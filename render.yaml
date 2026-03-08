@@ -1,0 +1,23 @@
+# Configuration Render (référence)
+# Pour un service déjà créé à la main, copiez la commande "build" ci-dessous
+# dans Dashboard > votre service backend > Build & Deploy > Build Command.
+
+services:
+  - type: web
+    name: maison-edition-api
+    runtime: python
+    rootDir: backend
+
+    buildCommand: >
+      pip install -r requirements.txt
+      && python manage.py collectstatic --noinput
+      && python manage.py migrate
+      && python manage.py create_admin_user --no-update
+
+    startCommand: gunicorn config.wsgi:application
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # À définir dans le dashboard (secrets) :
+      # CREATE_ADMIN_EMAIL, CREATE_ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL, etc.
