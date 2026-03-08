@@ -1,5 +1,6 @@
 # backend/apps/books/views.py
 
+import logging
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -10,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg, Q, F, Exists, OuterRef
 from django.conf import settings
 from django.core.cache import cache
+
+logger = logging.getLogger(__name__)
 
 from .models import Book, Author, Category, BookReview, ReviewLike
 from .filters import BookFilter
@@ -118,12 +121,20 @@ class BookViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if request.method == 'POST' and not request.data and not request.FILES:
+            logger.warning("POST /api/books/ : body vide (multipart non parsé ?)")
             return Response(
                 {
                     'detail': 'Aucune donnée reçue. Vérifiez que le formulaire envoie bien les champs '
                               '(titre, auteur, catégorie, etc.) avec Content-Type multipart/form-data.'
                 },
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            logger.warning(
+                "POST /api/books/ validation error: keys=%s errors=%s",
+                list(request.data.keys()) if request.data else [],
+                serializer.errors,
             )
         return super().create(request, *args, **kwargs)
 
