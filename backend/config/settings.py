@@ -178,6 +178,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# Créer staticfiles au démarrage (évite le warning si collectstatic n'a rien copié, ex. Render)
+os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # Configuration Média (Uploads images livres/auteurs)
 # Cloudinary en production si CLOUDINARY_CLOUD_NAME défini et package installé

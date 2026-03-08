@@ -4,6 +4,16 @@ Guide pour mettre en production le backend Django.
 
 ---
 
+## 0. Déploiement sur Render
+
+- **Root Directory** : définir `backend` pour que le build et le start s’exécutent depuis le dossier backend.
+- **Version Python** : le fichier `backend/.python-version` (contenu : `3.12.7`) est utilisé par Render. Sinon, définir la variable d’environnement `PYTHON_VERSION=3.12.7` dans le service.
+- **Build** : `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+- **Start** : `gunicorn config.wsgi:application`
+- **Base de données** : utiliser PostgreSQL et définir `DATABASE_URL` (Render le fournit si une base PostgreSQL est liée au service). Ne pas utiliser `requirements-render.txt` si vous utilisez déjà `requirements.txt` avec `psycopg2-binary` et `dj-database-url`.
+
+---
+
 ## 1. Variables d'environnement (.env)
 
 Copiez `.env.example` vers `.env` et adaptez pour la production :
@@ -50,6 +60,8 @@ python manage.py createsuperuser
 ```bash
 python manage.py collectstatic --noinput
 ```
+
+Sur Render, si « 0 static files copied » s’affiche, vérifier que le **Root Directory** du service est bien `backend` et que le dossier `backend/static` est bien versionné. Le répertoire `staticfiles` est créé automatiquement au démarrage s’il est vide (évite le warning WhiteNoise).
 
 ---
 

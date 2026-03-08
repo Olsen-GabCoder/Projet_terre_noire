@@ -13,6 +13,8 @@ from apps.users.jwt_cookie_views import CookieTokenObtainPairView, CookieTokenRe
 from .views import api_root, health_check, admin_backup
 
 urlpatterns = [
+    # Racine : redirection vers la doc API (évite 404 sur GET /)
+    path('', RedirectView.as_view(url='/api/docs/', permanent=False)),
     # Accueil admin → Groupes par défaut
     path('admin/', RedirectView.as_view(url='/admin/auth/group/', permanent=False)),
     # Backup admin

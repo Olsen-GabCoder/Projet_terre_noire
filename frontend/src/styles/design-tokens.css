@@ -37,7 +37,7 @@
   --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #c1121f 100%);
 
   /* Fond de page (unité visuelle header → contenu → footer) */
-  --color-bg-page: #e8edf3;
+  --color-bg-page: #ffffff;
 
   /* Ombres */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
