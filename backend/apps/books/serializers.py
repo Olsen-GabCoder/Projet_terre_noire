@@ -250,9 +250,11 @@ class BookDetailSerializer(serializers.ModelSerializer):
 class BookCreateUpdateSerializer(serializers.ModelSerializer):
     """
     Sérialiseur pour la création et modification de livres
-    Version simplifiée sans nested serializers
+    Version simplifiée sans nested serializers.
+    L'image de couverture est optionnelle à la création (ajout possible à l'édition).
     """
-    
+    cover_image = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = Book
         fields = [

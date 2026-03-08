@@ -125,7 +125,9 @@ class Book(models.Model):
     )
     cover_image = models.ImageField(
         upload_to='books/covers/',
-        verbose_name="Image de couverture"
+        verbose_name="Image de couverture",
+        blank=True,
+        null=True,
     )
     available = models.BooleanField(
         default=True,

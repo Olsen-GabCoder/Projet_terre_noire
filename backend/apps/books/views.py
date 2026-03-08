@@ -115,7 +115,18 @@ class BookViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return BookCreateUpdateSerializer
         return BookDetailSerializer
-    
+
+    def create(self, request, *args, **kwargs):
+        if request.method == 'POST' and not request.data and not request.FILES:
+            return Response(
+                {
+                    'detail': 'Aucune donnée reçue. Vérifiez que le formulaire envoie bien les champs '
+                              '(titre, auteur, catégorie, etc.) avec Content-Type multipart/form-data.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         """
         Optimisation des requêtes selon l'action
