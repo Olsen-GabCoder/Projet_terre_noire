@@ -1,6 +1,6 @@
+# Pour le déploiement sur Render (PostgreSQL). Sans mysqlclient (libs système absentes sur Render).
 Django>=5.0,<6.0
 djangorestframework
-mysqlclient
 python-dotenv
 django-cors-headers
 Pillow
@@ -12,7 +12,6 @@ reportlab
 cloudinary
 django-cloudinary-storage
 django-extensions
-# Production (Render)
 gunicorn
 whitenoise
 psycopg2-binary
