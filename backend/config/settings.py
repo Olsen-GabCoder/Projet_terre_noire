@@ -175,9 +175,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Dossiers sources pour collectstatic : notre static/ + static de l'admin Django (CSS/JS admin en prod)
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+import django
+_admin_static = Path(django.__file__).parent / 'contrib' / 'admin' / 'static'
+if _admin_static.exists():
+    STATICFILES_DIRS = list(STATICFILES_DIRS) + [str(_admin_static)]
 # Créer staticfiles au démarrage (évite le warning si collectstatic n'a rien copié, ex. Render)
 os.makedirs(STATIC_ROOT, exist_ok=True)
 
