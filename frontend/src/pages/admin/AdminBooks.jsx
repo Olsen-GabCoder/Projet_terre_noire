@@ -123,19 +123,24 @@ const AdminBooks = () => {
 
     try {
       if (editingBook) {
-        await api.patch(`/books/${editingBook.id}/`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.patch(`/books/${editingBook.id}/`, data);
       } else {
-        await api.post('/books/', data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.post('/books/', data);
       }
       fetchBooks();
       resetForm();
     } catch (err) {
       console.error('Erreur sauvegarde livre:', err);
-      alert(`Erreur lors de la sauvegarde: ${err.response?.data?.detail || err.message}`);
+      const data = err.response?.data;
+      let message = err.message;
+      if (data) {
+        if (data.detail) message = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        else if (typeof data === 'object' && Object.keys(data).length) {
+          const parts = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`);
+          message = parts.join('\n');
+        }
+      }
+      alert(`Erreur lors de la sauvegarde:\n${message}`);
     }
   };
 
