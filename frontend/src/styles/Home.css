@@ -36,6 +36,13 @@
   margin: 0;
 }
 
+/* Variantes inline (section livres uniquement) */
+.home-loading--inline,
+.home-error--inline {
+  min-height: 0;
+  padding: 3rem 2rem;
+}
+
 .btn-retry {
   margin-top: 1rem;
   padding: 0.6rem 1.25rem;
