@@ -591,9 +591,8 @@ const Profile = () => {
                             <img
                               src={item.book.cover_image || '/images/default-book-cover.jpg'}
                               alt={item.book.title}
-                              loading="lazy"
-                              decoding="async"
-                              loading="lazy"
+                                loading="lazy"
+                                decoding="async"
                             />
                             <div className="item-details">
                               <h5>{item.book.title}</h5>

@@ -199,7 +199,6 @@ const Checkout = () => {
                     alt={item.title}
                     loading="lazy"
                     decoding="async"
-                    loading="lazy"
                   />
                   <div className="chk-item-info">
                     <h4>{item.title}</h4>

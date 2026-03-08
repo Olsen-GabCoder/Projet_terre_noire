@@ -163,9 +163,8 @@ const Orders = () => {
                             <img
                               src={item.book?.cover_image || '/images/default-book-cover.jpg'}
                               alt={item.book?.title}
-                              loading="lazy"
-                              decoding="async"
-                              loading="lazy"
+                                loading="lazy"
+                                decoding="async"
                             />
                           </Link>
                           <div className="ord-item__details">

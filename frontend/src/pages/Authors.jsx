@@ -151,7 +151,6 @@ const Authors = () => {
                               alt={author.full_name}
                               loading="lazy"
                               decoding="async"
-                              loading="lazy"
                           onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
                             />
                           ) : null}
