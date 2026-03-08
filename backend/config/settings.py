@@ -200,13 +200,16 @@ if _cloud_name:
     except ImportError:
         pass
 
+# WhiteNoise : CompressedStaticFilesStorage (compression sans manifest strict)
+# Évite l'erreur sur les fichiers référencés par DRF (ex. glyphicons) absents en prod
+_whitenoise_storage = 'whitenoise.storage.CompressedStaticFilesStorage'
 if _use_cloudinary:
     STORAGES = {
         'default': {
             'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': _whitenoise_storage,
         },
     }
 else:
@@ -215,7 +218,7 @@ else:
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': _whitenoise_storage,
         },
     }
 # Compatibilité avec les paquets qui lisent encore l'ancien réglage (ex. django-cloudinary-storage)
