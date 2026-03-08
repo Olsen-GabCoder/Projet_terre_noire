@@ -28,6 +28,7 @@ urlpatterns = [
     # API Racine et santé (routes spécifiques AVANT les routes générales)
     path('api/root/', api_root, name='api-root'),
     path('api/health/', health_check, name='health-check'),
+    path('api/', api_root),  # GET /api/ sans auth (découverte des endpoints)
     
     # API Authentication JWT (cookies HttpOnly)
     path('api/token/', CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
