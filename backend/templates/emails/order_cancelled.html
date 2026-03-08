@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ user.first_name|default:user.username }},</p>
+<p>Votre commande <strong>#{{ order.id|stringformat:"06d" }}</strong> a bien été annulée.</p>
+
+<h3>Récapitulatif de la commande annulée</h3>
+<ul>
+  {% for item in items %}
+  <li>{{ item.title }} (× {{ item.quantity }})</li>
+  {% endfor %}
+</ul>
+
+<p>Si vous n'êtes pas à l'origine de cette annulation ou si vous avez des questions, n'hésitez pas à nous contacter.</p>
+<p><a href="{{ frontend_url }}/contact" class="btn">Nous contacter</a></p>
+<p>À bientôt !</p>
+{% endblock %}

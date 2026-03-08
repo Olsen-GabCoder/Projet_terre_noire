@@ -44,7 +44,14 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
-        
+
+        # Email de bienvenue (ne pas bloquer l'inscription si l'envoi échoue)
+        try:
+            from apps.core.email import send_welcome_registration
+            send_welcome_registration(user)
+        except Exception:
+            pass
+
         # Réponse avec les données de l'utilisateur créé (sans le mot de passe)
         headers = self.get_success_headers(serializer.data)
         return Response(

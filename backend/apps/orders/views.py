@@ -70,9 +70,16 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         instance = self.get_object()
+        old_status = instance.status
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        if old_status != 'SHIPPED' and instance.status == 'SHIPPED':
+            try:
+                from apps.core.email import send_order_shipped
+                send_order_shipped(instance)
+            except Exception:
+                pass
         response_serializer = OrderListSerializer(instance, context={'request': request})
         return Response(response_serializer.data)
     
@@ -92,7 +99,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         order.status = 'CANCELLED'
         order.save()
-        
+
+        try:
+            from apps.core.email import send_order_cancelled
+            send_order_cancelled(order)
+        except Exception:
+            pass
+
         serializer = OrderListSerializer(order, context={'request': request})
         return Response(serializer.data)
 

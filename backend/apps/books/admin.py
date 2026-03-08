@@ -25,6 +25,22 @@ class BookAdmin(admin.ModelAdmin):
     list_filter = ['format', 'available', 'category', 'created_at']
     list_editable = ['available']
     readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['category', 'author']  # Sélection par liste déroulante avec recherche
+    fieldsets = (
+        ('Informations générales', {
+            'fields': ('title', 'slug', 'author', 'category', 'reference', 'format', 'description'),
+        }),
+        ('Prix et disponibilité', {
+            'fields': ('price', 'original_price', 'available', 'is_bestseller'),
+        }),
+        ('Image et notation', {
+            'fields': ('cover_image', 'rating', 'rating_count'),
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
 
 
 @admin.register(BookReview)

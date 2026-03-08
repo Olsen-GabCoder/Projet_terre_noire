@@ -1,0 +1,14 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.email }}{% endif %},</p>
+<p>Bienvenue chez <strong>Terre Noire Éditions</strong> ! Votre compte a bien été créé.</p>
+<p>Vous pouvez dès à présent :</p>
+<ul>
+  <li>Explorer notre catalogue de livres</li>
+  <li>Passer des commandes</li>
+  <li>Soumettre un manuscrit</li>
+  <li>Gérer votre profil et vos commandes</li>
+</ul>
+<p><a href="{{ frontend_url }}/login" class="btn">Se connecter</a></p>
+<p>À très bientôt !</p>
+{% endblock %}

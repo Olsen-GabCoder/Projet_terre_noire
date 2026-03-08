@@ -170,3 +170,51 @@ def send_manuscript_acknowledgment(manuscript):
     return send_templated_email(
         subject, 'manuscript_ack', context, [manuscript.email]
     )
+
+
+def send_welcome_registration(user):
+    """Email de bienvenue après création de compte (inscription)."""
+    if not user or not getattr(user, 'email', None):
+        return False
+    context = {
+        'user': user,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = "Bienvenue — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'registration_welcome', context, [user.email]
+    )
+
+
+def send_order_cancelled(order):
+    """Email de confirmation d'annulation de commande."""
+    from apps.orders.models import Order
+    order = Order.objects.prefetch_related('items__book').get(pk=order.pk)
+    items = [{'title': item.book.title, 'quantity': item.quantity} for item in order.items.all()]
+    context = {
+        'order': order,
+        'user': order.user,
+        'items': items,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Commande #{order.id:06d} annulée — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'order_cancelled', context, [order.user.email]
+    )
+
+
+def send_order_shipped(order):
+    """Email de notification d'expédition."""
+    from apps.orders.models import Order
+    order = Order.objects.prefetch_related('items__book').get(pk=order.pk)
+    items = [{'title': item.book.title, 'quantity': item.quantity} for item in order.items.all()]
+    context = {
+        'order': order,
+        'user': order.user,
+        'items': items,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Votre commande #{order.id:06d} a été expédiée — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'order_shipped', context, [order.user.email]
+    )

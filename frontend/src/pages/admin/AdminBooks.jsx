@@ -12,6 +12,9 @@ const AdminBooks = () => {
   const [categories, setCategories] = useState([]);
   const [loadingAuthors, setLoadingAuthors] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [addCategoryError, setAddCategoryError] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -60,10 +63,11 @@ const AdminBooks = () => {
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
-      const res = await api.get('/categories/');
-      setCategories(res.data.results || res.data);
+      const res = await api.get('/categories/', { params: { page_size: 100 } });
+      setCategories(res.data.results || res.data || []);
     } catch (err) {
       console.error('Erreur chargement catégories:', err);
+      setCategories([]);
     } finally {
       setLoadingCategories(false);
     }
@@ -82,6 +86,26 @@ const AdminBooks = () => {
       ...prev,
       cover_image: e.target.files[0]
     }));
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setAddCategoryError(null);
+    setAddingCategory(true);
+    try {
+      const res = await api.post('/categories/', { name });
+      const created = res.data;
+      await fetchCategories();
+      setFormData(prev => ({ ...prev, category: String(created.id) }));
+      setNewCategoryName('');
+    } catch (err) {
+      const msg = err.response?.data?.name?.[0] || err.response?.data?.detail || err.message;
+      setAddCategoryError(msg || 'Erreur lors de l\'ajout de la catégorie.');
+    } finally {
+      setAddingCategory(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -258,6 +282,28 @@ const AdminBooks = () => {
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
+                  <div className="form-add-category">
+                    <span className="form-add-category-label">Ou ajouter une catégorie :</span>
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => { setNewCategoryName(e.target.value); setAddCategoryError(null); }}
+                      placeholder="Ex: Roman graphique"
+                      className="form-add-category-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCategory}
+                      disabled={addingCategory || !newCategoryName.trim()}
+                      className="form-add-category-btn"
+                    >
+                      {addingCategory ? 'Ajout…' : 'Ajouter'}
+                    </button>
+                  </div>
+                  {addCategoryError && <p className="form-hint form-hint--error">{addCategoryError}</p>}
+                  {!loadingCategories && categories.length === 0 && (
+                    <p className="form-hint">Aucune catégorie. Créez-en une dans l’admin Django (Catégories) ou via l’API.</p>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Format</label>

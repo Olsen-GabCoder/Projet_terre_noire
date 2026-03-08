@@ -34,15 +34,9 @@ Copiez `.env.example` vers `.env` et adaptez pour la production :
 
 ## 2. Cloudinary (images)
 
-1. Créer un compte sur [cloudinary.com](https://cloudinary.com)
-2. Récupérer : Cloud Name, API Key, API Secret (Dashboard)
-3. Ajouter dans `.env` :
-   ```
-   CLOUDINARY_CLOUD_NAME=votre_cloud
-   CLOUDINARY_API_KEY=123456789
-   CLOUDINARY_API_SECRET=votre_secret
-   ```
-4. Les images uploadées (livres, auteurs, avatars) seront stockées sur Cloudinary
+Pour stocker les images (couvertures, auteurs, avatars) en production : guide détaillé **backend/docs/CLOUDINARY.md**.
+
+Résumé : créer un compte sur [cloudinary.com](https://cloudinary.com), récupérer Cloud name, API Key et API Secret dans le Dashboard, puis définir les trois variables d’environnement (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`) en local dans `.env` et en production sur Render. Aucun changement de code : l’app utilise Cloudinary dès que ces variables sont présentes.
 
 ---
 
