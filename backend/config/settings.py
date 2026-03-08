@@ -218,6 +218,8 @@ else:
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
+# Compatibilité avec les paquets qui lisent encore l'ancien réglage (ex. django-cloudinary-storage)
+STATICFILES_STORAGE = STORAGES['staticfiles']['BACKEND']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
