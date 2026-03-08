@@ -1,0 +1,30 @@
+# Generated manually for ContactMessage
+
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = []
+
+    operations = [
+        migrations.CreateModel(
+            name='ContactMessage',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=200, verbose_name='Nom')),
+                ('email', models.EmailField(max_length=254, verbose_name='Email')),
+                ('subject', models.CharField(choices=[('Commande', 'Question commande'), ('Manuscrit', 'Soumission manuscrit'), ('Partenariat', 'Partenariat'), ('Autre', 'Autre')], default='Autre', max_length=50, verbose_name='Sujet')),
+                ('message', models.TextField(verbose_name='Message')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name="Date d'envoi")),
+                ('is_read', models.BooleanField(default=False, verbose_name='Lu')),
+            ],
+            options={
+                'verbose_name': 'Message de contact',
+                'verbose_name_plural': 'Messages de contact',
+                'ordering': ['-created_at'],
+            },
+        ),
+    ]

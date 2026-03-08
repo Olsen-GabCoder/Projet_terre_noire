@@ -1,0 +1,9 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ author_name }},</p>
+<p>Nous avons bien reçu votre manuscrit <strong>« {{ title }} »</strong>.</p>
+<p>Notre comité de lecture l'examinera avec attention. Vous serez contacté par email ou téléphone dans les prochaines semaines pour vous informer de la suite donnée à votre proposition.</p>
+<p>Merci de votre confiance et de l'intérêt que vous portez à Terre Noire Éditions.</p>
+<p><a href="{{ frontend_url }}" class="btn">Visiter notre site</a></p>
+<p>Cordialement,<br>L'équipe Terre Noire Éditions</p>
+{% endblock %}

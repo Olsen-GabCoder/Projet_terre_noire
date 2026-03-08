@@ -5,3 +5,14 @@ python-dotenv
 django-cors-headers
 Pillow
 djangorestframework-simplejwt
+django-filter
+drf-spectacular
+drf-spectacular-sidecar
+reportlab
+cloudinary
+django-cloudinary-storage
+# Production (Render)
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url

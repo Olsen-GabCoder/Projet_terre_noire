@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Terre Noire Éditions{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">
+    <span class="admin-brand">Terre Noire Éditions</span>
+    <span class="admin-brand-sub">Administration</span>
+  </a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/terrenoire.css' %}">
+{% endblock %}
+
+{% block extrabody %}
+{{ block.super }}
+<script>
+(function() {
+  var s = localStorage.getItem('django.admin.navSidebarIsOpen');
+  if (s === null) localStorage.setItem('django.admin.navSidebarIsOpen', 'true');
+  var main = document.getElementById('main');
+  if (main && s !== 'false') main.classList.add('shifted');
+  main && main.addEventListener('click', function(e) {
+    if (!main.classList.contains('shifted') || window.innerWidth > 767) return;
+    if (e.target.closest('#nav-sidebar')) return;
+    var t = document.getElementById('toggle-nav-sidebar');
+    if (t) t.click();
+  });
+  var tbl = document.getElementById('result_list');
+  if (tbl) {
+    var ths = tbl.querySelectorAll('thead th');
+    tbl.querySelectorAll('tbody tr').forEach(function(tr) {
+      tr.querySelectorAll('td').forEach(function(td, i) {
+        if (ths[i]) td.setAttribute('data-label', ths[i].getAttribute('data-label') || ths[i].textContent.trim().replace(/\s+/g, ' '));
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

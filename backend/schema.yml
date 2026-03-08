@@ -1,0 +1,3885 @@
+openapi: 3.0.3
+info:
+  title: API Terre Noire Éditions
+  version: 1.0.0
+  description: API REST pour la maison d'édition Terre Noire Éditions (livres, commandes,
+    utilisateurs, etc.)
+paths:
+  /api/authors/:
+    get:
+      operationId: authors_list
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - authors
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuthorList'
+          description: ''
+    post:
+      operationId: authors_create
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      tags:
+      - authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: ''
+  /api/authors/{id}/:
+    get:
+      operationId: authors_retrieve
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Auteur.
+        required: true
+      tags:
+      - authors
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorDetail'
+          description: ''
+    put:
+      operationId: authors_update
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Auteur.
+        required: true
+      tags:
+      - authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: ''
+    patch:
+      operationId: authors_partial_update
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Auteur.
+        required: true
+      tags:
+      - authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAuthorRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAuthorRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAuthorRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: ''
+    delete:
+      operationId: authors_destroy
+      description: |-
+        ViewSet pour la gestion des auteurs
+
+        Liste des actions:
+        - list: GET /api/authors/ - Liste tous les auteurs
+        - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
+        - create: POST /api/authors/ - Créer un auteur (admin)
+        - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Auteur.
+        required: true
+      tags:
+      - authors
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/authors/{id}/books/:
+    get:
+      operationId: authors_books_retrieve
+      description: |-
+        Endpoint personnalisé: /api/authors/{id}/books/
+        Retourne tous les livres d'un auteur spécifique
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Auteur.
+        required: true
+      tags:
+      - authors
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: ''
+  /api/authors/with-books/:
+    get:
+      operationId: authors_with_books_retrieve
+      description: |-
+        Endpoint personnalisé: /api/authors/with-books/
+        Retourne uniquement les auteurs qui ont au moins un livre publié
+      tags:
+      - authors
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+          description: ''
+  /api/books/:
+    get:
+      operationId: books_list
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      parameters:
+      - in: query
+        name: author
+        schema:
+          type: integer
+      - in: query
+        name: available
+        schema:
+          type: boolean
+      - in: query
+        name: book_format
+        schema:
+          type: string
+          enum:
+          - EBOOK
+          - PAPIER
+        description: |-
+          Format du livre
+
+          * `EBOOK` - Ebook
+          * `PAPIER` - Papier
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: price__gte
+        schema:
+          type: number
+      - in: query
+        name: price__lte
+        schema:
+          type: number
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookListList'
+          description: ''
+    post:
+      operationId: books_create
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCreateUpdate'
+          description: ''
+  /api/books/{id}/:
+    get:
+      operationId: books_retrieve
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Livre.
+        required: true
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+    put:
+      operationId: books_update
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Livre.
+        required: true
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCreateUpdate'
+          description: ''
+    patch:
+      operationId: books_partial_update
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Livre.
+        required: true
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCreateUpdate'
+          description: ''
+    delete:
+      operationId: books_destroy
+      description: |-
+        ViewSet pour la gestion complète des livres
+
+        Liste des actions disponibles:
+        - list: GET /api/books/ - Liste paginée des livres
+        - retrieve: GET /api/books/{id}/ - Détail d'un livre
+        - create: POST /api/books/ - Créer un livre (admin)
+        - update: PUT /api/books/{id}/ - Modifier un livre (admin)
+        - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
+        - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
+
+        Filtres disponibles:
+        - ?category=1 - Filtrer par catégorie
+        - ?author=2 - Filtrer par auteur
+        - ?book_format=EBOOK - Filtrer par format (renommé pour éviter conflit DRF)
+        - ?available=true - Filtrer par disponibilité
+        - ?search=victor - Rechercher dans titre/description/auteur
+        - ?ordering=-created_at - Trier par date (descendant)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Livre.
+        required: true
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/books/{id}/related/:
+    get:
+      operationId: books_related_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/{id}/related/
+        Retourne des livres similaires (même catégorie ou même auteur)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Livre.
+        required: true
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/books/bestsellers/:
+    get:
+      operationId: books_bestsellers_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/bestsellers/
+        Retourne les best-sellers (livres marqués comme bestseller)
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/books/by-format/{format_type}/:
+    get:
+      operationId: books_by_format_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/by-format/EBOOK/ ou /PAPIER/
+        Retourne les livres filtrés par format
+      parameters:
+      - in: path
+        name: format_type
+        schema:
+          type: string
+        required: true
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/books/featured/:
+    get:
+      operationId: books_featured_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/featured/
+        Retourne les livres mis en avant (les 6 plus récents et disponibles)
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/books/new-releases/:
+    get:
+      operationId: books_new_releases_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/new-releases/
+        Retourne les nouveautés (10 derniers livres ajoutés)
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/books/statistics/:
+    get:
+      operationId: books_statistics_retrieve
+      description: |-
+        Endpoint personnalisé: /api/books/statistics/
+        Retourne des statistiques sur le catalogue
+      tags:
+      - books
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+    post:
+      operationId: categories_create
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Catégorie.
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDetail'
+          description: ''
+    put:
+      operationId: categories_update
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Catégorie.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: categories_partial_update
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Catégorie.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: categories_destroy
+      description: |-
+        ViewSet pour la gestion des catégories
+
+        Liste des actions:
+        - list: GET /api/categories/ - Liste toutes les catégories
+        - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres
+        - create: POST /api/categories/ - Créer une catégorie (admin)
+        - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
+        - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Catégorie.
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/categories/{id}/books/:
+    get:
+      operationId: categories_books_retrieve
+      description: |-
+        Endpoint personnalisé: /api/categories/{id}/books/
+        Retourne tous les livres d'une catégorie spécifique
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Catégorie.
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/with-books/:
+    get:
+      operationId: categories_with_books_retrieve
+      description: |-
+        Endpoint personnalisé: /api/categories/with-books/
+        Retourne uniquement les catégories qui ont au moins un livre
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/config/delivery/:
+    get:
+      operationId: config_delivery_retrieve
+      description: |-
+        Configuration livraison (public, pour le panier).
+        GET /api/config/delivery/
+      tags:
+      - config
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/contact/submit/:
+    post:
+      operationId: contact_submit_create
+      description: Envoi d'un message via le formulaire de contact. Accessible à tous.
+      tags:
+      - contact
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/coupons/validate/:
+    post:
+      operationId: coupons_validate_create
+      description: |-
+        Valider un code promo.
+        POST /api/coupons/validate/
+        Body: { "code": "MAISON10" }
+        Réponse: { "valid": true, "discount_percent": 10, "message": "10% de réduction appliqué" }
+      tags:
+      - coupons
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Endpoint de vérification de santé de l'API.
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/manuscripts/:
+    get:
+      operationId: manuscripts_list
+      description: |-
+        Vue pour lister tous les manuscrits (Admin seulement)
+        Endpoint: GET /api/manuscripts/
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - manuscripts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Manuscript'
+          description: ''
+  /api/manuscripts/{id}/:
+    get:
+      operationId: manuscripts_retrieve
+      description: |-
+        Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
+        Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - manuscripts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Manuscript'
+          description: ''
+    put:
+      operationId: manuscripts_update
+      description: |-
+        Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
+        Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - manuscripts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManuscriptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ManuscriptRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Manuscript'
+          description: ''
+    patch:
+      operationId: manuscripts_partial_update
+      description: |-
+        Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
+        Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - manuscripts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedManuscriptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedManuscriptRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Manuscript'
+          description: ''
+    delete:
+      operationId: manuscripts_destroy
+      description: |-
+        Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
+        Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - manuscripts
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/manuscripts/{id}/update-status/:
+    patch:
+      operationId: manuscripts_update_status_partial_update
+      description: |-
+        Vue spécifique pour mettre à jour uniquement le statut d'un manuscrit
+        Endpoint: PATCH /api/manuscripts/{id}/update-status/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - manuscripts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/manuscripts/submit/:
+    post:
+      operationId: manuscripts_submit_create
+      tags:
+      - manuscripts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManuscriptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ManuscriptRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Manuscript'
+          description: ''
+  /api/newsletter/subscribe/:
+    post:
+      operationId: newsletter_subscribe_create
+      description: Inscription à la newsletter. Accessible à tous.
+      tags:
+      - newsletter
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/orders/:
+    get:
+      operationId: orders_list
+      description: |-
+        ViewSet pour la gestion des commandes
+
+        Actions:
+        - list: GET /api/orders/ - Historique des commandes
+        - retrieve: GET /api/orders/{id}/ - Détail d'une commande
+        - create: POST /api/orders/ - Créer une commande
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderListList'
+          description: ''
+    post:
+      operationId: orders_create
+      description: |-
+        ViewSet pour la gestion des commandes
+
+        Actions:
+        - list: GET /api/orders/ - Historique des commandes
+        - retrieve: GET /api/orders/{id}/ - Détail d'une commande
+        - create: POST /api/orders/ - Créer une commande
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreate'
+          description: ''
+  /api/orders/{id}/:
+    get:
+      operationId: orders_retrieve
+      description: |-
+        ViewSet pour la gestion des commandes
+
+        Actions:
+        - list: GET /api/orders/ - Historique des commandes
+        - retrieve: GET /api/orders/{id}/ - Détail d'une commande
+        - create: POST /api/orders/ - Créer une commande
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+          description: ''
+    put:
+      operationId: orders_update
+      description: |-
+        ViewSet pour la gestion des commandes
+
+        Actions:
+        - list: GET /api/orders/ - Historique des commandes
+        - retrieve: GET /api/orders/{id}/ - Détail d'une commande
+        - create: POST /api/orders/ - Créer une commande
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusUpdate'
+          description: ''
+    patch:
+      operationId: orders_partial_update
+      description: Mise à jour du statut (admin uniquement). Retourne la commande
+        complète.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusUpdate'
+          description: ''
+    delete:
+      operationId: orders_destroy
+      description: |-
+        ViewSet pour la gestion des commandes
+
+        Actions:
+        - list: GET /api/orders/ - Historique des commandes
+        - retrieve: GET /api/orders/{id}/ - Détail d'une commande
+        - create: POST /api/orders/ - Créer une commande
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/orders/{id}/cancel/:
+    post:
+      operationId: orders_cancel_create
+      description: |-
+        Endpoint: POST /api/orders/{id}/cancel/
+        Annuler une commande (uniquement si PENDING)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderListRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderListRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+          description: ''
+  /api/payments/:
+    get:
+      operationId: payments_list
+      description: |-
+        ViewSet pour la gestion des paiements
+
+        Actions:
+        - create: POST /api/payments/ - Enregistrer un paiement
+        - retrieve: GET /api/payments/{id}/ - Détail d'un paiement
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+          description: ''
+    post:
+      operationId: payments_create
+      description: |-
+        ViewSet pour la gestion des paiements
+
+        Actions:
+        - create: POST /api/payments/ - Enregistrer un paiement
+        - retrieve: GET /api/payments/{id}/ - Détail d'un paiement
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/payments/{id}/:
+    get:
+      operationId: payments_retrieve
+      description: |-
+        ViewSet pour la gestion des paiements
+
+        Actions:
+        - create: POST /api/payments/ - Enregistrer un paiement
+        - retrieve: GET /api/payments/{id}/ - Détail d'un paiement
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/root/:
+    get:
+      operationId: root_retrieve
+      description: Endpoint racine de l'API qui liste tous les endpoints disponibles.
+      tags:
+      - root
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/token/:
+    post:
+      operationId: token_create
+      description: Vue personnalisée pour permettre la connexion avec l'email ou le
+        username.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          description: No response body
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/users/:
+    get:
+      operationId: users_list
+      description: |-
+        Vue pour lister les utilisateurs (réservée aux administrateurs).
+        Utilisation typique : panel d'administration.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserList'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: users_retrieve
+      description: |-
+        Vue d'administration pour gérer un utilisateur spécifique.
+        Permet de voir, modifier ou supprimer un utilisateur (soft delete).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+          description: ''
+    put:
+      operationId: users_update
+      description: |-
+        Vue d'administration pour gérer un utilisateur spécifique.
+        Permet de voir, modifier ou supprimer un utilisateur (soft delete).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserDetailRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+          description: ''
+    patch:
+      operationId: users_partial_update
+      description: |-
+        Vue d'administration pour gérer un utilisateur spécifique.
+        Permet de voir, modifier ou supprimer un utilisateur (soft delete).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetailRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+          description: ''
+    delete:
+      operationId: users_destroy
+      description: |-
+        Vue d'administration pour gérer un utilisateur spécifique.
+        Permet de voir, modifier ou supprimer un utilisateur (soft delete).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/check-auth/:
+    get:
+      operationId: users_check_auth_retrieve
+      description: Retourne les informations de l'utilisateur si authentifié.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/forgot-password/:
+    post:
+      operationId: users_forgot_password_create
+      description: |-
+        Demande de réinitialisation du mot de passe.
+        POST /api/users/forgot-password/ avec { "email": "user@example.com" }
+        Envoie un email avec un lien de réinitialisation (même réponse si email inexistant, pour éviter l'enumération).
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: |-
+        Vue pour récupérer et mettre à jour le profil de l'utilisateur connecté.
+        Seul l'utilisateur authentifié peut accéder à son propre profil.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+          description: ''
+    put:
+      operationId: users_me_update
+      description: |-
+        Vue pour récupérer et mettre à jour le profil de l'utilisateur connecté.
+        Seul l'utilisateur authentifié peut accéder à son propre profil.
+      tags:
+      - users
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: users_me_partial_update
+      description: |-
+        Vue pour récupérer et mettre à jour le profil de l'utilisateur connecté.
+        Seul l'utilisateur authentifié peut accéder à son propre profil.
+      tags:
+      - users
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/users/me/change-password/:
+    put:
+      operationId: users_me_change_password_update
+      description: |-
+        Vue pour changer le mot de passe de l'utilisateur connecté.
+        Nécessite l'ancien mot de passe pour des raisons de sécurité.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: users_me_change_password_partial_update
+      description: |-
+        Vue pour changer le mot de passe de l'utilisateur connecté.
+        Nécessite l'ancien mot de passe pour des raisons de sécurité.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswordChangeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/users/register/:
+    post:
+      operationId: users_register_create
+      description: |-
+        Vue pour l'inscription d'un nouvel utilisateur.
+        Accessible à tous (pas besoin d'être authentifié).
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/users/reset-password/:
+    post:
+      operationId: users_reset_password_create
+      description: |-
+        Réinitialisation du mot de passe avec token.
+        POST /api/users/reset-password/ avec { "uid": "...", "token": "...", "new_password": "..." }
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/wishlist/:
+    get:
+      operationId: wishlist_retrieve
+      description: Liste des livres dans la liste d'envie de l'utilisateur connecté.
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/wishlist/{book_id}/:
+    post:
+      operationId: wishlist_create
+      description: Ajouter ou retirer un livre de la liste d'envie.
+      parameters:
+      - in: path
+        name: book_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: wishlist_destroy
+      description: Ajouter ou retirer un livre de la liste d'envie.
+      parameters:
+      - in: path
+        name: book_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/wishlist/add/:
+    post:
+      operationId: wishlist_add_create
+      description: Ajouter un livre à la liste d'envie (sans retirer si déjà présent).
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/wishlist/toggle/:
+    post:
+      operationId: wishlist_toggle_create
+      description: Ajouter ou retirer un livre de la liste d'envie.
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: wishlist_toggle_destroy
+      description: Ajouter ou retirer un livre de la liste d'envie.
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    Author:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Author
+        Gère la transformation des auteurs en JSON
+        Inclut l'URL de la photo si elle existe
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          title: Nom complet
+          maxLength: 200
+        biography:
+          type: string
+          nullable: true
+          title: Biographie
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Photo de l'auteur
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        books_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - books_count
+      - created_at
+      - full_name
+      - id
+      - slug
+      - updated_at
+    AuthorDetail:
+      type: object
+      description: |-
+        Sérialiseur détaillé pour un auteur
+        Inclut la liste de ses livres
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          title: Nom complet
+          maxLength: 200
+        biography:
+          type: string
+          nullable: true
+          title: Biographie
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Photo de l'auteur
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookList'
+          readOnly: true
+        books_count:
+          type: string
+          readOnly: true
+        average_rating:
+          type: string
+          readOnly: true
+        bestsellers_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - average_rating
+      - bestsellers_count
+      - books
+      - books_count
+      - created_at
+      - full_name
+      - id
+      - slug
+      - updated_at
+    AuthorRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Author
+        Gère la transformation des auteurs en JSON
+        Inclut l'URL de la photo si elle existe
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          title: Nom complet
+          maxLength: 200
+        biography:
+          type: string
+          nullable: true
+          title: Biographie
+        photo:
+          type: string
+          format: binary
+          nullable: true
+          title: Photo de l'auteur
+      required:
+      - full_name
+    BookCreateUpdate:
+      type: object
+      description: |-
+        Sérialiseur pour la création et modification de livres
+        Version simplifiée sans nested serializers
+      properties:
+        title:
+          type: string
+          title: Titre
+          maxLength: 300
+        reference:
+          type: string
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix d'origine (FCFA)
+          description: Prix avant promotion. Laissez vide si pas de promotion.
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        cover_image:
+          type: string
+          format: uri
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+        is_bestseller:
+          type: boolean
+          title: Best-seller
+          description: Cocher pour mettre en avant ce livre
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          title: Note moyenne
+          description: 'Note sur 5 (ex: 4.5)'
+        rating_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          title: Nombre d'avis
+          description: Nombre total d'avis reçus
+        category:
+          type: integer
+          title: Catégorie
+        author:
+          type: integer
+          title: Auteur
+      required:
+      - author
+      - category
+      - cover_image
+      - description
+      - price
+      - reference
+      - title
+    BookCreateUpdateRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la création et modification de livres
+        Version simplifiée sans nested serializers
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: Titre
+          maxLength: 300
+        reference:
+          type: string
+          minLength: 1
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          minLength: 1
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix d'origine (FCFA)
+          description: Prix avant promotion. Laissez vide si pas de promotion.
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        cover_image:
+          type: string
+          format: binary
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+        is_bestseller:
+          type: boolean
+          title: Best-seller
+          description: Cocher pour mettre en avant ce livre
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          title: Note moyenne
+          description: 'Note sur 5 (ex: 4.5)'
+        rating_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          title: Nombre d'avis
+          description: Nombre total d'avis reçus
+        category:
+          type: integer
+          title: Catégorie
+        author:
+          type: integer
+          title: Auteur
+      required:
+      - author
+      - category
+      - cover_image
+      - description
+      - price
+      - reference
+      - title
+    BookDetail:
+      type: object
+      description: |-
+        Sérialiseur complet pour le détail d'un livre
+        Inclut toutes les informations nécessaires pour la page de détail
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 300
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        reference:
+          type: string
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        format_display:
+          type: string
+          readOnly: true
+        cover_image:
+          type: string
+          format: uri
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+        is_ebook:
+          type: boolean
+          readOnly: true
+        is_available:
+          type: boolean
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Author'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        has_discount:
+          type: boolean
+          readOnly: true
+        discount_percentage:
+          type: integer
+          readOnly: true
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        is_bestseller:
+          type: boolean
+          readOnly: true
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          readOnly: true
+        rating_count:
+          type: integer
+          readOnly: true
+        rating_display:
+          type: string
+          readOnly: true
+        rating_stars:
+          type: string
+          readOnly: true
+      required:
+      - author
+      - category
+      - cover_image
+      - created_at
+      - description
+      - discount_amount
+      - discount_percentage
+      - format_display
+      - has_discount
+      - id
+      - is_available
+      - is_bestseller
+      - is_ebook
+      - original_price
+      - price
+      - rating
+      - rating_count
+      - rating_display
+      - rating_stars
+      - reference
+      - slug
+      - title
+      - updated_at
+    BookList:
+      type: object
+      description: |-
+        Sérialiseur optimisé pour la liste des livres
+        Version allégée pour les performances (liste de catalogue)
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 300
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        reference:
+          type: string
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        format_display:
+          type: string
+          readOnly: true
+        cover_image:
+          type: string
+          format: uri
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+        category:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Author'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        has_discount:
+          type: boolean
+          readOnly: true
+        discount_percentage:
+          type: integer
+          readOnly: true
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        is_bestseller:
+          type: boolean
+          readOnly: true
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          readOnly: true
+        rating_count:
+          type: integer
+          readOnly: true
+        rating_display:
+          type: string
+          readOnly: true
+      required:
+      - author
+      - category
+      - cover_image
+      - created_at
+      - description
+      - discount_amount
+      - discount_percentage
+      - format_display
+      - has_discount
+      - id
+      - is_bestseller
+      - original_price
+      - price
+      - rating
+      - rating_count
+      - rating_display
+      - reference
+      - slug
+      - title
+    BookListRequest:
+      type: object
+      description: |-
+        Sérialiseur optimisé pour la liste des livres
+        Version allégée pour les performances (liste de catalogue)
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: Titre
+          maxLength: 300
+        reference:
+          type: string
+          minLength: 1
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          minLength: 1
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        cover_image:
+          type: string
+          format: binary
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+      required:
+      - cover_image
+      - description
+      - price
+      - reference
+      - title
+    Category:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Category
+        Transforme les catégories en JSON pour l'API
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom de la catégorie
+          maxLength: 100
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+      - updated_at
+    CategoryDetail:
+      type: object
+      description: |-
+        Sérialiseur détaillé pour une catégorie
+        Inclut la liste des livres de cette catégorie
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom de la catégorie
+          maxLength: 100
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookList'
+          readOnly: true
+        books_count:
+          type: string
+          readOnly: true
+        average_rating:
+          type: string
+          readOnly: true
+        bestsellers_count:
+          type: string
+          readOnly: true
+        average_price:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - average_price
+      - average_rating
+      - bestsellers_count
+      - books
+      - books_count
+      - created_at
+      - id
+      - name
+      - slug
+      - updated_at
+    CategoryRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Category
+        Transforme les catégories en JSON pour l'API
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom de la catégorie
+          maxLength: 100
+      required:
+      - name
+    EmailTokenObtainPairRequest:
+      type: object
+      description: Sérialiseur personnalisé qui permet de se connecter avec l'email
+        ou le username.
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    FormatEnum:
+      enum:
+      - EBOOK
+      - PAPIER
+      type: string
+      description: |-
+        * `EBOOK` - Ebook
+        * `PAPIER` - Papier
+    GenreEnum:
+      enum:
+      - ROMAN
+      - NOUVELLE
+      - POESIE
+      - ESSAI
+      - THEATRE
+      - JEUNESSE
+      - BD
+      - AUTRE
+      type: string
+      description: |-
+        * `ROMAN` - Roman
+        * `NOUVELLE` - Nouvelle / Recueil de nouvelles
+        * `POESIE` - Poésie
+        * `ESSAI` - Essai
+        * `THEATRE` - Théâtre
+        * `JEUNESSE` - Littérature jeunesse
+        * `BD` - Bande dessinée
+        * `AUTRE` - Autre
+    LanguageEnum:
+      enum:
+      - FR
+      - EN
+      - AR
+      - PT
+      - ES
+      - AUTRE
+      type: string
+      description: |-
+        * `FR` - Français
+        * `EN` - Anglais
+        * `AR` - Arabe
+        * `PT` - Portugais
+        * `ES` - Espagnol
+        * `AUTRE` - Autre
+    Manuscript:
+      type: object
+      description: |-
+        Sérialiseur pour la soumission de manuscrits
+        Les auteurs peuvent soumettre leur manuscrit (PDF/DOCX)
+        Le champ 'status' est en lecture seule (géré par l'admin)
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre du manuscrit
+          maxLength: 300
+        author_name:
+          type: string
+          title: Nom de l'auteur
+          maxLength: 200
+        pen_name:
+          type: string
+          title: Pseudonyme / Nom de plume
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          title: Email de contact
+          maxLength: 254
+        phone_number:
+          type: string
+          title: Numéro de téléphone
+          maxLength: 20
+        country:
+          type: string
+          title: Pays / Nationalité
+          maxLength: 100
+        genre:
+          allOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          title: Genre littéraire
+        language:
+          allOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          title: Langue du manuscrit
+        page_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Nombre de pages
+        file:
+          type: string
+          format: uri
+          title: Fichier manuscrit
+          pattern: (?:pdf|docx|doc)$
+        file_url:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          title: Description du manuscrit
+        terms_accepted:
+          type: boolean
+          title: Conditions acceptées
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ManuscriptStatusEnum'
+          readOnly: true
+          title: Statut
+        status_display:
+          type: string
+          readOnly: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de soumission
+      required:
+      - author_name
+      - description
+      - email
+      - file
+      - file_url
+      - id
+      - phone_number
+      - status
+      - status_display
+      - submitted_at
+      - terms_accepted
+      - title
+    ManuscriptRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la soumission de manuscrits
+        Les auteurs peuvent soumettre leur manuscrit (PDF/DOCX)
+        Le champ 'status' est en lecture seule (géré par l'admin)
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: Titre du manuscrit
+          maxLength: 300
+        author_name:
+          type: string
+          minLength: 1
+          title: Nom de l'auteur
+          maxLength: 200
+        pen_name:
+          type: string
+          title: Pseudonyme / Nom de plume
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Email de contact
+          maxLength: 254
+        phone_number:
+          type: string
+          minLength: 1
+          title: Numéro de téléphone
+          maxLength: 20
+        country:
+          type: string
+          title: Pays / Nationalité
+          maxLength: 100
+        genre:
+          allOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          title: Genre littéraire
+        language:
+          allOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          title: Langue du manuscrit
+        page_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Nombre de pages
+        file:
+          type: string
+          format: binary
+          title: Fichier manuscrit
+          pattern: (?:pdf|docx|doc)$
+        description:
+          type: string
+          minLength: 1
+          title: Description du manuscrit
+        terms_accepted:
+          type: boolean
+          title: Conditions acceptées
+      required:
+      - author_name
+      - description
+      - email
+      - file
+      - phone_number
+      - terms_accepted
+      - title
+    ManuscriptStatusEnum:
+      enum:
+      - PENDING
+      - REVIEWING
+      - ACCEPTED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - En attente
+        * `REVIEWING` - En cours d'examen
+        * `ACCEPTED` - Accepté
+        * `REJECTED` - Rejeté
+    OrderCreate:
+      type: object
+      properties:
+        shipping_address:
+          type: string
+          maxLength: 500
+        shipping_phone:
+          type: string
+          maxLength: 20
+        shipping_city:
+          type: string
+          maxLength: 100
+        coupon_code:
+          type: string
+          maxLength: 50
+      required:
+      - shipping_address
+      - shipping_city
+      - shipping_phone
+    OrderCreateRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: integer
+          writeOnly: true
+        shipping_address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        shipping_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        shipping_city:
+          type: string
+          minLength: 1
+          maxLength: 100
+        coupon_code:
+          type: string
+          maxLength: 50
+      required:
+      - items
+      - shipping_address
+      - shipping_city
+      - shipping_phone
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        book:
+          allOf:
+          - $ref: '#/components/schemas/BookList'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 4294967295
+          minimum: 1
+          format: int64
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - book
+      - id
+      - price
+      - quantity
+    OrderItemRequest:
+      type: object
+      properties:
+        book_id:
+          type: integer
+          writeOnly: true
+        quantity:
+          type: integer
+          maximum: 4294967295
+          minimum: 1
+          format: int64
+      required:
+      - book_id
+      - quantity
+    OrderList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/Status552Enum'
+        status_display:
+          type: string
+          readOnly: true
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        shipping_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        coupon_code:
+          type: string
+          readOnly: true
+          nullable: true
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        shipping_address:
+          type: string
+          readOnly: true
+        shipping_phone:
+          type: string
+          readOnly: true
+        shipping_city:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          readOnly: true
+      required:
+      - coupon_code
+      - created_at
+      - discount_amount
+      - id
+      - items
+      - shipping_address
+      - shipping_city
+      - shipping_cost
+      - shipping_phone
+      - status_display
+      - subtotal
+      - total_amount
+      - updated_at
+    OrderListRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status552Enum'
+    OrderStatusUpdate:
+      type: object
+      description: Serializer minimal pour la mise à jour du statut par l'admin.
+      properties:
+        status:
+          $ref: '#/components/schemas/Status552Enum'
+    OrderStatusUpdateRequest:
+      type: object
+      description: Serializer minimal pour la mise à jour du statut par l'admin.
+      properties:
+        status:
+          $ref: '#/components/schemas/Status552Enum'
+    PaginatedAuthorList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Author'
+    PaginatedBookListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookList'
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedOrderListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderList'
+    PasswordChangeRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le changement de mot de passe.
+        Nécessite l'ancien mot de passe pour des raisons de sécurité.
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - new_password
+      - new_password_confirm
+      - old_password
+    PatchedAuthorRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Author
+        Gère la transformation des auteurs en JSON
+        Inclut l'URL de la photo si elle existe
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          title: Nom complet
+          maxLength: 200
+        biography:
+          type: string
+          nullable: true
+          title: Biographie
+        photo:
+          type: string
+          format: binary
+          nullable: true
+          title: Photo de l'auteur
+    PatchedBookCreateUpdateRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la création et modification de livres
+        Version simplifiée sans nested serializers
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: Titre
+          maxLength: 300
+        reference:
+          type: string
+          minLength: 1
+          title: Référence (ISBN/Code)
+          description: ISBN ou code interne unique
+          maxLength: 50
+        description:
+          type: string
+          minLength: 1
+          title: Description/Résumé
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Prix (FCFA)
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix d'origine (FCFA)
+          description: Prix avant promotion. Laissez vide si pas de promotion.
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        cover_image:
+          type: string
+          format: binary
+          title: Image de couverture
+        available:
+          type: boolean
+          title: Disponible
+        is_bestseller:
+          type: boolean
+          title: Best-seller
+          description: Cocher pour mettre en avant ce livre
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          title: Note moyenne
+          description: 'Note sur 5 (ex: 4.5)'
+        rating_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          title: Nombre d'avis
+          description: Nombre total d'avis reçus
+        category:
+          type: integer
+          title: Catégorie
+        author:
+          type: integer
+          title: Auteur
+    PatchedCategoryRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le modèle Category
+        Transforme les catégories en JSON pour l'API
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nom de la catégorie
+          maxLength: 100
+    PatchedManuscriptRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la soumission de manuscrits
+        Les auteurs peuvent soumettre leur manuscrit (PDF/DOCX)
+        Le champ 'status' est en lecture seule (géré par l'admin)
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: Titre du manuscrit
+          maxLength: 300
+        author_name:
+          type: string
+          minLength: 1
+          title: Nom de l'auteur
+          maxLength: 200
+        pen_name:
+          type: string
+          title: Pseudonyme / Nom de plume
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Email de contact
+          maxLength: 254
+        phone_number:
+          type: string
+          minLength: 1
+          title: Numéro de téléphone
+          maxLength: 20
+        country:
+          type: string
+          title: Pays / Nationalité
+          maxLength: 100
+        genre:
+          allOf:
+          - $ref: '#/components/schemas/GenreEnum'
+          title: Genre littéraire
+        language:
+          allOf:
+          - $ref: '#/components/schemas/LanguageEnum'
+          title: Langue du manuscrit
+        page_count:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Nombre de pages
+        file:
+          type: string
+          format: binary
+          title: Fichier manuscrit
+          pattern: (?:pdf|docx|doc)$
+        description:
+          type: string
+          minLength: 1
+          title: Description du manuscrit
+        terms_accepted:
+          type: boolean
+          title: Conditions acceptées
+    PatchedOrderStatusUpdateRequest:
+      type: object
+      description: Serializer minimal pour la mise à jour du statut par l'admin.
+      properties:
+        status:
+          $ref: '#/components/schemas/Status552Enum'
+    PatchedPasswordChangeRequest:
+      type: object
+      description: |-
+        Sérialiseur pour le changement de mot de passe.
+        Nécessite l'ancien mot de passe pour des raisons de sécurité.
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+    PatchedUserDetailRequest:
+      type: object
+      description: |-
+        Sérialiseur pour afficher et mettre à jour le profil utilisateur.
+        Les champs sensibles (username, email) sont en lecture seule.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 100
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+    PatchedUserUpdateRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la mise à jour du profil utilisateur.
+        Permet de modifier uniquement les informations de profil.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        profile_image:
+          type: string
+          format: binary
+          nullable: true
+          title: Photo de profil
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 100
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        transaction_id:
+          type: string
+          maxLength: 100
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - id
+      - provider
+      - transaction_id
+    PaymentRequest:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - provider
+      - transaction_id
+    PaymentStatusEnum:
+      enum:
+      - SUCCESS
+      - FAILED
+      - PENDING
+      type: string
+      description: |-
+        * `SUCCESS` - Réussi
+        * `FAILED` - Échoué
+        * `PENDING` - En attente
+    ProviderEnum:
+      enum:
+      - MOBICASH
+      - AIRTEL
+      - CASH
+      - VISA
+      type: string
+      description: |-
+        * `MOBICASH` - Mobicash
+        * `AIRTEL` - Airtel Money
+        * `CASH` - Espèces
+        * `VISA` - Carte Visa
+    Status552Enum:
+      enum:
+      - PENDING
+      - PAID
+      - SHIPPED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - En attente
+        * `PAID` - Payé
+        * `SHIPPED` - Expédié
+        * `CANCELLED` - Annulé
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserDetail:
+      type: object
+      description: |-
+        Sérialiseur pour afficher et mettre à jour le profil utilisateur.
+        Les champs sensibles (username, email) sont en lecture seule.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adresse électronique
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        profile_image:
+          type: string
+          readOnly: true
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        full_address:
+          type: string
+          readOnly: true
+        has_complete_profile:
+          type: boolean
+          readOnly: true
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d’inscription
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Dernière connexion
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Statut équipe
+          description: Précise si l’utilisateur peut se connecter à ce site d'administration.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Statut super-utilisateur
+          description: Précise que l’utilisateur possède toutes les permissions sans
+            les assigner explicitement.
+      required:
+      - date_joined
+      - email
+      - full_address
+      - full_name
+      - has_complete_profile
+      - id
+      - is_staff
+      - is_superuser
+      - last_login
+      - profile_image
+      - username
+    UserDetailRequest:
+      type: object
+      description: |-
+        Sérialiseur pour afficher et mettre à jour le profil utilisateur.
+        Les champs sensibles (username, email) sont en lecture seule.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 100
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+    UserList:
+      type: object
+      description: Sérialiseur simplifié pour lister les utilisateurs (admin).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adresse électronique
+        full_name:
+          type: string
+          readOnly: true
+        phone_number:
+          type: string
+          readOnly: true
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+        city:
+          type: string
+          readOnly: true
+          nullable: true
+          title: Ville
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Actif
+          description: Précise si l’utilisateur doit être considéré comme actif. Décochez
+            ceci plutôt que de supprimer le compte.
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d’inscription
+      required:
+      - city
+      - date_joined
+      - email
+      - full_name
+      - id
+      - is_active
+      - phone_number
+      - username
+    UserRegistration:
+      type: object
+      description: |-
+        Sérialiseur pour l'inscription d'un nouvel utilisateur.
+        Gère la création sécurisée avec hachage du mot de passe.
+      properties:
+        username:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Adresse électronique
+          maxLength: 254
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+      required:
+      - email
+      - first_name
+      - last_name
+      - username
+    UserRegistrationRequest:
+      type: object
+      description: |-
+        Sérialiseur pour l'inscription d'un nouvel utilisateur.
+        Gère la création sécurisée avec hachage du mot de passe.
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Adresse électronique
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Mot de passe (minimum 8 caractères)
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Confirmez votre mot de passe
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - password_confirm
+      - username
+    UserUpdate:
+      type: object
+      description: |-
+        Sérialiseur pour la mise à jour du profil utilisateur.
+        Permet de modifier uniquement les informations de profil.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        profile_image:
+          type: string
+          format: uri
+          nullable: true
+          title: Photo de profil
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+    UserUpdateRequest:
+      type: object
+      description: |-
+        Sérialiseur pour la mise à jour du profil utilisateur.
+        Permet de modifier uniquement les informations de profil.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        profile_image:
+          type: string
+          format: binary
+          nullable: true
+          title: Photo de profil
+        phone_number:
+          type: string
+          nullable: true
+          title: Numéro de téléphone
+          description: 'Format: +243XXXXXXXXX (requis pour Mobile Money)'
+          pattern: ^\+?\d{8,15}$
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          title: Adresse complète
+          description: Rue, avenue, numéro, quartier
+        city:
+          type: string
+          nullable: true
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          minLength: 1
+          title: Pays
+          maxLength: 100
+        receive_newsletter:
+          type: boolean
+          title: Recevoir la newsletter
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

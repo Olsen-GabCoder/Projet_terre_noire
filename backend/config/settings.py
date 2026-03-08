@@ -20,19 +20,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Ajout du dossier 'apps' au chemin système pour des imports propres
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
+# Render / production : DATABASE_URL (PostgreSQL) fourni par Render
+import dj_database_url
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+# SECURITY WARNING: keep the secret key used in production secret!
+_SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
+if not DEBUG and _SECRET_KEY == 'django-insecure-fallback-key':
+    raise ValueError(
+        "SECRET_KEY doit être défini en production. "
+        "Ajoutez SECRET_KEY=votre_clé_secrète dans votre fichier .env"
+    )
+SECRET_KEY = _SECRET_KEY
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS.append('testserver')  # Pour les tests Django
 
 
 # Application definition
+_cloudinary_apps = []
+try:
+    import cloudinary_storage  # noqa: F401
+    _cloudinary_apps = ['cloudinary_storage', 'cloudinary']
+except ImportError:
+    pass
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,20 +56,35 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    *_cloudinary_apps,
     'django.contrib.staticfiles',
-
+    
     # Bibliothèques tierces (Page 4 PDF)
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'django_filters',
+    'drf_spectacular',
     
-    # Nos applications (seront créées dans le dossier apps/)
-    # 'apps.books', etc. (à venir)
+    # Nos applications (créées dans le dossier apps/)
+    'apps.books',
+    'apps.users',
+    'apps.orders',
+    'apps.manuscripts',
+    'apps.newsletter',
+    'apps.contact',
+    'apps.wishlist',
+    'apps.coupons',
+    'apps.core',
+
+    # EXTENSIONS
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # Doit être placé haut
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files en production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -67,7 +98,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,21 +115,30 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-# Configuration MySQL (Page 4 PDF)
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+# Si DATABASE_URL est défini (Render, PostgreSQL), l'utiliser ; sinon MySQL (dev local)
+_db_url = os.getenv('DATABASE_URL')
+if _db_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=_db_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
 
 
 # Password validation
@@ -140,30 +180,177 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Configuration Média (Uploads images livres/auteurs)
+# Cloudinary en production si CLOUDINARY_CLOUD_NAME défini et package installé
+_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME', '').strip()
+_use_cloudinary = False
+if _cloud_name:
+    try:
+        import cloudinary
+        cloudinary.config(
+            cloud_name=_cloud_name,
+            api_key=os.getenv('CLOUDINARY_API_KEY', ''),
+            api_secret=os.getenv('CLOUDINARY_API_SECRET', ''),
+        )
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': _cloud_name,
+            'API_KEY': os.getenv('CLOUDINARY_API_KEY', ''),
+            'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', ''),
+        }
+        _use_cloudinary = True
+    except ImportError:
+        pass
+
+if _use_cloudinary:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Cache (LocMem en dev ; Redis en prod si CACHE_URL défini)
+_cache_url = os.getenv('CACHE_URL')
+if _cache_url and _cache_url.startswith('redis://'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _cache_url,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'terrenoire-cache',
+            'OPTIONS': {'MAX_ENTRIES': 500},
+        }
+    }
+CACHE_DELIVERY_TTL = 600  # 10 min pour la config livraison
+CACHE_BOOKS_TTL = 300     # 5 min pour les listes de livres
+
+# Configuration Email (réinitialisation mot de passe, notifications, etc.)
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+# Logo : frontend/public/images/ ou backend/assets/images/ (priorité au backend)
+LOGO_PATH = BASE_DIR / 'assets' / 'images' / 'logo_terre_noire.png'
+if not LOGO_PATH.exists():
+    LOGO_PATH = BASE_DIR.parent / 'frontend' / 'public' / 'images' / 'logo_terre_noire.png'
+LOGO_URL = os.getenv('LOGO_URL') or f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/images/logo_terre_noire.png"
+# Gmail exige que l'expéditeur = compte SMTP. Si non défini, on utilise EMAIL_HOST_USER.
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') or os.getenv('EMAIL_HOST_USER') or 'noreply@terrenoireeditions.com'
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'terrenoireeditions@gmail.com')
+
+# SMTP : utilisé si EMAIL_HOST et EMAIL_HOST_USER sont définis (dev et prod)
+_email_host = os.getenv('EMAIL_HOST', '').strip()
+_email_user = os.getenv('EMAIL_HOST_USER', '').strip()
+if _email_host and _email_user:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = _email_host
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = _email_user
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+else:
+    # Fallback : console en dev, échec silencieux en prod
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.dummy.EmailBackend'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configuration du modèle utilisateur personnalisé
+AUTH_USER_MODEL = 'users.User'
+
 # Configuration Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.users.jwt_cookie_auth.JWTCookieAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny', # Changera en production
+        'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon_burst': '10/minute',
+        'anon_sustained': '30/hour',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Documentation API OpenAPI / Swagger
+SPECTACULAR_SETTINGS = {
+    'TITLE': "API Terre Noire Éditions",
+    'DESCRIPTION': "API REST pour la maison d'édition Terre Noire Éditions (livres, commandes, utilisateurs, etc.)",
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 # Configuration JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
+# Cookies HttpOnly pour JWT (noms des cookies)
+JWT_ACCESS_COOKIE_NAME = 'access_token'
+JWT_REFRESH_COOKIE_NAME = 'refresh_token'
 
-# Configuration CORS (Pour autoriser React en local)
-CORS_ALLOW_ALL_ORIGINS = True # Mettre à False en production et spécifier les domaines
+# Configuration CORS
+# En dev (DEBUG=True) : autorise localhost
+# En production : utiliser CORS_ALLOWED_ORIGINS dans .env (ex: https://terrenoireeditions.com,https://www.terrenoireeditions.com)
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_CREDENTIALS = True  # Requis pour les cookies HttpOnly
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in (os.getenv('CORS_ALLOWED_ORIGINS') or 'http://localhost:5173,http://127.0.0.1:5173').split(',')
+    if o.strip()
+]
+
+# =============================================================================
+# Sécurité production (actif uniquement quand DEBUG=False)
+# https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# =============================================================================
+if not DEBUG:
+    # Redirection HTTP → HTTPS
+    SECURE_SSL_REDIRECT = True
+
+    # HSTS (HTTP Strict Transport Security) — force le navigateur à utiliser HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 an
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Cookies uniquement en HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Protection contre le sniffing MIME
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    # Protection contre le clickjacking (X-Frame-Options)
+    X_FRAME_OPTIONS = 'DENY'
+
+    # Référer complet pour les redirections (évite la fuite d'info dans Referer)
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'

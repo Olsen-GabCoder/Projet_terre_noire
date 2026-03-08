@@ -1,0 +1,202 @@
+/**
+ * Page Groupes — Design Terre Noire (épuré)
+ */
+
+/* Conteneur */
+.tn-groups-page #content-main {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* Titre */
+.tn-groups-page #content h1 {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 4px !important;
+  color: var(--body-loud-color) !important;
+}
+
+.tn-groups-page .tn-page-subtitle {
+  font-size: 0.9375rem;
+  color: var(--body-quiet-color) !important;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* Object tools — bouton en dessous du titre, ne masque pas le texte */
+.tn-groups-page .object-tools {
+  margin-top: 0 !important;
+  margin-bottom: 20px !important;
+  float: none !important;
+  position: static !important;
+  clear: both !important;
+}
+
+.tn-groups-page .object-tools li {
+  float: none !important;
+  margin-left: 0 !important;
+  height: auto !important;
+}
+
+.tn-groups-page .object-tools a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 20px !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: var(--tn-gradient-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Barre de recherche — layout propre, icône à l'intérieur */
+.tn-groups-page #toolbar {
+  padding: 16px 20px !important;
+  margin-bottom: 20px !important;
+  border-radius: 12px !important;
+  background: var(--tn-module-bg) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+.tn-groups-page #toolbar .tn-search-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.tn-groups-page #toolbar .tn-search-inner {
+  position: relative !important;
+  flex: 1 1 180px !important;
+  min-width: 0 !important;
+  max-width: 320px !important;
+}
+
+.tn-groups-page #toolbar .tn-search-inner label {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+}
+
+.tn-groups-page #toolbar .tn-search-inner label img {
+  width: 18px !important;
+  height: 18px !important;
+  opacity: 0.5 !important;
+}
+
+.tn-groups-page #toolbar #searchbar {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 14px 0 38px !important;
+  font-size: 0.9375rem !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border-color) !important;
+  box-sizing: border-box !important;
+}
+
+/* Bouton Rechercher — même hauteur que le champ */
+.tn-groups-page #toolbar form input[type="submit"] {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 24px !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  border: none !important;
+  background: var(--tn-gradient-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.tn-groups-page #toolbar form input[type="submit"]:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+/* Module et tableau */
+.tn-groups-page #changelist .module,
+.tn-groups-page #changelist.filtered {
+  background: var(--tn-module-bg) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+.tn-groups-page #result_list thead th {
+  padding: 14px 20px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+
+.tn-groups-page #result_list tbody td {
+  padding: 16px 20px !important;
+}
+
+/* État vide */
+.tn-groups-page .tn-empty-state {
+  text-align: center;
+  padding: 48px 32px;
+  margin: 20px 0;
+  border-radius: 12px;
+  border: 2px dashed rgba(15, 23, 42, 0.12);
+  background: var(--tn-module-bg);
+}
+
+.tn-groups-page .tn-empty-state-icon {
+  font-size: 2.5rem;
+  color: var(--body-quiet-color);
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.tn-groups-page .tn-empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.tn-groups-page .tn-empty-state p {
+  color: var(--body-quiet-color);
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .tn-groups-page #content-main {
+    max-width: 100%;
+  }
+
+  .tn-groups-page #toolbar {
+    padding: 12px 14px !important;
+  }
+
+  .tn-groups-page #toolbar .tn-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tn-groups-page #toolbar .tn-search-inner {
+    max-width: none !important;
+  }
+
+  .tn-groups-page #toolbar #searchbar,
+  .tn-groups-page #toolbar form input[type="submit"] {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .tn-groups-page .tn-empty-state {
+    padding: 32px 20px;
+  }
+}

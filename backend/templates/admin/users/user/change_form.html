@@ -1,0 +1,79 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block bodyclass %}{{ block.super }} tn-user-change-form{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap">
+<link rel="stylesheet" href="{% static 'admin/css/user_change_form.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content_title %}
+<div class="tn-user-detail-hero">
+  <div class="tn-user-detail-hero__orb tn-user-detail-hero__orb--1"></div>
+  <div class="tn-user-detail-hero__orb tn-user-detail-hero__orb--2"></div>
+  <div class="tn-user-detail-hero__grid-bg"></div>
+  <div class="tn-user-detail-hero__inner">
+    <div class="tn-user-detail-hero__line"></div>
+    <h1 class="tn-user-detail-hero__title">
+      {% if add %}{% translate "Ajouter un utilisateur" %}{% else %}{{ original.get_full_name|default:original.username }}{% endif %}
+    </h1>
+    {% if not add and original %}
+    <p class="tn-user-detail-hero__sub">@{{ original.username }}{% if original.email %} · {{ original.email }}{% endif %}</p>
+    <div class="tn-user-detail-hero__badges">
+      <span class="tn-user-detail-badge tn-user-detail-badge--{% if original.is_active %}active{% else %}inactive{% endif %}">
+        {% if original.is_active %}Actif{% else %}Inactif{% endif %}
+      </span>
+      {% if original.is_staff %}<span class="tn-user-detail-badge tn-user-detail-badge--role">Staff</span>{% endif %}
+      {% if original.is_superuser %}<span class="tn-user-detail-badge tn-user-detail-badge--role">Superuser</span>{% endif %}
+    </div>
+    {% endif %}
+    <a href="{% url 'admin:users_user_changelist' %}" class="tn-user-detail-hero__back">
+      <i class="fas fa-arrow-left"></i> Retour à la liste
+    </a>
+  </div>
+</div>
+<div class="tn-user-detail-fade"></div>
+{% if change and not is_popup and original %}
+<div class="tn-user-detail-actions">
+  <div class="tn-user-detail-actions__inner">
+    <a href="{% url 'admin:users_user_toggle' original.pk %}"
+       class="tn-user-detail-toggle {% if original.is_active %}tn-user-detail-toggle--deactivate{% else %}tn-user-detail-toggle--activate{% endif %}"
+       onclick="return confirm('{% if original.is_active %}Êtes-vous sûr de vouloir désactiver cet utilisateur ?{% else %}Êtes-vous sûr de vouloir activer cet utilisateur ?{% endif %}');">
+      <i class="fas {% if original.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+      {% if original.is_active %}Désactiver cet utilisateur{% else %}Activer cet utilisateur{% endif %}
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block object-tools %}
+{% if change and not is_popup and original %}
+<ul class="object-tools tn-user-detail-object-tools">
+  {% block object-tools-items %}
+    {% change_form_object_tools %}
+  {% endblock %}
+</ul>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}
+
+{% block field_sets %}
+<div class="tn-user-detail-form">
+  {% if adminform.form.non_field_errors %}
+  <div class="tn-user-detail-errors">
+    {{ adminform.form.non_field_errors }}
+  </div>
+  {% endif %}
+  <div class="tn-user-cards-grid">
+    {% for fieldset in adminform %}
+      {% include "admin/users/user/includes/fieldset.html" with heading_level=2 prefix="fieldset" id_prefix=0 id_suffix=forloop.counter0 %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

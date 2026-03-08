@@ -1,0 +1,491 @@
+/* Auteurs — aligné pixel-perfect sur Catalogue / Home */
+
+.auth-page {
+  min-height: 100vh;
+}
+
+/* =============================================
+   HERO (identique Catalogue)
+   ============================================= */
+.auth-hero {
+  padding: 7.5rem 1.5rem 4rem;
+  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-hero__grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+}
+
+.auth-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-hero__orb--1 {
+  width: 450px;
+  height: 450px;
+  top: -20%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
+  filter: blur(60px);
+  animation: auth-orb-1 14s ease-in-out infinite;
+}
+
+.auth-hero__orb--2 {
+  width: 350px;
+  height: 350px;
+  bottom: -10%;
+  left: -6%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.07) 0%, transparent 65%);
+  filter: blur(70px);
+  animation: auth-orb-2 18s ease-in-out infinite;
+}
+
+@keyframes auth-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 15px) scale(1.04); }
+}
+
+@keyframes auth-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(18px, -20px) scale(1.06); }
+}
+
+.auth-hero__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-hero__line {
+  width: 48px;
+  height: 3px;
+  margin: 0 auto 1.75rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
+}
+
+.auth-hero__title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  color: #fff;
+}
+
+.auth-hero__sub {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 auto 1.5rem;
+  max-width: 480px;
+}
+
+.auth-hero__stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-hero__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.auth-hero__stat-val {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 30%, rgba(255, 255, 255, 0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-hero__stat-lbl {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.auth-hero__count {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.auth-hero__count strong {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.auth-hero-fade {
+  height: 80px;
+  background: linear-gradient(to bottom, #0c1631, #334155 50%, #f1f5f9);
+  margin-top: -1px;
+}
+
+/* =============================================
+   CONTENU
+   ============================================= */
+.authors-content {
+  background: #f1f5f9;
+  padding: 0 1.5rem 2rem;
+  min-height: 50vh;
+}
+
+.auth-wrap {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+/* =============================================
+   GRILLE
+   ============================================= */
+.auth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.75rem;
+}
+
+/* =============================================
+   CARTE AUTEUR — style BookCard vertical
+   ============================================= */
+.acard {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out);
+}
+
+.acard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.acard__visual {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  padding: 2.5rem 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acard__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(37, 99, 235, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 70% 80%, rgba(37, 99, 235, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.acard__avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.acard__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.acard__initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #60a5fa 100%);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.acard__badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-xs);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.acard__badge i {
+  font-size: 0.5625rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.acard__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.acard__name {
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-gray-800);
+  margin: 0 0 0.375rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.acard__bio {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-gray-400);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.acard__bio--empty {
+  font-style: italic;
+  color: var(--color-gray-300);
+}
+
+.acard__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-gray-100);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: auto;
+}
+
+.acard__cta i {
+  font-size: 0.625rem;
+}
+
+/* =============================================
+   ÉTAT VIDE / ERREUR
+   ============================================= */
+.auth-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-state__ico {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.auth-state__ico--err {
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--color-error);
+}
+
+.auth-state h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0 0 0.5rem;
+}
+
+.auth-state p {
+  font-size: 0.9375rem;
+  color: var(--color-gray-500);
+  margin: 0 0 1.5rem;
+}
+
+.auth-state__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.auth-state__btn:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-2px);
+}
+
+/* =============================================
+   TRANSITION → footer
+   ============================================= */
+.auth-footer-fade {
+  height: 100px;
+  background: linear-gradient(to bottom, #f1f5f9, #475569 50%, var(--color-bg-dark));
+}
+
+/* =============================================
+   RESPONSIVE (identique Catalogue)
+   ============================================= */
+@media (max-width: 1024px) {
+  .auth-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-hero {
+    padding: 6rem 1.25rem 3.5rem;
+  }
+
+  .auth-hero__title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .auth-hero__sub {
+    font-size: 0.9375rem;
+  }
+
+  .auth-hero__stats {
+    gap: 1.75rem;
+  }
+
+  .auth-hero__stat-val {
+    font-size: 1.375rem;
+  }
+
+  .auth-hero-fade {
+    height: 60px;
+  }
+
+  .authors-content {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .auth-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-hero {
+    padding: 5.5rem 1rem 3rem;
+  }
+
+  .auth-hero__orb--1 {
+    display: none;
+  }
+
+  .auth-hero__orb--2 {
+    width: 200px;
+    height: 200px;
+  }
+
+  .auth-hero__grid-bg {
+    display: none;
+  }
+
+  .auth-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+
+  .acard__avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .acard__visual {
+    padding: 2rem 0.75rem 1.5rem;
+  }
+
+  .acard__initials {
+    font-size: 1.5rem;
+  }
+
+  .acard__body {
+    padding: 0.875rem 1rem 1rem;
+  }
+
+  .acard__bio {
+    -webkit-line-clamp: 2;
+  }
+
+  .auth-footer-fade {
+    height: 80px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-hero__orb {
+    animation: none !important;
+  }
+}

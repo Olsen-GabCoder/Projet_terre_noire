@@ -1,0 +1,319 @@
+/* OrderSuccess — aligné Cart, Delivery (charte Terre Noire) */
+@import './design-tokens.css';
+
+.os-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-page);
+}
+
+/* Hero */
+.os-hero {
+  flex-shrink: 0;
+  padding: 6rem 1.5rem 3rem;
+  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.os-hero__grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+}
+
+.os-hero__orb {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
+  filter: blur(60px);
+  top: -20%;
+  right: -8%;
+  animation: os-orb 14s ease-in-out infinite;
+}
+
+@keyframes os-orb {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-15px, 10px); }
+}
+
+.os-hero__inner {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.os-hero__icon {
+  font-size: 4rem;
+  color: var(--color-success);
+  margin-bottom: 1rem;
+  animation: os-scale-in 0.5s ease-out;
+}
+
+@keyframes os-scale-in {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.os-hero__line {
+  width: 48px;
+  height: 3px;
+  margin: 0 auto 1.5rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
+}
+
+.os-hero__title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  color: #fff;
+}
+
+.os-hero__sub {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.os-hero__sub strong {
+  color: #fff;
+}
+
+.os-hero-fade {
+  flex-shrink: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  margin-top: -1px;
+}
+
+.os-footer-fade {
+  flex-shrink: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-gray-700) 60%, var(--color-bg-dark));
+}
+
+/* Content */
+.os-content {
+  flex: 1;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.os-card {
+  max-width: 640px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.os-info {
+  background: var(--color-gray-100);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.os-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.os-info-row:last-child {
+  border-bottom: none;
+}
+
+.os-info-label {
+  color: var(--color-gray-600);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.os-info-value {
+  color: var(--color-gray-900);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-align: right;
+}
+
+.os-steps {
+  padding: 1.25rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.os-steps h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0 0 1rem;
+}
+
+.os-steps h2 i {
+  margin-right: 0.5rem;
+  color: var(--color-primary);
+}
+
+.os-steps ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.os-steps li {
+  margin-bottom: 0.5rem;
+  color: var(--color-gray-600);
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+
+.os-steps strong {
+  color: var(--color-gray-800);
+}
+
+.os-payment {
+  margin-bottom: 1.5rem;
+}
+
+.os-payment h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0 0 0.75rem;
+}
+
+.os-payment h3 i {
+  margin-right: 0.5rem;
+  color: var(--color-primary);
+}
+
+.os-payment-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.os-payment-icons span {
+  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--color-gray-100);
+  border-radius: var(--radius-sm);
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-200);
+}
+
+.os-payment-icons span i {
+  margin-right: 0.35rem;
+  color: var(--color-primary);
+}
+
+.os-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.os-btn {
+  flex: 1;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.os-btn--primary {
+  background: var(--color-primary);
+  color: #fff !important;
+  border: none;
+}
+
+.os-btn--primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn-hover);
+  color: #fff !important;
+}
+
+.os-btn--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-gray-300);
+}
+
+.os-btn--outline:hover {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.os-support {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-gray-200);
+  font-size: 0.9375rem;
+  color: var(--color-gray-600);
+}
+
+.os-support a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.os-support a:hover {
+  text-decoration: underline;
+}
+
+.os-support i {
+  margin-right: 0.35rem;
+  color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .os-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .os-actions {
+    flex-direction: column;
+  }
+
+  .os-actions .os-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-hero__orb {
+    animation: none !important;
+  }
+
+  .os-hero__icon {
+    animation: none;
+  }
+}

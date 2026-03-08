@@ -1,0 +1,45 @@
+{% load i18n static %}
+<nav class="sticky tn-admin-sidebar" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <div class="tn-sidebar-inner">
+    {% if user.is_authenticated %}
+    <div class="tn-sidebar-profile">
+      <div class="tn-sidebar-avatar">
+        {% if user.profile_image %}
+        <img src="{{ user.profile_image.url }}" alt="" class="tn-avatar-img" />
+        {% else %}
+        <span class="tn-avatar-initials">{{ user.get_short_name|default:user.get_username|slice:":1"|upper }}</span>
+        {% endif %}
+        <span class="tn-avatar-dot" aria-hidden="true"></span>
+      </div>
+      <div class="tn-sidebar-user-details">
+        <h4>Bonjour, <span class="tn-user-highlight">{{ user.get_short_name|default:user.get_username }}</span></h4>
+        <p>{{ user.email|default:"" }}</p>
+      </div>
+      <button type="button" class="tn-sidebar-toggle toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}" title="{% translate 'Replier la barre latérale' %}">
+        <i class="fas fa-chevron-left tn-toggle-icon tn-toggle-icon--expand"></i>
+        <i class="fas fa-chevron-right tn-toggle-icon tn-toggle-icon--collapse"></i>
+      </button>
+    </div>
+    {% else %}
+    <div class="tn-sidebar-profile tn-sidebar-profile--no-user">
+      <button type="button" class="tn-sidebar-toggle toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}">
+        <i class="fas fa-chevron-left tn-toggle-icon tn-toggle-icon--expand"></i>
+        <i class="fas fa-chevron-right tn-toggle-icon tn-toggle-icon--collapse"></i>
+      </button>
+    </div>
+    {% endif %}
+
+    <div class="tn-sidebar-search">
+      <i class="fas fa-search tn-search-icon"></i>
+      <input type="search" id="nav-filter" class="tn-nav-filter"
+             placeholder="{% translate 'Rechercher un livre, auteur...' %}"
+             aria-label="{% translate 'Filter navigation items' %}">
+    </div>
+
+    <div class="tn-sidebar-nav">
+      <h4 class="tn-nav-title">{% translate 'Administration' %}</h4>
+      {% include 'admin/app_list.html' with app_list=available_apps show_changelinks=False %}
+    </div>
+
+  </div>
+</nav>

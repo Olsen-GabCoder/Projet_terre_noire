@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ user.first_name|default:user.username }},</p>
+<p>Nous avons bien reçu votre commande <strong>#{{ order.id|stringformat:"06d" }}</strong>.</p>
+
+<h3>Récapitulatif</h3>
+<table>
+  <thead>
+    <tr><th>Article</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>{{ item.price|floatformat:0 }} FCFA</td>
+      <td>{{ item.total|floatformat:0 }} FCFA</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p><strong>Sous-total :</strong> {{ subtotal|floatformat:0 }} FCFA</p>
+<p><strong>Frais de livraison :</strong> {% if shipping_cost %} {{ shipping_cost|floatformat:0 }} FCFA {% else %} Gratuit {% endif %}</p>
+{% if discount_amount %}<p><strong>Réduction :</strong> -{{ discount_amount|floatformat:0 }} FCFA</p>{% endif %}
+<p><strong>Total TTC : {{ total_amount|floatformat:0 }} FCFA</strong></p>
+
+<h3>Adresse de livraison</h3>
+<p>{{ order.shipping_address }}<br>{{ order.shipping_city }}<br>Tél : {{ order.shipping_phone }}</p>
+
+<p><em>Votre facture est jointe à cet email en pièce attachée (PDF).</em></p>
+
+<h3>Prochaines étapes</h3>
+<p>Vous recevrez les instructions de paiement (Mobicash, Airtel Money, espèces ou carte Visa) par téléphone ou email. Une fois le paiement effectué, vous recevrez une confirmation.</p>
+
+<p><a href="{{ frontend_url }}/orders" class="btn">Voir mes commandes</a></p>
+
+<p>Merci pour votre confiance !</p>
+{% endblock %}

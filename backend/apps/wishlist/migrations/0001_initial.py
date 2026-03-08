@@ -1,0 +1,33 @@
+# Generated manually for WishlistItem
+
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        ('books', '0002_book_is_bestseller_book_original_price_book_rating_and_more'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='WishlistItem',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('added_at', models.DateTimeField(auto_now_add=True)),
+                ('book', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wishlist_users', to='books.book')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wishlist_items', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': "Élément liste d'envie",
+                'verbose_name_plural': "Éléments liste d'envie",
+                'ordering': ['-added_at'],
+                'unique_together': {('user', 'book')},
+            },
+        ),
+    ]

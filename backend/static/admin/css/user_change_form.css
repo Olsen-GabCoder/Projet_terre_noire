@@ -1,0 +1,588 @@
+/**
+ * Page détail utilisateur — Admin Django Terre Noire
+ * Design professionnel : espacement strict (8px), cartes épurées, grille 2 colonnes.
+ */
+
+.tn-user-change-form {
+  --tn-primary: #2563eb;
+  --tn-primary-dark: #1d4ed8;
+  --tn-bg-page: #f1f5f9;
+  --tn-bg-card: #ffffff;
+  --tn-border: #e2e8f0;
+  --tn-border-light: #f1f5f9;
+  --tn-text: #0f172a;
+  --tn-text-secondary: #64748b;
+  --tn-text-muted: #94a3b8;
+  --tn-radius: 12px;
+  --tn-space-1: 8px;
+  --tn-space-2: 16px;
+  --tn-space-3: 24px;
+  --tn-space-4: 32px;
+  --tn-space-5: 40px;
+  --tn-space-6: 48px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* ========== Layout global ========== */
+.tn-user-change-form #content {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100vh - 120px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+.tn-user-change-form .main .content,
+.tn-user-change-form #content-main {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* ========== Hero ========== */
+.tn-user-change-form .tn-user-detail-hero {
+  flex-shrink: 0;
+  padding: var(--tn-space-6) var(--tn-space-3) var(--tn-space-5);
+  background: linear-gradient(170deg, #020617 0%, #0f172a 45%, #0c1631 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.tn-user-change-form .tn-user-detail-hero__grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 90%);
+}
+
+.tn-user-change-form .tn-user-detail-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.tn-user-change-form .tn-user-detail-hero__orb--1 {
+  width: 400px;
+  height: 400px;
+  top: -15%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+  filter: blur(50px);
+}
+
+.tn-user-change-form .tn-user-detail-hero__orb--2 {
+  width: 300px;
+  height: 300px;
+  bottom: -10%;
+  left: -5%;
+  background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+  filter: blur(55px);
+}
+
+.tn-user-change-form .tn-user-detail-hero__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.tn-user-change-form .tn-user-detail-hero__line {
+  width: 40px;
+  height: 3px;
+  margin: 0 auto var(--tn-space-3);
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--tn-primary), #60a5fa);
+}
+
+.tn-user-change-form .tn-user-detail-hero__title {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--tn-space-1);
+  color: #fff;
+}
+
+.tn-user-change-form .tn-user-detail-hero__sub {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.7);
+  margin: 0 auto var(--tn-space-2);
+  max-width: 420px;
+}
+
+.tn-user-change-form .tn-user-detail-hero__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--tn-space-1);
+  margin-bottom: var(--tn-space-2);
+}
+
+.tn-user-change-form .tn-user-detail-badge {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tn-user-change-form .tn-user-detail-badge--active {
+  background: rgba(16,185,129,0.2);
+  color: #6ee7b7;
+}
+
+.tn-user-change-form .tn-user-detail-badge--inactive {
+  background: rgba(239,68,68,0.2);
+  color: #fca5a5;
+}
+
+.tn-user-change-form .tn-user-detail-badge--role {
+  background: rgba(139,92,246,0.25);
+  color: #c4b5fd;
+}
+
+.tn-user-change-form .tn-user-detail-hero__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tn-space-1);
+  padding: 10px var(--tn-space-2);
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.tn-user-change-form .tn-user-detail-hero__back:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+/* Fade */
+.tn-user-change-form .tn-user-detail-fade {
+  flex-shrink: 0;
+  height: 64px;
+  background: linear-gradient(to bottom, #0c1631, #334155 40%, var(--tn-bg-page));
+  margin-top: -1px;
+}
+
+/* Barre d’actions */
+.tn-user-change-form .tn-user-detail-actions {
+  flex-shrink: 0;
+  background: var(--tn-bg-card);
+  border-bottom: 1px solid var(--tn-border);
+  padding: var(--tn-space-2) var(--tn-space-3);
+}
+
+.tn-user-change-form .tn-user-detail-actions__inner {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tn-space-1);
+  align-items: center;
+}
+
+.tn-user-change-form .tn-user-detail-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 10px var(--tn-space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border: 1px solid transparent;
+}
+
+.tn-user-change-form .tn-user-detail-toggle--activate {
+  background: rgba(6,182,212,0.12);
+  color: #0e7490;
+}
+
+.tn-user-change-form .tn-user-detail-toggle--activate:hover {
+  background: #0e7490;
+  color: #fff;
+}
+
+.tn-user-change-form .tn-user-detail-toggle--deactivate {
+  background: rgba(220,38,38,0.08);
+  color: #b91c1c;
+}
+
+.tn-user-change-form .tn-user-detail-toggle--deactivate:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+.tn-user-change-form .tn-user-detail-object-tools {
+  position: absolute !important;
+  top: var(--tn-space-2);
+  right: var(--tn-space-3);
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.tn-user-change-form .tn-user-detail-object-tools a {
+  font-size: 0.8125rem !important;
+  padding: 8px 12px !important;
+  color: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  border-radius: 8px !important;
+}
+
+.tn-user-change-form .tn-user-detail-object-tools a:hover {
+  background: rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+
+/* ========== Zone contenu ========== */
+.tn-user-change-form #content-main {
+  flex: 1;
+  min-height: 0;
+  background: var(--tn-bg-page);
+  padding: var(--tn-space-4) var(--tn-space-3);
+  overflow-y: auto;
+}
+
+@media (min-width: 992px) {
+  .tn-user-change-form #content-main {
+    padding: var(--tn-space-5) var(--tn-space-4);
+  }
+}
+
+.tn-user-change-form #content-main form {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.tn-user-change-form .tn-user-detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tn-space-3);
+}
+
+/* Erreurs globales */
+.tn-user-change-form .tn-user-detail-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: var(--tn-space-2) var(--tn-space-3);
+  border-radius: var(--tn-radius);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tn-user-change-form .tn-user-detail-errors ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* ========== Grille 2 colonnes ========== */
+.tn-user-change-form .tn-user-cards-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: var(--tn-space-3) !important;
+  margin-bottom: 0 !important;
+  align-items: start !important;
+}
+
+@media (min-width: 992px) {
+  .tn-user-change-form .tn-user-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--tn-space-3) !important;
+  }
+  .tn-user-change-form .tn-user-section--statut-et-roles,
+  .tn-user-change-form .tn-user-section--dates-importantes {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ========== Cartes (sections) — design professionnel ========== */
+.tn-user-change-form .tn-user-section {
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--tn-bg-card) !important;
+  border-radius: var(--tn-radius) !important;
+  border: 1px solid var(--tn-border) !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* En-tête de carte : fond discret + titre */
+.tn-user-change-form .tn-user-section__header {
+  padding: var(--tn-space-2) var(--tn-space-3) !important;
+  background: #fafbfc !important;
+  border-bottom: 1px solid var(--tn-border-light) !important;
+}
+
+.tn-user-change-form .tn-user-section__title {
+  font-size: 0.9375rem !important;
+  font-weight: 700 !important;
+  color: var(--tn-text) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.tn-user-change-form .tn-user-section__desc {
+  font-size: 0.8125rem !important;
+  color: var(--tn-text-secondary) !important;
+  margin: var(--tn-space-1) 0 0 0 !important;
+  line-height: 1.45 !important;
+}
+
+/* Corps de carte : champs */
+.tn-user-change-form .tn-user-section__fields {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+/* Une ligne = un champ (label + valeur) */
+.tn-user-change-form .tn-user-row {
+  display: grid !important;
+  grid-template-columns: 140px 1fr !important;
+  gap: var(--tn-space-2) !important;
+  align-items: start !important;
+  padding: var(--tn-space-2) var(--tn-space-3) !important;
+  border-bottom: 1px solid var(--tn-border-light) !important;
+  min-height: auto !important;
+}
+
+.tn-user-change-form .tn-user-row:last-child {
+  border-bottom: none !important;
+}
+
+.tn-user-change-form .tn-user-row--checkbox {
+  grid-template-columns: 1fr !important;
+  align-items: center !important;
+  padding: var(--tn-space-2) var(--tn-space-3) !important;
+}
+
+.tn-user-change-form .tn-user-row__cell--full {
+  grid-column: 1 / -1 !important;
+}
+
+.tn-user-change-form .tn-user-row__checkbox-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--tn-space-1) !important;
+}
+
+.tn-user-change-form .tn-user-row__checkbox-wrap input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+}
+
+.tn-user-change-form .tn-user-row__checkbox-wrap label {
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+  color: var(--tn-text) !important;
+  margin: 0 !important;
+}
+
+/* Label */
+.tn-user-change-form .tn-user-row__cell--label label {
+  display: block !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--tn-text-muted) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.tn-user-change-form .tn-user-row__cell--value {
+  min-width: 0 !important;
+}
+
+.tn-user-change-form .tn-user-row__readonly-wrap,
+.tn-user-change-form .tn-user-row__readonly {
+  font-size: 0.9375rem !important;
+  color: var(--tn-text) !important;
+  line-height: 1.5 !important;
+}
+
+.tn-user-change-form .tn-user-row__readonly-wrap a {
+  color: var(--tn-primary);
+  text-decoration: none;
+}
+
+.tn-user-change-form .tn-user-row__readonly-wrap a:hover {
+  text-decoration: underline;
+}
+
+.tn-user-change-form .tn-user-row__help,
+.tn-user-change-form .tn-user-row__help--password {
+  margin-top: var(--tn-space-1) !important;
+  font-size: 0.8125rem !important;
+  color: var(--tn-text-secondary) !important;
+  line-height: 1.4 !important;
+}
+
+.tn-user-change-form .tn-user-row__help a {
+  color: var(--tn-primary) !important;
+}
+
+/* Inputs */
+.tn-user-change-form .tn-user-row__cell--value input[type="text"],
+.tn-user-change-form .tn-user-row__cell--value input[type="email"],
+.tn-user-change-form .tn-user-row__cell--value input[type="password"],
+.tn-user-change-form .tn-user-row__cell--value input[type="url"],
+.tn-user-change-form .tn-user-row__cell--value input[type="number"],
+.tn-user-change-form .tn-user-row__cell--value input[type="file"],
+.tn-user-change-form .tn-user-row__cell--value textarea,
+.tn-user-change-form .tn-user-row__cell--value select {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  font-family: inherit !important;
+  font-size: 0.9375rem !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--tn-border) !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+
+.tn-user-change-form .tn-user-row__cell--value input:focus,
+.tn-user-change-form .tn-user-row__cell--value textarea:focus,
+.tn-user-change-form .tn-user-row__cell--value select:focus {
+  outline: none !important;
+  border-color: var(--tn-primary) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+
+/* Groups / Permissions */
+.tn-user-change-form .tn-user-row--groups,
+.tn-user-change-form .tn-user-row--user_permissions {
+  grid-template-columns: 1fr !important;
+}
+
+.tn-user-change-form .tn-user-row--groups .tn-user-row__cell--label,
+.tn-user-change-form .tn-user-row--user_permissions .tn-user-row__cell--label,
+.tn-user-change-form .tn-user-row--groups .tn-user-row__cell--value,
+.tn-user-change-form .tn-user-row--user_permissions .tn-user-row__cell--value {
+  grid-column: 1 !important;
+}
+
+.tn-user-change-form .tn-user-row__cell--value .selector {
+  max-width: 100% !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: var(--tn-space-1) !important;
+}
+
+.tn-user-change-form .tn-user-row__cell--value select[multiple] {
+  min-height: 120px !important;
+  max-height: 220px !important;
+}
+
+.tn-user-change-form .tn-user-row .errorlist {
+  font-size: 0.8125rem !important;
+  color: #dc2626 !important;
+  margin: 4px 0 0 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+/* ========== Submit row ========== */
+.tn-user-change-form #content-main .submit-row {
+  position: sticky !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: var(--tn-space-2) !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  background: var(--tn-bg-card) !important;
+  border: 1px solid var(--tn-border) !important;
+  border-radius: var(--tn-radius) !important;
+  padding: var(--tn-space-3) !important;
+  margin-top: var(--tn-space-3) !important;
+  margin-bottom: 0 !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+  z-index: 10;
+}
+
+.tn-user-change-form .submit-row input,
+.tn-user-change-form .submit-row a {
+  font-family: inherit !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 10px var(--tn-space-2) !important;
+  border-radius: 8px !important;
+}
+
+.tn-user-change-form .submit-row input.default {
+  background: linear-gradient(135deg, var(--tn-primary) 0%, var(--tn-primary-dark) 100%) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.tn-user-change-form .submit-row a.deletelink {
+  color: #dc2626 !important;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 991px) {
+  .tn-user-change-form .tn-user-detail-hero {
+    padding: var(--tn-space-5) var(--tn-space-2) var(--tn-space-4);
+  }
+  .tn-user-change-form .tn-user-detail-hero__title {
+    font-size: 1.375rem;
+  }
+  .tn-user-change-form .tn-user-detail-fade {
+    height: 48px;
+  }
+  .tn-user-change-form #content-main {
+    padding: var(--tn-space-3) var(--tn-space-2);
+  }
+  .tn-user-change-form .tn-user-row {
+    grid-template-columns: 1fr !important;
+    padding: var(--tn-space-2) var(--tn-space-2) !important;
+    gap: 4px 0 !important;
+  }
+  .tn-user-change-form .tn-user-section__header {
+    padding: var(--tn-space-2) !important;
+  }
+  .tn-user-change-form .tn-user-detail-object-tools {
+    position: static !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-user-change-form .tn-user-detail-hero__orb--1,
+  .tn-user-change-form .tn-user-detail-hero__orb--2 {
+    animation: none !important;
+  }
+}

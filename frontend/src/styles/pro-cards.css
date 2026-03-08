@@ -1,0 +1,132 @@
+/**
+ * Pro Cards — Ultra moderne
+ * Cartes qui occupent tout l'espace, design épuré
+ */
+@import './design-tokens.css';
+
+/* ── Carte de base : remplit sa cellule ── */
+.pro-card {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 1.25rem 1.5rem;
+  overflow: auto;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.pro-card:hover {
+  border-color: rgba(37, 99, 235, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.pro-card__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-primary), transparent);
+  opacity: 0.7;
+}
+
+.pro-card__tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.pro-card__heading {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-gray-900);
+  margin: 0 0 0.75rem;
+}
+
+.pro-card__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0 0 0.35rem;
+}
+
+.pro-card__text {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-gray-600);
+  margin: 0;
+}
+
+.pro-card__icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Quote */
+.pro-quote {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--color-gray-600);
+  border-left: 2px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Boutons pro */
+.pro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.pro-btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+}
+
+.pro-btn--primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.pro-btn--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-gray-300);
+}
+
+.pro-btn--outline:hover {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.05);
+}

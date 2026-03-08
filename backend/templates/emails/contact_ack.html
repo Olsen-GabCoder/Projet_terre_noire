@@ -1,0 +1,9 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ name }},</p>
+<p>Nous avons bien reçu votre message concernant « {{ subject }} ».</p>
+<p>Notre équipe vous répondra dans les plus brefs délais, généralement sous 24 heures.</p>
+<p>En attendant, n'hésitez pas à parcourir notre catalogue de livres.</p>
+<p><a href="{{ frontend_url }}" class="btn">Découvrir le catalogue</a></p>
+<p>Cordialement,<br>L'équipe Terre Noire Éditions</p>
+{% endblock %}

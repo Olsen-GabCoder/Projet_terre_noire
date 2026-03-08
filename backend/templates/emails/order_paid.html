@@ -1,0 +1,31 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ user.first_name|default:user.username }},</p>
+<p>Nous avons bien reçu votre paiement pour la commande <strong>#{{ order.id|stringformat:"06d" }}</strong>.</p>
+
+<h3>Récapitulatif</h3>
+<table>
+  <thead>
+    <tr><th>Article</th><th>Qté</th><th>Total</th></tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>{{ item.total|floatformat:0 }} FCFA</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p><strong>Montant payé : {{ total_amount|floatformat:0 }} FCFA</strong></p>
+
+<p><em>Votre facture est jointe à cet email en pièce attachée (PDF).</em></p>
+
+<p>Votre commande sera préparée et expédiée sous 5 à 10 jours ouvrés. Vous recevrez une notification dès l'expédition.</p>
+
+<p><a href="{{ frontend_url }}/orders" class="btn">Suivre ma commande</a></p>
+
+<p>Merci pour votre achat !</p>
+{% endblock %}

@@ -1,0 +1,484 @@
+/**
+ * Footer — Charte Terre Noire Éditions
+ */
+@import './design-tokens.css';
+
+.ft {
+  position: relative;
+  background: linear-gradient(180deg, var(--color-bg-dark) 0%, var(--color-bg-darker) 100%);
+  color: var(--color-text-light);
+  overflow: hidden;
+}
+
+.ft__orb {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  top: -15%;
+  right: -5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 65%);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.ft__main {
+  padding: 3rem 1.5rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.ft__wrap {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.ft__grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 2.5rem;
+}
+
+/* Brand */
+.ft-brand__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ft-brand__logo {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.ft-brand__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Logo en blanc comme dans le header */
+  filter: brightness(0) invert(1);
+}
+
+.ft-brand__logo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.ft-brand__name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.ft-brand__desc {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+  max-width: 320px;
+}
+
+/* Social */
+.ft-social {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.ft-social__link {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-muted);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.ft-social__link:hover {
+  background: var(--color-primary);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Newsletter */
+.ft-newsletter__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 0.75rem;
+}
+
+.ft-newsletter__form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ft-newsletter__input {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ft-newsletter__input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ft-newsletter__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ft-newsletter__input.has-error {
+  border-color: var(--color-error);
+}
+
+.ft-newsletter__btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.ft-newsletter__btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+.ft-newsletter__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ft-newsletter__msg {
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ft-newsletter__msg--ok {
+  color: var(--color-success);
+}
+
+.ft-newsletter__msg--err {
+  color: var(--color-error);
+}
+
+.ft-newsletter__privacy {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.75rem 0 0;
+}
+
+/* Column titles */
+.ft-col__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.4);
+}
+
+/* Links */
+.ft-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ft-links li {
+  margin-bottom: 0.5rem;
+}
+
+.ft-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  transition: color 0.2s;
+}
+
+.ft-links a:hover {
+  color: #fff;
+}
+
+.ft-icon {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+}
+
+/* Contact */
+.ft-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ft-contact__row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ft-contact__icon {
+  width: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+}
+
+.ft-contact__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ft-contact__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ft-contact__value {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.ft-contact__value a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.ft-contact__value a:hover {
+  color: var(--color-primary);
+}
+
+/* Payments */
+.ft__payments {
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ft__payments-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ft__payments-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ft__payments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ft__pay-item {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Bottom */
+.ft__bottom {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ft__bottom-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ft__copy {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.ft__copy strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ft__legal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ft__legal a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  transition: color 0.2s;
+}
+
+.ft__legal a:hover {
+  color: var(--color-primary);
+}
+
+.ft__legal-sep {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.625rem;
+}
+
+.ft__credit {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.ft__credit a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.ft__credit a:hover {
+  color: #60a5fa;
+}
+
+/* Back to top */
+.ft-top-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  z-index: 1000;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.ft-top-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-3px);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .ft__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ft-brand {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .ft__main {
+    padding: 2.5rem 1rem 1.5rem;
+  }
+
+  .ft__grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .ft-brand {
+    grid-column: span 1;
+  }
+
+  .ft__payments-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ft__bottom-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .ft-top-btn {
+    bottom: 1rem;
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ft__main {
+    padding: 2rem 0.75rem 1.25rem;
+  }
+
+  .ft-brand__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ft-newsletter__form {
+    flex-direction: column;
+  }
+
+  .ft-newsletter__btn {
+    width: 100%;
+  }
+}

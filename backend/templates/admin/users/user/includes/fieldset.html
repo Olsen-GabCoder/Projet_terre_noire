@@ -1,0 +1,51 @@
+{% load i18n %}
+<section class="tn-user-section tn-user-section--{{ fieldset.name|slugify }}" aria-labelledby="section-{{ fieldset.name|slugify }}">
+  <div class="tn-user-section__header">
+    {% if fieldset.name %}
+    <h3 id="section-{{ fieldset.name|slugify }}" class="tn-user-section__title">{{ fieldset.name }}</h3>
+    {% endif %}
+    {% if fieldset.description %}
+    <p class="tn-user-section__desc">{{ fieldset.description|safe }}</p>
+    {% endif %}
+  </div>
+  <div class="tn-user-section__fields">
+    {% for line in fieldset %}
+    {% for field in line %}
+    {% if not field.field.is_hidden %}
+    <div class="tn-user-row {% if field.is_checkbox %}tn-user-row--checkbox{% endif %} {% if field.field.name %}tn-user-row--{{ field.field.name }}{% endif %}">
+      {% if field.is_checkbox %}
+      <div class="tn-user-row__cell tn-user-row__cell--full">
+        <div class="tn-user-row__checkbox-wrap">
+          {{ field.field }}{% if not field.is_fieldset %}{{ field.label_tag }}{% endif %}
+        </div>
+        {% if line.fields|length == 1 %}{{ line.errors }}{% endif %}
+        {% if not line.fields|length == 1 and not field.is_readonly %}{{ field.errors }}{% endif %}
+      </div>
+      {% else %}
+      {% if not field.is_fieldset %}
+      <div class="tn-user-row__cell tn-user-row__cell--label">
+        {{ field.label_tag }}
+      </div>
+      {% endif %}
+      <div class="tn-user-row__cell tn-user-row__cell--value">
+        {% if field.is_readonly %}
+        <div class="tn-user-row__readonly-wrap">{{ field.contents }}</div>
+        {% else %}
+        {{ field.field }}
+        {% endif %}
+        {% if field.field.help_text and not field.field.name == 'password' %}
+        <p class="tn-user-row__help">{{ field.field.help_text|safe }}</p>
+        {% endif %}
+        {% if field.field.name == 'password' and field.contents %}
+        <p class="tn-user-row__help tn-user-row__help--password">Les mots de passe ne sont pas stockés en clair. Utilisez le lien ci‑dessus pour en définir un nouveau.</p>
+        {% endif %}
+        {% if line.fields|length == 1 %}{{ line.errors }}{% endif %}
+        {% if not line.fields|length == 1 and not field.is_readonly %}{{ field.errors }}{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+  </div>
+</section>

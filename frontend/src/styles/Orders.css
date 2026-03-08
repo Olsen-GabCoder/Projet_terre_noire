@@ -1,0 +1,432 @@
+/* Mes commandes — aligné charte Terre Noire Éditions */
+
+.ord-page {
+  min-height: 100vh;
+  background: var(--color-bg-page);
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================================
+   HERO
+   ============================================= */
+.ord-hero {
+  padding: 6rem 1.5rem 3rem;
+  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.ord-hero__grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
+}
+
+.ord-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ord-hero__orb--1 {
+  width: 350px;
+  height: 350px;
+  top: -15%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 65%);
+  filter: blur(50px);
+}
+
+.ord-hero__orb--2 {
+  width: 280px;
+  height: 280px;
+  bottom: -10%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 65%);
+  filter: blur(60px);
+}
+
+.ord-hero__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.ord-hero__line {
+  width: 48px;
+  height: 3px;
+  margin: 0 auto 1.25rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
+}
+
+.ord-hero__title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  color: #fff;
+}
+
+.ord-hero__sub {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 auto 0.5rem;
+  max-width: 480px;
+}
+
+.ord-hero__count {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.ord-hero__count strong {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.ord-hero-fade {
+  height: 80px;
+  background: linear-gradient(to bottom, #0c1631, var(--color-bg-page));
+  margin-top: -1px;
+}
+
+/* =============================================
+   CONTENU
+   ============================================= */
+.ord-content {
+  flex: 1;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.ord-wrap {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.ord-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* État vide */
+.ord-empty {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-card);
+}
+
+.ord-empty__ico {
+  font-size: 3.5rem;
+  color: var(--color-gray-300);
+  margin-bottom: 1rem;
+}
+
+.ord-empty h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-gray-800);
+  margin: 0 0 0.5rem;
+}
+
+.ord-empty p {
+  color: var(--color-gray-500);
+  font-size: 0.9375rem;
+  margin: 0 0 1.5rem;
+}
+
+/* Liste des commandes */
+.ord-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ord-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.ord-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.ord-card__id {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-gray-800);
+  margin: 0 0 0.25rem;
+}
+
+.ord-card__date {
+  font-size: 0.8125rem;
+  color: var(--color-gray-500);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ord-status {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ord-status--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ord-status--paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.ord-status--shipped {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.ord-status--cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ord-card__items {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ord-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--color-gray-100);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gray-200);
+}
+
+.ord-item__cover {
+  flex-shrink: 0;
+  width: 48px;
+  height: 64px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.ord-item__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ord-item__details {
+  flex: 1;
+  min-width: 0;
+}
+
+.ord-item__title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+  text-decoration: none;
+  margin-bottom: 0.15rem;
+}
+
+.ord-item__title:hover {
+  color: var(--color-primary);
+}
+
+.ord-item__author {
+  font-size: 0.8125rem;
+  color: var(--color-gray-500);
+  margin: 0;
+}
+
+.ord-item__qty {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.ord-item__price {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-gray-800);
+}
+
+.ord-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.ord-card__shipping p {
+  margin: 0.2rem 0;
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+}
+
+.ord-card__shipping strong {
+  color: var(--color-gray-800);
+}
+
+.ord-card__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ord-card__total span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-500);
+}
+
+.ord-card__total strong {
+  font-size: 1.125rem;
+  color: var(--color-primary);
+}
+
+.ord-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0 1.25rem 1rem;
+}
+
+.ord-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.ord-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  box-shadow: var(--shadow-btn);
+}
+
+.ord-btn--primary:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-1px);
+}
+
+.ord-btn--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.ord-btn--outline:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.ord-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.ord-btn--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.ord-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ord-footer-fade {
+  height: 100px;
+  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-gray-700) 60%, var(--color-bg-dark));
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 768px) {
+  .ord-hero {
+    padding: 5.5rem 1rem 2.5rem;
+  }
+
+  .ord-content {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .ord-item {
+    flex-wrap: wrap;
+  }
+
+  .ord-item__price {
+    width: 100%;
+    text-align: right;
+  }
+
+  .ord-card__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ord-card__total {
+    align-items: flex-start;
+  }
+}
