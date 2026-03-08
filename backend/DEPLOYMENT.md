@@ -50,8 +50,16 @@ Copiez `.env.example` vers `.env` et adaptez pour la production :
 
 ```bash
 python manage.py migrate
-python manage.py createsuperuser
 ```
+
+### Créer un admin sans shell (Render, CI, mode gratuit)
+
+Aucun email ni mot de passe ne doit être dans le code (dépôt public). Tout passe par des variables d'environnement ou l'option `--email`. Guide détaillé : **backend/docs/CREATE_ADMIN.md**.
+
+En résumé :
+- **Email** : variable `CREATE_ADMIN_EMAIL` ou option `--email votre@email.com`
+- **Mot de passe** : variable `CREATE_ADMIN_PASSWORD` uniquement (jamais en dur)
+- Sur Render : définir ces variables dans l'environnement du service, puis exécuter `python manage.py create_admin_user` (one-off job ou dans la commande de build).
 
 ---
 
