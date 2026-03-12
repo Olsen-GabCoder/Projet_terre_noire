@@ -11,6 +11,7 @@ const Catalog = () => {
   const navigate = useNavigate();
   const gridRef = useRef(null);
   const [heroReady, setHeroReady] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,21 @@ const Catalog = () => {
   useEffect(() => {
     requestAnimationFrame(() => setHeroReady(true));
   }, []);
+
+  useEffect(() => {
+    if (mobileFiltersOpen) {
+      document.body.style.overflow = 'hidden';
+      const onEscape = (e) => { if (e.key === 'Escape') setMobileFiltersOpen(false); };
+      document.addEventListener('keydown', onEscape);
+      return () => {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onEscape);
+      };
+    } else {
+      document.body.style.overflow = '';
+      return undefined;
+    }
+  }, [mobileFiltersOpen]);
 
   useEffect(() => {
     setFilters({
@@ -94,6 +110,8 @@ const Catalog = () => {
     navigate(`/catalog?${params.toString()}`);
   };
 
+  const closeMobileFilters = () => setMobileFiltersOpen(false);
+
   const resetFilters = () => {
     setFilters({
       search: '',
@@ -104,6 +122,7 @@ const Catalog = () => {
       ordering: '-created_at',
     });
     navigate('/catalog');
+    setMobileFiltersOpen(false);
   };
 
   const handlePageChange = (page) => {
@@ -170,31 +189,64 @@ const Catalog = () => {
             <h2 className="home-books-title">Affiner votre recherche</h2>
           </div>
 
-          {/* Barre de filtres professionnelle */}
-          <div className="cat-filters">
-            <div className="cat-filters__search">
-              <div className="cat-filters__search-wrap">
-                <i className="fas fa-search cat-filters__search-ico" />
-                <input
-                  type="text"
-                  placeholder="Rechercher un titre, un auteur…"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="cat-filters__search-input"
-                />
-                {filters.search && (
-                  <button
-                    type="button"
-                    onClick={() => handleFilterChange('search', '')}
-                    className="cat-filters__search-clear"
-                    aria-label="Effacer la recherche"
-                  >
-                    <i className="fas fa-times" />
-                  </button>
-                )}
+          {/* Barre de filtres professionnelle — sur mobile: recherche + bouton Filtres → drawer */}
+          <div className={`cat-filters ${mobileFiltersOpen ? 'cat-filters--drawer-open' : ''}`}>
+            <div className="cat-filters__head">
+              <div className="cat-filters__search">
+                <div className="cat-filters__search-wrap">
+                  <i className="fas fa-search cat-filters__search-ico" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher un titre, un auteur…"
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                    className="cat-filters__search-input"
+                  />
+                  {filters.search && (
+                    <button
+                      type="button"
+                      onClick={() => handleFilterChange('search', '')}
+                      className="cat-filters__search-clear"
+                      aria-label="Effacer la recherche"
+                    >
+                      <i className="fas fa-times" />
+                    </button>
+                  )}
+                </div>
               </div>
+              <button
+                type="button"
+                className="cat-filters__mobile-btn"
+                onClick={() => setMobileFiltersOpen(true)}
+                aria-label="Ouvrir les filtres"
+              >
+                <i className="fas fa-sliders-h" />
+                <span>Filtres</span>
+                {activeFilterCount > 0 && (
+                  <span className="cat-filters__mobile-btn-badge">{activeFilterCount}</span>
+                )}
+              </button>
             </div>
 
+            <div
+              className="cat-filters__backdrop"
+              onClick={closeMobileFilters}
+              aria-hidden="true"
+            />
+
+            <div className="cat-filters__drawer">
+              <div className="cat-filters__drawer-header">
+                <h3 className="cat-filters__drawer-title">Filtres</h3>
+                <button
+                  type="button"
+                  className="cat-filters__drawer-close"
+                  onClick={closeMobileFilters}
+                  aria-label="Fermer les filtres"
+                >
+                  <i className="fas fa-times" />
+                </button>
+              </div>
+              <div className="cat-filters__drawer-body">
             <div className="cat-filters__row">
               {/* Catégories — pills */}
               <div className="cat-filters__group">
@@ -329,6 +381,8 @@ const Catalog = () => {
                 </button>
               </div>
             )}
+              </div>
+            </div>
           </div>
 
           {/* Grille livres */}
