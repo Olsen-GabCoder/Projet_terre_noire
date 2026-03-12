@@ -1921,7 +1921,7 @@
   }
 }
 
-/* Très petits mobiles (400px et moins) — nom court pour garder l’identité visible */
+/* Très petits mobiles (400px et moins) — nom complet en petit sur 2 lignes si besoin */
 @media (max-width: 400px) {
   .header-container {
     padding: 0 0.75rem;
@@ -1929,21 +1929,25 @@
   }
   
   .brand-modern {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
   }
   
   .brand-logo {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
   }
   
   .brand-name--long {
-    display: none;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    white-space: normal;
+    max-width: 9em; /* "Terre Noire" / "Éditions" sur 2 lignes */
   }
   
   .brand-name--short {
-    display: inline;
-    font-size: 0.9rem;
+    display: none;
   }
   
   .mobile-menu-button,
