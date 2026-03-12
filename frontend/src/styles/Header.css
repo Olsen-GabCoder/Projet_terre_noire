@@ -1940,10 +1940,7 @@
   }
   
   .brand-name--long {
-    font-size: 0.7rem;
-    line-height: 1.2;
-    white-space: normal;
-    max-width: 9em; /* "Terre Noire" / "Éditions" sur 2 lignes */
+    font-size: 0.85rem;
   }
   
   .brand-name--short {
