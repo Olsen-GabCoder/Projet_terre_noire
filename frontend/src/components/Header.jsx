@@ -432,35 +432,37 @@ const Header = () => {
                 <i className="fas fa-book-open"></i>
               </span>
             </div>
-            <span className="brand-name">Terre Noire Éditions</span>
+            <span className="brand-name brand-name--long">Terre Noire Éditions</span>
+            <span className="brand-name brand-name--short" aria-hidden="true">T. Noire</span>
           </Link>
 
-          <div className="header-mobile-actions">
-            <Link to="/wishlist" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Liste d'envie">
-              <i className="far fa-heart"></i>
-              {getWishlistCount() > 0 && (
-                <span className="header-mobile-cart-badge">{getWishlistCount()}</span>
-              )}
-            </Link>
-            <Link to="/cart" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Panier">
-              <i className="fas fa-shopping-cart"></i>
-              {getTotalItems() > 0 && (
-                <span className="header-mobile-cart-badge">{getTotalItems()}</span>
-              )}
-            </Link>
-          </div>
-
-          <button 
-            ref={burgerButtonRef}
-            className={`mobile-menu-button ${mobileMenuOpen ? 'active' : ''}`}
+          <div className="header-right-mobile">
+            <div className="header-mobile-actions">
+              <Link to="/wishlist" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Liste d'envie">
+                <i className="far fa-heart"></i>
+                {getWishlistCount() > 0 && (
+                  <span className="header-mobile-cart-badge">{getWishlistCount()}</span>
+                )}
+              </Link>
+              <Link to="/cart" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Panier">
+                <i className="fas fa-shopping-cart"></i>
+                {getTotalItems() > 0 && (
+                  <span className="header-mobile-cart-badge">{getTotalItems()}</span>
+                )}
+              </Link>
+            </div>
+            <button 
+              ref={burgerButtonRef}
+              className={`mobile-menu-button ${mobileMenuOpen ? 'active' : ''}`}
             onClick={toggleMobileMenu}
             aria-label="Menu mobile"
             aria-expanded={mobileMenuOpen}
           >
-            <span className="toggler-icon"></span>
-            <span className="toggler-icon"></span>
-            <span className="toggler-icon"></span>
-          </button>
+              <span className="toggler-icon"></span>
+              <span className="toggler-icon"></span>
+              <span className="toggler-icon"></span>
+            </button>
+          </div>
 
           <div className="navbar-content">
             <ul className="nav-modern">

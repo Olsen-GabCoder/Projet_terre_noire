@@ -117,9 +117,23 @@
   min-width: 0;
 }
 
+/* Nom court pour écrans très étroits (affiché via media query 400px) */
+.brand-name--short {
+  display: none;
+}
+
 /* ==========================================
    ACTIONS MOBILE (panier visible en tablette/mobile)
    ========================================== */
+
+/* Groupe droite header (actions + burger) — reste à droite sur mobile */
+.header-right-mobile {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 
 .header-mobile-actions {
   display: none;
@@ -1809,11 +1823,15 @@
     overflow: hidden;
   }
   
+  .header-right-mobile {
+    display: flex;
+  }
+
   .header-mobile-actions {
     display: flex;
     flex-shrink: 0;
   }
-  
+
   .mobile-menu-button {
     display: flex;
     flex-shrink: 0;
@@ -1903,7 +1921,7 @@
   }
 }
 
-/* Très petits mobiles (400px et moins) — masquer le nom pour éviter tout chevauchement */
+/* Très petits mobiles (400px et moins) — nom court pour garder l’identité visible */
 @media (max-width: 400px) {
   .header-container {
     padding: 0 0.75rem;
@@ -1919,8 +1937,13 @@
     height: 36px;
   }
   
-  .brand-name {
+  .brand-name--long {
     display: none;
+  }
+  
+  .brand-name--short {
+    display: inline;
+    font-size: 0.9rem;
   }
   
   .mobile-menu-button,
