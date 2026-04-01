@@ -28,6 +28,8 @@ const AdminBooks = () => {
     is_bestseller: false,
     category: '',
     cover_image: null,
+    back_cover_image: null,
+    pdf_file: null,
   });
 
   useEffect(() => {
@@ -88,6 +90,20 @@ const AdminBooks = () => {
     }));
   };
 
+  const handleBackCoverChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      back_cover_image: e.target.files[0] || null
+    }));
+  };
+
+  const handlePdfChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      pdf_file: e.target.files[0] || null
+    }));
+  };
+
   const handleAddCategory = async (e) => {
     e.preventDefault();
     const name = newCategoryName.trim();
@@ -113,7 +129,7 @@ const AdminBooks = () => {
     const data = new FormData();
     Object.keys(formData).forEach(key => {
       const value = formData[key];
-      if (key === 'cover_image' && value === null) return;
+      if ((key === 'cover_image' || key === 'back_cover_image' || key === 'pdf_file') && value === null) return;
       if (typeof value === 'boolean') {
         data.append(key, value.toString());
       } else if (value !== '' && value !== null && value !== undefined) {
@@ -158,6 +174,8 @@ const AdminBooks = () => {
       is_bestseller: book.is_bestseller || false,
       category: book.category?.id || book.category || '',
       cover_image: null,
+      back_cover_image: null,
+      pdf_file: null,
     });
     setShowForm(true);
   };
@@ -188,6 +206,8 @@ const AdminBooks = () => {
       is_bestseller: false,
       category: '',
       cover_image: null,
+      back_cover_image: null,
+      pdf_file: null,
     });
   };
 
@@ -395,6 +415,34 @@ const AdminBooks = () => {
                   <span className="form-hint">
                     {editingBook ? "Laisser vide pour conserver l'image actuelle" : 'Image recommandée: 400x600px, JPG ou PNG'}
                   </span>
+                </div>
+                <div className="form-group full-width">
+                  <label>Couverture arrière (4e de couverture)</label>
+                  <input type="file" accept="image/*" onChange={handleBackCoverChange} />
+                  <span className="form-hint">
+                    {editingBook ? 'Laisser vide pour conserver la couverture arrière actuelle' : 'Optionnel. Même format que la couverture avant.'}
+                  </span>
+                  {editingBook?.back_cover_image && (
+                    <span className="form-hint" style={{ display: 'block', marginTop: '0.25rem' }}>
+                      <i className="fas fa-image" /> Couverture arrière actuellement jointe
+                    </span>
+                  )}
+                </div>
+                <div className="form-group full-width">
+                  <label>Fichier PDF (ebook)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={handlePdfChange}
+                  />
+                  <span className="form-hint">
+                    {editingBook ? 'Laisser vide pour conserver le PDF actuel' : 'Optionnel. Pour lecture en ligne ou achat ebook.'}
+                  </span>
+                  {editingBook?.pdf_file && (
+                    <span className="form-hint" style={{ display: 'block', marginTop: '0.25rem' }}>
+                      <i className="fas fa-file-pdf" /> PDF actuellement joint
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="form-actions">

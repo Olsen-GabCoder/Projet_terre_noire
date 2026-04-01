@@ -11,6 +11,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg, Q, F, Exists, OuterRef
 from django.conf import settings
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
+from django.http import FileResponse, Http404
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +33,27 @@ from .serializers import (
     BookReviewCreateSerializer,
     BookReviewReplySerializer,
 )
+
+
+@xframe_options_exempt
+@require_GET
+def serve_book_pdf(request, book_id):
+    """
+    Sert le PDF d'un livre pour affichage dans l'iframe de l'application.
+    Exempt de X-Frame-Options pour autoriser l'embedding dans notre frontend.
+    """
+    book = get_object_or_404(Book, pk=book_id)
+    if not book.pdf_file:
+        raise Http404("PDF non disponible pour ce livre.")
+    try:
+        f = book.pdf_file.open('rb')
+    except Exception as e:
+        logger.warning("Ouverture du PDF livre %s échouée: %s", book_id, e)
+        raise Http404("Fichier PDF inaccessible.") from e
+    filename = f"{book.slug or book.id}.pdf"
+    response = FileResponse(f, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
 
 
 class StandardResultsSetPagination(PageNumberPagination):

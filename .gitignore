@@ -2,8 +2,16 @@
 __pycache__/
 *.py[cod]
 venv/
-.env
 db.sqlite3
+
+# Secrets & Environment — bloque .env partout
+.env
+.env.local
+.env.production
+.env.staging
+**/.env
+**/.env.*
+!**/.env.example
 
 # Node
 node_modules/
@@ -12,3 +20,11 @@ dist/
 
 # Media
 backend/media/
+
+# Notes de travail / prompts
+PROMPT_*.md
+RETOUR_*.md
+A_FAIRE.md
+
+# Claude Code
+.claude/

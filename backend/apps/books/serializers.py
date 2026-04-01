@@ -97,6 +97,7 @@ class BookListSerializer(serializers.ModelSerializer):
             'format',
             'format_display',
             'cover_image',
+            'back_cover_image',
             'available',
             'category',
             'author',
@@ -108,7 +109,8 @@ class BookListSerializer(serializers.ModelSerializer):
             'is_bestseller',
             'rating',
             'rating_count',
-            'rating_display'
+            'rating_display',
+            'pdf_file',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
     
@@ -188,6 +190,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'format',
             'format_display',
             'cover_image',
+            'back_cover_image',
             'available',
             'is_ebook',
             'is_available',
@@ -205,7 +208,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'rating',
             'rating_count',
             'rating_display',
-            'rating_stars'
+            'rating_stars',
+            'pdf_file',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
     
@@ -251,9 +255,11 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
     """
     Sérialiseur pour la création et modification de livres
     Version simplifiée sans nested serializers.
-    L'image de couverture est optionnelle à la création (ajout possible à l'édition).
+    L'image de couverture et le PDF sont optionnels.
     """
     cover_image = serializers.ImageField(required=False, allow_null=True)
+    back_cover_image = serializers.ImageField(required=False, allow_null=True)
+    pdf_file = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Book
@@ -262,15 +268,17 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'reference',
             'description',
             'price',
-            'original_price',  # Ajouté
+            'original_price',
             'format',
             'cover_image',
+            'back_cover_image',
+            'pdf_file',
             'available',
-            'is_bestseller',   # Ajouté
-            'rating',          # Ajouté
-            'rating_count',    # Ajouté
+            'is_bestseller',
+            'rating',
+            'rating_count',
             'category',
-            'author'
+            'author',
         ]
     
     def validate(self, data):

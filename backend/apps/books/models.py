@@ -129,6 +129,19 @@ class Book(models.Model):
         blank=True,
         null=True,
     )
+    back_cover_image = models.ImageField(
+        upload_to='books/back_covers/',
+        verbose_name="Image de couverture arrière (4e de couverture)",
+        blank=True,
+        null=True,
+    )
+    pdf_file = models.FileField(
+        upload_to='books/pdfs/',
+        verbose_name="Fichier PDF (ebook)",
+        blank=True,
+        null=True,
+        help_text="PDF du livre pour lecture en ligne ou achat ebook.",
+    )
     available = models.BooleanField(
         default=True,
         verbose_name="Disponible"

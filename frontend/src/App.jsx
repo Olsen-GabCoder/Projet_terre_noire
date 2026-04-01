@@ -9,6 +9,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import BookDetail from './pages/BookDetail';
+import BookReader from './pages/BookReader';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
@@ -49,19 +50,21 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
   const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/');
+  const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
 
   return (
     <div className="app">
       <a href="#main-content" className="skip-link">
         Aller au contenu principal
       </a>
-      <Header />
-      <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''}`}>
+      {!isReaderPage && <Header />}
+      <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
               <Routes>
                 {/* Routes principales */}
                 <Route path="/" element={<Home />} />
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/books/:id" element={<BookDetail />} />
+                <Route path="/books/:id/read" element={<BookReader />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<Checkout />} />
@@ -106,7 +109,7 @@ function AppContent() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
       </main>
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isReaderPage && <Footer />}
     </div>
   );
 }

@@ -343,6 +343,21 @@ const BookDetail = () => {
                   </span>
                 )}
               </div>
+              {book.back_cover_image && (
+                <div className="bd-back-cover">
+                  <p className="bd-back-cover__title">4e de couverture</p>
+                  <div className="bd-back-cover__wrapper">
+                    <img
+                      src={book.back_cover_image}
+                      alt={`Quatrième de couverture — ${book.title}`}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Infos + actions */}
@@ -394,6 +409,14 @@ const BookDetail = () => {
                   )}
                 </div>
               </div>
+
+              {book.pdf_file && (
+                <div className="bd-read-action">
+                  <Link to={`/books/${id}/read`} className="bd-btn bd-btn--read">
+                    <i className="fas fa-book-open" /> Lire le livre
+                  </Link>
+                </div>
+              )}
 
               {book.available && (
                 <div className="bd-actions">

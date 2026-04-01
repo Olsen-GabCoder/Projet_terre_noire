@@ -34,7 +34,11 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('price', 'original_price', 'available', 'is_bestseller'),
         }),
         ('Image et notation', {
-            'fields': ('cover_image', 'rating', 'rating_count'),
+            'fields': ('cover_image', 'back_cover_image', 'rating', 'rating_count'),
+        }),
+        ('Ebook / PDF', {
+            'fields': ('pdf_file',),
+            'description': 'Fichier PDF pour lecture en ligne ou achat ebook.',
         }),
         ('Métadonnées', {
             'fields': ('created_at', 'updated_at'),
