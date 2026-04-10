@@ -343,6 +343,54 @@ def send_editorial_quote(quote):
     )
 
 
+def send_quote_response_notification(quote, action, reason=''):
+    """
+    Notifie l'éditeur quand l'auteur répond à un devis (accept/reject/revision).
+    Destinataires : created_by + email org (dédupliqués).
+    """
+    # Destinataires
+    recipients = set()
+    if quote.created_by and quote.created_by.email:
+        recipients.add(quote.created_by.email)
+    if quote.provider_organization and quote.provider_organization.email:
+        recipients.add(quote.provider_organization.email)
+    if not recipients:
+        return False
+
+    # Identité de l'éditeur
+    editor_name = 'Éditeur'
+    if quote.created_by:
+        editor_name = quote.created_by.get_full_name() or quote.created_by.username
+
+    # Identité de l'auteur et manuscrit
+    ms = quote.manuscript
+    author_name = ms.author_name if ms else (quote.client.get_full_name() if quote.client else quote.client_name)
+    ms_title = ms.title if ms else quote.title
+    model_display = quote.get_publishing_model_display() if quote.publishing_model else 'Non précisé'
+
+    context = {
+        'editor_name': editor_name,
+        'author_name': author_name or 'Auteur',
+        'manuscript_title': ms_title,
+        'quote_reference': quote.reference,
+        'publishing_model_display': model_display,
+        'total_ttc': f"{float(quote.total_ttc):,.0f}".replace(',', ' ') if quote.total_ttc else '—',
+        'frontend_url': settings.FRONTEND_URL,
+        'rejection_reason': reason,
+        'revision_reason': reason,
+        'author_message': reason,
+    }
+
+    templates = {
+        'accept': ('quote_accepted', f"Devis accepté pour « {ms_title} » — Frollot"),
+        'reject': ('quote_rejected', f"Devis décliné pour « {ms_title} » — Frollot"),
+        'revision': ('quote_revision_requested', f"Demande de révision — Devis « {ms_title} » — Frollot"),
+    }
+
+    template_name, subject = templates.get(action, templates['reject'])
+    return send_templated_email(subject, template_name, context, list(recipients))
+
+
 def send_welcome_registration(user):
     """Email de bienvenue après création de compte (inscription)."""
     if not user or not getattr(user, 'email', None):

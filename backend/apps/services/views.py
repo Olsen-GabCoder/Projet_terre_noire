@@ -1031,9 +1031,13 @@ class QuoteRespondView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
+        from django.db import transaction
         from django.utils import timezone
+        from apps.core.tasks import send_quote_response_notification_task
+
         quote = get_object_or_404(Quote, pk=pk, client=request.user)
         action = request.data.get('action')
+        reason = request.data.get('reason', '').strip()
 
         if quote.status not in ('SENT', 'REVISION_REQUESTED'):
             return Response({'error': 'Ce devis ne peut plus être modifié.'}, status=400)
@@ -1049,20 +1053,19 @@ class QuoteRespondView(APIView):
         elif action == 'reject':
             quote.status = 'REJECTED'
             quote.rejected_at = timezone.now()
-            quote.rejection_reason = request.data.get('reason', '')
+            quote.rejection_reason = reason
             quote.save(update_fields=['status', 'rejected_at', 'rejection_reason'])
 
         elif action == 'revision':
             if quote.status != 'SENT':
                 return Response({'error': 'Seul un devis envoyé peut faire l\'objet d\'une contre-proposition.'}, status=400)
-            reason = request.data.get('reason', '').strip()
             if not reason:
                 return Response(
                     {'error': 'Le motif de la demande de révision est obligatoire.'},
                     status=400,
                 )
             quote.status = 'REVISION_REQUESTED'
-            quote.rejection_reason = reason  # Stocke le motif de révision
+            quote.rejection_reason = reason
             quote.save(update_fields=['status', 'rejection_reason'])
 
         else:
@@ -1070,5 +1073,11 @@ class QuoteRespondView(APIView):
                 {'error': 'Action invalide. Valeurs acceptées : accept, reject, revision.'},
                 status=400,
             )
+
+        # Notification email à l'éditeur (après commit réussi)
+        quote_id = quote.id
+        transaction.on_commit(
+            lambda: send_quote_response_notification_task.delay(quote_id, action, reason)
+        )
 
         return Response(QuoteDetailSerializer(quote).data)
