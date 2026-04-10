@@ -17,6 +17,10 @@ const manuscriptService = {
 
   // Mise à jour de statut (org member ou admin)
   updateStatus: (id, data) => api.patch(`/manuscripts/${id}/update-status/`, data),
+
+  // Verrouillage marché ouvert (auteur)
+  lockMarket: (id) => api.post(`/manuscripts/mine/${id}/lock-market/`),
+  unlockMarket: (id) => api.post(`/manuscripts/mine/${id}/unlock-market/`),
 };
 
 export default manuscriptService;

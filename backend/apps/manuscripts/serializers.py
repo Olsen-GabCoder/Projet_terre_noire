@@ -189,6 +189,8 @@ class ManuscriptListSerializer(serializers.ModelSerializer):
             'target_organization',
             'target_organization_name',
             'is_open_market',
+            'open_market_locked',
+            'open_market_deadline',
             'status',
             'status_display',
             'reviewed_at',
