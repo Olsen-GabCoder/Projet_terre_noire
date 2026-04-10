@@ -87,6 +87,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 
 // Pages dashboard
 const DashboardLayout = lazy(() => import('./components/DashboardLayout'));
+const DashboardOverview = lazy(() => import('./pages/dashboard/DashboardOverview'));
 const OrgDashboard = lazy(() => import('./pages/dashboard/OrgDashboard'));
 const EditorialProjects = lazy(() => import('./pages/dashboard/EditorialProjects'));
 const EditorialProjectDetail = lazy(() => import('./pages/dashboard/EditorialProjectDetail'));
@@ -96,6 +97,11 @@ const OrgManuscripts = lazy(() => import('./pages/dashboard/OrgManuscripts'));
 const OrgBooks = lazy(() => import('./pages/dashboard/OrgBooks'));
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings'));
 const OrgPrintRequests = lazy(() => import('./pages/dashboard/OrgPrintRequests'));
+
+// Pages dashboard — Mon compte
+const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
+const SecuritySettings = lazy(() => import('./pages/dashboard/SecuritySettings'));
+const MyInvitations = lazy(() => import('./pages/dashboard/MyInvitations'));
 
 // Pages espace auteur
 const AuthorDashboard = lazy(() => import('./pages/dashboard/AuthorDashboard'));
@@ -314,70 +320,61 @@ function AppContent() {
                 <Route path="/clubs/create" element={<ProtectedRoute><BookClubCreate /></ProtectedRoute>} />
                 <Route path="/clubs/:slug" element={<BookClubDetail />} />
 
-                {/* Dashboard → redirige vers le profil unifié */}
-                <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
-                <Route path="/dashboard/profiles" element={<Navigate to="/profile?tab=roles" replace />} />
-                <Route path="/dashboard/organizations" element={<Navigate to="/profile?tab=organizations" replace />} />
-                <Route path="/dashboard/invitations" element={<Navigate to="/profile?tab=invitations" replace />} />
-                <Route path="/dashboard/security" element={<Navigate to="/profile?tab=security" replace />} />
-                {/* Sous-routes avec params — restent dans le DashboardLayout */}
-                <Route path="/dashboard/organizations/:id" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<OrgDashboard />} />
-                  <Route path="manuscripts" element={<OrgManuscripts />} />
-                  <Route path="books" element={<OrgBooks />} />
-                  <Route path="print-requests" element={<OrgPrintRequests />} />
-                  <Route path="settings" element={<OrgSettings />} />
-                </Route>
-                <Route path="/dashboard/my-manuscripts" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<MyManuscripts />} />
-                </Route>
-                <Route path="/dashboard/my-service-requests" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<MyServiceRequests />} />
-                </Route>
-                <Route path="/dashboard/my-quotes" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<Quotes />} />
-                  <Route path=":id" element={<QuoteDetail />} />
-                </Route>
-                <Route path="/dashboard/projects" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<EditorialProjects />} />
-                  <Route path=":id" element={<EditorialProjectDetail />} />
-                </Route>
-                <Route path="/dashboard/my-loans" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<MyLoans />} />
+                {/* ══════ Dashboard — route parent unique ══════ */}
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                  <Route index element={<DashboardOverview />} />
+
+                  {/* Mon espace — activités personnelles */}
+                  <Route path="orders" element={<Orders embedded />} />
+                  <Route path="wishlist" element={<Wishlist embedded />} />
+                  <Route path="my-manuscripts" element={<MyManuscripts />} />
+                  <Route path="my-service-requests" element={<MyServiceRequests />} />
+                  <Route path="my-quotes" element={<Quotes />} />
+                  <Route path="my-quotes/:id" element={<QuoteDetail />} />
+                  <Route path="my-loans" element={<MyLoans />} />
+                  <Route path="lists" element={<ReadingLists />} />
+                  <Route path="clubs" element={<BookClubs />} />
+                  <Route path="profile" element={<DashboardProfile />} />
+                  <Route path="security" element={<SecuritySettings />} />
+                  <Route path="settings" element={<Settings embedded />} />
+                  <Route path="invitations" element={<MyInvitations />} />
+                  <Route path="projects" element={<EditorialProjects />} />
+                  <Route path="projects/:id" element={<EditorialProjectDetail />} />
+
+                  {/* Organisations */}
+                  <Route path="organizations/:id" element={<OrgDashboard />} />
+                  <Route path="organizations/:id/manuscripts" element={<OrgManuscripts />} />
+                  <Route path="organizations/:id/books" element={<OrgBooks />} />
+                  <Route path="organizations/:id/print-requests" element={<OrgPrintRequests />} />
+                  <Route path="organizations/:id/settings" element={<OrgSettings />} />
+
+                  {/* Espace Auteur */}
+                  <Route path="author" element={<AuthorDashboard />} />
+                  <Route path="author/books" element={<AuthorBooks />} />
+                  <Route path="author/sales" element={<AuthorSales />} />
+                  <Route path="author/reviews" element={<AuthorReviews />} />
+                  <Route path="author/manuscripts" element={<AuthorManuscripts />} />
+                  <Route path="author/profile" element={<AuthorProfile />} />
+
+                  {/* Espace Services Pro */}
+                  <Route path="services" element={<ProDashboard />} />
+                  <Route path="services/requests" element={<ProRequests />} />
+                  <Route path="services/orders" element={<ProOrders />} />
+                  <Route path="services/listings" element={<ProListings />} />
+                  <Route path="services/wallet" element={<ProWallet />} />
+                  <Route path="services/quotes" element={<Quotes />} />
+                  <Route path="services/quotes/create" element={<QuoteCreate />} />
+                  <Route path="services/quotes/:id" element={<QuoteDetail />} />
+
+                  {/* Espace Livreur */}
+                  <Route path="delivery" element={<DeliveryDashboard />} />
+                  <Route path="delivery/assignments" element={<DeliveryAssignments />} />
+                  <Route path="delivery/wallet" element={<DeliveryWalletPage />} />
+                  <Route path="delivery/profile" element={<DeliveryProfile />} />
+                  <Route path="delivery/rates" element={<DeliveryRatesPage />} />
                 </Route>
 
-                {/* Espace Auteur */}
-                <Route path="/dashboard/author" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<AuthorDashboard />} />
-                  <Route path="books" element={<AuthorBooks />} />
-                  <Route path="sales" element={<AuthorSales />} />
-                  <Route path="reviews" element={<AuthorReviews />} />
-                  <Route path="manuscripts" element={<AuthorManuscripts />} />
-                  <Route path="profile" element={<AuthorProfile />} />
-                </Route>
-
-                {/* Espace Services Pro */}
-                <Route path="/dashboard/services" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<ProDashboard />} />
-                  <Route path="requests" element={<ProRequests />} />
-                  <Route path="orders" element={<ProOrders />} />
-                  <Route path="listings" element={<ProListings />} />
-                  <Route path="wallet" element={<ProWallet />} />
-                  <Route path="quotes" element={<Quotes />} />
-                  <Route path="quotes/create" element={<QuoteCreate />} />
-                  <Route path="quotes/:id" element={<QuoteDetail />} />
-                </Route>
-
-                {/* Espace Livreur */}
-                <Route path="/dashboard/delivery" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                  <Route index element={<DeliveryDashboard />} />
-                  <Route path="assignments" element={<DeliveryAssignments />} />
-                  <Route path="wallet" element={<DeliveryWalletPage />} />
-                  <Route path="profile" element={<DeliveryProfile />} />
-                  <Route path="rates" element={<DeliveryRatesPage />} />
-                </Route>
-
-                {/* Espace Vendeur */}
+                {/* Espace Vendeur — route séparée (prefix /vendor) */}
                 <Route path="/vendor" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                   <Route index element={<VendorDashboard />} />
                   <Route path="listings" element={<VendorListings />} />

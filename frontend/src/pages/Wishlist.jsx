@@ -9,7 +9,7 @@ import '../styles/Wishlist.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 
-const Wishlist = () => {
+const Wishlist = ({ embedded = false }) => {
   const { t } = useTranslation();
   const revealRef = useReveal();
   const { wishlistItems, removeFromWishlist, isInWishlist } = useWishlist();
@@ -38,12 +38,14 @@ const Wishlist = () => {
     return (
       <div className="wishlist-page">
         <SEO title={t('pages.wishlist.title')} />
-        <PageHero
-          title={t('pages.wishlist.title', "Ma liste d'envie")}
-          subtitle={t('pages.wishlist.emptySubtitle', "Votre liste d'envie est vide.")}
-        />
+        {!embedded && (
+          <PageHero
+            title={t('pages.wishlist.title', "Ma liste d'envie")}
+            subtitle={t('pages.wishlist.emptySubtitle', "Votre liste d'envie est vide.")}
+          />
+        )}
 
-        <div ref={revealRef} className="wishlist-content reveal-section">
+        <div ref={embedded ? undefined : revealRef} className="wishlist-content reveal-section">
           <div className="wishlist-empty">
             <div className="wishlist-empty__ico">
               <i className="far fa-heart" />
@@ -64,12 +66,14 @@ const Wishlist = () => {
 
   return (
     <div className="wishlist-page">
-      <PageHero
-        title={t('pages.wishlist.title')}
-        subtitle={t('pages.wishlist.count', { count: wishlistItems.length })}
-      />
+      {!embedded && (
+        <PageHero
+          title={t('pages.wishlist.title')}
+          subtitle={t('pages.wishlist.count', { count: wishlistItems.length })}
+        />
+      )}
 
-      <div ref={revealRef} className="wishlist-content reveal-section">
+      <div ref={embedded ? undefined : revealRef} className="wishlist-content reveal-section">
         {error && (
           <div className="wishlist-error">
             <i className="fas fa-exclamation-circle" aria-hidden="true" /> {error}

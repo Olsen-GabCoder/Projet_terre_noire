@@ -9,7 +9,7 @@ import '../styles/Orders.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 
-const Orders = () => {
+const Orders = ({ embedded = false }) => {
   const { t } = useTranslation();
   const revealRef = useReveal();
   const { user } = useAuth();
@@ -24,12 +24,12 @@ const Orders = () => {
   const [pagination, setPagination] = useState({ count: 0, next: null, previous: null });
 
   useEffect(() => {
-    if (!user) {
+    if (!embedded && !user) {
       navigate('/login');
       return;
     }
     loadOrders();
-  }, [user, navigate, location.key]);
+  }, [user, navigate, location.key, embedded]);
 
   const loadOrders = async (page = 1) => {
     setLoading(true);
@@ -113,18 +113,20 @@ const Orders = () => {
   return (
     <div className="ord-page">
       <SEO title={t('pages.orders.title', 'Mes Commandes')} />
-      <PageHero
-        title={t('common.myOrders', 'Mes commandes')}
-        subtitle={t('pages.orders.heroSub', "Consultez l'historique de vos commandes et suivez leur statut.")}
-      >
-        {orders.length > 0 && (
-          <p className="ord-hero__count">
-            <strong>{orders.length}</strong> {t('pages.orders.orderCount', 'commande', { count: orders.length })}{orders.length > 1 ? 's' : ''}
-          </p>
-        )}
-      </PageHero>
+      {!embedded && (
+        <PageHero
+          title={t('common.myOrders', 'Mes commandes')}
+          subtitle={t('pages.orders.heroSub', "Consultez l'historique de vos commandes et suivez leur statut.")}
+        >
+          {orders.length > 0 && (
+            <p className="ord-hero__count">
+              <strong>{orders.length}</strong> {t('pages.orders.orderCount', 'commande', { count: orders.length })}{orders.length > 1 ? 's' : ''}
+            </p>
+          )}
+        </PageHero>
+      )}
 
-      <div className="ord-content reveal-section" ref={revealRef}>
+      <div className="ord-content reveal-section" ref={embedded ? undefined : revealRef}>
         <div className="ord-wrap">
           {error && (
             <div className="ord-error">

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/Settings.css';
 import PageHero from '../components/PageHero';
 
-const Settings = () => {
+const Settings = ({ embedded = false }) => {
   const { t } = useTranslation();
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
@@ -14,12 +14,12 @@ const Settings = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    if (!user) {
+    if (!embedded && !user) {
       navigate('/login');
       return;
     }
-    setReceiveNewsletter(user.receive_newsletter || false);
-  }, [user, navigate]);
+    if (user) setReceiveNewsletter(user.receive_newsletter || false);
+  }, [user, navigate, embedded]);
 
   const handleNewsletterChange = async (e) => {
     const checked = e.target.checked;
@@ -46,10 +46,12 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
-      <PageHero
-        title={t('pages.settings.title', 'Paramètres')}
-        subtitle={t('pages.settings.subtitle', 'Gérez vos préférences et les notifications de votre compte.')}
-      />
+      {!embedded && (
+        <PageHero
+          title={t('pages.settings.title', 'Paramètres')}
+          subtitle={t('pages.settings.subtitle', 'Gérez vos préférences et les notifications de votre compte.')}
+        />
+      )}
 
       <div className="settings-content">
         <div className="settings-card">

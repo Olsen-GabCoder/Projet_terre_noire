@@ -1082,6 +1082,14 @@ button.nav-link--more i.fa-ellipsis {
   font-size: 0.75rem;
 }
 
+.dropdown-item--secondary {
+  opacity: 0.7;
+}
+
+.dropdown-item--secondary:hover {
+  opacity: 1;
+}
+
 .logout-btn .dropdown-icon {
   background: rgba(239, 68, 68, 0.08);
   color: #ef4444;
