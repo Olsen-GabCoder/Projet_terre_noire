@@ -3,6 +3,7 @@ from .views import (
     ManuscriptCreateView,
     ManuscriptListView,
     ManuscriptDetailView,
+    ManuscriptDownloadView,
     ManuscriptStatusUpdateView,
     MyManuscriptsView,
     MyManuscriptDetailView,
@@ -22,5 +23,6 @@ urlpatterns = [
     path('mine/<int:pk>/unlock-market/', OpenMarketUnlockView.as_view(), name='open_market_unlock'),
     path('', ManuscriptListView.as_view(), name='manuscript_list'),
     path('<int:pk>/', ManuscriptDetailView.as_view(), name='manuscript_detail'),
+    path('<int:pk>/download/', ManuscriptDownloadView.as_view(), name='manuscript_download'),
     path('<int:pk>/update-status/', ManuscriptStatusUpdateView.as_view(), name='manuscript_update_status'),
 ]
