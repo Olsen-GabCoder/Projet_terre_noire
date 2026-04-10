@@ -1,7 +1,10 @@
 import logging
+from pathlib import Path
 
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.text import slugify
 
 logger = logging.getLogger(__name__)
 from rest_framework import generics, status, permissions
@@ -11,10 +14,71 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 
 from apps.core.throttling import PublicEndpointThrottle
-from apps.organizations.models import OrganizationMembership
+from apps.organizations.models import Organization, OrganizationMembership
 from apps.organizations.permissions import IsOrganizationMember, user_has_org_permission
 from .models import Manuscript
 from .serializers import ManuscriptSerializer, ManuscriptListSerializer, ManuscriptStatusSerializer
+
+
+# Rôles autorisés à consulter les manuscrits d'une organisation
+MANUSCRIPT_ACCESS_ROLES = ['PROPRIETAIRE', 'ADMINISTRATEUR', 'EDITEUR']
+
+
+def user_can_access_manuscript(user, manuscript):
+    """
+    Vérifie si un utilisateur a le droit de télécharger un manuscrit.
+    Réutilisé par ManuscriptDownloadView et potentiellement d'autres vues.
+    Retourne (bool, str) — (autorisé, raison).
+    """
+    # Admin plateforme
+    if getattr(user, 'is_platform_admin', False) or getattr(user, 'is_staff', False):
+        return True, 'admin'
+
+    # Submitter (l'auteur)
+    if manuscript.submitter_id and manuscript.submitter_id == user.id:
+        return True, 'submitter'
+
+    # Membre autorisé de l'organisation destinataire (soumission ciblée)
+    if manuscript.target_organization_id:
+        if OrganizationMembership.objects.filter(
+            user=user,
+            organization_id=manuscript.target_organization_id,
+            role__in=MANUSCRIPT_ACCESS_ROLES,
+            is_active=True,
+        ).exists():
+            return True, 'org_editor'
+
+    # Marché ouvert : membre autorisé d'une org dont les genres acceptés correspondent
+    if manuscript.is_open_market:
+        user_org_ids = OrganizationMembership.objects.filter(
+            user=user,
+            role__in=MANUSCRIPT_ACCESS_ROLES,
+            is_active=True,
+            organization__org_type='MAISON_EDITION',
+            organization__is_active=True,
+        ).values_list('organization_id', flat=True)
+
+        if user_org_ids:
+            matching = Organization.objects.filter(
+                id__in=user_org_ids,
+            ).filter(
+                # Org sans genres acceptés → accepte tout ; sinon genre doit matcher
+                accepted_genres__contains=[manuscript.genre],
+            ).exists()
+
+            # Aussi accepter les orgs sans filtre de genre
+            no_filter = Organization.objects.filter(
+                id__in=user_org_ids,
+                accepted_genres=[],
+            ).exists() or Organization.objects.filter(
+                id__in=user_org_ids,
+                accepted_genres__isnull=True,
+            ).exists()
+
+            if matching or no_filter:
+                return True, 'open_market_editor'
+
+    return False, 'denied'
 
 
 class ManuscriptCreateView(generics.CreateAPIView):
@@ -389,3 +453,47 @@ class OpenMarketUnlockView(APIView):
             'success': True,
             'message': "Marché ouvert déverrouillé. Vous pouvez attendre d'autres offres.",
         })
+
+
+# ══════════════════════════════════════════════════════════════
+# Téléchargement protégé du fichier manuscrit
+# ══════════════════════════════════════════════════════════════
+
+class ManuscriptDownloadView(APIView):
+    """
+    GET /api/manuscripts/{pk}/download/
+    Sert le fichier manuscrit en streaming après vérification des permissions.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        manuscript = get_object_or_404(Manuscript, pk=pk)
+
+        if not manuscript.file:
+            raise Http404("Aucun fichier attaché à ce manuscrit.")
+
+        authorized, reason = user_can_access_manuscript(request.user, manuscript)
+        if not authorized:
+            return Response(
+                {'detail': 'Vous n\'avez pas accès à ce manuscrit.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        logger.info(
+            "Téléchargement manuscrit %s par user %s (%s)",
+            pk, request.user.id, reason,
+        )
+
+        try:
+            f = manuscript.file.open('rb')
+        except Exception as e:
+            logger.warning("Ouverture fichier manuscrit %s échouée: %s", pk, e)
+            raise Http404("Fichier inaccessible.") from e
+
+        ext = Path(manuscript.file.name).suffix or '.pdf'
+        safe_title = slugify(manuscript.title)[:50] or f'manuscrit-{pk}'
+        filename = f"{safe_title}{ext}"
+
+        response = FileResponse(f, content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
