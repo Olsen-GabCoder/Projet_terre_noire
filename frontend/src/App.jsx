@@ -99,6 +99,7 @@ const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings'));
 const OrgPrintRequests = lazy(() => import('./pages/dashboard/OrgPrintRequests'));
 
 // Pages dashboard — Mon compte
+const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
 const SecuritySettings = lazy(() => import('./pages/dashboard/SecuritySettings'));
 const MyInvitations = lazy(() => import('./pages/dashboard/MyInvitations'));
 
@@ -333,6 +334,7 @@ function AppContent() {
                   <Route path="my-loans" element={<MyLoans />} />
                   <Route path="lists" element={<ReadingLists />} />
                   <Route path="clubs" element={<BookClubs />} />
+                  <Route path="profile" element={<DashboardProfile />} />
                   <Route path="security" element={<SecuritySettings />} />
                   <Route path="settings" element={<Settings embedded />} />
                   <Route path="invitations" element={<MyInvitations />} />
