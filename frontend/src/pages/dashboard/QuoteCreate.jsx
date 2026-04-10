@@ -53,6 +53,20 @@ const QuoteCreate = () => {
   const [organizationId, setOrganizationId] = useState(searchParams.get('organization') || '');
   const [publishingModel, setPublishingModel] = useState('');
 
+  // Paramètres éditoriaux (garde-fous anti-Harmattan)
+  const [printRun, setPrintRun] = useState('');
+  const [retailPrice, setRetailPrice] = useState('');
+  // Valeurs de départ suggérées — pas des recommandations Frollot, juste un point de départ
+  const [royaltyTerms, setRoyaltyTerms] = useState([
+    { up_to: 3000, rate: 8 },
+    { above: 3000, rate: 10 },
+  ]);
+  const [authorMustPurchase, setAuthorMustPurchase] = useState(false);
+
+  const needsPrintRun = publishingModel && publishingModel !== 'NUMERIQUE_PUR';
+  const needsRoyalties = ['COMPTE_EDITEUR', 'COEDITION'].includes(publishingModel);
+  const showPurchaseGuard = ['COMPTE_EDITEUR', 'COEDITION', 'COMPTE_AUTEUR'].includes(publishingModel);
+
   // Lots & items
   const [lots, setLots] = useState([emptyLot()]);
 
@@ -165,6 +179,10 @@ const QuoteCreate = () => {
         manuscript_id: manuscriptId,
         service_request_id: serviceRequestId,
         publishing_model: publishingModel || '',
+        print_run: needsPrintRun ? (parseInt(printRun) || null) : null,
+        retail_price: publishingModel ? (parseFloat(retailPrice) || null) : null,
+        royalty_terms: needsRoyalties ? royaltyTerms : [],
+        author_must_purchase: authorMustPurchase,
         client_name: clientName,
         client_email: clientEmail,
         ...(clientIdParam && { client_id: parseInt(clientIdParam) }),
@@ -243,6 +261,113 @@ const QuoteCreate = () => {
             </div>
           </div>
         </div>
+
+        {/* ── Paramètres éditoriaux (garde-fous anti-Harmattan) ── */}
+        {publishingModel && (
+          <div className="as-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <i className="fas fa-shield-alt" style={{ color: 'var(--color-primary)' }} /> Paramètres éditoriaux
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+              {/* Tirage prévu */}
+              {needsPrintRun && (
+                <div>
+                  <label style={labelStyle}>Tirage prévu *</label>
+                  <input type="number" value={printRun} onChange={e => setPrintRun(e.target.value)}
+                    placeholder="Ex: 500" min="1" style={inputStyle} required />
+                  <small style={{ display: 'block', marginTop: 4, fontSize: '0.75rem', color: 'var(--color-text-muted-ui)' }}>
+                    Nombre d'exemplaires prévus pour le premier tirage. Minimum 300 pour les éditions papier.
+                  </small>
+                </div>
+              )}
+
+              {/* Prix de vente public */}
+              <div>
+                <label style={labelStyle}>Prix de vente public *</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="number" value={retailPrice} onChange={e => setRetailPrice(e.target.value)}
+                    placeholder="Ex: 8500" min="0" step="any" style={{ ...inputStyle, paddingRight: '4rem' }} required />
+                  <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: 'var(--color-text-muted-ui)', fontWeight: 600 }}>FCFA</span>
+                </div>
+                <small style={{ display: 'block', marginTop: 4, fontSize: '0.75rem', color: 'var(--color-text-muted-ui)' }}>
+                  Prix TTC envisagé pour un exemplaire. Utilisé pour vérifier la cohérence économique du devis.
+                </small>
+              </div>
+            </div>
+
+            {/* Grille de droits d'auteur */}
+            {needsRoyalties && (
+              <div style={{ marginTop: '1.25rem' }}>
+                <label style={labelStyle}>Grille de droits d'auteur *</label>
+                <small style={{ display: 'block', marginBottom: 8, fontSize: '0.75rem', color: 'var(--color-text-muted-ui)' }}>
+                  Rémunération de l'auteur en pourcentage du prix de vente. Minimum 5 % pour ce modèle éditorial.
+                </small>
+                {royaltyTerms.map((tier, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted-ui)', minWidth: 75 }}>
+                      {tier.above !== undefined ? 'Au-delà de' : 'Jusqu\'à'}
+                    </span>
+                    <input type="number" value={tier.up_to ?? tier.above ?? ''}
+                      onChange={e => {
+                        const val = parseInt(e.target.value) || 0;
+                        const key = tier.above !== undefined ? 'above' : 'up_to';
+                        setRoyaltyTerms(prev => prev.map((t, j) => j === i ? { [key]: val, rate: t.rate } : t));
+                      }}
+                      min="0" style={{ ...smallInput, width: 100, textAlign: 'right' }} placeholder="ex." />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted-ui)' }}>ex. →</span>
+                    <input type="number" value={tier.rate}
+                      onChange={e => setRoyaltyTerms(prev => prev.map((t, j) => j === i ? { ...t, rate: parseFloat(e.target.value) || 0 } : t))}
+                      min="0" max="100" step="0.5" style={{ ...smallInput, width: 70, textAlign: 'right' }} />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted-ui)' }}>%</span>
+                    {royaltyTerms.length > 1 && (
+                      <button type="button" onClick={() => setRoyaltyTerms(prev => prev.filter((_, j) => j !== i))}
+                        style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}>
+                        <i className="fas fa-times" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button"
+                  onClick={() => {
+                    setRoyaltyTerms(prev => {
+                      // Transformer le dernier palier above en up_to, ajouter un nouveau above
+                      const updated = prev.map((t, i) => {
+                        if (i === prev.length - 1 && t.above !== undefined) {
+                          return { up_to: t.above, rate: t.rate };
+                        }
+                        return t;
+                      });
+                      const lastVal = updated[updated.length - 1]?.up_to || 5000;
+                      return [...updated, { above: lastVal, rate: Math.max((updated[updated.length - 1]?.rate || 5) + 2, 5) }];
+                    });
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, marginTop: '0.25rem' }}>
+                  <i className="fas fa-plus" /> Ajouter un palier
+                </button>
+              </div>
+            )}
+
+            {/* Achat obligatoire */}
+            {showPurchaseGuard && (
+              <div style={{ marginTop: '1.25rem' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', fontSize: '0.88rem' }}>
+                  <input type="checkbox" checked={authorMustPurchase} onChange={e => setAuthorMustPurchase(e.target.checked)}
+                    style={{ marginTop: 3 }} />
+                  <span>L'auteur sera contractuellement obligé d'acheter des exemplaires</span>
+                </label>
+                {authorMustPurchase && (
+                  <div style={{ marginTop: 8, padding: '0.75rem 1rem', background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: 8, fontSize: '0.82rem', color: '#92400e', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b', marginTop: 2 }} />
+                    <span>Cette pratique est interdite par Frollot pour ce modèle éditorial. Le devis sera rejeté à l'envoi si cette case reste cochée.</span>
+                  </div>
+                )}
+                <small style={{ display: 'block', marginTop: 4, fontSize: '0.75rem', color: 'var(--color-text-muted-ui)' }}>
+                  Si l'auteur souhaite acheter ses livres, il pourra le faire librement après publication, sans engagement préalable.
+                </small>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Lots & Items ── */}
         {lots.map((lot, li) => (
