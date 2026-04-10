@@ -28,3 +28,4 @@ A_FAIRE.md
 
 # Claude Code
 .claude/backend/logs/*.log
+backend/logs/
