@@ -1672,6 +1672,12 @@
       "goToPage": "Aller à la page {{page}}",
       "pageOf": "Page {{current}} sur {{total}}",
       "allRightsReserved": "Tous droits réservés — usage personnel exclusif"
+    },
+    "notFound": {
+      "title": "Page non trouvée",
+      "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+      "backHome": "Retour à l'accueil",
+      "viewCatalog": "Voir le catalogue"
     }
   },
   "dashboard": {

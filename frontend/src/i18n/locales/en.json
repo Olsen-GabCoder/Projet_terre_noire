@@ -1672,6 +1672,12 @@
       "goToPage": "Go to page {{page}}",
       "pageOf": "Page {{current}} of {{total}}",
       "allRightsReserved": "All rights reserved — personal use only"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you are looking for does not exist or has been moved.",
+      "backHome": "Back to home",
+      "viewCatalog": "Browse catalog"
     }
   },
   "dashboard": {

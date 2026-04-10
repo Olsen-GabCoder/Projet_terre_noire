@@ -346,6 +346,8 @@ function AppContent() {
                   <Route path="organizations/:id/manuscripts" element={<OrgManuscripts />} />
                   <Route path="organizations/:id/books" element={<OrgBooks />} />
                   <Route path="organizations/:id/print-requests" element={<OrgPrintRequests />} />
+                  <Route path="organizations/:id/projects" element={<EditorialProjects />} />
+                  <Route path="organizations/:id/projects/:projectId" element={<EditorialProjectDetail />} />
                   <Route path="organizations/:id/settings" element={<OrgSettings />} />
 
                   {/* Espace Auteur */}
