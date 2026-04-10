@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import organizationService from '../../services/organizationService';
 import { organizationAPI, handleApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { useTranslation } from 'react-i18next';
 
 const GENRE_OPTIONS = [
   { value: 'ROMAN', label: 'Roman' }, { value: 'NOUVELLE', label: 'Nouvelle' },
@@ -39,7 +38,6 @@ const SOCIAL_KEYS = [
 
 const ChipSelect = ({ options, selected, onChange }) => (
   <div className="org-settings__genres">
-  const { t } = useTranslation();
     {options.map(o => (
       <button key={o.value} type="button" className={`org-settings__genre-chip ${selected.includes(o.value) ? 'active' : ''}`}
         onClick={() => onChange(selected.includes(o.value) ? selected.filter(v => v !== o.value) : [...selected, o.value])}>
