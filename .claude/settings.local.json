@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -lh /c/maison_dedition/frontend/src/styles/*.css)",
+      "Bash(xargs -I {} ls {})",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(wc -l /c/maison_dedition/frontend/src/pages/admin/*.jsx)",
+      "Bash(wc -l /c/maison_dedition/frontend/src/pages/*.jsx)",
+      "Bash(ls -1 /c/maison_dedition/frontend/src/pages/*.jsx)",
+      "Bash(grep -r \"class.*ViewSet\\\\|class.*View\" apps/*/views.py)",
+      "Bash(find apps:*)",
+      "Bash(python manage.py test apps.users.tests apps.wishlist.tests apps.newsletter.tests apps.contact.tests apps.manuscripts.tests)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''apps/users/models.py''\\).read\\(\\)\\); print\\(''models.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''apps/users/totp_manager.py''\\).read\\(\\)\\); print\\(''totp_manager.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''apps/users/session_manager.py''\\).read\\(\\)\\); print\\(''session_manager.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''apps/users/jwt_cookie_views.py''\\).read\\(\\)\\); print\\(''jwt_cookie_views.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''apps/users/jwt_cookie_auth.py''\\).read\\(\\)\\); print\\(''jwt_cookie_auth.py OK''\\)\")",
+      "Bash(python manage.py makemigrations users)",
+      "Bash(python manage.py migrate users)",
+      "Bash(mv \"Logo_frollot.png\" \"logo_frollot_tmp.png\")",
+      "Bash(mv \"logo_frollot_tmp.png\" \"logo_frollot.png\")",
+      "Bash(python manage.py makemigrations)",
+      "Bash(python -c ':*)",
+      "Bash(grep -r \"storefront\\\\|directory\\\\|professionals\" backend/apps/*/urls.py --include=\"*.py\")",
+      "Bash(grep -r \"class.*Storefront\\\\|class.*Directory\\\\|class.*InquiryView\\\\|class.*ProfessionalView\" backend/apps/*/views.py --include=\"*.py\")",
+      "Bash(grep -n \"useHomeData\" /c/maison_dedition/frontend/src/hooks/*.js)"
+    ]
+  }
+}

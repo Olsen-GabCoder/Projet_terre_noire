@@ -1,0 +1,2 @@
+- [Frollot Vision](project_frollot_vision.md) — Le projet est Frollot, plateforme sociale du livre multi-acteurs, pas une simple maison d'édition
+- [User Profile](user_profile.md) — Développeur principal du projet, francophone, basé au Gabon
