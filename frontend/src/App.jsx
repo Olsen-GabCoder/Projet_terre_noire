@@ -98,6 +98,10 @@ const OrgBooks = lazy(() => import('./pages/dashboard/OrgBooks'));
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings'));
 const OrgPrintRequests = lazy(() => import('./pages/dashboard/OrgPrintRequests'));
 
+// Pages dashboard — Mon compte
+const SecuritySettings = lazy(() => import('./pages/dashboard/SecuritySettings'));
+const MyInvitations = lazy(() => import('./pages/dashboard/MyInvitations'));
+
 // Pages espace auteur
 const AuthorDashboard = lazy(() => import('./pages/dashboard/AuthorDashboard'));
 const AuthorBooks = lazy(() => import('./pages/dashboard/AuthorBooks'));
@@ -320,11 +324,18 @@ function AppContent() {
                   <Route index element={<DashboardOverview />} />
 
                   {/* Mon espace — activités personnelles */}
+                  <Route path="orders" element={<Orders embedded />} />
+                  <Route path="wishlist" element={<Wishlist embedded />} />
                   <Route path="my-manuscripts" element={<MyManuscripts />} />
                   <Route path="my-service-requests" element={<MyServiceRequests />} />
                   <Route path="my-quotes" element={<Quotes />} />
                   <Route path="my-quotes/:id" element={<QuoteDetail />} />
                   <Route path="my-loans" element={<MyLoans />} />
+                  <Route path="lists" element={<ReadingLists />} />
+                  <Route path="clubs" element={<BookClubs />} />
+                  <Route path="security" element={<SecuritySettings />} />
+                  <Route path="settings" element={<Settings embedded />} />
+                  <Route path="invitations" element={<MyInvitations />} />
                   <Route path="projects" element={<EditorialProjects />} />
                   <Route path="projects/:id" element={<EditorialProjectDetail />} />
 
