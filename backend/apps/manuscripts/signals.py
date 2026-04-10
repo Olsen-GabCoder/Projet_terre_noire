@@ -74,67 +74,64 @@ def _handle_quote_accepted(manuscript_id, accepted_quote_pk, provider_org_id):
     from apps.manuscripts.models import Manuscript
     from apps.services.models import Quote, EditorialProject
 
-    try:
-        with transaction.atomic():
-            manuscript = Manuscript.objects.select_for_update().get(pk=manuscript_id)
-            accepted_quote = Quote.objects.get(pk=accepted_quote_pk)
+    from django.utils import timezone
 
-            # 1. Passer le manuscrit en ACCEPTED
-            #    On utilise un save direct ici plutôt que transition_status
-            #    car la précondition (devis accepté) est déjà satisfaite par construction.
-            manuscript.status = 'ACCEPTED'
-            from django.utils import timezone
-            manuscript.reviewed_at = timezone.now()
-            manuscript.save(update_fields=['status', 'reviewed_at'])
+    with transaction.atomic():
+        manuscript = Manuscript.objects.select_for_update().get(pk=manuscript_id)
+        accepted_quote = Quote.objects.get(pk=accepted_quote_pk)
 
-            # 2. Créer le projet éditorial
-            if provider_org_id:
-                EditorialProject.objects.create(
-                    manuscript=manuscript,
-                    organization_id=provider_org_id,
-                    title=manuscript.title,
-                    description=(
-                        f"Projet éditorial créé automatiquement suite à l'acceptation "
-                        f"du devis {accepted_quote.reference} "
-                        f"(modèle : {accepted_quote.get_publishing_model_display()})."
-                    ),
-                    status='DRAFT',
+        # 1. Passer le manuscrit en ACCEPTED
+        manuscript.status = 'ACCEPTED'
+        manuscript.reviewed_at = timezone.now()
+        manuscript.save(update_fields=['status', 'reviewed_at'])
+
+        # 2. Créer le projet éditorial
+        if provider_org_id:
+            project = EditorialProject.objects.create(
+                manuscript=manuscript,
+                organization_id=provider_org_id,
+                title=manuscript.title,
+                description=(
+                    f"Projet éditorial créé automatiquement suite à l'acceptation "
+                    f"du devis {accepted_quote.reference} "
+                    f"(modèle : {accepted_quote.get_publishing_model_display()})."
+                ),
+                status='DRAFT',
+            )
+            logger.info(
+                "Manuscrit %s accepté (devis %s). Projet éditorial créé : id=%s.",
+                manuscript_id, accepted_quote_pk, project.id,
+            )
+        else:
+            logger.warning(
+                "Devis %s accepté sans provider_organization — "
+                "projet éditorial NON créé. Le devis doit être réparé manuellement.",
+                accepted_quote_pk,
+            )
+
+        # 3. Annuler les devis concurrents (marché ouvert)
+        if manuscript.is_open_market:
+            competing_quotes = Quote.objects.filter(
+                manuscript=manuscript,
+                status__in=['DRAFT', 'SENT', 'REVISION_REQUESTED'],
+            ).exclude(pk=accepted_quote_pk)
+
+            cancelled_org_ids = list(
+                competing_quotes.exclude(
+                    provider_organization__isnull=True
+                ).values_list('provider_organization_id', flat=True).distinct()
+            )
+
+            competing_quotes.update(
+                status='CANCELLED',
+                rejection_reason="Un autre devis a été accepté par l'auteur.",
+            )
+
+            # 4. Notifier les maisons écartées (hors transaction pour ne pas bloquer)
+            if cancelled_org_ids:
+                transaction.on_commit(
+                    lambda: _notify_cancelled_orgs(manuscript_id, cancelled_org_ids)
                 )
-
-            # 3. Annuler les devis concurrents (marché ouvert)
-            if manuscript.is_open_market:
-                competing_quotes = Quote.objects.filter(
-                    manuscript=manuscript,
-                    status__in=['DRAFT', 'SENT', 'REVISION_REQUESTED'],
-                ).exclude(pk=accepted_quote_pk)
-
-                cancelled_org_ids = list(
-                    competing_quotes.exclude(
-                        provider_organization__isnull=True
-                    ).values_list('provider_organization_id', flat=True).distinct()
-                )
-
-                competing_quotes.update(
-                    status='CANCELLED',
-                    rejection_reason="Un autre devis a été accepté par l'auteur.",
-                )
-
-                # 4. Notifier les maisons écartées (hors transaction pour ne pas bloquer)
-                if cancelled_org_ids:
-                    transaction.on_commit(
-                        lambda: _notify_cancelled_orgs(manuscript_id, cancelled_org_ids)
-                    )
-
-        logger.info(
-            "Manuscrit %s accepté (devis %s). Projet éditorial créé.",
-            manuscript_id, accepted_quote_pk,
-        )
-
-    except Exception:
-        logger.exception(
-            "Erreur lors de l'acceptation du manuscrit %s (devis %s).",
-            manuscript_id, accepted_quote_pk,
-        )
 
 
 def _handle_quote_rejected(manuscript_id):

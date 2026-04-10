@@ -261,7 +261,7 @@ CACHE_BOOKS_TTL = 300     # 5 min pour les listes de livres
 # Configuration Email (réinitialisation mot de passe, notifications, etc.)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 # Logo : frontend/public/images/ ou backend/assets/images/ (priorité au backend)
-LOGO_PATH = BASE_DIR / 'assets' / 'images' / 'logo_frollot.png'
+LOGO_PATH = BASE_DIR / 'assets' / 'images' / 'logo_frollot_small.jpg'
 if not LOGO_PATH.exists():
     LOGO_PATH = BASE_DIR.parent / 'frontend' / 'public' / 'images' / 'logo_frollot.png'
 # Logo optimisé pour les PDFs (petit, JPEG, ~2 Ko)

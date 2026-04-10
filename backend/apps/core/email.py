@@ -4,6 +4,7 @@ Centralise l'envoi des notifications (commandes, newsletter, contact, etc.).
 """
 import base64
 import logging
+import mimetypes
 
 from django.conf import settings
 from django.core.mail import send_mail, EmailMultiAlternatives
@@ -26,7 +27,8 @@ def _get_logo_base64():
             if logo_path.stat().st_size > MAX_LOGO_BYTES:
                 return None
             data = logo_path.read_bytes()
-            return f"data:image/png;base64,{base64.b64encode(data).decode('ascii')}"
+            mime_type = mimetypes.guess_type(str(logo_path))[0] or 'image/png'
+            return f"data:{mime_type};base64,{base64.b64encode(data).decode('ascii')}"
         except Exception:
             pass
     return None

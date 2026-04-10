@@ -51,6 +51,11 @@ class ManuscriptSerializer(serializers.ModelSerializer):
             'id', 'status', 'submitted_at', 'reviewed_by', 'reviewed_at',
             'open_market_locked', 'open_market_deadline',
         ]
+        extra_kwargs = {
+            'pen_name': {'required': True, 'allow_blank': False},
+            'country': {'required': True, 'allow_blank': False},
+            'page_count': {'required': True},
+        }
 
     def get_target_organization_name(self, obj):
         if obj.target_organization:
@@ -134,7 +139,11 @@ class ManuscriptSerializer(serializers.ModelSerializer):
         return value.strip()
 
     def validate_page_count(self, value):
-        if value is not None and (value < 1 or value > 10000):
+        if value is None:
+            raise serializers.ValidationError(
+                "Le nombre de pages est obligatoire."
+            )
+        if value < 1 or value > 10000:
             raise serializers.ValidationError(
                 "Le nombre de pages doit être entre 1 et 10 000."
             )

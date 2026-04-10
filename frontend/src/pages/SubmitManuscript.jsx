@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import manuscriptService from '../services/manuscriptService';
 import organizationService from '../services/organizationService';
+import AFRICAN_COUNTRIES, { matchCountryName, getDialCodeByCountry } from '../constants/africanCountries';
 import '../styles/SubmitManuscript.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
@@ -48,10 +49,11 @@ const SubmitManuscript = () => {
   const [previewOrg, setPreviewOrg] = useState(null);
 
   const [formData, setFormData] = useState({
-    title: '', author_name: '', pen_name: '', email: '', phone_number: '',
-    country: '', genre: 'ROMAN', language: 'FR', page_count: '', description: '',
-    terms_accepted: false,
+    title: '', author_name: '', pen_name: '', email: '', phone_local: '',
+    dial_code: '', country: '', genre: 'ROMAN', language: 'FR', page_count: '',
+    description: '', terms_accepted: false,
   });
+  const [dialCodeManual, setDialCodeManual] = useState(false);
 
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
@@ -60,6 +62,26 @@ const SubmitManuscript = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState(false);
   const [submittedId, setSubmittedId] = useState(null);
+
+  // Pré-remplir les champs depuis le compte utilisateur
+  useEffect(() => {
+    if (!user) return;
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    const matched = matchCountryName(user.country);
+    const dialCode = matched?.dialCode || '';
+    let phoneLocal = user.phone_number || '';
+    if (dialCode && phoneLocal.startsWith(dialCode)) {
+      phoneLocal = phoneLocal.slice(dialCode.length);
+    }
+    setFormData(prev => ({
+      ...prev,
+      author_name: fullName,
+      email: user.email || '',
+      country: matched?.name || '',
+      dial_code: dialCode,
+      phone_local: phoneLocal.replace(/\D/g, ''),
+    }));
+  }, [user]);
 
   // Charger la maison présélectionnée depuis l'URL
   useEffect(() => {
@@ -114,11 +136,27 @@ const SubmitManuscript = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === 'phone_local') {
+      const digits = value.replace(/\D/g, '');
+      setFormData(prev => ({ ...prev, phone_local: digits }));
+      if (fieldErrors.phone_number) setFieldErrors(p => ({ ...p, phone_number: null }));
+      return;
+    }
+    if (name === 'country') {
+      const newDial = getDialCodeByCountry(value);
+      setFormData(prev => ({
+        ...prev,
+        country: value,
+        ...((!dialCodeManual && newDial) ? { dial_code: newDial } : {}),
+      }));
+      if (fieldErrors.country) setFieldErrors(p => ({ ...p, country: null }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (fieldErrors[name]) setFieldErrors((p) => ({ ...p, [name]: null }));
   };
 
-  const validatePhone = (phone) => phone.replace(/\D/g, '').length >= 8;
+  const validatePhone = (local) => local.replace(/\D/g, '').length >= 6;
   const descWordCount = formData.description.trim() ? formData.description.trim().split(/\s+/).length : 0;
 
   const handleFileChange = (e) => {
@@ -141,18 +179,24 @@ const SubmitManuscript = () => {
     setError(''); setFieldErrors({}); setIsSubmitting(true);
 
     if (!file) { setError(t('pages.submitManuscript.fileRequired')); setIsSubmitting(false); return; }
-    if (!validatePhone(formData.phone_number)) { setFieldErrors(p => ({ ...p, phone_number: t('pages.submitManuscript.phoneMinDigits') })); setIsSubmitting(false); return; }
+    if (!formData.country) { setFieldErrors(p => ({ ...p, country: 'Veuillez sélectionner votre pays.' })); setIsSubmitting(false); return; }
+    if (!formData.dial_code) { setFieldErrors(p => ({ ...p, phone_number: 'Veuillez sélectionner un indicatif.' })); setIsSubmitting(false); return; }
+    if (!validatePhone(formData.phone_local)) { setFieldErrors(p => ({ ...p, phone_number: 'Le numéro doit contenir au moins 6 chiffres.' })); setIsSubmitting(false); return; }
+    if (!formData.pen_name.trim()) { setFieldErrors(p => ({ ...p, pen_name: 'Le nom de plume est obligatoire.' })); setIsSubmitting(false); return; }
+    if (!formData.page_count) { setFieldErrors(p => ({ ...p, page_count: 'Le nombre de pages est obligatoire.' })); setIsSubmitting(false); return; }
     if (formData.description.trim().length < 50) { setFieldErrors(p => ({ ...p, description: t('pages.submitManuscript.descMinChars') })); setIsSubmitting(false); return; }
     if (!formData.terms_accepted) { setError(t('pages.submitManuscript.termsRequired')); setIsSubmitting(false); return; }
+
+    const phoneNumber = formData.dial_code + formData.phone_local;
 
     try {
       const fd = new FormData();
       fd.append('title', formData.title);
       fd.append('author_name', formData.author_name);
-      if (formData.pen_name) fd.append('pen_name', formData.pen_name);
+      fd.append('pen_name', formData.pen_name);
       fd.append('email', formData.email);
-      fd.append('phone_number', formData.phone_number);
-      if (formData.country) fd.append('country', formData.country);
+      fd.append('phone_number', phoneNumber);
+      fd.append('country', formData.country);
       fd.append('genre', formData.genre);
       fd.append('language', formData.language);
       if (formData.page_count) fd.append('page_count', formData.page_count);
@@ -645,43 +689,59 @@ const SubmitManuscript = () => {
 
                 <div className="form-group">
                   <label htmlFor="author_name" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelAuthorName')}</span><span className="required">*</span></label>
-                  <div className="input-group">
+                  <div className="input-group input-group--locked">
                     <span className="input-group__icon" aria-hidden><i className="fas fa-user" /></span>
-                    <input type="text" id="author_name" name="author_name" value={formData.author_name} onChange={handleChange} placeholder={t('pages.submitManuscript.placeholderAuthorName')} className="form-input" required />
+                    <input type="text" id="author_name" name="author_name" value={formData.author_name} readOnly className="form-input" required />
+                    <span className="input-group__lock" aria-hidden><i className="fas fa-lock" /></span>
                   </div>
+                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/profile">Mon profil</Link>.</div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="pen_name" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPenName')}</span></label>
-                  <div className="input-group">
+                  <label htmlFor="pen_name" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPenName')}</span><span className="required">*</span></label>
+                  <div className={`input-group ${fieldErrors.pen_name ? 'input-group--error' : ''}`}>
                     <span className="input-group__icon" aria-hidden><i className="fas fa-mask" /></span>
-                    <input type="text" id="pen_name" name="pen_name" value={formData.pen_name} onChange={handleChange} placeholder={t('pages.submitManuscript.placeholderOptional')} className="form-input" />
+                    <input type="text" id="pen_name" name="pen_name" value={formData.pen_name} onChange={handleChange} placeholder="Votre nom de plume ou votre vrai nom" className="form-input" required />
                   </div>
+                  {fieldErrors.pen_name && <span className="field-error">{fieldErrors.pen_name}</span>}
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="email" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelEmail')}</span><span className="required">*</span></label>
-                  <div className="input-group">
+                  <div className="input-group input-group--locked">
                     <span className="input-group__icon" aria-hidden><i className="fas fa-envelope" /></span>
-                    <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder={t('pages.submitManuscript.placeholderEmail')} className="form-input" required />
+                    <input type="email" id="email" name="email" value={formData.email} readOnly className="form-input" required />
+                    <span className="input-group__lock" aria-hidden><i className="fas fa-lock" /></span>
                   </div>
+                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/profile">Mon profil</Link>.</div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone_number" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPhone')}</span><span className="required">*</span></label>
-                  <div className={`input-group ${fieldErrors.phone_number ? 'input-group--error' : ''}`}>
-                    <span className="input-group__icon" aria-hidden><i className="fas fa-phone" /></span>
-                    <input type="tel" id="phone_number" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="+241 XX XX XX XX" className="form-input" required />
+                  <label htmlFor="phone_local" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPhone')}</span><span className="required">*</span></label>
+                  <div className="ms-phone-split">
+                    <div className="input-group input-group--select ms-phone-split__dial">
+                      <select id="dial_code" name="dial_code" value={formData.dial_code} onChange={(e) => { setFormData(p => ({ ...p, dial_code: e.target.value })); setDialCodeManual(true); }} className="form-input" required>
+                        <option value="">Indicatif</option>
+                        {AFRICAN_COUNTRIES.map(c => <option key={c.code} value={c.dialCode}>{c.dialCode} · {c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className={`input-group ms-phone-split__number ${fieldErrors.phone_number ? 'input-group--error' : ''}`}>
+                      <input type="tel" id="phone_local" name="phone_local" value={formData.phone_local} onChange={handleChange} inputMode="numeric" pattern="[0-9]*" placeholder="XX XX XX XX" className="form-input" required />
+                    </div>
                   </div>
                   {fieldErrors.phone_number && <span className="field-error">{fieldErrors.phone_number}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="country" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelCountry')}</span></label>
-                  <div className="input-group">
+                  <label htmlFor="country" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelCountry')}</span><span className="required">*</span></label>
+                  <div className={`input-group input-group--select ${fieldErrors.country ? 'input-group--error' : ''}`}>
                     <span className="input-group__icon" aria-hidden><i className="fas fa-globe-africa" /></span>
-                    <input type="text" id="country" name="country" value={formData.country} onChange={handleChange} placeholder={t('pages.submitManuscript.placeholderCountry')} className="form-input" />
+                    <select id="country" name="country" value={formData.country} onChange={handleChange} className="form-input" required>
+                      <option value="">— Sélectionnez votre pays —</option>
+                      {AFRICAN_COUNTRIES.map(c => <option key={c.code} value={c.name}>{c.name}</option>)}
+                    </select>
                   </div>
+                  {fieldErrors.country && <span className="field-error">{fieldErrors.country}</span>}
                 </div>
 
                 <div className="form-group full-width form-row-3">
@@ -704,11 +764,12 @@ const SubmitManuscript = () => {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="page_count" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPages')}</span></label>
-                    <div className="input-group">
+                    <label htmlFor="page_count" className="form-label"><span className="label-text">{t('pages.submitManuscript.labelPages')}</span><span className="required">*</span></label>
+                    <div className={`input-group ${fieldErrors.page_count ? 'input-group--error' : ''}`}>
                       <span className="input-group__icon" aria-hidden><i className="fas fa-file-alt" /></span>
-                      <input type="number" id="page_count" name="page_count" value={formData.page_count} onChange={handleChange} placeholder="250" className="form-input" min="1" max="10000" />
+                      <input type="number" id="page_count" name="page_count" value={formData.page_count} onChange={handleChange} placeholder="250" className="form-input" min="1" max="10000" required />
                     </div>
+                    {fieldErrors.page_count && <span className="field-error">{fieldErrors.page_count}</span>}
                   </div>
                 </div>
               </div>

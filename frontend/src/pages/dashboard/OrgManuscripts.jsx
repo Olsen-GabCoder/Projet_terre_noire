@@ -112,6 +112,7 @@ const OrgManuscripts = () => {
       client_email: ms.email,
       title: `Devis \u00e9dition \u2014 ${ms.title}`,
     });
+    params.set('organization', orgId);
     if (ms.submitter) params.set('client_id', ms.submitter);
     if (parentQuoteId) params.set('parent_quote', parentQuoteId);
     return `/dashboard/services/quotes/create?${params.toString()}`;

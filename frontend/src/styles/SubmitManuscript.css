@@ -580,6 +580,41 @@
   color: var(--color-gray-500);
 }
 
+.field-hint a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* Champs verrouillés (identité du compte) */
+.input-group--locked .form-input {
+  background: var(--color-bg-section-alt, #f8f9fa);
+  cursor: not-allowed;
+  color: var(--color-gray-500);
+}
+
+.input-group__lock {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  color: var(--color-gray-400);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* Téléphone : indicatif + numéro */
+.ms-phone-split {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ms-phone-split__dial {
+  flex: 0 0 200px;
+}
+
+.ms-phone-split__number {
+  flex: 1;
+}
+
 /* Terms checkbox */
 .form-terms {
   margin-top: 0.5rem;
@@ -901,6 +936,14 @@
 
   .success-card {
     padding: 1.5rem;
+  }
+
+  .ms-phone-split {
+    flex-direction: column;
+  }
+
+  .ms-phone-split__dial {
+    flex: none;
   }
 }
 
