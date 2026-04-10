@@ -282,7 +282,7 @@ function AppContent() {
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
-                <Route path="/submit-manuscript" element={<SubmitManuscript />} />
+                <Route path="/submit-manuscript" element={<ProtectedRoute><SubmitManuscript /></ProtectedRoute>} />
                 
                 {/* Routes utilisateur */}
                 <Route path="/login" element={<Login />} />

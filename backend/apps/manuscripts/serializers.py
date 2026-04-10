@@ -69,10 +69,11 @@ class ManuscriptSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         if obj.file:
+            url = f'/api/manuscripts/{obj.pk}/download/'
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.file.url)
-            return obj.file.url
+                return request.build_absolute_uri(url)
+            return url
         return None
 
     def get_quotes_summary(self, obj):

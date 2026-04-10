@@ -101,6 +101,25 @@ const AdminManuscripts = () => {
   const getLanguageLabel = (lang) => LANGUAGE_LABELS[lang] || lang || '—';
   const getFileUrl = (m) => m.file_url || m.file;
 
+  const handleDownloadFile = async (manuscript) => {
+    const url = getFileUrl(manuscript);
+    if (!url) return;
+    try {
+      const res = await api.get(url, { responseType: 'blob' });
+      const blobUrl = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `manuscrit-${manuscript.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      const msg = err.response?.status === 403
+        ? "Vous n'avez pas accès à ce manuscrit."
+        : 'Erreur lors du téléchargement.';
+      toast.error(msg);
+    }
+  };
+
   const getFilteredManuscripts = () => {
     if (filter === 'all') return manuscripts;
     return manuscripts.filter(m => m.status === filter);
@@ -257,7 +276,7 @@ const AdminManuscripts = () => {
                         </button>
                         {getFileUrl(manuscript) && (
                           <button
-                            onClick={() => window.open(getFileUrl(manuscript), '_blank')}
+                            onClick={() => handleDownloadFile(manuscript)}
                             className="btn-download"
                           >
                             <i className="fas fa-download" />
@@ -304,7 +323,7 @@ const AdminManuscripts = () => {
                       </button>
                       {getFileUrl(manuscript) && (
                         <button
-                          onClick={() => window.open(getFileUrl(manuscript), '_blank')}
+                          onClick={() => handleDownloadFile(manuscript)}
                           className="btn-download"
                         >
                           <i className="fas fa-download" />
@@ -417,7 +436,7 @@ const AdminManuscripts = () => {
                     </div>
                     <div className="admin-manuscripts-modal__file-download">
                       <button
-                        onClick={() => window.open(getFileUrl(selectedManuscript), '_blank')}
+                        onClick={() => handleDownloadFile(selectedManuscript)}
                         className="btn-download"
                       >
                         <i className="fas fa-download" />

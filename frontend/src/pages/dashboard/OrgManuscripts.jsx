@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import api from '../../services/api';
 import manuscriptService from '../../services/manuscriptService';
 import servicesService from '../../services/servicesService';
 import { useAuth } from '../../context/AuthContext';
@@ -250,9 +251,28 @@ const OrgManuscripts = () => {
                   <p>{selected.description}</p>
                 </div>
                 {selected.file_url && (
-                  <a href={selected.file_url} target="_blank" rel="noopener noreferrer" className="dashboard-btn dashboard-btn--secondary" style={{ marginBottom: 16 }}>
+                  <button
+                    type="button"
+                    className="dashboard-btn dashboard-btn--secondary"
+                    style={{ marginBottom: 16 }}
+                    onClick={async () => {
+                      try {
+                        const res = await api.get(selected.file_url, { responseType: 'blob' });
+                        const blobUrl = URL.createObjectURL(res.data);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `manuscrit-${selected.id}.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(blobUrl);
+                      } catch (err) {
+                        toast.error(err.response?.status === 403
+                          ? "Vous n'avez pas accès à ce manuscrit."
+                          : 'Erreur lors du téléchargement.');
+                      }
+                    }}
+                  >
                     <i className="fas fa-download" /> {"Télécharger le manuscrit"}
-                  </a>
+                  </button>
                 )}
 
                 {/* ── Devis liés ── */}
