@@ -140,6 +140,19 @@ def send_editorial_quote_task(self, quote_id):
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_quote_response_notification_task(self, quote_id, action, reason=''):
+    try:
+        from apps.services.models import Quote
+        from apps.core.email import send_quote_response_notification
+        quote = Quote.objects.select_related(
+            'provider_organization', 'client', 'manuscript', 'created_by',
+        ).get(pk=quote_id)
+        send_quote_response_notification(quote, action, reason)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_welcome_registration_task(self, user_id):
     try:
         from django.contrib.auth import get_user_model

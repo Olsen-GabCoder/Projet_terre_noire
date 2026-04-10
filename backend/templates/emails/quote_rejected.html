@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ editor_name }}</strong>,</p>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  L'auteur <strong>{{ author_name }}</strong> a <strong style="color: #ef4444;">décliné</strong>
+  votre devis pour le manuscrit <strong>&laquo;&nbsp;{{ manuscript_title }}&nbsp;&raquo;</strong>.
+</p>
+
+<!-- Résumé du devis refusé -->
+<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0 0 6px; color: #ef4444; font-weight: bold; font-size: 14px;">
+    Devis refusé
+  </p>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; color: #333;">
+    <tr><td style="padding: 2px 12px 2px 0; color: #555;">Référence :</td><td>{{ quote_reference }}</td></tr>
+    <tr><td style="padding: 2px 12px 2px 0; color: #555;">Modèle éditorial :</td><td>{{ publishing_model_display }}</td></tr>
+    <tr><td style="padding: 2px 12px 2px 0; color: #555;">Montant TTC :</td><td>{{ total_ttc }} FCFA</td></tr>
+  </table>
+</div>
+
+{% if rejection_reason %}
+<div style="background: #f8f9fa; border-left: 4px solid #94a3b8; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0 0 6px; color: #64748b; font-weight: bold; font-size: 13px;">Motif indiqué par l'auteur</p>
+  <p style="margin: 0; color: #333; font-size: 13px; white-space: pre-line;">{{ rejection_reason }}</p>
+</div>
+{% endif %}
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Cette décision est définitive pour ce devis. Si le manuscrit est en marché ouvert,
+  d'autres opportunités pourront se présenter.
+</p>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}
