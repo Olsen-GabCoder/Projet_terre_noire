@@ -375,17 +375,17 @@ const Header = () => {
                     </>
                   )}
                   <h4 className="user-actions-title">{t('footer.accountTitle')}</h4>
-                  <Link to="/profile" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="action-icon"><i className="fas fa-user-circle"></i></div>
-                    <div className="action-content"><span>{t('common.myProfile')}</span><small>{t('header.profileSubtitle')}</small></div>
+                  <Link to="/dashboard" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="action-icon"><i className="fas fa-tachometer-alt"></i></div>
+                    <div className="action-content"><span>{t('header.dashboard', 'Mon tableau de bord')}</span><small>{t('header.dashboardSubtitle', 'Vue d\'ensemble de vos activités')}</small></div>
                     <i className="fas fa-chevron-right"></i>
                   </Link>
-                  <Link to="/orders" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/dashboard/orders" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
                     <div className="action-icon"><i className="fas fa-box"></i></div>
                     <div className="action-content"><span>{t('common.myOrders')}</span><small>{t('header.ordersSubtitle')}</small></div>
                     <i className="fas fa-chevron-right"></i>
                   </Link>
-                  <Link to="/settings" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/dashboard/settings" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
                     <div className="action-icon"><i className="fas fa-cog"></i></div>
                     <div className="action-content"><span>{t('common.settings')}</span><small>{t('header.settingsSubtitle')}</small></div>
                     <i className="fas fa-chevron-right"></i>
@@ -636,19 +636,27 @@ const Header = () => {
 
                       <div className="dropdown-divider"></div>
 
-                      <Link to="/profile" className="dropdown-item" onClick={closeAllMenus}>
-                        <div className="dropdown-icon"><i className="fas fa-user-circle"></i></div>
-                        <div className="dropdown-content"><span>{t('common.myProfile')}</span><small>{t('header.profileSubtitle')}</small></div>
+                      <Link to="/dashboard" className="dropdown-item" onClick={closeAllMenus}>
+                        <div className="dropdown-icon"><i className="fas fa-tachometer-alt"></i></div>
+                        <div className="dropdown-content"><span>{t('header.dashboard', 'Mon tableau de bord')}</span><small>{t('header.dashboardSubtitle', 'Vue d\'ensemble de vos activités')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
-                      <Link to="/orders" className="dropdown-item" onClick={closeAllMenus}>
+                      <Link to="/dashboard/orders" className="dropdown-item" onClick={closeAllMenus}>
                         <div className="dropdown-icon"><i className="fas fa-box"></i></div>
                         <div className="dropdown-content"><span>{t('common.myOrders')}</span><small>{t('header.ordersSubtitle')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
-                      <Link to="/settings" className="dropdown-item" onClick={closeAllMenus}>
+                      <Link to="/dashboard/settings" className="dropdown-item" onClick={closeAllMenus}>
                         <div className="dropdown-icon"><i className="fas fa-cog"></i></div>
                         <div className="dropdown-content"><span>{t('common.settings')}</span><small>{t('header.settingsSubtitle')}</small></div>
+                        <i className="fas fa-chevron-right"></i>
+                      </Link>
+
+                      <div className="dropdown-divider"></div>
+
+                      <Link to="/profile" className="dropdown-item dropdown-item--secondary" onClick={closeAllMenus}>
+                        <div className="dropdown-icon"><i className="fas fa-user-circle"></i></div>
+                        <div className="dropdown-content"><span>{t('header.publicProfile', 'Voir mon profil')}</span><small>{t('header.publicProfileSubtitle', 'Page publique')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
 
