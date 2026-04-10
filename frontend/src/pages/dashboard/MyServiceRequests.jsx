@@ -124,10 +124,10 @@ const MyServiceRequests = () => {
                       <td>
                         {req.status === 'QUOTED' && req.quotes_count > 0 && (
                           <div style={{ display: 'flex', gap: '0.35rem' }}>
-                            <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleQuoteRespond(req.id, true)}>
+                            <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleQuoteRespond(req.pending_quote_id, true)} disabled={!req.pending_quote_id}>
                               Accepter
                             </button>
-                            <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }} onClick={() => handleQuoteRespond(req.id, false)}>
+                            <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }} onClick={() => handleQuoteRespond(req.pending_quote_id, false)} disabled={!req.pending_quote_id}>
                               Refuser
                             </button>
                           </div>

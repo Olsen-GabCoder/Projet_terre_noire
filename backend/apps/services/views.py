@@ -188,10 +188,10 @@ class ServiceRequestListView(generics.ListAPIView):
                 return ServiceRequest.objects.none()
             return ServiceRequest.objects.filter(
                 provider_profile__in=profiles,
-            ).select_related('client', 'provider_profile__user', 'listing')
+            ).select_related('client', 'provider_profile__user', 'listing').prefetch_related('quotes')
         return ServiceRequest.objects.filter(
             client=user,
-        ).select_related('client', 'provider_profile__user', 'listing')
+        ).select_related('client', 'provider_profile__user', 'listing').prefetch_related('quotes')
 
 
 class ServiceRequestDetailView(generics.RetrieveAPIView):

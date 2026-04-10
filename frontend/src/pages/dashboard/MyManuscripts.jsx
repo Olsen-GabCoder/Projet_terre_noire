@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import manuscriptService from '../../services/manuscriptService';
 import { useTranslation } from 'react-i18next';
@@ -130,8 +130,8 @@ const MyManuscripts = () => {
                   const st = STATUS_STYLES[ms.status] || STATUS_STYLES.PENDING;
                   const isExpanded = expandedId === ms.id;
                   return (
-                    <>
-                      <tr key={ms.id} onClick={() => toggleExpand(ms)} style={{ cursor: 'pointer' }}>
+                    <Fragment key={ms.id}>
+                      <tr onClick={() => toggleExpand(ms)} style={{ cursor: 'pointer' }}>
                         <td className="org-manuscripts__ref">MS-{String(ms.id).padStart(5, '0')}</td>
                         <td className="org-manuscripts__title">{ms.title}</td>
                         <td>{ms.genre_display}</td>
@@ -227,7 +227,7 @@ const MyManuscripts = () => {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>

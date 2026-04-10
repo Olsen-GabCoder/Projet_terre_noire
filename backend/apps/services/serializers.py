@@ -65,6 +65,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     provider_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     quotes_count = serializers.SerializerMethodField()
+    pending_quote_id = serializers.SerializerMethodField()
 
     class Meta:
         model = ServiceRequest
@@ -73,7 +74,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             'provider_profile', 'provider_name',
             'title', 'description', 'requirements', 'file',
             'page_count', 'word_count', 'budget_min', 'budget_max',
-            'status', 'status_display', 'quotes_count',
+            'status', 'status_display', 'quotes_count', 'pending_quote_id',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'client', 'created_at', 'updated_at']
@@ -86,6 +87,11 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
 
     def get_quotes_count(self, obj):
         return obj.quotes.count()
+
+    def get_pending_quote_id(self, obj):
+        # Utilise le prefetch si disponible, sinon requête directe
+        quote = obj.quotes.filter(status='PENDING').first()
+        return quote.id if quote else None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
