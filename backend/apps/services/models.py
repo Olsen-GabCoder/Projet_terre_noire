@@ -768,6 +768,16 @@ class Quote(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True,
         verbose_name="Prix de vente prévu (FCFA)",
     )
+    author_must_purchase = models.BooleanField(
+        default=False,
+        verbose_name="Achat obligatoire par l'auteur",
+        help_text="Cocher si le contrat impose à l'auteur d'acheter un nombre d'exemplaires.",
+    )
+    author_purchase_quantity = models.PositiveIntegerField(
+        null=True, blank=True,
+        verbose_name="Exemplaires en achat libre (optionnel)",
+        help_text="Nombre d'exemplaires que l'auteur peut acheter librement, sans obligation.",
+    )
     parent_quote = models.ForeignKey(
         'self', on_delete=models.SET_NULL,
         null=True, blank=True,
@@ -934,15 +944,40 @@ class Quote(models.Model):
         Valide les règles métier d'un devis éditorial avant envoi.
         Appelé avant le passage de DRAFT à SENT pour un devis lié à un manuscrit.
         Lève ValidationError si une règle est violée.
+
+        Garde-fous anti-Harmattan — aucun n'est contournable par omission de champ.
         """
         if not self.manuscript:
             return  # Pas un devis éditorial, pas de validation spécifique
 
+        model = self.publishing_model
+        model_display = self.get_publishing_model_display() if model else '—'
+
         # 1. Le modèle éditorial doit être renseigné
-        if not self.publishing_model:
+        if not model:
             raise ValidationError(
                 "Un devis lié à un manuscrit doit obligatoirement mentionner "
                 "le modèle éditorial (compte d'éditeur, coédition, etc.)."
+            )
+
+        # ── Champs rendus obligatoires selon le modèle ──
+
+        # Prix de vente : obligatoire pour tous les modèles
+        if not self.retail_price:
+            raise ValidationError(
+                "Le prix de vente public est obligatoire pour un devis éditorial."
+            )
+
+        # Tirage : obligatoire sauf NUMERIQUE_PUR
+        if model != 'NUMERIQUE_PUR' and self.print_run is None:
+            raise ValidationError(
+                f"Le tirage prévu est obligatoire pour un modèle {model_display}."
+            )
+
+        # Grille de droits d'auteur : obligatoire pour COMPTE_EDITEUR et COEDITION
+        if model in ('COMPTE_EDITEUR', 'COEDITION') and not self.royalty_terms:
+            raise ValidationError(
+                f"La grille de droits d'auteur est obligatoire pour un modèle {model_display}."
             )
 
         # 2. Garde-fou de cohérence économique (ratio paramétrable)
@@ -953,30 +988,38 @@ class Quote(models.Model):
                 raise ValidationError(
                     f"Le montant du devis ({self.total_ttc:,.0f} FCFA) dépasse "
                     f"{max_ratio}x le chiffre d'affaires théorique maximal "
-                    f"({max_revenue:,.0f} FCFA = {self.print_run} ex. x "
+                    f"({max_revenue:,.0f} FCFA = {self.print_run} ex. × "
                     f"{self.retail_price:,.0f} FCFA). "
                     f"Ce devis est économiquement incohérent."
                 )
 
-        # 3. Tirage minimum (sauf numérique pur)
-        if self.publishing_model != 'NUMERIQUE_PUR':
-            if self.print_run is not None and self.print_run < 300:
-                raise ValidationError(
-                    f"Le tirage minimum est de 300 exemplaires "
-                    f"(tirage prévu : {self.print_run}). "
-                    f"Pour un tirage inférieur, utilisez le modèle 'Édition numérique pure'."
-                )
+        # 3. Tirage minimum 300 exemplaires (sauf numérique pur)
+        if model != 'NUMERIQUE_PUR' and self.print_run is not None and self.print_run < 300:
+            raise ValidationError(
+                f"Le tirage minimum est de 300 exemplaires "
+                f"(tirage prévu : {self.print_run}). "
+                f"Pour un tirage inférieur, utilisez le modèle « Édition numérique pure »."
+            )
 
         # 4. Grille de droits d'auteur : plancher à 5% pour compte d'éditeur et coédition
-        if self.publishing_model in ('COMPTE_EDITEUR', 'COEDITION') and self.royalty_terms:
+        if model in ('COMPTE_EDITEUR', 'COEDITION') and self.royalty_terms:
             for tier in self.royalty_terms:
                 rate = tier.get('rate', 0)
                 if rate < 5:
                     raise ValidationError(
-                        f"Le taux de droits d'auteur ne peut pas être inférieur à 5% "
-                        f"pour un modèle {self.get_publishing_model_display()}. "
-                        f"Taux détecté : {rate}%."
+                        f"Le taux de droits d'auteur ne peut pas être inférieur à 5 % "
+                        f"pour un modèle {model_display}. "
+                        f"Taux détecté : {rate} %."
                     )
+
+        # 5. Interdiction d'achat obligatoire par l'auteur
+        if self.author_must_purchase and model in ('COMPTE_EDITEUR', 'COEDITION', 'COMPTE_AUTEUR'):
+            raise ValidationError(
+                f"L'achat obligatoire d'exemplaires par l'auteur est interdit pour un "
+                f"modèle {model_display}. Cette pratique est considérée comme abusive "
+                f"par Frollot. Si l'auteur souhaite acheter ses livres, il doit le faire "
+                f"librement après publication, sans engagement contractuel préalable."
+            )
 
 
 class QuoteLot(models.Model):
