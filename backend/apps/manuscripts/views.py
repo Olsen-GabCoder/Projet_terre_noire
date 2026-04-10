@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 
 from apps.core.throttling import PublicEndpointThrottle
 from apps.organizations.models import Organization, OrganizationMembership
-from apps.organizations.permissions import IsOrganizationMember, user_has_org_permission
+from apps.organizations.permissions import IsOrganizationEditor, IsOrganizationMember, user_has_org_permission
 from .models import Manuscript
 from .serializers import ManuscriptSerializer, ManuscriptListSerializer, ManuscriptStatusSerializer
 
@@ -266,7 +266,7 @@ class OrganizationManuscriptInboxView(generics.ListAPIView):
     Filtre : ?status=PENDING&type=targeted|open
     """
     serializer_class = ManuscriptListSerializer
-    permission_classes = [IsAuthenticated, IsOrganizationMember]
+    permission_classes = [IsAuthenticated, IsOrganizationEditor]
 
     def get_queryset(self):
         from apps.organizations.models import Organization
@@ -307,7 +307,7 @@ class OrganizationManuscriptDetailView(generics.RetrieveAPIView):
     GET /api/organizations/{org_id}/manuscripts/{pk}/
     """
     serializer_class = ManuscriptSerializer
-    permission_classes = [IsAuthenticated, IsOrganizationMember]
+    permission_classes = [IsAuthenticated, IsOrganizationEditor]
 
     def get_queryset(self):
         from apps.organizations.models import Organization

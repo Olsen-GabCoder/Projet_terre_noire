@@ -44,6 +44,7 @@ const OrgManuscripts = () => {
   const [manuscripts, setManuscripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [accessDenied, setAccessDenied] = useState(false);
   const [filter, setFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
@@ -61,7 +62,13 @@ const OrgManuscripts = () => {
     if (typeFilter) params.type = typeFilter;
     manuscriptService.getOrgManuscripts(orgId, params)
       .then((res) => setManuscripts(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setError('Erreur de chargement.'))
+      .catch((err) => {
+        if (err.response?.status === 403) {
+          setAccessDenied(true);
+        } else {
+          setError('Erreur de chargement.');
+        }
+      })
       .finally(() => setLoading(false));
   }, [orgId, filter, typeFilter]);
 
@@ -112,6 +119,25 @@ const OrgManuscripts = () => {
 
   if (loading && manuscripts.length === 0) {
     return <div className="dashboard-loading"><div className="admin-spinner" /></div>;
+  }
+
+  if (accessDenied || (!loading && !canManage)) {
+    return (
+      <div style={{ padding: '3rem 2rem', textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.75rem', color: '#ef4444' }}>
+          <i className="fas fa-lock" />
+        </div>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-heading)', margin: '0 0 0.75rem' }}>
+          Accès réservé aux éditeurs
+        </h2>
+        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted-ui)', margin: '0 0 1.5rem', lineHeight: 1.6 }}>
+          Seuls les rôles Propriétaire, Administrateur et Éditeur peuvent consulter les manuscrits reçus par l'organisation.
+        </p>
+        <button onClick={() => navigate(`/dashboard/organizations/${orgId}`)} className="dashboard-btn dashboard-btn--primary">
+          <i className="fas fa-arrow-left" /> Retour au tableau de bord
+        </button>
+      </div>
+    );
   }
 
   return (

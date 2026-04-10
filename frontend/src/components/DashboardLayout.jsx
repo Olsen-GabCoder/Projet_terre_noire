@@ -15,25 +15,34 @@ const Badge = ({ count, accent }) => {
 };
 
 /* ── Helper : sous-menus contextuels par type d'organisation ── */
+/* Rôles éditoriaux — seuls ces rôles voient les liens Manuscrits et Projets */
+const EDITORIAL_ROLES = ['PROPRIETAIRE', 'ADMINISTRATEUR', 'EDITEUR'];
+
+/* ── Helper : sous-menus contextuels par type d'organisation ── */
 const ORG_SUB_LINKS = {
-  MAISON_EDITION: (id, t) => [
-    { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
-    { to: `/dashboard/organizations/${id}/books`, icon: 'fas fa-book', label: t('dashboard.books', 'Livres') },
-    { to: `/dashboard/organizations/${id}/manuscripts`, icon: 'fas fa-inbox', label: t('dashboard.manuscripts', 'Manuscrits') },
-    { to: `/dashboard/organizations/${id}/projects`, icon: 'fas fa-project-diagram', label: t('dashboard.editorialProjects.title', 'Projets éditoriaux') },
-    { to: `/dashboard/organizations/${id}/print-requests`, icon: 'fas fa-print', label: t('dashboard.printRequests', 'Impression') },
-    { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
-  ],
-  LIBRAIRIE: (id, t) => [
+  MAISON_EDITION: (id, t, role) => {
+    const isEditor = EDITORIAL_ROLES.includes(role);
+    return [
+      { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
+      { to: `/dashboard/organizations/${id}/books`, icon: 'fas fa-book', label: t('dashboard.books', 'Livres') },
+      ...(isEditor ? [
+        { to: `/dashboard/organizations/${id}/manuscripts`, icon: 'fas fa-inbox', label: t('dashboard.manuscripts', 'Manuscrits') },
+        { to: `/dashboard/organizations/${id}/projects`, icon: 'fas fa-project-diagram', label: t('dashboard.editorialProjects.title', 'Projets éditoriaux') },
+      ] : []),
+      { to: `/dashboard/organizations/${id}/print-requests`, icon: 'fas fa-print', label: t('dashboard.printRequests', 'Impression') },
+      { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
+    ];
+  },
+  LIBRAIRIE: (id, t, _role) => [
     { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
     { to: `/dashboard/organizations/${id}/books`, icon: 'fas fa-book', label: t('dashboard.catalog', 'Catalogue') },
     { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
   ],
-  BIBLIOTHEQUE: (id, t) => [
+  BIBLIOTHEQUE: (id, t, _role) => [
     { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
     { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
   ],
-  IMPRIMERIE: (id, t) => [
+  IMPRIMERIE: (id, t, _role) => [
     { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
     { to: `/dashboard/organizations/${id}/print-requests`, icon: 'fas fa-print', label: t('dashboard.printRequests', 'Demandes') },
     { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
@@ -193,7 +202,7 @@ const DashboardLayout = () => {
             <h3 className="dashboard__orgs-title">{t('dashboard.myOrgs', 'Mes organisations')}</h3>
             {organizationMemberships.map((m) => {
               const isExpanded = expandedOrg === m.organization_id;
-              const subLinks = (ORG_SUB_LINKS[m.organization_type] || ORG_SUB_LINKS.MAISON_EDITION)(m.organization_id, t);
+              const subLinks = (ORG_SUB_LINKS[m.organization_type] || ORG_SUB_LINKS.MAISON_EDITION)(m.organization_id, t, m.role);
               return (
                 <div key={m.organization_id} className="dashboard__org-group">
                   <button

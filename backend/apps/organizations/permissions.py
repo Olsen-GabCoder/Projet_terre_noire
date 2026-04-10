@@ -87,6 +87,20 @@ class IsOrganizationAdmin(permissions.BasePermission):
         ).exists()
 
 
+class IsOrganizationEditor(permissions.BasePermission):
+    """Membre actif avec rôle éditorial (PROPRIETAIRE, ADMINISTRATEUR, EDITEUR)."""
+    def has_permission(self, request, view):
+        org_id = view.kwargs.get('org_id') or view.kwargs.get('pk')
+        if not org_id:
+            return False
+        if getattr(request.user, 'is_platform_admin', False) or request.user.is_staff:
+            return True
+        return OrganizationMembership.objects.filter(
+            user=request.user, organization_id=org_id, is_active=True,
+            role__in=['PROPRIETAIRE', 'ADMINISTRATEUR', 'EDITEUR'],
+        ).exists()
+
+
 class HasOrgPermission(permissions.BasePermission):
     """
     Vérifie un codename de permission spécifique.
