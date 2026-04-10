@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import api from '../../services/api';
 import '../../styles/AdminDashboard.css';
-import { useTranslation } from 'react-i18next';
 
 const COLORS = ['#2563eb', '#e63946', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
@@ -23,7 +22,6 @@ const MANUSCRIPT_LABELS = {
 
 const formatPrice = (value) =>
   new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value) + ' FCFA';
-  const { t } = useTranslation();
 
 const formatMonth = (str) => {
   const [, m] = str.split('-');
