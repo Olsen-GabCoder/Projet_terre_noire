@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { wishlistAPI } from '../services/api';
 
@@ -25,7 +25,8 @@ export const WishlistProvider = ({ children }) => {
     try {
       const res = await wishlistAPI.getList();
       setWishlistItems(res.data.results || []);
-    } catch {
+    } catch (err) {
+      console.error('[Wishlist] Erreur chargement:', err);
       setWishlistItems([]);
     } finally {
       setLoading(false);
@@ -65,13 +66,14 @@ export const WishlistProvider = ({ children }) => {
         if (book?.id) {
           try {
             await wishlistAPI.add(book.id);
-          } catch {
-            // ignore
+          } catch (err) {
+            console.error('[Wishlist] Erreur merge item:', err);
           }
         }
       }
       localStorage.removeItem(STORAGE_KEY);
-    } catch {
+    } catch (err) {
+      console.error('[Wishlist] Erreur parse localStorage:', err);
       localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
@@ -91,8 +93,8 @@ export const WishlistProvider = ({ children }) => {
         } else {
           setWishlistItems((prev) => prev.filter((item) => item.id !== book.id));
         }
-      } catch {
-        // keep state unchanged
+      } catch (err) {
+        console.error('[Wishlist] Erreur toggle:', err);
       }
     } else {
       setWishlistItems((prev) => {
@@ -108,8 +110,8 @@ export const WishlistProvider = ({ children }) => {
       try {
         await wishlistAPI.remove(bookId);
         setWishlistItems((prev) => prev.filter((item) => item.id !== bookId));
-      } catch {
-        // keep state unchanged
+      } catch (err) {
+        console.error('[Wishlist] Erreur suppression:', err);
       }
     } else {
       setWishlistItems((prev) => prev.filter((item) => item.id !== bookId));
@@ -119,14 +121,14 @@ export const WishlistProvider = ({ children }) => {
   const isInWishlist = (bookId) => wishlistItems.some((item) => item.id === bookId);
   const getWishlistCount = () => wishlistItems.length;
 
-  const value = {
+  const value = useMemo(() => ({
     wishlistItems,
     toggleWishlist,
     removeFromWishlist,
     isInWishlist,
     getWishlistCount,
     loading,
-  };
+  }), [wishlistItems, toggleWishlist, removeFromWishlist, isInWishlist, getWishlistCount, loading]);
 
   return (
     <WishlistContext.Provider value={value}>

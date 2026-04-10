@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import '../../styles/AdminManuscripts.css';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const AdminManuscripts = () => {
   const [manuscripts, setManuscripts] = useState([]);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedManuscript, setSelectedManuscript] = useState(null);
@@ -35,7 +38,7 @@ const AdminManuscripts = () => {
       setSelectedManuscript(null);
     } catch (err) {
       console.error('Erreur mise à jour statut:', err);
-      alert('Erreur lors de la mise à jour du statut');
+      toast.error('Erreur lors de la mise à jour du statut');
     }
   };
 
@@ -47,7 +50,7 @@ const AdminManuscripts = () => {
       setSelectedManuscript(null);
     } catch (err) {
       console.error('Erreur suppression manuscrit:', err);
-      alert('Erreur lors de la suppression');
+      toast.error('Erreur lors de la suppression');
     }
   };
 

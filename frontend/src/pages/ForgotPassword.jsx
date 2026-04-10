@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authAPI, handleApiError } from '../services/api';
+import PageHero from '../components/PageHero';
 import '../styles/Login.css';
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -12,7 +15,7 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Veuillez saisir votre adresse email.');
+      setError(t('pages.forgotPassword.errorEmpty'));
       return;
     }
     setIsLoading(true);
@@ -20,7 +23,7 @@ const ForgotPassword = () => {
     setMessage(null);
     try {
       const res = await authAPI.forgotPassword(email.trim().toLowerCase());
-      setMessage(res.data?.message || "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.");
+      setMessage(res.data?.message || t('pages.forgotPassword.successMessage'));
     } catch (err) {
       const msg = err.response?.data?.message || handleApiError(err);
       setError(msg);
@@ -31,28 +34,15 @@ const ForgotPassword = () => {
 
   return (
     <div className="login-page">
-      <section className="login-hero">
-        <div className="login-hero__orb login-hero__orb--1" />
-        <div className="login-hero__orb login-hero__orb--2" />
-        <div className="login-hero__orb login-hero__orb--3" />
-        <div className="login-hero__grid-bg" />
-        <div className="login-hero__shine" />
-        <div className="login-hero__inner">
-          <span className="login-hero__pill">Mot de passe oublié</span>
-          <div className="login-hero__line" />
-          <div className="login-hero__icon">
-            <i className="fas fa-key" />
-          </div>
-          <h1 className="login-hero__title">
-            <span className="login-hero__title-main">Réinitialiser</span>
-          </h1>
-          <p className="login-hero__sub">
-            Saisissez votre email pour recevoir un lien de réinitialisation.
-          </p>
-        </div>
-      </section>
-
-      <div className="login-hero-fade" />
+      <PageHero
+        title={t('pages.forgotPassword.heroTitle')}
+        subtitle={t('pages.forgotPassword.heroSub')}
+        pill={t('pages.forgotPassword.pill')}
+        icon="fas fa-key"
+        orbCount={3}
+        hasShine
+        className="login-hero"
+      />
 
       <div className="login-content">
         <div className="login-content__bg">
@@ -64,7 +54,7 @@ const ForgotPassword = () => {
             <div className="login-card__header">
               <span className="login-card__trust">
                 <i className="fas fa-shield-halved" />
-                Récupération sécurisée
+                {t('pages.forgotPassword.secureRecovery')}
               </span>
             </div>
             {error && (
@@ -82,7 +72,7 @@ const ForgotPassword = () => {
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="login-field">
-                <label htmlFor="email">Adresse email</label>
+                <label htmlFor="email">{t('pages.forgotPassword.emailLabel')}</label>
                 <div className="login-input-wrap">
                   <i className="fas fa-envelope login-input-ico" />
                   <input
@@ -92,7 +82,7 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     className="login-input"
-                    placeholder="votre@email.com"
+                    placeholder={t('pages.forgotPassword.emailPlaceholder')}
                     required
                     disabled={isLoading}
                   />
@@ -107,12 +97,12 @@ const ForgotPassword = () => {
                 {isLoading ? (
                   <>
                     <i className="fas fa-spinner fa-spin" />
-                    Envoi en cours...
+                    {t('pages.forgotPassword.sending')}
                   </>
                 ) : (
                   <>
                     <i className="fas fa-paper-plane" />
-                    Envoyer le lien
+                    {t('pages.forgotPassword.sendLink')}
                   </>
                 )}
               </button>
@@ -121,7 +111,7 @@ const ForgotPassword = () => {
             <div className="login-footer">
               <p>
                 <Link to="/login" className="login-link">
-                  <i className="fas fa-arrow-left" /> Retour à la connexion
+                  <i className="fas fa-arrow-left" /> {t('pages.forgotPassword.backToLogin')}
                 </Link>
               </p>
             </div>

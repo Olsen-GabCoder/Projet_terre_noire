@@ -21,11 +21,8 @@ class NewsletterSubscribeView(APIView):
         serializer = NewsletterSubscribeSerializer(data=request.data)
         if serializer.is_valid():
             subscriber = serializer.save()
-            try:
-                from apps.core.email import send_newsletter_welcome
-                send_newsletter_welcome(subscriber.email)
-            except Exception as e:
-                logger.exception("Erreur envoi email newsletter à %s: %s", subscriber.email, e)
+            from apps.core.tasks import send_newsletter_welcome_task
+            send_newsletter_welcome_task.delay(subscriber.email)
             return Response(
                 {'success': True, 'message': 'Inscription réussie ! Merci de votre confiance.'},
                 status=status.HTTP_201_CREATED

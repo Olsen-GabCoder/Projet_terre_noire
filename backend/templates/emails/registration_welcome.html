@@ -1,14 +1,20 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>Bonjour {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.email }}{% endif %},</p>
-<p>Bienvenue chez <strong>Terre Noire Éditions</strong> ! Votre compte a bien été créé.</p>
-<p>Vous pouvez dès à présent :</p>
-<ul>
-  <li>Explorer notre catalogue de livres</li>
-  <li>Passer des commandes</li>
-  <li>Soumettre un manuscrit</li>
-  <li>Gérer votre profil et vos commandes</li>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.email }}{% endif %},</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">Bienvenue chez <strong style="color: #1e3a5f;">Frollot</strong> ! Votre compte a bien ete cree.</p>
+<p style="margin: 0 0 8px; color: #333333; font-size: 13px;">Vous pouvez des a present :</p>
+<ul style="margin: 0 0 20px; padding-left: 20px; color: #333333; font-size: 13px;">
+  <li style="margin-bottom: 4px;">Explorer notre catalogue de livres</li>
+  <li style="margin-bottom: 4px;">Passer des commandes</li>
+  <li style="margin-bottom: 4px;">Soumettre un manuscrit</li>
+  <li style="margin-bottom: 4px;">Gerer votre profil et vos commandes</li>
 </ul>
-<p><a href="{{ frontend_url }}/login" class="btn">Se connecter</a></p>
-<p>À très bientôt !</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/login" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Se connecter</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">A tres bientot !</p>
 {% endblock %}

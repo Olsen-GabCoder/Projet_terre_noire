@@ -6,6 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BookCard from '../components/BookCard';
 import bookService from '../services/bookService';
+import SEO from '../components/SEO';
+import ShareButtons from '../components/ShareButtons';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import '../styles/BookDetail.css';
 
 const BookDetail = () => {
@@ -14,6 +18,7 @@ const BookDetail = () => {
   const { addToCart, isInCart, getItemQuantity } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
 
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +38,7 @@ const BookDetail = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editForm, setEditForm] = useState({ rating: 5, comment: '' });
   const [expandedReplies, setExpandedReplies] = useState({});
+  const [selectedListing, setSelectedListing] = useState(null);
   const [reviewsPagination, setReviewsPagination] = useState({
     count: 0,
     next: null,
@@ -67,7 +73,7 @@ const BookDetail = () => {
         setBook(bookData);
         setRelatedBooks(Array.isArray(relatedData) ? relatedData : []);
       } catch (err) {
-        setError('Livre non trouvé ou erreur de chargement');
+        setError(t('bookDetail.notFound'));
         console.error(err);
       } finally {
         setLoading(false);
@@ -112,13 +118,17 @@ const BookDetail = () => {
     }
   }, [activeTab, id, isAuthenticated]);
 
-  const handleAddToCart = () => {
-    if (book?.available) addToCart(book, quantity);
+  const handleAddToCart = (listing = selectedListing) => {
+    if (book?.available) {
+      addToCart(book, quantity, listing);
+      toast.success(t('bookDetail.addedToCart'));
+    }
   };
 
   const handleBuyNow = () => {
     if (book?.available) {
-      addToCart(book, quantity);
+      addToCart(book, quantity, selectedListing);
+      toast.success(t('bookDetail.addedToCart'));
       navigate('/cart');
     }
   };
@@ -142,7 +152,7 @@ const BookDetail = () => {
       const bookData = await bookService.getBookById(id);
       setBook(bookData);
     } catch (err) {
-      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || 'Erreur lors de l\'envoi.');
+      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || t('common.error'));
     } finally {
       setReviewSubmitting(false);
     }
@@ -173,7 +183,7 @@ const BookDetail = () => {
       const bookData = await bookService.getBookById(id);
       setBook(bookData);
     } catch (err) {
-      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || 'Erreur lors de la modification.');
+      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || t('common.error'));
     } finally {
       setReviewSubmitting(false);
     }
@@ -201,7 +211,7 @@ const BookDetail = () => {
         setBook(bookData);
       }
     } catch (e) {
-      setReviewError('Erreur lors de la suppression.');
+      setReviewError(t('common.error'));
     } finally {
       setReviewSubmitting(false);
     }
@@ -217,7 +227,7 @@ const BookDetail = () => {
       setExpandedReplies((prev) => ({ ...prev, [reviewId]: true }));
       await fetchReviews(reviewsPagination.page);
     } catch (e) {
-      setReviewError(e.response?.data?.comment?.[0] || 'Erreur lors de l\'envoi de la réponse.');
+      setReviewError(e.response?.data?.comment?.[0] || t('common.error'));
     } finally {
       setReplySubmitting(false);
     }
@@ -269,10 +279,10 @@ const BookDetail = () => {
       <div className="bd-page">
         <section className="bd-hero bd-hero--error">
           <div className="bd-hero__inner">
-            <h1 className="bd-hero__title">Livre non trouvé</h1>
-            <p className="bd-hero__sub">{error || 'Ce livre n\'existe pas ou a été retiré.'}</p>
+            <h1 className="bd-hero__title">{t('bookDetail.notFound')}</h1>
+            <p className="bd-hero__sub">{error || t('bookDetail.notFoundMessage')}</p>
             <Link to="/catalog" className="bd-btn bd-btn--primary">
-              <i className="fas fa-arrow-left" /> Retour au catalogue
+              <i className="fas fa-arrow-left" /> {t('bookDetail.returnCatalog')}
             </Link>
           </div>
         </section>
@@ -280,11 +290,44 @@ const BookDetail = () => {
     );
   }
 
-  const authorName = book.author?.full_name || 'Auteur inconnu';
-  const categoryName = book.category?.name || 'Non catégorisé';
+  const authorName = book.author?.display_name || book.author?.full_name || t('bookDetail.unknownAuthor');
+  const authorId = book.author?.id;
+  const categoryName = book.category?.name || t('bookDetail.uncategorized');
 
   return (
     <div className="bd-page">
+      {book && <SEO
+        title={book.title}
+        description={book.description?.slice(0, 160)}
+        image={book.cover_image}
+        type="book"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Book',
+          name: book.title,
+          ...(book.isbn && { isbn: book.isbn }),
+          ...(typeof book.author === 'object'
+            ? { author: { '@type': 'Person', name: book.author?.full_name } }
+            : book.author ? { author: { '@type': 'Person', name: book.author } } : {}),
+          ...(book.description && { description: book.description.slice(0, 300) }),
+          ...(book.cover_image && { image: book.cover_image }),
+          ...(book.price && {
+            offers: {
+              '@type': 'Offer',
+              price: book.price,
+              priceCurrency: 'XAF',
+              availability: book.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            },
+          }),
+          ...(book.rating && {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: book.rating,
+              ...(book.rating_count && { ratingCount: book.rating_count }),
+            },
+          }),
+        }}
+      />}
       {/* Hero compact */}
       <section className="bd-hero">
         <div className="bd-hero__orb bd-hero__orb--1" />
@@ -292,16 +335,19 @@ const BookDetail = () => {
         <div className="bd-hero__grid-bg" />
         <div className="bd-hero__inner">
           <nav className="bd-breadcrumb" aria-label="Fil d'Ariane">
-            <Link to="/catalog" className="bd-breadcrumb__link">Catalogue</Link>
+            <Link to="/catalog" className="bd-breadcrumb__link">{t('bookDetail.breadcrumbCatalog')}</Link>
             <span className="bd-breadcrumb__sep">/</span>
             <span className="bd-breadcrumb__current">{book.title}</span>
           </nav>
           <div className="bd-hero__line" />
           <h1 className="bd-hero__title">{book.title}</h1>
           <p className="bd-hero__meta">
-            {authorName} · {categoryName}
+            {authorId ? <Link to={`/authors/${authorId}`} className="bd-hero__author-link">{authorName}</Link> : authorName} · {categoryName}
             {book.is_bestseller && (
-              <span className="bd-hero__bestseller">Best-seller</span>
+              <span className="bd-hero__bestseller">
+                <i className="fas fa-fire" /> Best-seller
+                {book.total_sales > 0 && ` · ${book.total_sales} vendu${book.total_sales > 1 ? 's' : ''}`}
+              </span>
             )}
           </p>
         </div>
@@ -312,52 +358,63 @@ const BookDetail = () => {
       <div className="bd-content">
         <div className="bd-wrap">
           <div className="bd-main">
-            {/* Image */}
-            <div className="bd-image-section">
-              <div className="bd-image-wrapper">
-                <button
-                  type="button"
-                  className={`bd-wishlist ${isInWishlist(book.id) ? 'bd-wishlist--active' : ''}`}
-                  onClick={() => toggleWishlist(book)}
-                  aria-label={isInWishlist(book.id) ? 'Retirer de la liste d\'envie' : 'Ajouter à la liste d\'envie'}
-                >
-                  <i className={`${isInWishlist(book.id) ? 'fas' : 'far'} fa-heart`} />
-                  <span>{isInWishlist(book.id) ? 'Dans la liste' : 'Liste d\'envie'}</span>
-                </button>
-                <img
-                  src={book.cover_image || '/images/default-book-cover.jpg'}
-                  alt={book.title}
-                  loading="lazy"
-                />
-                {book.has_discount && (
-                  <span className="bd-image-badge bd-image-badge--promo">
-                    −{book.discount_percentage}%
-                  </span>
+            {/* Couvertures — livre ouvert */}
+            <div className={`bd-image-section ${book.back_cover_image ? 'bd-image-section--duo' : ''}`}>
+              <div className="bd-book-display">
+                {/* Couverture arrière (gauche) */}
+                {book.back_cover_image && (
+                  <div className="bd-cover bd-cover--back">
+                    <div className="bd-cover__label">{t('bookDetail.backCover', '4e de couverture')}</div>
+                    <div className="bd-cover__frame">
+                      <img
+                        src={book.back_cover_image}
+                        alt={`Quatrième de couverture — ${book.title}`}
+                        width={340}
+                        height={480}
+                        loading="lazy"
+                        onError={(e) => { e.target.parentElement.parentElement.style.display = 'none'; }}
+                      />
+                    </div>
+                  </div>
                 )}
-                {!book.available && (
-                  <span className="bd-image-badge bd-image-badge--unavailable">Indisponible</span>
-                )}
-                {book.format === 'EBOOK' && (
-                  <span className="bd-image-badge bd-image-badge--format">
-                    <i className="fas fa-file-pdf" /> Ebook
-                  </span>
-                )}
-              </div>
-              {book.back_cover_image && (
-                <div className="bd-back-cover">
-                  <p className="bd-back-cover__title">4e de couverture</p>
-                  <div className="bd-back-cover__wrapper">
+                {/* Couverture avant (droite ou seule) */}
+                <div className="bd-cover bd-cover--front">
+                  {book.back_cover_image && <div className="bd-cover__label">{t('bookDetail.frontCover', 'Couverture')}</div>}
+                  <div className="bd-cover__frame">
+                    <button
+                      type="button"
+                      className={`bd-wishlist ${isInWishlist(book.id) ? 'bd-wishlist--active' : ''}`}
+                      onClick={() => toggleWishlist(book)}
+                      aria-label={isInWishlist(book.id) ? 'Retirer de la liste d\'envie' : 'Ajouter à la liste d\'envie'}
+                    >
+                      <i className={`${isInWishlist(book.id) ? 'fas' : 'far'} fa-heart`} />
+                      <span>{isInWishlist(book.id) ? t('bookDetail.wishlistInList') : t('bookDetail.wishlistAdd')}</span>
+                    </button>
                     <img
-                      src={book.back_cover_image}
-                      alt={`Quatrième de couverture — ${book.title}`}
+                      src={book.cover_image || '/images/default-book-cover.svg'}
+                      alt={book.title}
+                      width={340}
+                      height={480}
                       loading="lazy"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
                     />
+                    {book.has_discount && (
+                      <span className="bd-image-badge bd-image-badge--promo">
+                        −{book.discount_percentage}%
+                      </span>
+                    )}
+                    {!book.available && (
+                      <span className="bd-image-badge bd-image-badge--unavailable">{t('bookDetail.unavailable')}</span>
+                    )}
+                    {book.format === 'EBOOK' && (
+                      <span className="bd-image-badge bd-image-badge--format">
+                        <i className="fas fa-file-pdf" /> Ebook
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+              {/* Reliure centrale */}
+              {book.back_cover_image && <div className="bd-book-spine" aria-hidden="true" />}
             </div>
 
             {/* Infos + actions */}
@@ -365,8 +422,8 @@ const BookDetail = () => {
               <div className="bd-info-block">
                 <div className="bd-meta-row">
                   <span className="bd-meta-item">
-                    <span className="bd-meta-label">Auteur</span>
-                    <span className="bd-meta-value">{authorName}</span>
+                    <span className="bd-meta-label">{t('bookDetail.tabAuthor')}</span>
+                    <span className="bd-meta-value">{authorId ? <Link to={`/authors/${authorId}`} className="bd-hero__author-link">{authorName}</Link> : authorName}</span>
                   </span>
                   <span className="bd-meta-item">
                     <span className="bd-meta-label">Catégorie</span>
@@ -375,13 +432,21 @@ const BookDetail = () => {
                   <span className="bd-meta-item">
                     <span className="bd-meta-label">Format</span>
                     <span className="bd-meta-value">
-                      {book.format === 'EBOOK' ? 'Ebook (PDF)' : 'Livre papier'}
+                      {book.format === 'EBOOK' ? t('bookDetail.ebookFormat') : t('bookDetail.paperFormat')}
                     </span>
                   </span>
                   {book.reference && (
                     <span className="bd-meta-item">
-                      <span className="bd-meta-label">Référence</span>
+                      <span className="bd-meta-label">{t('bookDetail.reference')}</span>
                       <span className="bd-meta-value bd-meta-value--code">{book.reference}</span>
+                    </span>
+                  )}
+                  {book.publisher_name && (
+                    <span className="bd-meta-item">
+                      <span className="bd-meta-label">Éditeur</span>
+                      <Link to={`/organizations/${book.publisher_slug}`} className="bd-meta-value bd-meta-value--link">
+                        <i className="fas fa-book-open" /> {book.publisher_name}
+                      </Link>
                     </span>
                   )}
                 </div>
@@ -389,31 +454,171 @@ const BookDetail = () => {
 
               <div className="bd-price-block">
                 <div className="bd-price-row">
-                  {book.has_discount && book.original_price && (
-                    <span className="bd-price-old">{formatPrice(book.original_price)}</span>
+                  {selectedListing ? (
+                    <>
+                      {selectedListing.has_discount && selectedListing.original_price && (
+                        <span className="bd-price-old">{formatPrice(selectedListing.original_price)}</span>
+                      )}
+                      <span className="bd-price">{formatPrice(selectedListing.price)}</span>
+                      <span className="bd-price-vendor">chez {selectedListing.vendor_name}</span>
+                    </>
+                  ) : (
+                    <>
+                      {book.has_discount && book.original_price && (
+                        <span className="bd-price-old">{formatPrice(book.original_price)}</span>
+                      )}
+                      <span className="bd-price">{formatPrice(book.price)}</span>
+                      {book.best_listing_price && parseFloat(book.best_listing_price) < parseFloat(book.price) && (
+                        <span className="bd-price-from">
+                          ou {formatPrice(book.best_listing_price)} en librairie
+                        </span>
+                      )}
+                    </>
                   )}
-                  <span className="bd-price">{formatPrice(book.price)}</span>
                   {book.format === 'EBOOK' && (
-                    <span className="bd-price-vat">TVA incluse</span>
+                    <span className="bd-price-vat">{t('bookDetail.vatIncluded')}</span>
                   )}
                 </div>
                 <div className="bd-availability">
                   {book.available ? (
                     <span className="bd-availability--ok">
-                      <i className="fas fa-check-circle" /> En stock
+                      <i className="fas fa-check-circle" /> {t('bookDetail.inStock')}
                     </span>
                   ) : (
                     <span className="bd-availability--no">
-                      <i className="fas fa-times-circle" /> Épuisé
+                      <i className="fas fa-times-circle" /> {t('bookDetail.outOfStock')}
                     </span>
                   )}
                 </div>
               </div>
 
-              {book.pdf_file && (
+              {/* Offres vendeurs (marketplace) */}
+              {book.listings && book.listings.length > 0 && (
+                <div className="bd-vendors">
+                  <h3 className="bd-vendors__title">
+                    <i className="fas fa-store" /> {book.listings.length} {book.listings.length > 1 ? 'vendeurs proposent ce livre' : 'vendeur propose ce livre'}
+                  </h3>
+                  <div className="bd-vendors__list">
+                    {book.listings.map((listing) => (
+                      <button
+                        key={listing.id}
+                        type="button"
+                        className={`bd-vendor-card ${selectedListing?.id === listing.id ? 'bd-vendor-card--selected' : ''}`}
+                        onClick={() => setSelectedListing(
+                          selectedListing?.id === listing.id ? null : listing
+                        )}
+                      >
+                        <div className="bd-vendor-card__header">
+                          <span className="bd-vendor-card__name">
+                            {listing.vendor_name}
+                            {listing.vendor_is_verified && (
+                              <i className="fas fa-check-circle bd-vendor-card__verified" title="Vendeur vérifié" />
+                            )}
+                          </span>
+                          {listing.vendor_city && (
+                            <span className="bd-vendor-card__city">
+                              <i className="fas fa-map-marker-alt" /> {listing.vendor_city}
+                            </span>
+                          )}
+                        </div>
+                        <div className="bd-vendor-card__body">
+                          <span className="bd-vendor-card__price">{formatPrice(listing.price)}</span>
+                          <span className={`bd-vendor-card__condition bd-vendor-card__condition--${listing.condition.toLowerCase()}`}>
+                            {listing.condition_display}
+                          </span>
+                        </div>
+                        <div className="bd-vendor-card__footer">
+                          {listing.in_stock ? (
+                            <span className="bd-vendor-card__stock bd-vendor-card__stock--ok">
+                              <i className="fas fa-check" /> En stock
+                            </span>
+                          ) : (
+                            <span className="bd-vendor-card__stock bd-vendor-card__stock--no">
+                              <i className="fas fa-times" /> Rupture
+                            </span>
+                          )}
+                          {listing.has_discount && (
+                            <span className="bd-vendor-card__discount">
+                              -{listing.discount_percentage}%
+                            </span>
+                          )}
+                        </div>
+                        {selectedListing?.id === listing.id && (
+                          <span className="bd-vendor-card__check">
+                            <i className="fas fa-check-circle" />
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedListing && (
+                    <p className="bd-vendors__selected">
+                      <i className="fas fa-info-circle" /> Achat chez <strong>{selectedListing.vendor_name}</strong> pour {formatPrice(selectedListing.price)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Disponibilité en bibliothèque */}
+              {book.library_availability && book.library_availability.length > 0 && (
+                <div className="bd-libraries">
+                  <h3 className="bd-libraries__title">
+                    <i className="fas fa-landmark" /> Disponible dans {book.library_availability.length} {book.library_availability.length > 1 ? 'bibliothèques' : 'bibliothèque'}
+                  </h3>
+                  <div className="bd-libraries__list">
+                    {book.library_availability.map((lib) => (
+                      <Link
+                        key={lib.id}
+                        to={`/library/${lib.library_slug}`}
+                        className="bd-library-card"
+                      >
+                        <div className="bd-library-card__header">
+                          <span className="bd-library-card__name">
+                            {lib.library_name}
+                            {lib.library_is_verified && (
+                              <i className="fas fa-check-circle bd-library-card__verified" title="Vérifiée" />
+                            )}
+                          </span>
+                          {lib.library_city && (
+                            <span className="bd-library-card__city">
+                              <i className="fas fa-map-marker-alt" /> {lib.library_city}
+                            </span>
+                          )}
+                        </div>
+                        <div className="bd-library-card__body">
+                          <span className={`bd-library-card__stock ${lib.in_stock ? 'bd-library-card__stock--ok' : 'bd-library-card__stock--no'}`}>
+                            {lib.in_stock ? (
+                              <><i className="fas fa-check" /> {lib.available_copies}/{lib.total_copies} disponible{lib.available_copies > 1 ? 's' : ''}</>
+                            ) : (
+                              <><i className="fas fa-clock" /> Tous empruntés</>
+                            )}
+                          </span>
+                          <span className="bd-library-card__loan-days">
+                            <i className="fas fa-calendar-alt" /> {lib.max_loan_days}j de prêt
+                          </span>
+                          {lib.allows_digital_loan && (
+                            <span className="bd-library-card__digital">
+                              <i className="fas fa-tablet-alt" /> Prêt numérique
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {book.pdf_file && isAuthenticated && (
                 <div className="bd-read-action">
                   <Link to={`/books/${id}/read`} className="bd-btn bd-btn--read">
-                    <i className="fas fa-book-open" /> Lire le livre
+                    <i className="fas fa-book-open" /> {t('bookDetail.readBook')}
+                  </Link>
+                </div>
+              )}
+              {book.pdf_file && !isAuthenticated && (
+                <div className="bd-read-action">
+                  <Link to="/login" className="bd-btn bd-btn--read bd-btn--disabled">
+                    <i className="fas fa-lock" /> {t('bookDetail.loginToRead')}
                   </Link>
                 </div>
               )}
@@ -426,7 +631,7 @@ const BookDetail = () => {
                       className="bd-quantity__btn"
                       onClick={() => handleQuantityChange(-1)}
                       disabled={quantity <= 1}
-                      aria-label="Diminuer la quantité"
+                      aria-label={t('bookDetail.decreaseQty')}
                     >
                       −
                     </button>
@@ -436,7 +641,7 @@ const BookDetail = () => {
                       className="bd-quantity__btn"
                       onClick={() => handleQuantityChange(1)}
                       disabled={quantity >= 10}
-                      aria-label="Augmenter la quantité"
+                      aria-label={t('bookDetail.increaseQty')}
                     >
                       +
                     </button>
@@ -449,9 +654,9 @@ const BookDetail = () => {
                       disabled={isInCart(book.id)}
                     >
                       {isInCart(book.id) ? (
-                        <><i className="fas fa-check" /> {getItemQuantity(book.id)} dans le panier</>
+                        <><i className="fas fa-check" /> {getItemQuantity(book.id)} {t('bookDetail.itemsInCart')}</>
                       ) : (
-                        <><i className="fas fa-shopping-cart" /> Ajouter au panier</>
+                        <><i className="fas fa-shopping-cart" /> {t('bookDetail.addToCart')}</>
                       )}
                     </button>
                     <button
@@ -459,7 +664,7 @@ const BookDetail = () => {
                       onClick={handleBuyNow}
                       className="bd-btn bd-btn--buy"
                     >
-                      <i className="fas fa-bolt" /> Acheter maintenant
+                      <i className="fas fa-bolt" /> {t('bookDetail.buyNow')}
                     </button>
                   </div>
                 </div>
@@ -467,18 +672,23 @@ const BookDetail = () => {
             </div>
           </div>
 
+          {/* Partage social */}
+          <ShareButtons book={book} />
+
           {/* Onglets */}
           <div className="bd-tabs">
-            <div className="bd-tabs__header">
+            <div className="bd-tabs__header" role="tablist">
               {[
-                { id: 'description', label: 'Description', icon: 'fas fa-align-left' },
-                { id: 'details', label: 'Détails', icon: 'fas fa-info-circle' },
-                { id: 'author', label: 'Auteur', icon: 'fas fa-user-pen' },
-                { id: 'reviews', label: `Avis (${book?.rating_count || 0})`, icon: 'fas fa-star' },
+                { id: 'description', label: t('bookDetail.tabDescription'), icon: 'fas fa-align-left' },
+                { id: 'details', label: t('bookDetail.tabDetails'), icon: 'fas fa-info-circle' },
+                { id: 'author', label: t('bookDetail.tabAuthor'), icon: 'fas fa-user-pen' },
+                { id: 'reviews', label: `${t('bookDetail.tabReviews')} (${book?.rating_count || 0})`, icon: 'fas fa-star' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
                   className={`bd-tabs__btn ${activeTab === tab.id ? 'bd-tabs__btn--active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
@@ -488,29 +698,29 @@ const BookDetail = () => {
             </div>
             <div className="bd-tabs__content">
               {activeTab === 'description' && (
-                <div className="bd-tab-panel">
-                  <h3 className="bd-tab-panel__title">À propos de ce livre</h3>
+                <div className="bd-tab-panel" role="tabpanel">
+                  <h3 className="bd-tab-panel__title">{t('bookDetail.aboutThisBook')}</h3>
                   <p className="bd-description">
-                    {book.description || 'Aucune description disponible.'}
+                    {book.description || t('bookDetail.noDescription')}
                   </p>
                 </div>
               )}
               {activeTab === 'details' && (
-                <div className="bd-tab-panel">
-                  <h3 className="bd-tab-panel__title">Caractéristiques</h3>
+                <div className="bd-tab-panel" role="tabpanel">
+                  <h3 className="bd-tab-panel__title">{t('bookDetail.characteristics')}</h3>
                   <div className="bd-details-grid">
                     <div className="bd-detail-item">
                       <span className="bd-detail-label">Format</span>
                       <span className="bd-detail-value">
-                        {book.format === 'EBOOK' ? 'Ebook numérique (PDF)' : 'Livre papier'}
+                        {book.format === 'EBOOK' ? t('bookDetail.ebookFormat') : t('bookDetail.paperFormat')}
                       </span>
                     </div>
                     <div className="bd-detail-item">
-                      <span className="bd-detail-label">Référence</span>
+                      <span className="bd-detail-label">{t('bookDetail.reference')}</span>
                       <span className="bd-detail-value">{book.reference || '—'}</span>
                     </div>
                     <div className="bd-detail-item">
-                      <span className="bd-detail-label">Date de publication</span>
+                      <span className="bd-detail-label">{t('bookDetail.publicationDate')}</span>
                       <span className="bd-detail-value">
                         {book.created_at
                           ? new Date(book.created_at).toLocaleDateString('fr-FR', {
@@ -525,50 +735,53 @@ const BookDetail = () => {
                 </div>
               )}
               {activeTab === 'author' && (
-                <div className="bd-tab-panel bd-author-panel">
+                <div className="bd-tab-panel bd-author-panel" role="tabpanel">
                   {book.author ? (
                     <div className="bd-author">
                       <div className="bd-author__photo">
                         <img
-                          src={book.author.photo || '/images/default-author.jpg'}
-                          alt={book.author.full_name}
+                          src={book.author.display_photo || book.author.photo || '/images/default-author.jpg'}
+                          alt={book.author.display_name || book.author.full_name}
                           loading="lazy"
                           decoding="async"
                           onError={(e) => {
-                            e.target.src = '/images/default-book-cover.jpg';
+                            e.target.src = '/images/default-book-cover.svg';
                           }}
                         />
                       </div>
                       <div className="bd-author__info">
-                        <h3>{book.author.full_name}</h3>
+                        <h3>{book.author.display_name || book.author.full_name}</h3>
                         <p>
-                          {book.author.biography
-                            ? book.author.biography.length > 300
-                              ? book.author.biography.substring(0, 300) + '…'
-                              : book.author.biography
-                            : 'Aucune biographie disponible.'}
+                          {(book.author.display_bio || book.author.biography)
+                            ? (book.author.display_bio || book.author.biography).length > 300
+                              ? (book.author.display_bio || book.author.biography).substring(0, 300) + '…'
+                              : (book.author.display_bio || book.author.biography)
+                            : t('bookDetail.noBio')}
                         </p>
+                        {book.author.is_registered && (
+                          <span className="bd-author__registered"><i className="fas fa-check-circle" /> Auteur inscrit sur Frollot</span>
+                        )}
                         <Link
-                          to={`/catalog?search=${encodeURIComponent(book.author?.full_name || '')}`}
+                          to={`/authors/${book.author.id}`}
                           className="bd-btn bd-btn--outline"
                         >
-                          <i className="fas fa-book" /> Voir les livres de cet auteur
+                          <i className="fas fa-book" /> {t('bookDetail.viewAuthorBooks')}
                         </Link>
                       </div>
                     </div>
                   ) : (
-                    <p>Aucune information sur l&apos;auteur disponible.</p>
+                    <p>{t('bookDetail.noAuthorInfo')}</p>
                   )}
                 </div>
               )}
               {activeTab === 'reviews' && (
-                <div className="bd-tab-panel bd-tab-panel--reviews">
-                  <h3 className="bd-tab-panel__title">Avis des lecteurs</h3>
+                <div className="bd-tab-panel bd-tab-panel--reviews" role="tabpanel">
+                  <h3 className="bd-tab-panel__title">{t('bookDetail.readerReviews')}</h3>
 
                   {isAuthenticated && !myReview && (
                     <form className="bd-review-form" onSubmit={handleReviewSubmit}>
                       <div className="bd-review-form__rating">
-                        <label>Votre note :</label>
+                        <label>{t('bookDetail.yourRating')}</label>
                         <div className="bd-review-stars-input">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
@@ -584,20 +797,20 @@ const BookDetail = () => {
                         </div>
                       </div>
                       <div className="bd-review-form__comment">
-                        <label htmlFor="review-comment">Votre avis (optionnel) :</label>
+                        <label htmlFor="review-comment">{t('bookDetail.yourOpinion')}</label>
                         <textarea
                           id="review-comment"
                           rows={4}
                           value={reviewForm.comment}
                           onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
-                          placeholder="Partagez votre expérience de lecture..."
+                          placeholder={t('bookDetail.opinionPlaceholder')}
                           maxLength={1000}
                         />
                       </div>
                       {reviewError && <p className="bd-review-form__error">{reviewError}</p>}
                       <div className="bd-review-form__actions">
                         <button type="submit" className="bd-btn bd-btn--primary" disabled={reviewSubmitting}>
-                          {reviewSubmitting ? 'Envoi...' : 'Publier mon avis'}
+                          {reviewSubmitting ? t('bookDetail.publishing') : t('bookDetail.publishReview')}
                         </button>
                       </div>
                     </form>
@@ -610,7 +823,7 @@ const BookDetail = () => {
                   {!isAuthenticated && (
                     <p className="bd-review-login-prompt">
                       <Link to="/login" className="bd-btn bd-btn--primary">
-                        Connectez-vous pour laisser un avis
+                        {t('bookDetail.loginForReview')}
                       </Link>
                     </p>
                   )}
@@ -618,7 +831,7 @@ const BookDetail = () => {
                   <div className="bd-reviews-list">
                     {reviews.length === 0 ? (
                       <div className="bd-no-reviews">
-                        <p><i className="far fa-comment-dots" /> Soyez le premier à donner votre avis sur ce livre.</p>
+                        <p><i className="far fa-comment-dots" /> {t('bookDetail.noReviews')}</p>
                       </div>
                     ) : (
                       reviews.map((r) => (
@@ -667,10 +880,10 @@ const BookDetail = () => {
                                     {openMenuId === r.id && (
                                       <div className="bd-review-card__dropdown">
                                         <button type="button" onClick={() => handleReviewEdit(r)}>
-                                          <i className="far fa-edit" /> Modifier
+                                          <i className="far fa-edit" /> {t('common.edit')}
                                         </button>
                                         <button type="button" onClick={() => handleReviewDelete(r)} className="bd-review-card__dropdown-delete">
-                                          <i className="far fa-trash-alt" /> Supprimer
+                                          <i className="far fa-trash-alt" /> {t('common.delete')}
                                         </button>
                                       </div>
                                     )}
@@ -694,16 +907,16 @@ const BookDetail = () => {
                                   <textarea
                                     value={editForm.comment}
                                     onChange={(e) => setEditForm((f) => ({ ...f, comment: e.target.value }))}
-                                    placeholder="Modifiez votre avis..."
+                                    placeholder={t('bookDetail.opinionPlaceholder')}
                                     rows={3}
                                     maxLength={1000}
                                   />
                                   <div className="bd-review-edit-form__actions">
                                     <button type="button" className="bd-btn bd-btn--ghost" onClick={() => { setEditingReviewId(null); setReviewError(''); }}>
-                                      Annuler
+                                      {t('common.cancel')}
                                     </button>
                                     <button type="submit" className="bd-btn bd-btn--primary" disabled={reviewSubmitting}>
-                                      {reviewSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+                                      {reviewSubmitting ? t('bookDetail.publishing') : t('common.save')}
                                     </button>
                                   </div>
                                 </form>
@@ -726,7 +939,7 @@ const BookDetail = () => {
                                     className="bd-review-card__reply-btn"
                                     onClick={() => setReplyingTo(replyingTo === r.id ? null : r.id)}
                                   >
-                                    <i className="far fa-comment" /> Répondre
+                                    <i className="far fa-comment" /> {t('bookDetail.reply')}
                                   </button>
                                 )}
                               </div>
@@ -736,7 +949,7 @@ const BookDetail = () => {
                                     rows={3}
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
-                                    placeholder="Écrivez votre réponse..."
+                                    placeholder={t('bookDetail.replyPlaceholder')}
                                     maxLength={500}
                                   />
                                   <div className="bd-review-reply-form__actions">
@@ -745,7 +958,7 @@ const BookDetail = () => {
                                       className="bd-btn bd-btn--outline"
                                       onClick={() => { setReplyingTo(null); setReplyText(''); }}
                                     >
-                                      Annuler
+                                      {t('common.cancel')}
                                     </button>
                                     <button
                                       type="button"
@@ -753,7 +966,7 @@ const BookDetail = () => {
                                       onClick={() => handleReplySubmit(r.id)}
                                       disabled={!replyText.trim() || replySubmitting}
                                     >
-                                      {replySubmitting ? 'Envoi...' : 'Répondre'}
+                                      {replySubmitting ? t('bookDetail.sending') : t('bookDetail.reply')}
                                     </button>
                                   </div>
                                 </div>
@@ -768,8 +981,8 @@ const BookDetail = () => {
                                   >
                                     <i className={`fas fa-chevron-${isRepliesExpanded(r.id) ? 'up' : 'down'}`} />
                                     {isRepliesExpanded(r.id)
-                                      ? `Masquer les ${r.replies.length} réponse${r.replies.length > 1 ? 's' : ''}`
-                                      : `Voir les ${r.replies.length} réponse${r.replies.length > 1 ? 's' : ''}`}
+                                      ? `${t('bookDetail.hideReplies')} (${r.replies.length})`
+                                      : `${t('bookDetail.showReplies')} (${r.replies.length})`}
                                   </button>
                                   {isRepliesExpanded(r.id) && (
                                 <div className="bd-review-replies">
@@ -816,7 +1029,7 @@ const BookDetail = () => {
                                                 {openMenuId === reply.id && (
                                                   <div className="bd-review-card__dropdown">
                                                     <button type="button" onClick={() => handleReviewDelete(reply)} className="bd-review-card__dropdown-delete">
-                                                      <i className="far fa-trash-alt" /> Supprimer
+                                                      <i className="far fa-trash-alt" /> {t('common.delete')}
                                                     </button>
                                                   </div>
                                                 )}
@@ -863,7 +1076,7 @@ const BookDetail = () => {
                           disabled={!reviewsPagination.previous}
                           aria-label="Page précédente"
                         >
-                          <i className="fas fa-chevron-left" /> Précédent
+                          <i className="fas fa-chevron-left" /> {t('common.previous')}
                         </button>
                         <button
                           type="button"
@@ -872,7 +1085,7 @@ const BookDetail = () => {
                           disabled={!reviewsPagination.next}
                           aria-label="Page suivante"
                         >
-                          Suivant <i className="fas fa-chevron-right" />
+                          {t('common.next')} <i className="fas fa-chevron-right" />
                         </button>
                       </div>
                     </div>
@@ -886,7 +1099,7 @@ const BookDetail = () => {
           {relatedBooks.length > 0 && (
             <section className="bd-related">
               <h2 className="bd-related__title">
-                <i className="fas fa-book-open" /> Vous aimerez peut-être aussi
+                <i className="fas fa-book-open" /> {t('bookDetail.relatedTitle')}
               </h2>
               <div className="bd-related__grid">
                 {relatedBooks.map((b) => (
@@ -900,10 +1113,10 @@ const BookDetail = () => {
           {book.author && (
             <div className="bd-same-author">
               <Link
-                to={`/catalog?search=${encodeURIComponent(book.author?.full_name || '')}`}
+                to={`/authors/${book.author.id}`}
                 className="bd-btn bd-btn--outline bd-btn--lg"
               >
-                <i className="fas fa-user-pen" /> Tous les livres de {book.author?.full_name}
+                <i className="fas fa-user-pen" /> {t('bookDetail.allBooksBy')} {book.author?.display_name || book.author?.full_name}
               </Link>
             </div>
           )}

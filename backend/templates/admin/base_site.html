@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{% block title %}{{ title }} | Terre Noire Éditions{% endblock %}
+{% block title %}{{ title }} | Frollot{% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
@@ -14,7 +14,7 @@
 {% block branding %}
 <h1 id="site-name">
   <a href="{% url 'admin:index' %}">
-    <span class="admin-brand">Terre Noire Éditions</span>
+    <span class="admin-brand">Frollot</span>
     <span class="admin-brand-sub">Administration</span>
   </a>
 </h1>
@@ -22,7 +22,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/terrenoire.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/frollot.css' %}">
 {% endblock %}
 
 {% block extrabody %}

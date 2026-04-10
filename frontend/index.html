@@ -2,14 +2,33 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/images/logo_terre_noire.png" />
-    <link rel="apple-touch-icon" href="/images/logo_terre_noire.png" />
+    <link rel="icon" type="image/png" href="/images/logo_frollot.png" />
+    <link rel="apple-touch-icon" href="/images/logo_frollot.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Terre Noire Éditions — Maison d'édition, Port-Gentil, Gabon</title>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+    <meta name="theme-color" content="#5b5eea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)" />
+    <title>Frollot — Plateforme Sociale du Livre</title>
+    <!-- Fonts : preconnect + non-bloquant -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" /></noscript>
+    <!-- Preload assets critiques -->
+    <link rel="preload" href="/images/logo_frollot.png" as="image" />
+    <link rel="preload" href="/images/hero-books.svg" as="image" />
+    <!-- Icons : Font Awesome importé via npm dans main.jsx (plus de CDN) -->
   </head>
   <body>
+    <script>
+      // Applique le thème avant le rendu pour éviter un flash.
+      // En mode "auto" (pas de valeur stockée), on détecte prefers-color-scheme.
+      (function(){
+        var t=localStorage.getItem('frollot-theme');
+        if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}
+        else{document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

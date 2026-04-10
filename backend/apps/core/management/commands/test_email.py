@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
         try:
             send_mail(
-                subject="Test SMTP — Terre Noire Éditions",
+                subject="Test SMTP — Frollot",
                 message="Ceci est un email de test. Si vous le recevez, la configuration SMTP fonctionne.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[to],

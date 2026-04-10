@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import orderService from '../services/orderService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useReveal } from '../hooks/useReveal';
 import '../styles/Orders.css';
+import SEO from '../components/SEO';
+import PageHero from '../components/PageHero';
 
 const Orders = () => {
+  const { t } = useTranslation();
+  const revealRef = useReveal();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ count: 0, next: null, previous: null });
 
   useEffect(() => {
     if (!user) {
@@ -20,16 +29,22 @@ const Orders = () => {
       return;
     }
     loadOrders();
-  }, [user, navigate]);
+  }, [user, navigate, location.key]);
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await orderService.getOrders({ page_size: 50 });
+      const response = await orderService.getOrders({ page_size: 10, page });
       setOrders(response.results || response);
+      setPagination({
+        count: response.count || 0,
+        next: response.next || null,
+        previous: response.previous || null,
+      });
+      setCurrentPage(page);
     } catch (err) {
-      setError('Erreur lors du chargement de vos commandes.');
+      setError(t('pages.orders.errorLoad', 'Erreur lors du chargement de vos commandes.'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -42,7 +57,7 @@ const Orders = () => {
       await orderService.downloadInvoice(orderId);
     } catch (err) {
       console.error(err);
-      setError('Erreur lors du téléchargement de la facture.');
+      setError(t('pages.orders.errorInvoice', 'Erreur lors du téléchargement de la facture.'));
     } finally {
       setDownloadingId(null);
     }
@@ -59,7 +74,7 @@ const Orders = () => {
       );
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Impossible d\'annuler la commande.');
+      setError(err.response?.data?.error || t('pages.orders.errorCancel', "Impossible d'annuler la commande."));
     } finally {
       setCancellingId(null);
     }
@@ -82,10 +97,11 @@ const Orders = () => {
 
   const getStatusConfig = (status) => {
     const configs = {
-      PENDING: { label: 'En attente', class: 'ord-status--pending' },
-      PAID: { label: 'Payé', class: 'ord-status--paid' },
-      SHIPPED: { label: 'Expédié', class: 'ord-status--shipped' },
-      CANCELLED: { label: 'Annulé', class: 'ord-status--cancelled' },
+      PENDING: { label: t('pages.orders.statusPending', 'En attente'), class: 'ord-status--pending' },
+      PAID: { label: t('pages.orders.statusPaid', 'Payé'), class: 'ord-status--paid' },
+      SHIPPED: { label: t('pages.orders.statusShipped', 'Expédié'), class: 'ord-status--shipped' },
+      DELIVERED: { label: t('pages.orders.statusDelivered', 'Livré'), class: 'ord-status--delivered' },
+      CANCELLED: { label: t('pages.orders.statusCancelled', 'Annulé'), class: 'ord-status--cancelled' },
     };
     return configs[status] || configs.PENDING;
   };
@@ -96,26 +112,19 @@ const Orders = () => {
 
   return (
     <div className="ord-page">
-      <section className="ord-hero">
-        <div className="ord-hero__orb ord-hero__orb--1" />
-        <div className="ord-hero__orb ord-hero__orb--2" />
-        <div className="ord-hero__grid-bg" />
-        <div className="ord-hero__inner">
-          <div className="ord-hero__line" />
-          <h1 className="ord-hero__title">Mes commandes</h1>
-          <p className="ord-hero__sub">
-            Consultez l&apos;historique de vos commandes et suivez leur statut.
+      <SEO title={t('pages.orders.title', 'Mes Commandes')} />
+      <PageHero
+        title={t('common.myOrders', 'Mes commandes')}
+        subtitle={t('pages.orders.heroSub', "Consultez l'historique de vos commandes et suivez leur statut.")}
+      >
+        {orders.length > 0 && (
+          <p className="ord-hero__count">
+            <strong>{orders.length}</strong> {t('pages.orders.orderCount', 'commande', { count: orders.length })}{orders.length > 1 ? 's' : ''}
           </p>
-          {orders.length > 0 && (
-            <p className="ord-hero__count">
-              <strong>{orders.length}</strong> commande{orders.length > 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
-      </section>
-      <div className="ord-hero-fade" />
+        )}
+      </PageHero>
 
-      <div className="ord-content">
+      <div className="ord-content reveal-section" ref={revealRef}>
         <div className="ord-wrap">
           {error && (
             <div className="ord-error">
@@ -128,10 +137,10 @@ const Orders = () => {
               <div className="ord-empty__ico">
                 <i className="fas fa-shopping-bag" />
               </div>
-              <h2>Aucune commande</h2>
-              <p>Vous n&apos;avez pas encore passé de commande.</p>
+              <h2>{t('pages.orders.empty', 'Aucune commande')}</h2>
+              <p>{t('pages.orders.emptyDesc', "Vous n'avez pas encore passé de commande.")}</p>
               <Link to="/catalog" className="ord-btn ord-btn--primary">
-                <i className="fas fa-book" /> Découvrir le catalogue
+                <i className="fas fa-book" /> {t('pages.orders.browseCatalog', 'Découvrir le catalogue')}
               </Link>
             </div>
           ) : (
@@ -142,7 +151,7 @@ const Orders = () => {
                   <article key={order.id} className="ord-card">
                     <div className="ord-card__header">
                       <div className="ord-card__info">
-                        <h3 className="ord-card__id">Commande #{order.id}</h3>
+                        <h3 className="ord-card__id">{t('pages.orders.orderRef', 'Commande')} #{order.id}</h3>
                         <p className="ord-card__date">
                           <i className="far fa-calendar-alt" />
                           {formatDate(order.created_at)}
@@ -161,7 +170,7 @@ const Orders = () => {
                             className="ord-item__cover"
                           >
                             <img
-                              src={item.book?.cover_image || '/images/default-book-cover.jpg'}
+                              src={item.book?.cover_image || '/images/default-book-cover.svg'}
                               alt={item.book?.title}
                                 loading="lazy"
                                 decoding="async"
@@ -172,11 +181,16 @@ const Orders = () => {
                               {item.book?.title}
                             </Link>
                             <p className="ord-item__author">
-                              {item.book?.author?.full_name || 'Auteur inconnu'}
+                              {item.book?.author?.full_name || t('pages.orders.unknownAuthor', 'Auteur inconnu')}
                             </p>
                             <span className="ord-item__qty">
-                              Quantité : {item.quantity}
+                              {t('pages.orders.quantity', 'Quantité')} : {item.quantity}
                             </span>
+                            {item.vendor_name && (
+                              <span className="ord-item__vendor">
+                                <i className="fas fa-store" /> {item.vendor_name}
+                              </span>
+                            )}
                           </div>
                           <div className="ord-item__price">
                             {formatPrice(item.price * item.quantity)}
@@ -185,18 +199,51 @@ const Orders = () => {
                       ))}
                     </div>
 
+                    {order.sub_orders && order.sub_orders.length > 0 && (
+                      <div className="ord-suborders">
+                        <h4 className="ord-suborders__title">
+                          <i className="fas fa-truck" /> Suivi par vendeur
+                        </h4>
+                        {order.sub_orders.map((sub) => (
+                          <div key={sub.id} className="ord-suborder">
+                            <div className="ord-suborder__header">
+                              <span className="ord-suborder__vendor">
+                                <i className="fas fa-store" /> {sub.vendor_name}
+                              </span>
+                              <span className={`ord-status ord-status--sm ${getStatusConfig(sub.status).class}`}>
+                                {sub.status_display}
+                              </span>
+                            </div>
+                            <div className="ord-suborder__meta">
+                              <span>{formatPrice(sub.subtotal)}</span>
+                              {sub.delivery_agent_name && (
+                                <span className="ord-suborder__agent">
+                                  <i className="fas fa-motorcycle" /> {sub.delivery_agent_name}
+                                </span>
+                              )}
+                              {sub.delivered_at && (
+                                <span className="ord-suborder__delivered">
+                                  <i className="fas fa-check-circle" /> Livré le {formatDate(sub.delivered_at)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="ord-card__footer">
                       <div className="ord-card__shipping">
                         <p>
-                          <strong>Livraison :</strong>{' '}
+                          <strong>{t('pages.orders.delivery', 'Livraison')} :</strong>{' '}
                           {order.shipping_address}, {order.shipping_city}
                         </p>
                         <p>
-                          <strong>Téléphone :</strong> {order.shipping_phone}
+                          <strong>{t('pages.orders.phone', 'Téléphone')} :</strong> {order.shipping_phone}
                         </p>
                       </div>
                       <div className="ord-card__total">
-                        <span>Total</span>
+                        <span>{t('pages.orders.total', 'Total')}</span>
                         <strong>{formatPrice(order.total_amount)}</strong>
                       </div>
                     </div>
@@ -209,9 +256,9 @@ const Orders = () => {
                         disabled={downloadingId === order.id}
                       >
                         {downloadingId === order.id ? (
-                          <><i className="fas fa-spinner fa-spin" /> Téléchargement…</>
+                          <><i className="fas fa-spinner fa-spin" /> {t('pages.orders.downloading', 'Téléchargement…')}</>
                         ) : (
-                          <><i className="fas fa-file-pdf" /> Télécharger la facture</>
+                          <><i className="fas fa-file-pdf" /> {t('pages.orders.downloadInvoice', 'Télécharger la facture')}</>
                         )}
                       </button>
                       {order.status === 'PENDING' && (
@@ -222,9 +269,9 @@ const Orders = () => {
                           disabled={cancellingId === order.id}
                         >
                           {cancellingId === order.id ? (
-                            <><i className="fas fa-spinner fa-spin" /> Annulation…</>
+                            <><i className="fas fa-spinner fa-spin" /> {t('pages.orders.cancelling', 'Annulation…')}</>
                           ) : (
-                            <><i className="fas fa-times" /> Annuler la commande</>
+                            <><i className="fas fa-times" /> {t('pages.orders.cancelOrder', 'Annuler la commande')}</>
                           )}
                         </button>
                       )}
@@ -233,6 +280,32 @@ const Orders = () => {
                 );
               })}
             </div>
+          )}
+
+          {orders.length > 0 && (pagination.next || pagination.previous) && (
+            <nav className="cat-pag" aria-label={t('pages.orders.pagination', 'Pagination')} style={{ marginTop: '2rem' }}>
+              <button
+                type="button"
+                onClick={() => { loadOrders(currentPage - 1); window.scrollTo(0, 0); }}
+                disabled={!pagination.previous}
+                className="cat-pag__btn"
+              >
+                <i className="fas fa-chevron-left" />
+                <span>{t('common.previous')}</span>
+              </button>
+              <span style={{ margin: '0 1rem' }}>
+                {currentPage} / {Math.ceil(pagination.count / 10)}
+              </span>
+              <button
+                type="button"
+                onClick={() => { loadOrders(currentPage + 1); window.scrollTo(0, 0); }}
+                disabled={!pagination.next}
+                className="cat-pag__btn"
+              >
+                <span>{t('common.next')}</span>
+                <i className="fas fa-chevron-right" />
+              </button>
+            </nav>
           )}
         </div>
       </div>

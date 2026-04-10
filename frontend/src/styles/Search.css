@@ -1,0 +1,308 @@
+/* =============================================
+   PAGE DE RECHERCHE
+   ============================================= */
+.search-page {
+  min-height: 60vh;
+}
+
+.search-page__header {
+  background: var(--color-bg-section-alt);
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 2rem 2.5rem 1.5rem;
+}
+
+.search-page__header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.search-page__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-heading);
+  margin: 0 0 0.35rem;
+}
+
+.search-page__query {
+  color: var(--color-primary);
+}
+
+.search-page__count {
+  font-size: 0.88rem;
+  color: var(--color-gray-400);
+  margin: 0;
+}
+
+.search-page__body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 3rem;
+}
+
+/* ── Auteurs ── */
+.search-authors {
+  margin-bottom: 2rem;
+}
+
+.search-authors__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-authors__title i {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+}
+
+.search-authors__list {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-author-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-base);
+}
+
+.search-author-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.search-author-card__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.search-author-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-author-card__avatar span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+}
+
+.search-author-card__info strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+}
+
+.search-author-card__info span {
+  font-size: 0.78rem;
+  color: var(--color-gray-400);
+}
+
+/* ── Livres ── */
+.search-books__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-books__title i {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+}
+
+.search-books__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Pagination ── */
+.search-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.search-pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-pagination__btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  border-color: var(--color-primary);
+}
+
+.search-pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.search-pagination__info {
+  font-size: 0.82rem;
+  color: var(--color-gray-400);
+  font-weight: 500;
+}
+
+/* ── Loading ── */
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 30vh;
+  gap: 1rem;
+}
+
+.search-loading__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-gray-200);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: search-spin 0.7s linear infinite;
+}
+
+@keyframes search-spin { to { transform: rotate(360deg); } }
+
+.search-loading p {
+  font-size: 0.9rem;
+  color: var(--color-gray-400);
+  margin: 0;
+}
+
+/* ── Erreur ── */
+.search-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-error, #ef4444);
+  font-size: 0.9rem;
+}
+
+/* ── État vide ── */
+.search-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.search-empty__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  background: var(--color-bg-section-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-gray-400);
+}
+
+.search-empty h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  margin: 0 0 0.5rem;
+}
+
+.search-empty p {
+  font-size: 0.9rem;
+  color: var(--color-gray-400);
+  margin: 0 0 1.5rem;
+}
+
+.search-empty__suggestions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-empty__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.search-empty__link:hover {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  border-color: var(--color-primary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .search-page__header { padding: 1.5rem 1.25rem 1.25rem; }
+  .search-page__body { padding: 1.5rem 1.25rem 2rem; }
+  .search-page__title { font-size: 1.2rem; }
+  .search-books__grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 1rem; }
+  .search-pagination { gap: 0.75rem; }
+  .search-pagination__btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+}
+
+@media (max-width: 480px) {
+  .search-page__header { padding: 1.25rem 1rem; }
+  .search-page__body { padding: 1.25rem 1rem 2rem; }
+  .search-books__grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .search-authors__list { flex-direction: column; }
+}

@@ -1,12 +1,21 @@
+import logging
+
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 from rest_framework import generics, status, permissions
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 
 from apps.core.throttling import PublicEndpointThrottle
+from apps.organizations.models import OrganizationMembership
+from apps.organizations.permissions import IsOrganizationMember, user_has_org_permission
 from .models import Manuscript
-from .serializers import ManuscriptSerializer
+from .serializers import ManuscriptSerializer, ManuscriptListSerializer, ManuscriptStatusSerializer
+
 
 class ManuscriptCreateView(generics.CreateAPIView):
     queryset = Manuscript.objects.all()
@@ -14,19 +23,21 @@ class ManuscriptCreateView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [PublicEndpointThrottle]
     parser_classes = [MultiPartParser, FormParser]
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         manuscript = serializer.instance
-        try:
-            from apps.core.email import send_manuscript_acknowledgment
-            send_manuscript_acknowledgment(manuscript)
-        except Exception:
-            pass
+
+        # Lier au soumetteur si authentifié
+        if request.user and request.user.is_authenticated:
+            manuscript.submitter = request.user
+            manuscript.save(update_fields=['submitter'])
+
+        # Répondre immédiatement, puis envoyer les emails en arrière-plan
         headers = self.get_success_headers(serializer.data)
-        return Response(
+        response = Response(
             {
                 'success': True,
                 'message': 'Votre manuscrit a été soumis avec succès.',
@@ -36,81 +47,334 @@ class ManuscriptCreateView(generics.CreateAPIView):
             headers=headers
         )
 
+        # Emails en arrière-plan (non-bloquant via thread si Celery absent)
+        import threading
+        from apps.core.tasks import send_manuscript_acknowledgment_task, send_manuscript_org_notification_task
+
+        def _send_emails():
+            try:
+                from apps.core.email import send_manuscript_org_notification
+
+                # 1. Accusé de réception à l'auteur
+                send_manuscript_acknowledgment_task.delay(manuscript.id)
+
+                # 2. Notification à l'organisation ciblée
+                if manuscript.target_organization:
+                    send_manuscript_org_notification_task.delay(manuscript.id)
+
+                # 3. Marché ouvert : notifier toutes les maisons d'édition qui acceptent ce genre
+                elif manuscript.is_open_market:
+                    from apps.organizations.models import Organization
+                    eligible_orgs = Organization.objects.filter(
+                        org_type='MAISON_EDITION',
+                        is_active=True,
+                    ).exclude(email='').exclude(email__isnull=True)
+                    # Filtrer par genre si l'org a des genres acceptés
+                    for org in eligible_orgs:
+                        if org.accepted_genres and manuscript.genre not in org.accepted_genres:
+                            continue
+                        try:
+                            send_manuscript_org_notification(manuscript, org_override=org)
+                        except Exception:
+                            logger.warning("Échec notification org %s pour manuscrit %s", org.id, manuscript.id)
+            except Exception:
+                logger.exception("Erreur envoi emails manuscrit %s", manuscript.id)
+
+        threading.Thread(target=_send_emails, daemon=True).start()
+
+        return response
+
+
 class ManuscriptListView(generics.ListAPIView):
-    """
-    Vue pour lister tous les manuscrits (Admin seulement)
-    Endpoint: GET /api/manuscripts/
-    """
-    queryset = Manuscript.objects.all().order_by('-submitted_at')
-    serializer_class = ManuscriptSerializer
+    """Liste tous les manuscrits (Admin plateforme)."""
+    queryset = Manuscript.objects.all().select_related(
+        'submitter', 'target_organization', 'reviewed_by'
+    ).order_by('-submitted_at')
+    serializer_class = ManuscriptListSerializer
     permission_classes = [IsAdminUser]
 
+
 class ManuscriptDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
-    Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
-    """
-    queryset = Manuscript.objects.all()
+    """Voir, modifier ou supprimer un manuscrit (Admin plateforme)."""
+    queryset = Manuscript.objects.select_related(
+        'submitter', 'target_organization', 'reviewed_by'
+    )
     serializer_class = ManuscriptSerializer
     permission_classes = [IsAdminUser]
     parser_classes = [MultiPartParser, FormParser]
-    
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
-        return Response(
-            {
-                'success': True,
-                'message': 'Manuscrit mis à jour avec succès.',
-                'data': serializer.data
-            }
-        )
-    
+        return Response({
+            'success': True,
+            'message': 'Manuscrit mis à jour avec succès.',
+            'data': serializer.data
+        })
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(
-            {
-                'success': True,
-                'message': 'Manuscrit supprimé avec succès.'
-            },
+            {'success': True, 'message': 'Manuscrit supprimé avec succès.'},
             status=status.HTTP_200_OK
         )
 
+
 class ManuscriptStatusUpdateView(APIView):
     """
-    Vue spécifique pour mettre à jour uniquement le statut d'un manuscrit
-    Endpoint: PATCH /api/manuscripts/{id}/update-status/
+    Mettre à jour le statut d'un manuscrit avec feedback optionnel.
+    Passe désormais par transition_status() pour bénéficier de tous les verrous.
+    Accessible par admin plateforme OU membre d'org avec permission manage_manuscripts.
     """
-    permission_classes = [IsAdminUser]
-    
+    permission_classes = [IsAuthenticated]
+
     def patch(self, request, pk):
-        try:
-            manuscript = Manuscript.objects.get(pk=pk)
-        except Manuscript.DoesNotExist:
-            return Response(
-                {'error': 'Manuscrit non trouvé.'},
-                status=status.HTTP_404_NOT_FOUND
+        from django.core.exceptions import ValidationError
+
+        manuscript = get_object_or_404(Manuscript, pk=pk)
+
+        # Vérifier autorisation : admin plateforme OU membre de l'org ciblée avec permission
+        user = request.user
+        is_authorized = user.is_staff
+        if not is_authorized and manuscript.target_organization:
+            is_authorized = user_has_org_permission(
+                user, manuscript.target_organization, 'org.manage_manuscripts'
             )
-        
-        status_value = request.data.get('status')
-        if status_value not in [choice[0] for choice in Manuscript.STATUS_CHOICES]:
+        if not is_authorized:
             return Response(
-                {'error': f'Statut invalide. Choisissez parmi: {[choice[1] for choice in Manuscript.STATUS_CHOICES]}'},
+                {'error': 'Non autorisé.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = ManuscriptStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        old_status = manuscript.status
+        new_status = serializer.validated_data['status']
+        rejection_reason = serializer.validated_data.get('rejection_reason', '')
+
+        try:
+            manuscript.transition_status(new_status, user, rejection_reason=rejection_reason)
+        except ValidationError as e:
+            return Response(
+                {'error': e.message if hasattr(e, 'message') else str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        manuscript.status = status_value
-        manuscript.save()
-        
-        return Response(
-            {
-                'success': True,
-                'message': f'Statut du manuscrit mis à jour à "{manuscript.get_status_display()}"',
-                'data': ManuscriptSerializer(manuscript).data
-            }
+
+        # Notifier l'auteur du changement de statut
+        if old_status != new_status:
+            try:
+                from apps.core.email import send_manuscript_status_update
+                send_manuscript_status_update(manuscript)
+            except Exception:
+                pass
+
+        return Response({
+            'success': True,
+            'message': f'Statut du manuscrit mis à jour à "{manuscript.get_status_display()}"',
+            'data': ManuscriptSerializer(manuscript, context={'request': request}).data
+        })
+
+
+# ══════════════════════════════════════════════════════════════
+# Inbox Manuscrits pour Organisation
+# ══════════════════════════════════════════════════════════════
+
+class OrganizationManuscriptInboxView(generics.ListAPIView):
+    """
+    Liste les manuscrits reçus par une organisation (ciblés + marché ouvert compatible).
+    GET /api/organizations/{org_id}/manuscripts/
+    Filtre : ?status=PENDING&type=targeted|open
+    """
+    serializer_class = ManuscriptListSerializer
+    permission_classes = [IsAuthenticated, IsOrganizationMember]
+
+    def get_queryset(self):
+        from apps.organizations.models import Organization
+        from django.db.models import Q
+
+        org_id = self.kwargs['org_id']
+        org = get_object_or_404(Organization, pk=org_id)
+
+        # Manuscrits ciblés directement à cette org
+        q = Q(target_organization=org)
+
+        # Manuscrits marché ouvert dont le genre correspond aux genres acceptés
+        if org.accepted_genres:
+            q |= Q(is_open_market=True, genre__in=org.accepted_genres)
+
+        qs = Manuscript.objects.filter(q).select_related(
+            'submitter', 'target_organization'
+        ).distinct().order_by('-submitted_at')
+
+        # Filtres optionnels
+        params = self.request.query_params
+        status_filter = params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        type_filter = params.get('type')
+        if type_filter == 'targeted':
+            qs = qs.filter(target_organization=org)
+        elif type_filter == 'open':
+            qs = qs.filter(is_open_market=True).exclude(target_organization=org)
+
+        return qs
+
+
+class OrganizationManuscriptDetailView(generics.RetrieveAPIView):
+    """
+    Détail d'un manuscrit pour un membre d'organisation.
+    GET /api/organizations/{org_id}/manuscripts/{pk}/
+    """
+    serializer_class = ManuscriptSerializer
+    permission_classes = [IsAuthenticated, IsOrganizationMember]
+
+    def get_queryset(self):
+        from apps.organizations.models import Organization
+        from django.db.models import Q
+
+        org_id = self.kwargs['org_id']
+        org = get_object_or_404(Organization, pk=org_id)
+
+        q = Q(target_organization=org)
+        if org.accepted_genres:
+            q |= Q(is_open_market=True, genre__in=org.accepted_genres)
+
+        return Manuscript.objects.filter(q).select_related(
+            'submitter', 'target_organization', 'reviewed_by'
+        ).distinct()
+
+
+# ══════════════════════════════════════════════════════════════
+# Mes Soumissions (auteur connecté)
+# ══════════════════════════════════════════════════════════════
+
+class MyManuscriptsView(generics.ListAPIView):
+    """
+    Liste les manuscrits soumis par l'utilisateur connecté.
+    GET /api/manuscripts/mine/
+    """
+    serializer_class = ManuscriptListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Manuscript.objects.filter(
+            submitter=self.request.user
+        ).select_related('target_organization').order_by('-submitted_at')
+
+
+class MyManuscriptDetailView(generics.RetrieveAPIView):
+    """
+    Détail d'un manuscrit soumis par l'utilisateur connecté.
+    GET /api/manuscripts/mine/{pk}/
+    """
+    serializer_class = ManuscriptSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Manuscript.objects.filter(
+            submitter=self.request.user
+        ).select_related('target_organization', 'reviewed_by')
+
+
+# ══════════════════════════════════════════════════════��═══════
+# Marché ouvert — Verrouillage / déverrouillage
+# ══════════════════════════════════════════════════════════════
+
+class OpenMarketLockView(APIView):
+    """
+    L'auteur déclare avoir reçu toutes les offres attendues.
+    Démarre la fenêtre de 15 jours pour comparer les devis.
+    POST /api/manuscripts/mine/{pk}/lock-market/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from datetime import timedelta
+
+        manuscript = get_object_or_404(
+            Manuscript, pk=pk, submitter=request.user
         )
+
+        if not manuscript.is_open_market:
+            return Response(
+                {'error': "Ce manuscrit n'est pas en marché ouvert."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if manuscript.open_market_locked:
+            return Response(
+                {'error': 'Le marché ouvert est déjà verrouillé.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        manuscript.open_market_locked = True
+        manuscript.open_market_deadline = timezone.now() + timedelta(days=15)
+        manuscript.save(update_fields=['open_market_locked', 'open_market_deadline'])
+
+        # Aligner la validité des devis SENT sur la deadline si elle est plus tard
+        from apps.services.models import Quote
+        active_quotes = Quote.objects.filter(
+            manuscript=manuscript,
+            status='SENT',
+        )
+        for quote in active_quotes:
+            if quote.valid_until and quote.valid_until < manuscript.open_market_deadline.date():
+                quote.valid_until = manuscript.open_market_deadline.date()
+                quote.save(update_fields=['valid_until'])
+
+        return Response({
+            'success': True,
+            'message': (
+                f"Marché ouvert verrouillé. Vous avez jusqu'au "
+                f"{manuscript.open_market_deadline.strftime('%d/%m/%Y')} pour choisir."
+            ),
+            'open_market_deadline': manuscript.open_market_deadline.isoformat(),
+        })
+
+
+class OpenMarketUnlockView(APIView):
+    """
+    L'auteur déverrouille le marché ouvert pour attendre d'autres offres.
+    Interdit si un devis a déjà été accepté.
+    POST /api/manuscripts/mine/{pk}/unlock-market/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        manuscript = get_object_or_404(
+            Manuscript, pk=pk, submitter=request.user
+        )
+
+        if not manuscript.is_open_market:
+            return Response(
+                {'error': "Ce manuscrit n'est pas en marché ouvert."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not manuscript.open_market_locked:
+            return Response(
+                {'error': "Le marché ouvert n'est pas verrouillé."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verrou définitif si un devis est déjà accepté
+        if manuscript._has_accepted_quote():
+            return Response(
+                {'error': "Impossible de déverrouiller : un devis a déjà été accepté."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        manuscript.open_market_locked = False
+        manuscript.open_market_deadline = None
+        manuscript.save(update_fields=['open_market_locked', 'open_market_deadline'])
+
+        return Response({
+            'success': True,
+            'message': "Marché ouvert déverrouillé. Vous pouvez attendre d'autres offres.",
+        })

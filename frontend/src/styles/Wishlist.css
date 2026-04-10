@@ -1,49 +1,83 @@
-/* Liste d'envie — aligné charte Terre Noire Éditions */
+/* Liste d'envie — Charte Frollot */
 @import './design-tokens.css';
 
 .wishlist-page {
   min-height: 100vh;
-  background: var(--color-bg-page);
+  background: transparent;
   display: flex;
   flex-direction: column;
 }
 
+/* ── HERO ── */
 .wishlist-hero {
   padding: 6rem 1.5rem 3rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
-  color: #fff;
+  background: linear-gradient(170deg, #f0f0ff 0%, #e8e6ff 40%, #f5f3ff 100%);
+  color: var(--color-gray-800);
   position: relative;
   overflow: hidden;
   text-align: center;
+}
+
+:root[data-theme="dark"] .wishlist-hero {
+  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  color: #fff;
 }
 
 .wishlist-hero__grid-bg {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
 }
 
+:root[data-theme="dark"] .wishlist-hero__grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
 .wishlist-hero__orb {
   position: absolute;
-  width: 450px;
-  height: 450px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(230, 57, 70, 0.08) 0%, transparent 65%);
-  filter: blur(60px);
+}
+
+.wishlist-hero__orb--1 {
+  width: 450px;
+  height: 450px;
   top: -20%;
   right: -8%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 65%);
+  filter: blur(60px);
+  animation: wish-orb-1 14s ease-in-out infinite;
+}
+
+.wishlist-hero__orb--2 {
+  width: 350px;
+  height: 350px;
+  bottom: -15%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 65%);
+  filter: blur(60px);
+  animation: wish-orb-2 18s ease-in-out infinite;
+}
+
+@keyframes wish-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 15px) scale(1.05); }
+}
+
+@keyframes wish-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -20px) scale(1.06); }
 }
 
 .wishlist-hero__inner {
-  max-width: 800px;
-  margin: 0 auto;
   position: relative;
   z-index: 1;
 }
@@ -53,7 +87,7 @@
   height: 3px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, #e63946, #f87171);
+  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
 }
 
 .wishlist-hero__title {
@@ -62,41 +96,64 @@
   line-height: 1.1;
   letter-spacing: -0.03em;
   margin: 0 0 1rem;
+  color: var(--color-gray-800);
 }
+
+:root[data-theme="dark"] .wishlist-hero__title { color: #fff; }
 
 .wishlist-hero__sub {
   font-size: 1.125rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-gray-500);
   margin: 0;
 }
 
+:root[data-theme="dark"] .wishlist-hero__sub { color: rgba(255, 255, 255, 0.6); }
+
 .wishlist-hero-fade {
   height: 80px;
-  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  background: linear-gradient(to bottom, #f5f3ff, var(--color-bg-page));
   margin-top: -1px;
+}
+
+:root[data-theme="dark"] .wishlist-hero-fade {
+  background: linear-gradient(to bottom, #0c1631, var(--color-bg-page));
 }
 
 .wishlist-footer-fade {
   height: 100px;
-  background: linear-gradient(to bottom, var(--color-bg-page), #475569 50%, var(--color-bg-dark));
+  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-bg-section-alt));
 }
 
+/* ── CONTENU ── */
 .wishlist-content {
   flex: 1;
   padding: 2rem 1.5rem 4rem;
+  width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  width: 100%;
+}
+
+.wishlist-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-error, #ef4444);
+  font-size: 0.9rem;
 }
 
 /* État vide */
 .wishlist-empty {
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: var(--radius-lg);
   padding: 3rem 2rem;
   text-align: center;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-border-card);
   box-shadow: var(--shadow-card);
 }
 
@@ -109,13 +166,13 @@
 .wishlist-empty h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-gray-800);
+  color: var(--color-text-heading);
   margin: 0 0 0.5rem;
 }
 
 .wishlist-empty p {
   font-size: 1rem;
-  color: var(--color-gray-500);
+  color: var(--color-text-muted-ui);
   margin: 0 0 1.5rem;
 }
 
@@ -134,7 +191,7 @@
   font-weight: 600;
   font-size: 0.9375rem;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: var(--transition-base);
 }
 
 .wishlist-btn--primary {
@@ -152,7 +209,7 @@
 /* Grille des livres */
 .wishlist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -182,7 +239,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-base);
 }
 
 .wishlist-remove {
@@ -203,13 +260,28 @@
   background: var(--color-primary-dark);
 }
 
+/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+  .wishlist-hero {
+    padding: 5rem 1.25rem 2.5rem;
+  }
+
   .wishlist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1rem;
   }
 
   .wishlist-card-actions {
     flex-direction: column;
+  }
+
+  .wishlist-content {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wishlist-grid {
+    grid-template-columns: 1fr;
   }
 }

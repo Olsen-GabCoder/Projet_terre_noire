@@ -1,0 +1,64 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ author_name }}</strong>,</p>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  La maison d'edition <strong>{{ org_name }}</strong> vous adresse un devis
+  pour votre manuscrit <strong>&laquo; {{ manuscript_title }} &raquo;</strong>
+  (ref. {{ manuscript_reference }}).
+</p>
+
+<!-- Modèle éditorial en clair -->
+<div style="background: #f0f7ff; border-left: 4px solid #1e3a5f; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0 0 8px; color: #1e3a5f; font-weight: bold; font-size: 14px;">
+    {{ publishing_model_display }}
+  </p>
+  <p style="margin: 0; color: #333333; font-size: 13px;">
+    {{ publishing_model_explanation }}
+  </p>
+</div>
+
+<!-- Résumé financier -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr>
+    <td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px; width: 140px;">Reference devis</td>
+    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ quote_reference }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Montant total TTC</td>
+    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ total_ttc }} FCFA</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Delai de realisation</td>
+    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ delivery_days }} jours ouvres</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Validite</td>
+    <td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ validity_days }} jours (jusqu'au {{ valid_until }})</td>
+  </tr>
+  {% if royalty_summary %}
+  <tr>
+    <td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Droits d'auteur</td>
+    <td style="padding: 8px 10px; color: #333; font-size: 13px;">{{ royalty_summary }}</td>
+  </tr>
+  {% endif %}
+</table>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Le devis detaille est joint a cet email en piece jointe (PDF).
+  Vous pouvez egalement le consulter et y repondre directement sur Frollot.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/manuscripts/mine" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Consulter sur Frollot</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0 0 8px; color: #666666; font-size: 12px;">
+  Vous pouvez accepter, refuser ou demander une revision de ce devis
+  directement depuis votre espace Frollot.
+</p>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'equipe Frollot</p>
+{% endblock %}

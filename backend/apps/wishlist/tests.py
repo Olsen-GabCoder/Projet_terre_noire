@@ -18,12 +18,12 @@ class WishlistTest(APITestCase):
             email='wish@example.com',
             password='TestPass123!',
         )
-        cat = Category.objects.create(name='Roman', slug='roman')
-        auth = Author.objects.create(full_name='Auteur', slug='auteur')
+        cat, _ = Category.objects.get_or_create(name='Roman', defaults={'slug': 'roman'})
+        auth = Author.objects.create(full_name='Auteur Wish', slug='auteur-wish')
         self.book = Book.objects.create(
-            title='Livre',
-            slug='livre',
-            reference='REF1',
+            title='Livre Wish',
+            slug='livre-wish',
+            reference='WISH-REF1',
             description='D',
             price=Decimal('1000'),
             format='PAPIER',
@@ -41,3 +41,7 @@ class WishlistTest(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post('/api/wishlist/add/', {'book_id': self.book.id})
         self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
+
+    def test_wishlist_unauthenticated(self):
+        response = self.client.get('/api/wishlist/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Settings.css';
+import PageHero from '../components/PageHero';
 
 const Settings = () => {
+  const { t } = useTranslation();
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [receiveNewsletter, setReceiveNewsletter] = useState(false);
@@ -43,27 +46,18 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
-      <section className="settings-hero">
-        <div className="settings-hero__orb settings-hero__orb--1" />
-        <div className="settings-hero__grid-bg" />
-        <div className="settings-hero__inner">
-          <div className="settings-hero__line" />
-          <h1 className="settings-hero__title">Paramètres</h1>
-          <p className="settings-hero__sub">
-            Gérez vos préférences et les notifications de votre compte.
-          </p>
-        </div>
-      </section>
-
-      <div className="settings-hero-fade" />
+      <PageHero
+        title={t('pages.settings.title', 'Paramètres')}
+        subtitle={t('pages.settings.subtitle', 'Gérez vos préférences et les notifications de votre compte.')}
+      />
 
       <div className="settings-content">
         <div className="settings-card">
-          <h2><i className="fas fa-bell" /> Notifications</h2>
+          <h2><i className="fas fa-bell" /> {t('pages.settings.notifications', 'Notifications')}</h2>
           <div className="settings-row">
             <div className="settings-row__label">
-              <span>Newsletter</span>
-              <small>Recevez nos nouveautés et actualités par email</small>
+              <span>{t('pages.settings.newsletter', 'Newsletter')}</span>
+              <small>{t('pages.settings.newsletterDesc', 'Recevez nos nouveautés et actualités par email')}</small>
             </div>
             <label className="settings-toggle">
               <input
@@ -71,6 +65,7 @@ const Settings = () => {
                 checked={receiveNewsletter}
                 onChange={handleNewsletterChange}
                 disabled={loading}
+                aria-label={t('pages.settings.toggleNewsletter', 'Activer ou désactiver la newsletter')}
               />
               <span className="settings-toggle__slider" />
             </label>
@@ -84,16 +79,16 @@ const Settings = () => {
         </div>
 
         <div className="settings-card">
-          <h2><i className="fas fa-user" /> Compte</h2>
-          <p>Modifiez vos informations personnelles, adresse et coordonnées depuis votre profil.</p>
+          <h2><i className="fas fa-user" /> {t('pages.settings.account', 'Compte')}</h2>
+          <p>{t('pages.settings.accountDesc', 'Modifiez vos informations personnelles, adresse et coordonnées depuis votre profil.')}</p>
           <Link to="/profile" className="settings-btn settings-btn--primary">
-            <i className="fas fa-arrow-right" /> Aller au profil
+            <i className="fas fa-arrow-right" /> {t('pages.settings.goToProfile', 'Aller au profil')}
           </Link>
         </div>
 
         <div className="settings-card">
-          <h2><i className="fas fa-shield-alt" /> Sécurité</h2>
-          <p>Pour modifier votre mot de passe ou sécuriser votre compte, contactez-nous à terrenoireeditions@gmail.com.</p>
+          <h2><i className="fas fa-shield-alt" /> {t('pages.settings.security', 'Sécurité')}</h2>
+          <p>{t('pages.settings.securityDesc', 'Pour modifier votre mot de passe ou sécuriser votre compte, contactez-nous à contact@frollot.com.')}</p>
         </div>
       </div>
       <div className="settings-footer-fade" />

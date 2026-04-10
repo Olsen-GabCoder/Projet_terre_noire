@@ -10,12 +10,19 @@ User = get_user_model()
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Sérialiseur personnalisé qui permet de se connecter avec l'email ou le username.
+    Inclut token_version dans le payload JWT pour l'invalidation après changement de mot de passe.
     """
-    
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['token_version'] = user.token_version
+        return token
+
     def validate(self, attrs):
         # Récupérer l'email ou le username de la requête
         username_or_email = attrs.get('username', '').strip()
-        
+
         # Si le champ contient un @, c'est un email, on cherche l'utilisateur par email
         if '@' in username_or_email:
             try:
@@ -24,5 +31,5 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                 attrs['username'] = user.username
             except User.DoesNotExist:
                 pass  # L'erreur sera gérée par la validation parente
-        
+
         return super().validate(attrs)

@@ -1,0 +1,26 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ org_name }}</strong>,</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Nous vous informons que votre proposition pour le manuscrit
+  <strong>&laquo; {{ title }} &raquo;</strong> (ref. {{ reference }})
+  de {{ author_name }} n'a pas ete retenue.
+</p>
+<div style="background: #fff8f0; border-left: 4px solid #e67e22; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #333333; font-size: 13px;">
+    L'auteur a choisi une autre offre editoriale parmi les propositions
+    qu'il a recues. Votre devis a ete automatiquement annule.
+  </p>
+</div>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Cela ne remet pas en cause la qualite de votre proposition.
+  De nouveaux manuscrits correspondant a vos criteres vous seront
+  proposes des qu'ils seront disponibles sur la plateforme.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/organizations" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Consulter vos manuscrits</a>
+  </td></tr>
+</table>
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'equipe Frollot</p>
+{% endblock %}

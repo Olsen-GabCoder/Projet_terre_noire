@@ -125,6 +125,17 @@ const bookService = {
     }
   },
 
+  // Récupérer les offres vendeurs pour un livre
+  getBookListings: async (bookId) => {
+    try {
+      const response = await api.get(`/books/${bookId}/listings/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des offres vendeurs:`, error);
+      return [];
+    }
+  },
+
   // Récupérer les statistiques
   getStatistics: async () => {
     try {
@@ -172,14 +183,25 @@ const bookService = {
   },
 
   // ============ AUTHORS ============
-  
+
   // Récupérer tous les auteurs
   getAuthors: async () => {
     try {
-      const response = await api.get('/authors/');
+      const response = await api.get('/authors/', { params: { page_size: 500 } });
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des auteurs:', error);
+      throw error;
+    }
+  },
+
+  // Auteurs mis en avant (triés par pertinence)
+  getFeaturedAuthors: async (limit = 16) => {
+    try {
+      const response = await api.get('/authors/featured/', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des auteurs en vedette:', error);
       throw error;
     }
   },
@@ -191,6 +213,17 @@ const bookService = {
       return response.data;
     } catch (error) {
       console.error(`Erreur lors de la récupération de l'auteur ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Créer un auteur à la volée
+  createAuthor: async (data) => {
+    try {
+      const response = await api.post('/authors/', data);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'auteur:', error);
       throw error;
     }
   },
@@ -207,7 +240,7 @@ const bookService = {
   },
 
   // ============ SEARCH ============
-  
+
   // Recherche globale
   searchBooks: async (query, params = {}) => {
     try {
@@ -218,6 +251,19 @@ const bookService = {
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
       throw error;
+    }
+  },
+
+  // Autocomplete léger (max 5 livres + 3 auteurs)
+  autocomplete: async (query) => {
+    try {
+      const response = await api.get('/books/autocomplete/', {
+        params: { q: query }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur autocomplete:', error);
+      return { books: [], authors: [] };
     }
   },
 };

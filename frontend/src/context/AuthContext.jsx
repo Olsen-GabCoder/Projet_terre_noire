@@ -1,6 +1,8 @@
 // frontend/src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI, tokenStorage, handleApiError } from '../services/api';
+// Mode cookies-only — les tokens JWT sont dans des cookies HttpOnly.
+// Le frontend ne manipule jamais les tokens directement.
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { authAPI, handleApiError } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -17,59 +19,86 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
 
+  // Vérifier l'auth au chargement (le cookie est envoyé automatiquement)
   useEffect(() => {
     const checkAuthStatus = async () => {
-      if (!tokenStorage.getAccessToken()) {
-        setLoading(false);
-        setAuthChecked(true);
-        return;
-      }
       try {
         const response = await authAPI.checkAuth();
-        if (response.data?.user) {
-          setUser(response.data.user);
-        } else if (response.data && !response.data.user) {
-          setUser(response.data);
+        const userData = response.data?.user || response.data;
+        if (userData?.id) {
+          setUser(userData);
         }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          tokenStorage.clearTokens();
-          setUser(null);
-        }
+      } catch {
+        setUser(null);
       } finally {
         setLoading(false);
         setAuthChecked(true);
       }
     };
-
     checkAuthStatus();
   }, []);
 
-  const login = async (username, password) => {
+  // Écouter l'event de session expirée (dispatch par l'intercepteur 401)
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+    };
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, []);
+
+  const login = useCallback(async (username, password, rememberMe = false) => {
     try {
       const response = await authAPI.login({
         username: username.trim(),
         password: password,
+        remember_me: rememberMe,
       });
 
-      const { access, refresh, user: userData } = response.data || {};
-
-      if (access) {
-        tokenStorage.setTokens(access, refresh);
+      // 2FA requis (status 202)
+      if (response.status === 202 && response.data?.totp_required) {
+        return {
+          success: false,
+          totpRequired: true,
+          challengeToken: response.data.challenge_token,
+        };
       }
 
+      const userData = response.data?.user;
       if (userData) {
         setUser(userData);
         return { success: true, user: userData };
       }
 
-      if (access) {
-        const userResponse = await authAPI.checkAuth();
-        const fallbackUser = userResponse.data?.user || userResponse.data;
+      // Fallback : cookie posé, on vérifie l'auth
+      try {
+        const checkResponse = await authAPI.checkAuth();
+        const fallbackUser = checkResponse.data?.user || checkResponse.data;
         setUser(fallbackUser);
         return { success: true, user: fallbackUser };
+      } catch {
+        return { success: false, error: 'Réponse serveur invalide.' };
       }
+    } catch (error) {
+      return {
+        success: false,
+        error: handleApiError(error),
+      };
+    }
+  }, []);
 
+  const verifyTotp = useCallback(async (challengeToken, code, rememberMe = false) => {
+    try {
+      const response = await authAPI.verifyTotp({
+        challenge_token: challengeToken,
+        code: code,
+        remember_me: rememberMe,
+      });
+      const userData = response.data?.user;
+      if (userData) {
+        setUser(userData);
+        return { success: true, user: userData };
+      }
       return { success: false, error: 'Réponse serveur invalide.' };
     } catch (error) {
       return {
@@ -77,76 +106,118 @@ export const AuthProvider = ({ children }) => {
         error: handleApiError(error),
       };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      
+
       if (response.status === 201) {
-        return await login(userData.username, userData.password);
+        // Le compte est créé mais inactif — l'utilisateur doit vérifier son email
+        return {
+          success: true,
+          needsVerification: true,
+          message: response.data?.message || "Inscription réussie ! Vérifiez votre email pour activer votre compte.",
+        };
       }
-      
-      return { success: false, error: 'Erreur lors de l\'inscription' };
+
+      return { success: false, error: "Erreur lors de l'inscription." };
     } catch (error) {
       return {
         success: false,
         error: handleApiError(error),
       };
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authAPI.logout();
-    } catch (e) {
+    } catch {
       // Ignorer les erreurs (ex: déjà déconnecté)
     }
-    tokenStorage.clearTokens();
     setUser(null);
-  };
+  }, []);
 
-  const updateProfile = async (userData) => {
+  const refreshUser = useCallback(async () => {
     try {
-      const response = await authAPI.updateProfile(userData);
-      const userDataFromApi = response.data.user ?? response.data;
+      const response = await authAPI.checkAuth();
+      const userData = response.data?.user || response.data;
+      if (userData?.id) setUser(userData);
+    } catch { /* */ }
+  }, []);
+
+  const updateProfile = useCallback(async (profileData) => {
+    try {
+      const response = await authAPI.updateProfile(profileData);
+      const userDataFromApi = response.data?.user ?? response.data;
       const updatedUser = { ...user, ...userDataFromApi };
       setUser(updatedUser);
       return { success: true, user: updatedUser };
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil:', error);
       return {
         success: false,
         error: handleApiError(error),
       };
     }
-  };
+  }, [user]);
 
-  const changePassword = async (passwordData) => {
+  const changePassword = useCallback(async (passwordData) => {
     try {
       await authAPI.changePassword(passwordData);
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error);
       return {
         success: false,
         error: handleApiError(error),
       };
     }
-  };
+  }, []);
 
-  const value = {
+  // OAuth : échanger un token temporaire contre les cookies JWT
+  const loginWithOAuthToken = useCallback(async (oauthToken) => {
+    try {
+      const response = await authAPI.exchangeOAuthToken({ token: oauthToken });
+      const userData = response.data?.user;
+      if (userData) {
+        setUser(userData);
+        return { success: true, user: userData };
+      }
+      return { success: false, error: 'Réponse serveur invalide.' };
+    } catch (error) {
+      return { success: false, error: handleApiError(error) };
+    }
+  }, []);
+
+  // Helpers pour le système multi-rôles Frollot
+  const hasProfile = (profileType) =>
+    user?.profile_types?.includes(profileType) || false;
+
+  const hasOrgRole = (orgId, role) =>
+    user?.organization_memberships?.some(
+      (m) => m.organization_id === orgId && m.role === role
+    ) || false;
+
+  const value = useMemo(() => ({
     user,
     loading,
     authChecked,
     login,
+    loginWithOAuthToken,
+    verifyTotp,
     register,
     logout,
     updateProfile,
+    refreshUser,
     changePassword,
     isAuthenticated: !!user,
-    isAdmin: user?.is_staff || user?.is_superuser || false,
-  };
+    isAdmin: user?.is_platform_admin || user?.is_staff || user?.is_superuser || false,
+    hasProfile,
+    hasOrgRole,
+    profiles: user?.profiles || [],
+    profileTypes: user?.profile_types || [],
+    organizationMemberships: user?.organization_memberships || [],
+  }), [user, loading, authChecked, login, loginWithOAuthToken, verifyTotp, register, logout, updateProfile, refreshUser, changePassword]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

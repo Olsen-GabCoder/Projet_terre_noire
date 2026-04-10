@@ -1,31 +1,38 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>Bonjour {{ user.first_name|default:user.username }},</p>
-<p>Nous avons bien reçu votre paiement pour la commande <strong>#{{ order.id|stringformat:"06d" }}</strong>.</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ user.first_name|default:user.username }}</strong>,</p>
+<p style="margin: 0 0 20px; color: #333333; font-size: 14px;">Nous avons bien recu votre paiement pour la commande <strong style="color: #1e3a5f;">#{{ order.id|stringformat:"06d" }}</strong>.</p>
 
-<h3>Récapitulatif</h3>
-<table>
-  <thead>
-    <tr><th>Article</th><th>Qté</th><th>Total</th></tr>
-  </thead>
-  <tbody>
-    {% for item in items %}
-    <tr>
-      <td>{{ item.title }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>{{ item.total|floatformat:0 }} FCFA</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f;">Recapitulatif</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  <tr style="background-color: #f8f9fa;">
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; border-bottom: 1px solid #eee;">Article</td>
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; text-align: center; border-bottom: 1px solid #eee;">Qte</td>
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; text-align: right; border-bottom: 1px solid #eee;">Total</td>
+  </tr>
+  {% for item in items %}
+  <tr>
+    <td style="padding: 8px 10px; color: #333333; border-bottom: 1px solid #eee; font-size: 13px;">{{ item.title }}</td>
+    <td style="padding: 8px 10px; color: #333333; text-align: center; border-bottom: 1px solid #eee; font-size: 13px;">{{ item.quantity }}</td>
+    <td style="padding: 8px 10px; color: #333333; text-align: right; border-bottom: 1px solid #eee; font-weight: bold; font-size: 13px;">{{ item.total|floatformat:0 }} FCFA</td>
+  </tr>
+  {% endfor %}
 </table>
 
-<p><strong>Montant payé : {{ total_amount|floatformat:0 }} FCFA</strong></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #d1fae5; border-radius: 6px; margin: 0 0 20px;">
+  <tr><td align="center" style="padding: 14px;">
+    <p style="margin: 0; font-size: 16px; font-weight: bold; color: #059669;">Montant paye : {{ total_amount|floatformat:0 }} FCFA</p>
+  </td></tr>
+</table>
 
-<p><em>Votre facture est jointe à cet email en pièce attachée (PDF).</em></p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 13px;">📎 Votre facture PDF est jointe à cet email. Elle est aussi disponible dans votre espace "Mes commandes".</p>
+<p style="margin: 0 0 20px; color: #333333; font-size: 13px;">Votre commande sera preparee et expediee sous quelques jours. Vous recevrez une notification des l'expedition.</p>
 
-<p>Votre commande sera préparée et expédiée sous 5 à 10 jours ouvrés. Vous recevrez une notification dès l'expédition.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Suivre ma commande</a>
+  </td></tr>
+</table>
 
-<p><a href="{{ frontend_url }}/orders" class="btn">Suivre ma commande</a></p>
-
-<p>Merci pour votre achat !</p>
+<p style="margin: 0; color: #333333;">Merci pour votre achat !</p>
 {% endblock %}

@@ -3,11 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useDeliveryConfig } from '../context/DeliveryConfigContext';
+import { useTranslation } from 'react-i18next';
 import { couponAPI } from '../services/api';
+import { useReveal } from '../hooks/useReveal';
 import '../styles/Cart.css';
+import SEO from '../components/SEO';
+import PageHero from '../components/PageHero';
 
 const Cart = () => {
-  const { shippingFreeThreshold, shippingCost } = useDeliveryConfig();
+  const { t } = useTranslation();
+  const revealRef = useReveal();
+  // eslint-disable-next-line no-unused-vars
+  const _deliveryConfig = useDeliveryConfig();
   const {
     cartItems,
     appliedCoupon,
@@ -32,18 +39,18 @@ const Cart = () => {
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(p) + ' FCFA';
 
   const subtotal = cartItems.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
-  const shipping = subtotal === 0 ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
+  const allEbooks = cartItems.every(i => i.format === 'EBOOK');
   const discountPercent = appliedCoupon?.discountPercent ?? 0;
   const discountFixed = appliedCoupon?.discountAmount ?? 0;
   const discountAmt = discountPercent > 0
     ? (subtotal * discountPercent) / 100
     : Math.min(discountFixed, subtotal);
-  const total = subtotal - discountAmt + shipping;
+  const total = subtotal - discountAmt; // Livraison calculee au checkout
 
   const applyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
     if (!code) {
-      setCouponMsg({ ok: false, text: 'Saisissez un code promo' });
+      setCouponMsg({ ok: false, text: t('cart.enterCoupon') });
       return;
     }
     setApplying(true);
@@ -60,11 +67,11 @@ const Cart = () => {
         setCouponMsg({ ok: true, text: data.message });
       } else {
         clearCoupon();
-        setCouponMsg({ ok: false, text: data.message || 'Code promo invalide' });
+        setCouponMsg({ ok: false, text: data.message || t('cart.invalidCoupon') });
       }
     } catch (err) {
       clearCoupon();
-      const msg = err.response?.data?.message || 'Code promo invalide';
+      const msg = err.response?.data?.message || t('cart.invalidCoupon');
       setCouponMsg({ ok: false, text: msg });
     } finally {
       setApplying(false);
@@ -90,25 +97,20 @@ const Cart = () => {
   if (!cartItems.length) {
     return (
       <div className="crt-page">
-        <section className="crt-hero">
-          <div className="crt-hero__orb" />
-          <div className="crt-hero__grid-bg" />
-          <div className="crt-hero__inner">
-            <div className="crt-hero__line" />
-            <h1 className="crt-hero__title">Mon Panier</h1>
-            <p className="crt-hero__sub">Votre panier est vide pour le moment.</p>
-          </div>
-        </section>
-        <div className="crt-hero-fade" />
+        <SEO title={t('cart.pageTitle')} />
+        <PageHero
+          title={t('cart.pageTitle')}
+          subtitle={t('cart.emptyText')}
+        />
 
         <div className="crt-content">
           <div className="crt-empty">
             <div className="crt-empty__ico"><i className="fas fa-shopping-bag" /></div>
-            <h2>Aucun article</h2>
-            <p>Parcourez notre catalogue et ajoutez des livres à votre panier.</p>
+            <h2>{t('cart.emptyTitle')}</h2>
+            <p>{t('cart.emptyText')}</p>
             <div className="crt-empty__actions">
               <Link to="/catalog" className="crt-btn crt-btn--primary">
-                <i className="fas fa-book" /> Explorer le catalogue
+                <i className="fas fa-book" /> {t('cart.browseCatalog')}
               </Link>
             </div>
             <div className="crt-empty__features">
@@ -134,39 +136,31 @@ const Cart = () => {
   /* ── PANIER REMPLI ── */
   return (
     <div className="crt-page">
-      <section className="crt-hero">
-        <div className="crt-hero__orb" />
-        <div className="crt-hero__grid-bg" />
-        <div className="crt-hero__inner">
-          <div className="crt-hero__line" />
-          <h1 className="crt-hero__title">Mon Panier</h1>
-          <p className="crt-hero__sub">
-            {getTotalItems()} article{getTotalItems() > 1 ? 's' : ''} dans votre panier
-          </p>
-        </div>
-      </section>
-      <div className="crt-hero-fade" />
+      <PageHero
+        title={t('cart.pageTitle')}
+        subtitle={t('cart.itemCount', { count: getTotalItems(), s: getTotalItems() > 1 ? 's' : '' })}
+      />
 
-      <div className="crt-content">
+      <div className="crt-content reveal-section" ref={revealRef}>
         <div className="crt-layout">
 
           {/* ── COLONNE ARTICLES ── */}
           <div className="crt-items">
             <div className="crt-items__head">
-              <h2>Articles</h2>
+              <h2>{t('cart.articles')}</h2>
               <button onClick={clearCart} className="crt-clear">
-                <i className="fas fa-trash-alt" /> Vider
+                <i className="fas fa-trash-alt" /> {t('cart.clear')}
               </button>
             </div>
 
             {cartItems.map((item) => (
-              <div className="crt-card" key={item.id}>
+              <div className="crt-card" key={item._cartKey || item.id}>
                 <div
                   className="crt-card__img"
                   onClick={() => navigate(`/books/${item.id}`)}
                 >
                   <img
-                    src={item.cover_image || '/images/default-book-cover.jpg'}
+                    src={item.cover_image || '/images/default-book-cover.svg'}
                     alt={item.title}
                     loading="lazy"
                     decoding="async"
@@ -181,7 +175,7 @@ const Cart = () => {
                       {item.title}
                     </h3>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.id, item.listing_id)}
                       className="crt-card__rm"
                       aria-label="Retirer"
                     >
@@ -191,20 +185,32 @@ const Cart = () => {
                   <p className="crt-card__author">
                     {item.author?.full_name || 'Auteur inconnu'}
                   </p>
-                  {item.format && (
-                    <span className="crt-card__format">
-                      {item.format === 'EBOOK' ? 'Ebook' : 'Papier'}
-                    </span>
-                  )}
+                  <div className="crt-card__meta">
+                    {item.format && (
+                      <span className="crt-card__format">
+                        {item.format === 'EBOOK' ? 'Ebook' : 'Papier'}
+                      </span>
+                    )}
+                    {item.vendor_name && (
+                      <span className="crt-card__vendor">
+                        <i className="fas fa-store" /> {item.vendor_name}
+                      </span>
+                    )}
+                    {item.condition && (
+                      <span className={`crt-card__condition crt-card__condition--${item.condition === 'NEW' ? 'new' : 'used'}`}>
+                        {item.condition === 'NEW' ? 'Neuf' : item.condition === 'USED_GOOD' ? 'Occasion — Bon état' : 'Occasion'}
+                      </span>
+                    )}
+                  </div>
                   <div className="crt-card__bottom">
                     <div className="crt-qty">
                       <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.listing_id)}
                         disabled={item.quantity <= 1}
                       >−</button>
                       <span>{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
+                        onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1), item.listing_id)}
                         disabled={item.quantity >= 99}
                       >+</button>
                     </div>
@@ -221,11 +227,11 @@ const Cart = () => {
           {/* ── COLONNE RÉSUMÉ ── */}
           <div className="crt-summary">
             <div className="crt-sum-card">
-              <h2>Récapitulatif</h2>
+              <h2>{t('cart.summary')}</h2>
 
               {/* Coupon */}
               <div className="crt-coupon">
-                <label>Code promo</label>
+                <label>{t('cart.couponLabel')}</label>
                 <div className="crt-coupon__row">
                   <input
                     type="text"
@@ -236,7 +242,7 @@ const Cart = () => {
                     readOnly={!!appliedCoupon}
                   />
                   <button onClick={applyCoupon} disabled={applying || !couponCode.trim()}>
-                    {applying ? '...' : 'Appliquer'}
+                    {applying ? <i className="fas fa-spinner fa-spin" aria-hidden="true" /> : t('cart.couponApply')}
                   </button>
                 </div>
                 {couponMsg && (
@@ -250,7 +256,7 @@ const Cart = () => {
               {/* Prix */}
               <div className="crt-prices">
                 <div className="crt-row">
-                  <span>Sous-total</span>
+                  <span>{t('cart.subtotal')}</span>
                   <span>{fmt(subtotal)}</span>
                 </div>
                 {discountAmt > 0 && (
@@ -258,25 +264,30 @@ const Cart = () => {
                     <span>
                       Réduction {appliedCoupon?.code && `(${appliedCoupon.code})`}
                       {discountPercent > 0 ? ` (${discountPercent}%)` : ''}
-                      <button type="button" onClick={removeCoupon} className="crt-coupon-remove" aria-label="Retirer le code">×</button>
+                      <button type="button" onClick={removeCoupon} className="crt-coupon-remove" aria-label={t('cart.removeCoupon')}>×</button>
                     </span>
                     <span>-{fmt(discountAmt)}</span>
                   </div>
                 )}
                 <div className="crt-row">
-                  <span>Livraison {shipping === 0 && <em className="crt-free">Gratuit</em>}</span>
-                  <span>{shipping === 0 ? 'Gratuit' : fmt(shipping)}</span>
+                  <span>{t('cart.shipping', 'Livraison')}</span>
+                  {allEbooks ? (
+                    <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Gratuit (ebook)</span>
+                  ) : (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)' }}>
+                      <i className="fas fa-truck" style={{ marginRight: '0.25rem' }} />
+                      Au checkout
+                    </span>
+                  )}
                 </div>
-                {shipping > 0 && subtotal < shippingFreeThreshold && (
-                  <div className="crt-progress-notice">
-                    <p>Plus que {fmt(shippingFreeThreshold - subtotal)} pour la livraison gratuite</p>
-                    <div className="crt-progress">
-                      <div style={{ width: `${(subtotal / shippingFreeThreshold) * 100}%` }} />
-                    </div>
+                {!allEbooks && (
+                  <div className="crt-delivery-notice">
+                    <i className="fas fa-info-circle" />
+                    <span>Les frais de livraison seront calcules selon le livreur que vous choisirez au checkout.</span>
                   </div>
                 )}
                 <div className="crt-row crt-row--total">
-                  <span>Total</span>
+                  <span>{t('cart.total')} {!allEbooks && <em style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--color-text-muted-ui)' }}>(hors livraison)</em>}</span>
                   <strong>{fmt(total)}</strong>
                 </div>
               </div>
@@ -296,10 +307,10 @@ const Cart = () => {
               {/* Actions */}
               <div className="crt-actions">
                 <button onClick={checkout} disabled={checking} className="crt-btn crt-btn--primary crt-btn--full">
-                  {checking ? 'Traitement...' : <>Procéder au paiement <span>{fmt(total)}</span></>}
+                  {checking ? 'Traitement...' : <>{t('cart.checkout')} <span>{fmt(total)}</span></>}
                 </button>
                 <button onClick={() => navigate('/catalog')} className="crt-btn crt-btn--outline crt-btn--full">
-                  Continuer mes achats
+                  {t('cart.continueShopping')}
                 </button>
               </div>
 

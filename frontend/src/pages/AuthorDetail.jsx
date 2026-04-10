@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import BookCard from '../components/BookCard';
+import ShareButtons from '../components/ShareButtons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import bookService from '../services/bookService';
 import '../styles/AuthorDetail.css';
 import '../styles/Home.css';
+import PageHero from '../components/PageHero';
 
 const AuthorDetail = () => {
   const { id } = useParams();
+  const { t } = useTranslation();
   const [author, setAuthor] = useState(null);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +29,7 @@ const AuthorDetail = () => {
         setAuthor(authorData);
         setBooks(Array.isArray(booksData) ? booksData : booksData.results || []);
       } catch (err) {
-        setError('Auteur non trouvé');
+        setError(t('pages.authorDetail.notFound'));
         console.error(err);
       } finally {
         setLoading(false);
@@ -39,15 +43,14 @@ const AuthorDetail = () => {
   if (error || !author) {
     return (
       <div className="authd-page">
-        <section className="authd-hero authd-hero--error">
-          <div className="authd-hero__inner">
-            <h1 className="authd-hero__title">Auteur non trouvé</h1>
-            <p className="authd-hero__sub">{error || 'Cet auteur n\'existe pas.'}</p>
-            <Link to="/authors" className="authd-btn authd-btn--primary">
-              <i className="fas fa-arrow-left" /> Retour aux auteurs
-            </Link>
-          </div>
-        </section>
+        <PageHero
+          title={t('pages.authorDetail.notFound')}
+          subtitle={error || t('pages.authorDetail.notFoundDesc')}
+        >
+          <Link to="/authors" className="authd-btn authd-btn--primary">
+            <i className="fas fa-arrow-left" /> {t('pages.authorDetail.backToAuthors')}
+          </Link>
+        </PageHero>
       </div>
     );
   }
@@ -61,29 +64,35 @@ const AuthorDetail = () => {
   return (
     <div className="authd-page">
       <section className="authd-hero">
-        <div className="authd-hero__orb authd-hero__orb--1" />
-        <div className="authd-hero__grid-bg" />
+        <div className="page-hero__grid-bg" />
+        <div className="page-hero__orb page-hero__orb--1" />
+        <div className="page-hero__orb page-hero__orb--2" />
         <div className="authd-hero__inner">
           <Link to="/authors" className="authd-back">
-            <i className="fas fa-arrow-left" /> Retour aux auteurs
+            <i className="fas fa-arrow-left" /> {t('pages.authorDetail.backToAuthors')}
           </Link>
           <div className="authd-hero__profile">
             <div className="authd-hero__avatar">
-              {author.photo ? (
-                <img src={author.photo} alt={author.full_name} loading="lazy" onError={handleAvatarError} />
+              {(author.display_photo || author.photo) ? (
+                <img src={author.display_photo || author.photo} alt={author.display_name || author.full_name} loading="lazy" onError={handleAvatarError} />
               ) : null}
-              <div className="authd-hero__initials" style={author.photo ? { display: 'none' } : undefined}>
-                {(author.full_name || '?').charAt(0).toUpperCase()}
+              <div className="authd-hero__initials" style={(author.display_photo || author.photo) ? { display: 'none' } : undefined}>
+                {((author.display_name || author.full_name || '?').charAt(0)).toUpperCase()}
               </div>
             </div>
             <div className="authd-hero__info">
               <div className="authd-hero__line" />
-              <h1 className="authd-hero__title">{author.full_name || 'Auteur inconnu'}</h1>
-              {(author.books_count || 0) > 0 && (
-                <p className="authd-hero__count">
-                  <i className="fas fa-book" /> {author.books_count} ouvrage{(author.books_count || 0) > 1 ? 's' : ''} publié{(author.books_count || 0) > 1 ? 's' : ''}
-                </p>
-              )}
+              <h1 className="authd-hero__title">{author.display_name || author.full_name || t('pages.authorDetail.unknownAuthor')}</h1>
+              <div className="authd-hero__meta-row">
+                {(author.books_count || 0) > 0 && (
+                  <p className="authd-hero__count">
+                    <i className="fas fa-book" /> {author.books_count} {t((author.books_count || 0) > 1 ? 'pages.authorDetail.works' : 'pages.authorDetail.work')} {t((author.books_count || 0) > 1 ? 'pages.authorDetail.publishedPlural' : 'pages.authorDetail.published')}
+                  </p>
+                )}
+                {author.is_registered && (
+                  <span className="authd-hero__registered"><i className="fas fa-check-circle" /> Auteur inscrit sur Frollot</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -91,11 +100,13 @@ const AuthorDetail = () => {
 
       <div className="authd-hero-fade" />
 
-      {author.biography && (
+      <ShareButtons book={{ title: author.display_name || author.full_name, description: author.display_bio || author.biography }} />
+
+      {(author.display_bio || author.biography) && (
         <div className="authd-content">
           <div className="authd-bio">
-            <h2>Biographie</h2>
-            <p>{author.biography}</p>
+            <h2>{t('pages.authorDetail.biography')}</h2>
+            <p>{author.display_bio || author.biography}</p>
           </div>
         </div>
       )}
@@ -103,13 +114,13 @@ const AuthorDetail = () => {
       <section className="home-books">
         <div className="home-books-inner">
           <div className="home-books-heading">
-            <span className="home-books-label">Publications</span>
+            <span className="home-books-label">{t('pages.authorDetail.publications')}</span>
             <h2 className="home-books-title">
-              {books.length > 0 ? `Livres de ${author.full_name || 'cet auteur'}` : 'Aucun ouvrage'}
+              {books.length > 0 ? `${t('pages.authorDetail.booksBy')} ${author.display_name || author.full_name || t('pages.authorDetail.unknownAuthor')}` : t('pages.authorDetail.noBooks')}
             </h2>
           </div>
           {books.length === 0 ? (
-            <p className="authd-books__empty">Aucun ouvrage disponible pour le moment.</p>
+            <p className="authd-books__empty">{t('pages.authorDetail.noBooksDesc')}</p>
           ) : (
             <>
               <div className="home-books-grid">
@@ -119,7 +130,7 @@ const AuthorDetail = () => {
               </div>
               <div className="home-books-more">
                 <Link to={`/catalog?author=${author.id}`} className="home-books-more-link">
-                  Voir tous ses livres dans le catalogue
+                  {t('pages.authorDetail.viewInCatalog')}
                 </Link>
               </div>
             </>

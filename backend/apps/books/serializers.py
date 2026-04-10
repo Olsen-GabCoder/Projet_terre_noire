@@ -2,6 +2,41 @@ from rest_framework import serializers
 from .models import Category, Author, Book, BookReview, ReviewLike
 
 
+class LibraryCatalogMiniSerializer(serializers.Serializer):
+    """Version compacte d'une entrée de catalogue bibliothèque."""
+    id = serializers.IntegerField()
+    library_id = serializers.IntegerField(source='library.id')
+    library_name = serializers.CharField(source='library.name')
+    library_slug = serializers.SlugField(source='library.slug')
+    library_city = serializers.CharField(source='library.city')
+    library_is_verified = serializers.BooleanField(source='library.is_verified')
+    available_copies = serializers.IntegerField()
+    total_copies = serializers.IntegerField()
+    allows_digital_loan = serializers.BooleanField()
+    max_loan_days = serializers.IntegerField()
+    in_stock = serializers.SerializerMethodField()
+
+    def get_in_stock(self, obj):
+        return obj.available_copies > 0
+
+
+class BookListingMiniSerializer(serializers.Serializer):
+    """Version compacte d'une offre marketplace, embarquée dans BookListSerializer."""
+    id = serializers.IntegerField()
+    vendor_id = serializers.IntegerField(source='vendor.id')
+    vendor_name = serializers.CharField(source='vendor.name')
+    vendor_slug = serializers.SlugField(source='vendor.slug')
+    vendor_city = serializers.CharField(source='vendor.city')
+    vendor_is_verified = serializers.BooleanField(source='vendor.is_verified')
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    original_price = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True)
+    stock = serializers.IntegerField()
+    condition = serializers.CharField()
+    condition_display = serializers.CharField(source='get_condition_display')
+    has_discount = serializers.BooleanField()
+    in_stock = serializers.BooleanField()
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """
     Sérialiseur pour le modèle Category
@@ -16,14 +51,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class AuthorSerializer(serializers.ModelSerializer):
     """
-    Sérialiseur pour le modèle Author
-    Gère la transformation des auteurs en JSON
-    Inclut l'URL de la photo si elle existe
+    Sérialiseur pour le modèle Author.
+    Expose les champs display_* qui résolvent automatiquement
+    depuis le profil utilisateur lié (si existant).
     """
-    
-    # Champ calculé pour le nombre de livres de l'auteur
     books_count = serializers.SerializerMethodField()
-    
+    avg_rating = serializers.SerializerMethodField()
+    display_name = serializers.CharField(read_only=True)
+    display_bio = serializers.CharField(read_only=True)
+    display_photo = serializers.SerializerMethodField()
+    is_registered = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Author
         fields = [
@@ -33,14 +71,42 @@ class AuthorSerializer(serializers.ModelSerializer):
             'photo',
             'slug',
             'books_count',
+            'avg_rating',
+            'display_name',
+            'display_bio',
+            'display_photo',
+            'is_registered',
             'created_at',
-            'updated_at'
+            'updated_at',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-    
+
     def get_books_count(self, obj):
-        """Retourne le nombre de livres écrits par cet auteur"""
+        # Utiliser l'annotation si dispo, sinon prefetch cache
+        if hasattr(obj, 'num_books'):
+            return obj.num_books
         return obj.books.count()
+
+    def get_avg_rating(self, obj):
+        # Si annoté par la vue, utiliser la valeur annotée (pas de requête supplémentaire)
+        if hasattr(obj, 'avg_rating') and obj.avg_rating is not None:
+            return round(float(obj.avg_rating), 1)
+        # Utiliser le cache prefetch pour éviter le N+1
+        books = obj.books.all()
+        rated = [b.rating for b in books if b.rating and b.rating > 0]
+        if rated:
+            return round(sum(rated) / len(rated), 1)
+        return 0
+
+    def get_display_photo(self, obj):
+        photo = obj.display_photo
+        if photo:
+            request = self.context.get('request')
+            if request and hasattr(photo, 'url'):
+                return request.build_absolute_uri(photo.url)
+            if hasattr(photo, 'url'):
+                return photo.url
+        return None
 
 
 class BookListSerializer(serializers.ModelSerializer):
@@ -84,6 +150,19 @@ class BookListSerializer(serializers.ModelSerializer):
     # Formatage de la note (ex: "4.5/5")
     rating_display = serializers.SerializerMethodField()
     
+    # Organisation éditrice (compact pour la liste)
+    publisher_name = serializers.SerializerMethodField()
+    publisher_slug = serializers.SerializerMethodField()
+
+    # Offres marketplace (librairies, vendeurs)
+    listings = serializers.SerializerMethodField()
+    best_listing_price = serializers.SerializerMethodField()
+    listings_count = serializers.SerializerMethodField()
+
+    # Disponibilité en bibliothèque
+    library_availability = serializers.SerializerMethodField()
+    library_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Book
         fields = [
@@ -107,13 +186,67 @@ class BookListSerializer(serializers.ModelSerializer):
             'discount_percentage',
             'discount_amount',
             'is_bestseller',
+            'total_sales',
             'rating',
             'rating_count',
             'rating_display',
             'pdf_file',
+            # Organisation
+            'publisher_organization',
+            'publisher_name',
+            'publisher_slug',
+            # Marketplace
+            'listings',
+            'best_listing_price',
+            'listings_count',
+            # Bibliothèques
+            'library_availability',
+            'library_count',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
-    
+
+    def get_publisher_name(self, obj):
+        return obj.publisher_organization.name if obj.publisher_organization else None
+
+    def get_publisher_slug(self, obj):
+        return obj.publisher_organization.slug if obj.publisher_organization else None
+
+    def _get_active_listings(self, obj):
+        """Retourne les listings prefetchées ou queryset filtré."""
+        # Si prefetchées via Prefetch('active_listings'), utiliser le cache
+        if hasattr(obj, '_prefetched_objects_cache') and 'active_listings' in obj._prefetched_objects_cache:
+            return obj.active_listings.all()
+        # Fallback : query directe (pour les endpoints qui n'ont pas le Prefetch)
+        return obj.listings.filter(is_active=True).select_related('vendor')
+
+    def get_listings(self, obj):
+        active = self._get_active_listings(obj)
+        return BookListingMiniSerializer(active, many=True).data
+
+    def get_best_listing_price(self, obj):
+        active = self._get_active_listings(obj)
+        if not active:
+            return None
+        prices = [l.price for l in active if l.in_stock]
+        return str(min(prices)) if prices else None
+
+    def get_listings_count(self, obj):
+        active = self._get_active_listings(obj)
+        return len(list(active))
+
+    def _get_active_catalog_items(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'active_catalog_items' in obj._prefetched_objects_cache:
+            return obj.active_catalog_items
+        return obj.library_catalog_items.filter(is_active=True).select_related('library')
+
+    def get_library_availability(self, obj):
+        items = self._get_active_catalog_items(obj)
+        return LibraryCatalogMiniSerializer(items, many=True).data
+
+    def get_library_count(self, obj):
+        items = self._get_active_catalog_items(obj)
+        return len(list(items))
+
     def get_rating_display(self, obj):
         """Retourne la note formatée (ex: "4.5/5")"""
         if obj.rating and obj.rating > 0:
@@ -176,7 +309,20 @@ class BookDetailSerializer(serializers.ModelSerializer):
     # Formatage de la note
     rating_display = serializers.SerializerMethodField()
     rating_stars = serializers.SerializerMethodField()
-    
+
+    # Offres marketplace
+    listings = serializers.SerializerMethodField()
+    best_listing_price = serializers.SerializerMethodField()
+    listings_count = serializers.SerializerMethodField()
+
+    # Disponibilité en bibliothèque
+    library_availability = serializers.SerializerMethodField()
+    library_count = serializers.SerializerMethodField()
+
+    # Organisation éditrice
+    publisher_name = serializers.SerializerMethodField()
+    publisher_slug = serializers.SerializerMethodField()
+
     class Meta:
         model = Book
         fields = [
@@ -205,20 +351,71 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'discount_percentage',
             'discount_amount',
             'is_bestseller',
+            'total_sales',
             'rating',
             'rating_count',
             'rating_display',
             'rating_stars',
             'pdf_file',
+            # Organisation
+            'publisher_organization',
+            'publisher_name',
+            'publisher_slug',
+            # Marketplace
+            'listings',
+            'best_listing_price',
+            'listings_count',
+            # Bibliothèques
+            'library_availability',
+            'library_count',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
     
+    def get_publisher_name(self, obj):
+        return obj.publisher_organization.name if obj.publisher_organization else None
+
+    def get_publisher_slug(self, obj):
+        return obj.publisher_organization.slug if obj.publisher_organization else None
+
+    def _get_active_listings(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'active_listings' in obj._prefetched_objects_cache:
+            return obj.active_listings.all()
+        return obj.listings.filter(is_active=True).select_related('vendor')
+
+    def get_listings(self, obj):
+        active = self._get_active_listings(obj)
+        return BookListingMiniSerializer(active, many=True).data
+
+    def get_best_listing_price(self, obj):
+        active = self._get_active_listings(obj)
+        if not active:
+            return None
+        prices = [l.price for l in active if l.in_stock]
+        return str(min(prices)) if prices else None
+
+    def get_listings_count(self, obj):
+        active = self._get_active_listings(obj)
+        return len(list(active))
+
+    def _get_active_catalog_items(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'active_catalog_items' in obj._prefetched_objects_cache:
+            return obj.active_catalog_items
+        return obj.library_catalog_items.filter(is_active=True).select_related('library')
+
+    def get_library_availability(self, obj):
+        items = self._get_active_catalog_items(obj)
+        return LibraryCatalogMiniSerializer(items, many=True).data
+
+    def get_library_count(self, obj):
+        items = self._get_active_catalog_items(obj)
+        return len(list(items))
+
     def get_rating_display(self, obj):
         """Retourne la note formatée (ex: "4.5/5")"""
         if obj.rating and obj.rating > 0:
             return f"{obj.rating}/5 ({obj.rating_count} avis)"
         return "Pas encore noté"
-    
+
     def get_rating_stars(self, obj):
         """Retourne les étoiles de notation pour l'affichage"""
         if not obj.rating or obj.rating == 0:
@@ -275,10 +472,12 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'pdf_file',
             'available',
             'is_bestseller',
+            'total_sales',
             'rating',
             'rating_count',
             'category',
             'author',
+            'publisher_organization',
         ]
     
     def validate(self, data):
@@ -321,18 +520,18 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
 
 class AuthorDetailSerializer(serializers.ModelSerializer):
     """
-    Sérialiseur détaillé pour un auteur
-    Inclut la liste de ses livres
+    Sérialiseur détaillé pour un auteur.
+    Inclut la liste de ses livres + champs display_*.
     """
-    
-    # Liste des livres de l'auteur (nested)
     books = BookListSerializer(many=True, read_only=True)
     books_count = serializers.SerializerMethodField()
-    
-    # Statistiques de l'auteur
     average_rating = serializers.SerializerMethodField()
     bestsellers_count = serializers.SerializerMethodField()
-    
+    display_name = serializers.CharField(read_only=True)
+    display_bio = serializers.CharField(read_only=True)
+    display_photo = serializers.SerializerMethodField()
+    is_registered = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Author
         fields = [
@@ -345,27 +544,41 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
             'books_count',
             'average_rating',
             'bestsellers_count',
+            'display_name',
+            'display_bio',
+            'display_photo',
+            'is_registered',
             'created_at',
-            'updated_at'
+            'updated_at',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-    
+
     def get_books_count(self, obj):
-        """Retourne le nombre total de livres"""
+        if hasattr(obj, 'num_books'):
+            return obj.num_books
         return obj.books.count()
-    
+
     def get_average_rating(self, obj):
-        """Retourne la note moyenne des livres de l'auteur"""
+        # Utilise le prefetch cache au lieu de requêtes supplémentaires
         books = obj.books.all()
-        if books.exists():
-            total_rating = sum(book.rating for book in books if book.rating)
-            count = sum(1 for book in books if book.rating)
-            return round(total_rating / count, 2) if count > 0 else 0
+        rated = [b.rating for b in books if b.rating and b.rating > 0]
+        if rated:
+            return round(sum(rated) / len(rated), 2)
         return 0
-    
+
     def get_bestsellers_count(self, obj):
-        """Retourne le nombre de best-sellers de l'auteur"""
-        return obj.books.filter(is_bestseller=True).count()
+        # Utilise le prefetch cache
+        return sum(1 for b in obj.books.all() if b.is_bestseller)
+
+    def get_display_photo(self, obj):
+        photo = obj.display_photo
+        if photo:
+            request = self.context.get('request')
+            if request and hasattr(photo, 'url'):
+                return request.build_absolute_uri(photo.url)
+            if hasattr(photo, 'url'):
+                return photo.url
+        return None
 
 
 class CategoryDetailSerializer(serializers.ModelSerializer):
@@ -401,27 +614,28 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
     
     def get_books_count(self, obj):
         """Retourne le nombre de livres dans cette catégorie"""
+        if hasattr(obj, 'num_books'):
+            return obj.num_books
         return obj.books.count()
-    
+
     def get_average_rating(self, obj):
-        """Retourne la note moyenne des livres de la catégorie"""
+        """Retourne la note moyenne des livres de la catégorie (utilise le prefetch cache)"""
         books = obj.books.all()
-        if books.exists():
-            total_rating = sum(book.rating for book in books if book.rating)
-            count = sum(1 for book in books if book.rating)
-            return round(total_rating / count, 2) if count > 0 else 0
+        rated = [b.rating for b in books if b.rating and b.rating > 0]
+        if rated:
+            return round(sum(rated) / len(rated), 2)
         return 0
-    
+
     def get_bestsellers_count(self, obj):
-        """Retourne le nombre de best-sellers dans cette catégorie"""
-        return obj.books.filter(is_bestseller=True).count()
-    
+        """Retourne le nombre de best-sellers dans cette catégorie (utilise le prefetch cache)"""
+        return sum(1 for b in obj.books.all() if b.is_bestseller)
+
     def get_average_price(self, obj):
-        """Retourne le prix moyen des livres de la catégorie"""
-        books = obj.books.all()
-        if books.exists():
-            total_price = sum(book.price for book in books)
-            return round(total_price / books.count(), 2)
+        """Retourne le prix moyen des livres de la catégorie (utilise le prefetch cache)"""
+        books = list(obj.books.all())
+        if books:
+            total_price = sum(b.price for b in books)
+            return round(total_price / len(books), 2)
         return 0
 
 

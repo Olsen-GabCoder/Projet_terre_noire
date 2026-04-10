@@ -1,14 +1,21 @@
+import json
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
 
 from django.db.models import Prefetch
 from django.http import HttpResponse
 
+logger = logging.getLogger(__name__)
+
 from .models import Order, OrderItem, Payment
 from apps.core.invoice import generate_order_invoice_pdf
+from apps.users.throttles import OrderCreateThrottle
 from .serializers import (
     OrderCreateSerializer,
     OrderListSerializer,
@@ -26,15 +33,16 @@ class StandardResultsSetPagination(PageNumberPagination):
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des commandes
-    
+
     Actions:
     - list: GET /api/orders/ - Historique des commandes
     - retrieve: GET /api/orders/{id}/ - Détail d'une commande
     - create: POST /api/orders/ - Créer une commande
     """
-    
+
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
+    http_method_names = ['get', 'post', 'put', 'patch', 'head', 'options']
     
     def get_queryset(self):
         items_prefetch = Prefetch(
@@ -54,11 +62,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderStatusUpdateSerializer
         return OrderListSerializer
     
+    def get_throttles(self):
+        if self.action == 'create':
+            return [OrderCreateThrottle()]
+        return super().get_throttles()
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
-        
+
         response_serializer = OrderListSerializer(order, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -75,11 +88,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         if old_status != 'SHIPPED' and instance.status == 'SHIPPED':
-            try:
-                from apps.core.email import send_order_shipped
-                send_order_shipped(instance)
-            except Exception:
-                pass
+            from apps.core.tasks import send_order_shipped_task
+            send_order_shipped_task.delay(instance.id)
         response_serializer = OrderListSerializer(instance, context={'request': request})
         return Response(response_serializer.data)
     
@@ -87,24 +97,28 @@ class OrderViewSet(viewsets.ModelViewSet):
     def cancel_order(self, request, pk=None):
         """
         Endpoint: POST /api/orders/{id}/cancel/
-        Annuler une commande (uniquement si PENDING)
+        Annuler une commande (uniquement si PENDING).
+        Restaure le stock des listings marketplace.
         """
         order = self.get_object()
-        
+
         if order.status != 'PENDING':
             return Response(
                 {'error': 'Seules les commandes en attente peuvent être annulées.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
+        # Restaurer le stock des listings marketplace
+        for item in order.items.select_related('listing', 'listing__book'):
+            if item.listing and item.listing.book.format != 'EBOOK':
+                item.listing.stock += item.quantity
+                item.listing.save(update_fields=['stock'])
+
         order.status = 'CANCELLED'
         order.save()
 
-        try:
-            from apps.core.email import send_order_cancelled
-            send_order_cancelled(order)
-        except Exception:
-            pass
+        from apps.core.tasks import send_order_cancelled_task
+        send_order_cancelled_task.delay(order.id)
 
         serializer = OrderListSerializer(order, context={'request': request})
         return Response(serializer.data)
@@ -175,11 +189,140 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.status == 'SUCCESS':
             order.status = 'PAID'
             order.save()
-            # Envoi email de confirmation de paiement
+            # Split payment — créditer les portefeuilles vendeurs
             try:
-                from apps.core.email import send_order_paid
-                send_order_paid(order)
+                from apps.marketplace.services import split_payment
+                split_payment(order)
             except Exception:
                 pass
-        
+            # Mettre à jour les ventes et le statut best-seller
+            from apps.books.signals import update_sales_on_payment
+            update_sales_on_payment(order)
+            # Envoi email de confirmation de paiement
+            from apps.core.tasks import send_order_paid_task
+            send_order_paid_task.delay(order.id)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class PaymentInitiateView(APIView):
+    """
+    POST /api/payments/initiate/
+    Initie un paiement via le provider (Mobicash, Airtel, Cash).
+    Body : { order_id, provider, phone_number }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('order_id')
+        provider_name = request.data.get('provider')
+        phone_number = request.data.get('phone_number', '')
+
+        if not order_id or not provider_name:
+            return Response({'error': 'order_id et provider requis.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response({'error': 'Commande introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if order.status != 'PENDING':
+            return Response({'error': 'Cette commande ne peut plus être payée.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if hasattr(order, 'payment'):
+            return Response({'error': 'Cette commande a déjà un paiement.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .payment_gateway import get_provider, PaymentError
+        try:
+            provider = get_provider(provider_name)
+            result = provider.initiate(order, phone_number)
+        except PaymentError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        payment = Payment.objects.create(
+            order=order,
+            transaction_id=result['transaction_id'],
+            provider=provider_name,
+            status=result['status'],
+            amount=order.total_amount,
+        )
+
+        if result['status'] == 'SUCCESS':
+            order.status = 'PAID'
+            order.save()
+            try:
+                from apps.marketplace.services import split_payment
+                split_payment(order)
+            except Exception:
+                pass
+            from apps.books.signals import update_sales_on_payment
+            update_sales_on_payment(order)
+            from apps.core.tasks import send_order_paid_task
+            send_order_paid_task.delay(order.id)
+
+        return Response({
+            'payment_id': payment.id,
+            'transaction_id': result['transaction_id'],
+            'status': result['status'],
+            'message': result.get('message', ''),
+        }, status=status.HTTP_201_CREATED)
+
+
+class PaymentWebhookView(APIView):
+    """
+    POST /api/payments/webhook/<provider>/
+    Webhook appelé par le provider de paiement (Mobicash, Airtel).
+    Pas d'authentification JWT — validé par signature HMAC.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request, provider_name):
+        from .payment_gateway import get_provider, PaymentError
+
+        try:
+            provider = get_provider(provider_name.upper())
+        except PaymentError:
+            return Response({'error': 'Provider inconnu.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        signature = request.headers.get('X-Webhook-Signature', '')
+        raw_body = request.body.decode('utf-8') if isinstance(request.body, bytes) else json.dumps(request.data)
+
+        if not provider.validate_webhook(raw_body, signature):
+            logger.warning("Webhook %s : signature invalide", provider_name)
+            return Response({'error': 'Signature invalide.'}, status=status.HTTP_403_FORBIDDEN)
+
+        result = provider.parse_webhook(request.data)
+        transaction_id = result.get('transaction_id')
+        if not transaction_id:
+            return Response({'error': 'transaction_id manquant.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payment = Payment.objects.select_related('order').get(transaction_id=transaction_id)
+        except Payment.DoesNotExist:
+            logger.warning("Webhook %s : transaction %s inconnue", provider_name, transaction_id)
+            return Response({'error': 'Transaction inconnue.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment.status != 'PENDING':
+            return Response({'status': 'already_processed'})
+
+        new_status = result.get('status', 'FAILED')
+        payment.status = new_status
+        payment.save()
+
+        if new_status == 'SUCCESS':
+            order = payment.order
+            order.status = 'PAID'
+            order.save()
+            try:
+                from apps.marketplace.services import split_payment
+                split_payment(order)
+            except Exception:
+                pass
+            from apps.books.signals import update_sales_on_payment
+            update_sales_on_payment(order)
+            from apps.core.tasks import send_order_paid_task
+            send_order_paid_task.delay(order.id)
+            logger.info("Paiement %s confirmé via webhook %s", transaction_id, provider_name)
+
+        return Response({'status': 'ok'})

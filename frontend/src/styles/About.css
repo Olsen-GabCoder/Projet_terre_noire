@@ -6,48 +6,77 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-page);
+  background: transparent;
 }
 
 /* Hero (inchangé) */
 .about-hero {
   flex-shrink: 0;
   padding: 6rem 1.5rem 3rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
-  color: #fff;
+  background: linear-gradient(170deg, #f0f0ff 0%, #e8e6ff 40%, #f5f3ff 100%);
+  color: var(--color-gray-800);
   position: relative;
   overflow: hidden;
   text-align: center;
+}
+
+:root[data-theme="dark"] .about-hero {
+  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  color: #fff;
 }
 
 .about-hero__grid-bg {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 100%);
 }
 
-.about-hero__orb {
-  position: absolute;
-  width: 450px;
-  height: 450px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
-  filter: blur(60px);
-  top: -20%;
-  right: -8%;
-  animation: about-orb 14s ease-in-out infinite;
+:root[data-theme="dark"] .about-hero__grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
 }
 
-@keyframes about-orb {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-15px, 10px); }
+.about-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.about-hero__orb--1 {
+  width: 450px;
+  height: 450px;
+  top: -20%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 65%);
+  filter: blur(60px);
+  animation: about-orb-1 14s ease-in-out infinite;
+}
+
+.about-hero__orb--2 {
+  width: 350px;
+  height: 350px;
+  bottom: -15%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 65%);
+  filter: blur(60px);
+  animation: about-orb-2 18s ease-in-out infinite;
+}
+
+@keyframes about-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 15px) scale(1.05); }
+}
+
+@keyframes about-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -20px) scale(1.06); }
 }
 
 .about-hero__inner {
@@ -70,28 +99,36 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   margin: 0 0 1rem;
-  color: #fff;
+  color: var(--color-gray-800);
 }
+
+:root[data-theme="dark"] .about-hero__title { color: #fff; }
 
 .about-hero__sub {
   font-size: 1.125rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-gray-500);
   margin: 0 auto;
   max-width: 600px;
 }
 
+:root[data-theme="dark"] .about-hero__sub { color: rgba(255, 255, 255, 0.6); }
+
 .about-hero-fade {
   flex-shrink: 0;
   height: 80px;
-  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  background: linear-gradient(to bottom, #f5f3ff, var(--color-bg-page));
   margin-top: -1px;
+}
+
+:root[data-theme="dark"] .about-hero-fade {
+  background: linear-gradient(to bottom, #0c1631, var(--color-bg-page));
 }
 
 .about-footer-fade {
   flex-shrink: 0;
   height: 100px;
-  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-gray-700) 60%, var(--color-bg-dark));
+  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-bg-section-alt));
 }
 
 /* ── Grille : cartes à taille de contenu ── */
@@ -110,7 +147,7 @@
 
 /* Cartes communes */
 .about-layout .card {
-  background: #fff;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-gray-200);
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
@@ -266,7 +303,7 @@
 
 .btn--outline:hover {
   border-color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(99, 102, 241, 0.05);
 }
 
 /* Responsive */

@@ -76,6 +76,11 @@ INSTALLED_APPS = [
     'apps.wishlist',
     'apps.coupons',
     'apps.core',
+    'apps.organizations',
+    'apps.marketplace',
+    'apps.social',
+    'apps.services',
+    'apps.library',
 
     # EXTENSIONS
     'django_extensions',
@@ -246,7 +251,7 @@ else:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'terrenoire-cache',
+            'LOCATION': 'frollot-cache',
             'OPTIONS': {'MAX_ENTRIES': 500},
         }
     }
@@ -256,13 +261,21 @@ CACHE_BOOKS_TTL = 300     # 5 min pour les listes de livres
 # Configuration Email (réinitialisation mot de passe, notifications, etc.)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 # Logo : frontend/public/images/ ou backend/assets/images/ (priorité au backend)
-LOGO_PATH = BASE_DIR / 'assets' / 'images' / 'logo_terre_noire.png'
+LOGO_PATH = BASE_DIR / 'assets' / 'images' / 'logo_frollot.png'
 if not LOGO_PATH.exists():
-    LOGO_PATH = BASE_DIR.parent / 'frontend' / 'public' / 'images' / 'logo_terre_noire.png'
-LOGO_URL = os.getenv('LOGO_URL') or f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/images/logo_terre_noire.png"
+    LOGO_PATH = BASE_DIR.parent / 'frontend' / 'public' / 'images' / 'logo_frollot.png'
+# Logo optimisé pour les PDFs (petit, JPEG, ~2 Ko)
+LOGO_PATH_PDF = BASE_DIR / 'assets' / 'images' / 'logo_frollot_small.jpg'
+LOGO_URL = os.getenv('LOGO_URL') or f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/images/logo_frollot.png"
 # Gmail exige que l'expéditeur = compte SMTP. Si non défini, on utilise EMAIL_HOST_USER.
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') or os.getenv('EMAIL_HOST_USER') or 'noreply@terrenoireeditions.com'
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'terrenoireeditions@gmail.com')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') or os.getenv('EMAIL_HOST_USER') or 'noreply@frollot.com'
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'contact@frollot.com')
+
+# OAuth (Google & Facebook)
+GOOGLE_OAUTH_CLIENT_ID = os.getenv('GOOGLE_OAUTH_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH_CLIENT_SECRET', '')
+FACEBOOK_OAUTH_APP_ID = os.getenv('FACEBOOK_OAUTH_APP_ID', '')
+FACEBOOK_OAUTH_APP_SECRET = os.getenv('FACEBOOK_OAUTH_APP_SECRET', '')
 
 # SMTP : utilisé si EMAIL_HOST et EMAIL_HOST_USER sont définis (dev et prod)
 _email_host = os.getenv('EMAIL_HOST', '').strip()
@@ -277,6 +290,38 @@ if _email_host and _email_user:
 else:
     # Fallback : console en dev, échec silencieux en prod
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.dummy.EmailBackend'
+
+# ── Celery (async tasks) ──
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Libreville'
+# En dev sans Redis, les tâches s'exécutent de manière synchrone
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'True' if DEBUG else 'False') == 'True'
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_TASK_SOFT_TIME_LIMIT = 120  # 2 minutes — warning
+CELERY_TASK_TIME_LIMIT = 300  # 5 minutes — hard kill
+
+# ── Règles métier éditorial ──
+# Ratio max entre le montant d'un devis et le CA théorique (tirage x prix).
+# Un devis dont le total dépasse ce ratio × CA est bloqué comme incohérent.
+MAX_QUOTE_TO_REVENUE_RATIO = float(os.getenv('MAX_QUOTE_TO_REVENUE_RATIO', '2.0'))
+
+# ── Payment providers (Gabon) ──
+MOBICASH_MERCHANT_ID = os.getenv('MOBICASH_MERCHANT_ID', '')
+MOBICASH_API_KEY = os.getenv('MOBICASH_API_KEY', '')
+MOBICASH_API_SECRET = os.getenv('MOBICASH_API_SECRET', '')
+MOBICASH_API_URL = os.getenv('MOBICASH_API_URL', '')  # vide = simulation
+MOBICASH_WEBHOOK_SECRET = os.getenv('MOBICASH_WEBHOOK_SECRET', '')
+
+AIRTEL_CLIENT_ID = os.getenv('AIRTEL_CLIENT_ID', '')
+AIRTEL_CLIENT_SECRET = os.getenv('AIRTEL_CLIENT_SECRET', '')
+AIRTEL_API_URL = os.getenv('AIRTEL_API_URL', '')  # vide = simulation
+AIRTEL_WEBHOOK_SECRET = os.getenv('AIRTEL_WEBHOOK_SECRET', '')
+
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -302,14 +347,15 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon_burst': '10/minute',
         'anon_sustained': '30/hour',
+        'login': '5/minute',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # Documentation API OpenAPI / Swagger
 SPECTACULAR_SETTINGS = {
-    'TITLE': "API Terre Noire Éditions",
-    'DESCRIPTION': "API REST pour la maison d'édition Terre Noire Éditions (livres, commandes, utilisateurs, etc.)",
+    'TITLE': "API Frollot",
+    'DESCRIPTION': "API REST de la plateforme Frollot — Plateforme Sociale du Livre (livres, commandes, utilisateurs, organisations, etc.)",
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
@@ -333,7 +379,7 @@ JWT_REFRESH_COOKIE_NAME = 'refresh_token'
 
 # Configuration CORS
 # En dev (DEBUG=True) : autorise localhost
-# En production : utiliser CORS_ALLOWED_ORIGINS dans .env (ex: https://terrenoireeditions.com,https://www.terrenoireeditions.com)
+# En production : utiliser CORS_ALLOWED_ORIGINS dans .env (ex: https://frollot.com,https://www.frollot.com)
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True  # Requis pour les cookies HttpOnly
 CORS_ALLOWED_ORIGINS = [
@@ -366,3 +412,70 @@ if not DEBUG:
 
     # Référer complet pour les redirections (évite la fuite d'info dans Referer)
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+    # Proxy SSL (derrière nginx)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# =============================================================================
+# Logging
+# =============================================================================
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO')
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'simple': {
+            'format': '{levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+    },
+}

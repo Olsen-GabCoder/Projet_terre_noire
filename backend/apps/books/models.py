@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils.text import slugify
@@ -41,7 +42,9 @@ class Category(models.Model):
 
 class Author(models.Model):
     """
-    Modèle pour les auteurs
+    Modèle pour les auteurs.
+    Peut être lié à un compte utilisateur (optionnel).
+    Quand lié, les infos affichées (nom, bio, photo) viennent du profil utilisateur.
     """
     full_name = models.CharField(
         max_length=200,
@@ -64,6 +67,15 @@ class Author(models.Model):
         blank=True,
         verbose_name="Slug"
     )
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='author_profile',
+        verbose_name="Compte utilisateur lié",
+        help_text="Si lié, le nom, la bio et la photo sont synchronisés depuis le profil.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -73,13 +85,49 @@ class Author(models.Model):
         ordering = ['full_name']
 
     def save(self, *args, **kwargs):
-        """Génération automatique du slug si non fourni"""
         if not self.slug:
-            self.slug = slugify(self.full_name)
+            base = slugify(self.full_name)
+            slug = base
+            n = 1
+            while Author.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{n}"
+                n += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
+        return self.display_name
+
+    # ── Propriétés de résolution (priorité au compte lié) ──
+
+    @property
+    def display_name(self):
+        if self.user:
+            name = self.user.get_full_name()
+            if name:
+                return name
         return self.full_name
+
+    @property
+    def display_bio(self):
+        if self.user_id:
+            from apps.users.models import UserProfile
+            profile = UserProfile.objects.filter(
+                user_id=self.user_id, profile_type='AUTEUR', is_active=True
+            ).first()
+            if profile and profile.bio:
+                return profile.bio
+        return self.biography or ''
+
+    @property
+    def display_photo(self):
+        if self.user_id and self.user.profile_image:
+            return self.user.profile_image
+        return self.photo
+
+    @property
+    def is_registered(self):
+        return self.user_id is not None
 
 
 class Book(models.Model):
@@ -173,11 +221,16 @@ class Book(models.Model):
         help_text="Prix avant promotion. Laissez vide si pas de promotion."
     )
     
-    # Indicateur Best-seller (manuelle)
+    # Best-seller — calculé automatiquement à partir des ventes
     is_bestseller = models.BooleanField(
         default=False,
         verbose_name="Best-seller",
-        help_text="Cocher pour mettre en avant ce livre"
+        help_text="Calculé automatiquement : 500+ ventes.",
+    )
+    total_sales = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ventes totales",
+        help_text="Nombre total d'exemplaires vendus (mis à jour au paiement).",
     )
     
     # Note moyenne (ex: 4.5)
@@ -197,7 +250,18 @@ class Book(models.Model):
         help_text="Nombre total d'avis reçus"
     )
     # === FIN NOUVEAUX CHAMPS ===
-    
+
+    # Organisation éditrice (Frollot Connect)
+    publisher_organization = models.ForeignKey(
+        'organizations.Organization',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='published_books',
+        verbose_name="Organisation éditrice",
+        help_text="Maison d'édition qui a publié ce livre.",
+    )
+
     # Métadonnées
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

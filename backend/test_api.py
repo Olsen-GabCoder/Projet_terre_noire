@@ -30,6 +30,9 @@ def test_api():
         print(f"❌ Erreur avec /token/: {e}")
         return False
     
+
+    
+    
     # Test 3: Tester l'endpoint users (sans authentification)
     try:
         response = requests.get(f"{base_url}/users/", timeout=5)

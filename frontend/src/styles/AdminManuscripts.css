@@ -48,7 +48,7 @@
   height: 450px;
   top: -20%;
   right: -8%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 65%);
   filter: blur(60px);
   animation: admin-ms-orb-1 14s ease-in-out infinite;
 }
@@ -58,7 +58,7 @@
   height: 350px;
   bottom: -10%;
   left: -6%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.07) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.07) 0%, transparent 65%);
   filter: blur(70px);
   animation: admin-ms-orb-2 18s ease-in-out infinite;
 }
@@ -117,7 +117,7 @@
   font-size: 0.9375rem;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.25s ease;
+  transition: var(--transition-base);
 }
 
 .admin-manuscripts-hero__back:hover {
@@ -161,12 +161,14 @@
 }
 
 .admin-manuscripts-stat {
-  background: #fff;
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur));
+  -webkit-backdrop-filter: blur(var(--card-glass-blur));
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   text-align: center;
   box-shadow: var(--shadow-card);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--card-glass-border);
 }
 
 .admin-manuscripts-stat__number {
@@ -191,12 +193,14 @@
 
 /* Filtres */
 .admin-manuscripts-filter {
-  background: #fff;
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur));
+  -webkit-backdrop-filter: blur(var(--card-glass-blur));
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-card);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--card-glass-border);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -222,13 +226,13 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(37, 99, 235, 0.1);
+  transition: var(--transition-base);
+  background: rgba(99, 102, 241, 0.1);
   color: var(--color-primary);
 }
 
 .admin-manuscripts-filter__btn:hover {
-  background: rgba(37, 99, 235, 0.2);
+  background: rgba(99, 102, 241, 0.2);
 }
 
 .admin-manuscripts-filter__btn.active {
@@ -239,11 +243,13 @@
 /* Tableau desktop */
 .admin-manuscripts-table {
   width: 100%;
-  background: #fff;
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur));
+  -webkit-backdrop-filter: blur(var(--card-glass-blur));
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-card);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--card-glass-border);
 }
 
 @media (max-width: 768px) {
@@ -265,7 +271,7 @@
 }
 
 .admin-manuscripts-table thead {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 .admin-manuscripts-table th {
@@ -280,11 +286,11 @@
 
 .admin-manuscripts-table tbody tr {
   border-bottom: 1px solid var(--color-gray-200);
-  transition: background 0.2s ease;
+  transition: var(--transition-base);
 }
 
 .admin-manuscripts-table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.04);
+  background: rgba(99, 102, 241, 0.04);
 }
 
 .admin-manuscripts-table tbody tr:last-child {
@@ -363,11 +369,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  transition: all 0.2s ease;
+  transition: var(--transition-base);
 }
 
 .admin-manuscripts-table .btn-view {
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   color: var(--color-primary);
 }
 
@@ -397,11 +403,13 @@
 }
 
 .admin-manuscripts-mobile-card {
-  background: #fff;
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur));
+  -webkit-backdrop-filter: blur(var(--card-glass-blur));
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
   box-shadow: var(--shadow-card);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--card-glass-border);
 }
 
 .admin-manuscripts-mobile-card__header {
@@ -478,7 +486,7 @@
 }
 
 .admin-manuscripts-modal {
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: var(--radius-lg);
   max-width: 640px;
   width: 100%;
@@ -637,7 +645,7 @@
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-base);
   color: #fff;
 }
 
@@ -805,4 +813,62 @@
   .admin-manuscripts-modal__status-actions {
     flex-direction: column;
   }
+}
+
+/* =============================================
+   DARK MODE
+   ============================================= */
+:root[data-theme="dark"] .admin-manuscripts-status-badge--pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-status-badge--review {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38bdf8;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-status-badge--accepted {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-status-badge--rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-table .btn-download {
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-table .btn-download:hover {
+  background: #0e7490;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-mobile-card .btn-download {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-modal__file-download .btn-download {
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-modal__file-download .btn-download:hover {
+  background: #0e7490;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-modal__btn-delete {
+  background: rgba(220, 38, 38, 0.1);
+  color: #f87171;
+}
+
+:root[data-theme="dark"] .admin-manuscripts-modal__btn-delete:hover {
+  background: #dc2626;
+  color: #fff;
 }

@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import SocialLoginButtons from '../components/SocialLoginButtons';
+import PasswordStrengthMeter from '../components/PasswordStrengthMeter';
+import PageHero from '../components/PageHero';
 import '../styles/Register.css';
+import SEO from '../components/SEO';
 
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { register, isAuthenticated, loading: authLoading } = useAuth();
@@ -44,45 +50,45 @@ const Register = () => {
     const errors = {};
 
     if (!formData.username.trim()) {
-      errors.username = "Le nom d'utilisateur est requis";
+      errors.username = t('register.valUsernameRequired');
     } else if (formData.username.length < 3) {
-      errors.username = 'Minimum 3 caractères';
+      errors.username = t('register.valUsernameMin');
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      errors.username = 'Lettres, chiffres et underscore seulement';
+      errors.username = t('register.valUsernameChars');
     }
 
     if (!formData.email.trim()) {
-      errors.email = "L'email est requis";
+      errors.email = t('register.valEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Email invalide';
+      errors.email = t('register.valEmailInvalid');
     }
 
     if (!formData.password) {
-      errors.password = 'Le mot de passe est requis';
+      errors.password = t('register.valPasswordRequired');
     } else if (formData.password.length < 8) {
-      errors.password = 'Minimum 8 caractères';
+      errors.password = t('register.valPasswordMin');
     }
 
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Confirmez le mot de passe';
+      errors.confirmPassword = t('register.valConfirmRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      errors.confirmPassword = t('register.valConfirmMismatch');
     }
 
     if (!formData.first_name.trim()) {
-      errors.first_name = 'Le prénom est requis';
+      errors.first_name = t('register.valFirstNameRequired');
     }
 
     if (!formData.last_name.trim()) {
-      errors.last_name = 'Le nom est requis';
+      errors.last_name = t('register.valLastNameRequired');
     }
 
     if (formData.phone_number.trim() && !/^\+?[0-9\s\-()]+$/.test(formData.phone_number)) {
-      errors.phone_number = 'Format invalide';
+      errors.phone_number = t('register.valPhoneInvalid');
     }
 
     if (!termsAccepted) {
-      errors.terms = 'Vous devez accepter les conditions';
+      errors.terms = t('register.valTermsRequired');
     }
 
     setFieldErrors(errors);
@@ -113,7 +119,7 @@ const Register = () => {
       if (result.success) {
         navigate('/', {
           replace: true,
-          state: { message: 'Inscription réussie ! Bienvenue.' },
+          state: { message: t('register.success') },
         });
       } else {
         if (typeof result.error === 'object') {
@@ -124,14 +130,14 @@ const Register = () => {
               : result.error[key];
           });
           setFieldErrors(apiErrors);
-          setError('Veuillez corriger les erreurs');
+          setError(t('register.errorFixErrors'));
         } else {
-          setError(result.error || "Erreur lors de l'inscription");
+          setError(result.error || t('register.errorGeneric'));
         }
       }
     } catch (err) {
       console.error('Erreur inscription:', err);
-      setError('Erreur de connexion au serveur.');
+      setError(t('register.errorServer'));
     } finally {
       setIsLoading(false);
     }
@@ -139,31 +145,17 @@ const Register = () => {
 
   return (
     <div className="reg-page">
+      <SEO title={t('register.pageTitle')} />
       {/* ── HERO ── */}
-      <section className="reg-hero">
-        <div className="reg-hero__orb reg-hero__orb--1" />
-        <div className="reg-hero__orb reg-hero__orb--2" />
-        <div className="reg-hero__orb reg-hero__orb--3" />
-        <div className="reg-hero__grid-bg" />
-        <div className="reg-hero__shine" />
-
-        <div className="reg-hero__inner">
-          <span className="reg-hero__pill">Rejoignez-nous</span>
-          <div className="reg-hero__line" />
-          <div className="reg-hero__icon">
-            <i className="fas fa-user-plus" />
-          </div>
-          <h1 className="reg-hero__title">
-            <span className="reg-hero__title-main">Créer un compte</span>
-          </h1>
-          <p className="reg-hero__sub">
-            Rejoignez notre communauté d'auteurs et de lecteurs — commandez en toute simplicité,
-            soumettez vos manuscrits et accédez à votre espace personnel.
-          </p>
-        </div>
-      </section>
-
-      <div className="reg-hero-fade" />
+      <PageHero
+        title={t('register.heroTitle')}
+        subtitle={t('register.heroSubtitle')}
+        pill={t('register.heroPill')}
+        icon="fas fa-user-plus"
+        orbCount={3}
+        hasShine
+        className="reg-hero"
+      />
 
       {/* ── CONTENU ── */}
       <div className="reg-content">
@@ -177,12 +169,12 @@ const Register = () => {
             <div className="reg-card__header">
               <span className="reg-card__trust">
                 <i className="fas fa-shield-halved" />
-                Inscription sécurisée
+                {t('register.secureRegistration')}
               </span>
             </div>
 
             {error && (
-              <div className="reg-alert reg-alert-error">
+              <div className="reg-alert reg-alert-error" aria-live="polite">
                 <i className="fas fa-exclamation-circle" />
                 <span>{error}</span>
               </div>
@@ -198,7 +190,7 @@ const Register = () => {
             <form onSubmit={handleSubmit} className="reg-form">
               <div className="reg-row">
                 <div className="reg-field">
-                  <label htmlFor="username">Nom d'utilisateur *</label>
+                  <label htmlFor="username">{t('register.usernameLabel')}</label>
                   <div className={`reg-input-wrap ${fieldErrors.username ? 'has-error' : ''}`}>
                     <i className="fas fa-user reg-input-ico" />
                     <input
@@ -208,16 +200,16 @@ const Register = () => {
                       value={formData.username}
                       onChange={handleChange}
                       className="reg-input"
-                      placeholder="johndoe"
+                      placeholder={t('register.usernamePlaceholder')}
                       autoComplete="username"
                       disabled={isLoading}
                     />
                   </div>
-                  {fieldErrors.username && <span className="reg-err">{fieldErrors.username}</span>}
+                  {fieldErrors.username && <span className="reg-err" aria-live="polite">{fieldErrors.username}</span>}
                 </div>
 
                 <div className="reg-field">
-                  <label htmlFor="email">Email *</label>
+                  <label htmlFor="email">{t('register.emailLabel')}</label>
                   <div className={`reg-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
                     <i className="fas fa-envelope reg-input-ico" />
                     <input
@@ -227,18 +219,18 @@ const Register = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className="reg-input"
-                      placeholder="exemple@email.com"
+                      placeholder={t('register.emailPlaceholder')}
                       autoComplete="email"
                       disabled={isLoading}
                     />
                   </div>
-                  {fieldErrors.email && <span className="reg-err">{fieldErrors.email}</span>}
+                  {fieldErrors.email && <span className="reg-err" aria-live="polite">{fieldErrors.email}</span>}
                 </div>
               </div>
 
               <div className="reg-row">
                 <div className="reg-field">
-                  <label htmlFor="first_name">Prénom *</label>
+                  <label htmlFor="first_name">{t('register.firstNameLabel')}</label>
                   <div className={`reg-input-wrap ${fieldErrors.first_name ? 'has-error' : ''}`}>
                     <i className="fas fa-user reg-input-ico" />
                     <input
@@ -248,16 +240,16 @@ const Register = () => {
                       value={formData.first_name}
                       onChange={handleChange}
                       className="reg-input"
-                      placeholder="Jean"
+                      placeholder={t('register.firstNamePlaceholder')}
                       autoComplete="given-name"
                       disabled={isLoading}
                     />
                   </div>
-                  {fieldErrors.first_name && <span className="reg-err">{fieldErrors.first_name}</span>}
+                  {fieldErrors.first_name && <span className="reg-err" aria-live="polite">{fieldErrors.first_name}</span>}
                 </div>
 
                 <div className="reg-field">
-                  <label htmlFor="last_name">Nom *</label>
+                  <label htmlFor="last_name">{t('register.lastNameLabel')}</label>
                   <div className={`reg-input-wrap ${fieldErrors.last_name ? 'has-error' : ''}`}>
                     <i className="fas fa-user reg-input-ico" />
                     <input
@@ -267,17 +259,17 @@ const Register = () => {
                       value={formData.last_name}
                       onChange={handleChange}
                       className="reg-input"
-                      placeholder="Dupont"
+                      placeholder={t('register.lastNamePlaceholder')}
                       autoComplete="family-name"
                       disabled={isLoading}
                     />
                   </div>
-                  {fieldErrors.last_name && <span className="reg-err">{fieldErrors.last_name}</span>}
+                  {fieldErrors.last_name && <span className="reg-err" aria-live="polite">{fieldErrors.last_name}</span>}
                 </div>
               </div>
 
               <div className="reg-field">
-                <label htmlFor="phone_number">Téléphone <span className="reg-opt">(optionnel)</span></label>
+                <label htmlFor="phone_number">{t('register.phoneLabel')} <span className="reg-opt">({t('register.optional')})</span></label>
                 <div className={`reg-input-wrap ${fieldErrors.phone_number ? 'has-error' : ''}`}>
                   <i className="fas fa-phone reg-input-ico" />
                   <input
@@ -287,16 +279,16 @@ const Register = () => {
                     value={formData.phone_number}
                     onChange={handleChange}
                     className="reg-input"
-                    placeholder="+241 XX XXX XXXX"
+                    placeholder={t('register.phonePlaceholder')}
                     autoComplete="tel"
                     disabled={isLoading}
                   />
                 </div>
-                {fieldErrors.phone_number && <span className="reg-err">{fieldErrors.phone_number}</span>}
+                {fieldErrors.phone_number && <span className="reg-err" aria-live="polite">{fieldErrors.phone_number}</span>}
               </div>
 
               <div className="reg-field">
-                <label htmlFor="password">Mot de passe *</label>
+                <label htmlFor="password">{t('register.passwordLabel')}</label>
                 <div className={`reg-input-wrap reg-input-wrap--pwd ${fieldErrors.password ? 'has-error' : ''}`}>
                   <i className="fas fa-lock reg-input-ico" />
                   <input
@@ -315,16 +307,17 @@ const Register = () => {
                     className="reg-pwd-toggle"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                    aria-label={showPassword ? t('register.hidePassword') : t('register.showPassword')}
                   >
                     <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
                   </button>
                 </div>
-                {fieldErrors.password && <span className="reg-err">{fieldErrors.password}</span>}
+                {fieldErrors.password && <span className="reg-err" aria-live="polite">{fieldErrors.password}</span>}
+                <PasswordStrengthMeter password={formData.password} />
               </div>
 
               <div className="reg-field">
-                <label htmlFor="confirmPassword">Confirmer le mot de passe *</label>
+                <label htmlFor="confirmPassword">{t('register.confirmPasswordLabel')}</label>
                 <div className={`reg-input-wrap reg-input-wrap--pwd ${fieldErrors.confirmPassword ? 'has-error' : ''}`}>
                   <i className="fas fa-lock reg-input-ico" />
                   <input
@@ -343,16 +336,16 @@ const Register = () => {
                     className="reg-pwd-toggle"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isLoading}
-                    aria-label={showConfirmPassword ? 'Masquer' : 'Afficher'}
+                    aria-label={showConfirmPassword ? t('register.hidePassword') : t('register.showPassword')}
                   >
                     <i className={`fas fa-${showConfirmPassword ? 'eye-slash' : 'eye'}`} />
                   </button>
                 </div>
-                {fieldErrors.confirmPassword && <span className="reg-err">{fieldErrors.confirmPassword}</span>}
+                {fieldErrors.confirmPassword && <span className="reg-err" aria-live="polite">{fieldErrors.confirmPassword}</span>}
                 {formData.password && formData.confirmPassword && (
                   <span className={`reg-match ${formData.password === formData.confirmPassword ? 'ok' : 'err'}`}>
                     <i className={`fas fa-${formData.password === formData.confirmPassword ? 'check-circle' : 'times-circle'}`} />
-                    {formData.password === formData.confirmPassword ? 'Correspond' : 'Ne correspond pas'}
+                    {formData.password === formData.confirmPassword ? t('register.passwordsMatch') : t('register.passwordsMismatch')}
                   </span>
                 )}
               </div>
@@ -366,38 +359,40 @@ const Register = () => {
                     disabled={isLoading}
                   />
                   <span>
-                    J'accepte les{' '}
-                    <Link to="/terms" target="_blank" rel="noopener noreferrer">conditions</Link>
-                    {' '}et la{' '}
-                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité</Link>
+                    {t('register.termsPrefix')}{' '}
+                    <Link to="/terms" target="_blank" rel="noopener noreferrer">{t('register.termsLink')}</Link>
+                    {' '}{t('register.termsAnd')}{' '}
+                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">{t('register.privacyLink')}</Link>
                   </span>
                 </label>
-                {fieldErrors.terms && <span className="reg-err">{fieldErrors.terms}</span>}
+                {fieldErrors.terms && <span className="reg-err" aria-live="polite">{fieldErrors.terms}</span>}
               </div>
 
               <button type="submit" className="reg-btn reg-btn-submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <i className="fas fa-spinner fa-spin" />
-                    Inscription...
+                    {t('register.submitting')}
                   </>
                 ) : (
                   <>
                     <i className="fas fa-user-plus" />
-                    Créer mon compte
+                    {t('register.submit')}
                   </>
                 )}
               </button>
             </form>
 
+            <SocialLoginButtons />
+
             <div className="reg-footer">
               <p>
-                Vous avez déjà un compte ?{' '}
-                <Link to="/login" className="reg-link">Se connecter</Link>
+                {t('register.hasAccount')}{' '}
+                <Link to="/login" className="reg-link">{t('register.loginLink')}</Link>
               </p>
               <Link to="/" className="reg-back">
                 <i className="fas fa-arrow-left" />
-                Retour à l'accueil
+                {t('register.backToHome')}
               </Link>
             </div>
           </div>

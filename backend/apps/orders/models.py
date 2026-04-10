@@ -9,6 +9,8 @@ class Order(models.Model):
         ('PENDING', 'En attente'),
         ('PAID', 'Payé'),
         ('SHIPPED', 'Expédié'),
+        ('DELIVERED', 'Livré'),
+        ('PARTIAL', 'Partiellement livré'),
         ('CANCELLED', 'Annulé'),
     ]
     
@@ -23,13 +25,21 @@ class Order(models.Model):
     shipping_address = models.TextField()
     shipping_phone = models.CharField(max_length=20)
     shipping_city = models.CharField(max_length=100)
+
+    # Livreur choisi par le client (optionnel)
+    delivery_agent_name = models.CharField(max_length=200, blank=True, default='')
+    delivery_agent_phone = models.CharField(max_length=20, blank=True, default='')
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         ordering = ['-created_at']
-    
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+        ]
+
     def __str__(self):
         return f"Commande #{self.id} - {self.user.email}"
 
@@ -39,7 +49,23 @@ class OrderItem(models.Model):
     book = models.ForeignKey(Book, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    
+
+    # Marketplace (nullable pour rétrocompatibilité)
+    listing = models.ForeignKey(
+        'marketplace.BookListing', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='order_items',
+        verbose_name="Offre vendeur",
+    )
+    sub_order = models.ForeignKey(
+        'marketplace.SubOrder', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='items',
+        verbose_name="Sous-commande",
+    )
+    vendor = models.ForeignKey(
+        'organizations.Organization', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name="Vendeur",
+    )
+
     def __str__(self):
         return f"{self.book.title} x{self.quantity}"
 

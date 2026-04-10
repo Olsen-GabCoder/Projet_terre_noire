@@ -1,37 +1,58 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import BookCard from '../components/BookCard';
+import { useReveal } from '../hooks/useReveal';
 import '../styles/Wishlist.css';
+import SEO from '../components/SEO';
+import PageHero from '../components/PageHero';
 
 const Wishlist = () => {
+  const { t } = useTranslation();
+  const revealRef = useReveal();
   const { wishlistItems, removeFromWishlist, isInWishlist } = useWishlist();
   const { addToCart, isInCart } = useCart();
+  const [error, setError] = useState(null);
+
+  const handleRemove = (bookId) => {
+    try {
+      setError(null);
+      removeFromWishlist(bookId);
+    } catch {
+      setError(t('pages.wishlist.errorRemove'));
+    }
+  };
+
+  const handleAddToCart = (book) => {
+    try {
+      setError(null);
+      addToCart(book);
+    } catch {
+      setError(t('pages.wishlist.errorAddToCart'));
+    }
+  };
 
   if (!wishlistItems.length) {
     return (
       <div className="wishlist-page">
-        <section className="wishlist-hero">
-          <div className="wishlist-hero__orb" />
-          <div className="wishlist-hero__grid-bg" />
-          <div className="wishlist-hero__inner">
-            <div className="wishlist-hero__line" />
-            <h1 className="wishlist-hero__title">Ma liste d&apos;envie</h1>
-            <p className="wishlist-hero__sub">Votre liste d&apos;envie est vide.</p>
-          </div>
-        </section>
-        <div className="wishlist-hero-fade" />
+        <SEO title={t('pages.wishlist.title')} />
+        <PageHero
+          title={t('pages.wishlist.title', "Ma liste d'envie")}
+          subtitle={t('pages.wishlist.emptySubtitle', "Votre liste d'envie est vide.")}
+        />
 
-        <div className="wishlist-content">
+        <div ref={revealRef} className="wishlist-content reveal-section">
           <div className="wishlist-empty">
             <div className="wishlist-empty__ico">
               <i className="far fa-heart" />
             </div>
-            <h2>Aucun livre favori</h2>
-            <p>Cliquez sur le cœur sur un livre pour l&apos;ajouter à votre liste d&apos;envie.</p>
+            <h2>{t('pages.wishlist.noFavorites', 'Aucun livre favori')}</h2>
+            <p>{t('pages.wishlist.noFavoritesDesc', "Cliquez sur le coeur sur un livre pour l'ajouter à votre liste d'envie.")}</p>
             <div className="wishlist-empty__actions">
               <Link to="/catalog" className="wishlist-btn wishlist-btn--primary">
-                <i className="fas fa-book" /> Explorer le catalogue
+                <i className="fas fa-book" /> {t('pages.wishlist.exploreCatalog', 'Explorer le catalogue')}
               </Link>
             </div>
           </div>
@@ -43,20 +64,17 @@ const Wishlist = () => {
 
   return (
     <div className="wishlist-page">
-      <section className="wishlist-hero">
-        <div className="wishlist-hero__orb" />
-        <div className="wishlist-hero__grid-bg" />
-        <div className="wishlist-hero__inner">
-          <div className="wishlist-hero__line" />
-          <h1 className="wishlist-hero__title">Ma liste d&apos;envie</h1>
-          <p className="wishlist-hero__sub">
-            {wishlistItems.length} livre{wishlistItems.length > 1 ? 's' : ''} dans votre liste
-          </p>
-        </div>
-      </section>
-      <div className="wishlist-hero-fade" />
+      <PageHero
+        title={t('pages.wishlist.title')}
+        subtitle={t('pages.wishlist.count', { count: wishlistItems.length })}
+      />
 
-      <div className="wishlist-content">
+      <div ref={revealRef} className="wishlist-content reveal-section">
+        {error && (
+          <div className="wishlist-error">
+            <i className="fas fa-exclamation-circle" aria-hidden="true" /> {error}
+          </div>
+        )}
         <div className="wishlist-grid">
           {wishlistItems.map((book) => (
             <div key={book.id} className="wishlist-card-wrapper">
@@ -65,11 +83,11 @@ const Wishlist = () => {
                 <button
                   type="button"
                   className="wishlist-remove"
-                  onClick={() => removeFromWishlist(book.id)}
-                  aria-label="Retirer de la liste d'envie"
+                  onClick={() => handleRemove(book.id)}
+                  aria-label={t('pages.wishlist.remove')}
                 >
-                  <i className="fas fa-heart-broken" />
-                  Retirer
+                  <i className="fas fa-heart-broken" aria-hidden="true" />
+                  {t('pages.wishlist.remove')}
                 </button>
                 {book.available && !isInCart(book.id) && (
                   <button
@@ -77,11 +95,12 @@ const Wishlist = () => {
                     className="wishlist-add-cart"
                     onClick={(e) => {
                       e.preventDefault();
-                      addToCart(book);
+                      handleAddToCart(book);
                     }}
+                    aria-label={t('bookCard.addToCart', 'Ajouter au panier')}
                   >
                     <i className="fas fa-shopping-cart" />
-                    Au panier
+                    {t('pages.wishlist.addToCart', 'Au panier')}
                   </button>
                 )}
               </div>

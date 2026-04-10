@@ -1,0 +1,218 @@
+/* ═══════════════════════════════════════════════
+   PageHero — Composant hero unifié Frollot
+   Un seul fichier remplace ~2,000 lignes dupliquées.
+   ═══════════════════════════════════════════════ */
+
+/* ── Section hero ── */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--hero-padding);
+  background: var(--hero-gradient-light);
+  text-align: center;
+}
+
+:root[data-theme="dark"] .page-hero {
+  background: var(--hero-gradient-dark);
+}
+
+/* ── Grille de fond ── */
+.page-hero__grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--hero-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hero-grid-color) 1px, transparent 1px);
+  background-size: var(--hero-grid-size) var(--hero-grid-size);
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ── Orbes flottantes ── */
+.page-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--hero-orb-color) 0%, transparent 70%);
+  filter: blur(var(--hero-orb-blur));
+  pointer-events: none;
+  will-change: transform;
+}
+
+.page-hero__orb--1 {
+  width: 450px;
+  height: 450px;
+  top: -15%;
+  left: -10%;
+  animation: pageHeroFloat1 14s ease-in-out infinite;
+}
+
+.page-hero__orb--2 {
+  width: 350px;
+  height: 350px;
+  bottom: -10%;
+  right: -8%;
+  animation: pageHeroFloat2 11s ease-in-out infinite;
+}
+
+.page-hero__orb--3 {
+  width: 200px;
+  height: 200px;
+  top: 40%;
+  right: 20%;
+  opacity: 0.6;
+  animation: pageHeroFloat3 16s ease-in-out infinite;
+}
+
+@keyframes pageHeroFloat1 {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(20px, -15px); }
+}
+@keyframes pageHeroFloat2 {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-15px, 12px); }
+}
+@keyframes pageHeroFloat3 {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(10px, -10px); }
+}
+
+/* ── Shine (optionnel, Login/Register) ── */
+.page-hero__shine {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at 50% 40%, rgba(99, 102, 241, 0.05), transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Contenu interne ── */
+.page-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--hero-inner-max-width);
+  margin: 0 auto;
+}
+
+/* ── Ligne accent ── */
+.page-hero__line {
+  width: var(--accent-line-width);
+  height: var(--accent-line-height);
+  background: var(--accent-line-gradient);
+  border-radius: 2px;
+  margin: 0 auto var(--section-header-gap);
+}
+
+/* ── Icône optionnelle (Login: clé, Register: user-plus) ── */
+.page-hero__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.25rem;
+  color: #fff;
+  box-shadow: var(--shadow-primary-soft);
+}
+
+/* ── Pill / chip optionnel ── */
+.page-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  color: var(--color-text-body);
+  margin-bottom: 1rem;
+}
+
+/* ── Titre (shimmer gradient animé) ── */
+.page-hero__title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0 0 0.75rem;
+  background: var(--shimmer-gradient);
+  background-size: var(--shimmer-size);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep var(--shimmer-duration) ease-in-out infinite;
+}
+
+/* ── Sous-titre ── */
+.page-hero__sub {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--color-text-body);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── Zone enfants (stats, actions, breadcrumb…) ── */
+.page-hero__extra {
+  margin-top: 1.5rem;
+}
+
+/* ── Fade de transition hero → contenu ── */
+.page-hero-fade {
+  height: var(--hero-fade-height);
+  background: linear-gradient(to bottom, var(--color-bg-section-alt), var(--color-bg-page));
+  pointer-events: none;
+}
+
+:root[data-theme="dark"] .page-hero-fade {
+  background: linear-gradient(to bottom, #0c1631, var(--color-bg-page));
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .page-hero__orb,
+  .page-hero__orb--1,
+  .page-hero__orb--2,
+  .page-hero__orb--3 {
+    animation-duration: 0.01ms !important;
+  }
+  .page-hero__title {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--color-text-heading);
+    color: var(--color-text-heading);
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page-hero {
+    padding: 5rem 1.25rem 2.5rem;
+  }
+  .page-hero__title {
+    font-size: clamp(1.5rem, 6vw, 2.25rem);
+  }
+  .page-hero__sub {
+    font-size: 0.95rem;
+  }
+  .page-hero__orb--1 { width: 300px; height: 300px; }
+  .page-hero__orb--2 { width: 220px; height: 220px; }
+  .page-hero__orb--3 { display: none; }
+}
+
+@media (max-width: 480px) {
+  .page-hero {
+    padding: 4.5rem 1rem 2rem;
+  }
+  .page-hero__title {
+    font-size: clamp(1.35rem, 7vw, 1.85rem);
+  }
+}

@@ -1,9 +1,18 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>Bonjour {{ author_name }},</p>
-<p>Nous avons bien reçu votre manuscrit <strong>« {{ title }} »</strong>.</p>
-<p>Notre comité de lecture l'examinera avec attention. Vous serez contacté par email ou téléphone dans les prochaines semaines pour vous informer de la suite donnée à votre proposition.</p>
-<p>Merci de votre confiance et de l'intérêt que vous portez à Terre Noire Éditions.</p>
-<p><a href="{{ frontend_url }}" class="btn">Visiter notre site</a></p>
-<p>Cordialement,<br>L'équipe Terre Noire Éditions</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ author_name }}</strong>,</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Nous avons bien recu votre manuscrit <strong style="color: #1e3a5f;">&laquo; {{ title }} &raquo;</strong>.</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 13px;"><strong>Reference :</strong> {{ reference }}</p>
+{% if target_org_name %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 13px;">Envoye a <strong>{{ target_org_name }}</strong>.</p>
+{% elif is_open_market %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 13px;">Publie sur le marche ouvert, visible par toutes les maisons d'edition.</p>
+{% endif %}
+<p style="margin: 0 0 20px; color: #333333; font-size: 13px;">Delai estime : <strong>2 a 4 semaines</strong>.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Visiter Frollot</a>
+  </td></tr>
+</table>
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'equipe Frollot</p>
 {% endblock %}

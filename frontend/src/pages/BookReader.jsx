@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../components/LoadingSpinner';
 import bookService from '../services/bookService';
 import api from '../services/api';
@@ -143,8 +144,8 @@ const OrnamentalDivider = () => (
   </div>
 );
 
-const GoldLoader = () => (
-  <div className="br-gold-loader" role="status" aria-label="Chargement…">
+const GoldLoader = ({ label, ariaLabel }) => (
+  <div className="br-gold-loader" role="status" aria-label={ariaLabel}>
     <div className="br-gold-loader__ring">
       <svg viewBox="0 0 50 50" className="br-gold-loader__svg">
         <circle
@@ -167,7 +168,7 @@ const GoldLoader = () => (
         />
       </svg>
     </div>
-    <p className="br-gold-loader__label">Chargement du document…</p>
+    <p className="br-gold-loader__label">{label}</p>
   </div>
 );
 
@@ -180,6 +181,7 @@ const PageTurnEffect = () => (
 // ─── Composant principal ────────────────────────────────────────────────────
 
 const BookReader = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -210,7 +212,7 @@ const BookReader = () => {
         const data = await bookService.getBookById(id);
         if (!cancelled) setBook(data);
       } catch (err) {
-        if (!cancelled) setError('Livre non trouvé ou erreur de chargement');
+        if (!cancelled) setError(t('pages.bookReader.loadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -256,7 +258,19 @@ const BookReader = () => {
         setPdfDoc(pdf);
         setNumPages(pdf.numPages);
       } catch (err) {
-        if (!cancelled) setPdfError('Impossible de charger le document.');
+        if (!cancelled) {
+          const status = err.response?.status;
+          if (status === 401) {
+            setPdfError(t('pages.bookReader.loginRequired'));
+          } else if (status === 403) {
+            setPdfError(
+              err.response?.data?.detail ||
+              t('pages.bookReader.purchaseRequired')
+            );
+          } else {
+            setPdfError(t('pages.bookReader.pdfLoadError'));
+          }
+        }
       } finally {
         if (!cancelled) setLoadingPdf(false);
       }
@@ -275,7 +289,7 @@ const BookReader = () => {
     ctx.fillStyle = '#5a4a2a';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `© Terre Noire Éditions — Page ${pageNum} — Usage personnel strictly reserved`,
+      `© Frollot — Page ${pageNum} — Usage personnel strictly reserved`,
       width / 2,
       height - 14
     );
@@ -286,7 +300,7 @@ const BookReader = () => {
     ctx.font = '300 10px "Cormorant Garamond", serif';
     ctx.globalAlpha = 0.045;
     ctx.fillStyle = '#3a2e1a';
-    ctx.fillText('TERRE NOIRE ÉDITIONS', 0, 0);
+    ctx.fillText('FROLLOT', 0, 0);
 
     ctx.restore();
   }, []);
@@ -440,10 +454,10 @@ const BookReader = () => {
         <div className="br-splash__inner">
           <div className="br-splash__logo">
             <IconFeather className="br-splash__logo-icon" />
-            <span className="br-splash__logo-text">Terre Noire</span>
+            <span className="br-splash__logo-text">Frollot</span>
           </div>
           <OrnamentalDivider />
-          <p className="br-splash__label">Ouverture du livre…</p>
+          <p className="br-splash__label">{t('pages.bookReader.opening')}</p>
           <div className="br-splash__dots">
             <span /><span /><span />
           </div>
@@ -460,14 +474,14 @@ const BookReader = () => {
           <div className="br-error-card__icon-wrap">
             <IconBookOpen className="br-error-card__icon" />
           </div>
-          <h1 className="br-error-card__title">Livre introuvable</h1>
+          <h1 className="br-error-card__title">{t('pages.bookReader.notFound')}</h1>
           <OrnamentalDivider />
           <p className="br-error-card__desc">
-            {error || "Ce livre n'existe pas ou n'est pas disponible en lecture."}
+            {error || t('pages.bookReader.notFoundDesc')}
           </p>
           <Link to="/catalog" className="br-cta">
             <IconArrowLeft className="br-cta__icon" />
-            <span>Retour au catalogue</span>
+            <span>{t('pages.bookReader.backToCatalog')}</span>
           </Link>
         </div>
       </div>
@@ -482,14 +496,14 @@ const BookReader = () => {
           <div className="br-error-card__icon-wrap">
             <IconFilePdf className="br-error-card__icon" />
           </div>
-          <h1 className="br-error-card__title">Lecture indisponible</h1>
+          <h1 className="br-error-card__title">{t('pages.bookReader.readingUnavailable')}</h1>
           <OrnamentalDivider />
           <p className="br-error-card__desc">
-            Ce livre ne dispose pas encore de version numérique pour la lecture en ligne.
+            {t('pages.bookReader.noDigitalVersion')}
           </p>
           <Link to={`/books/${id}`} className="br-cta">
             <IconArrowLeft className="br-cta__icon" />
-            <span>Retour à la fiche</span>
+            <span>{t('pages.bookReader.backToBook')}</span>
           </Link>
         </div>
       </div>
@@ -514,7 +528,7 @@ const BookReader = () => {
         aria-valuenow={Math.round(scrollPercent)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Progression de lecture"
+        aria-label={t('pages.bookReader.readingProgress')}
       >
         <div
           className="br-progress-edge__fill"
@@ -530,27 +544,27 @@ const BookReader = () => {
           <Link
             to={`/books/${id}`}
             className="br-header__back"
-            aria-label="Retour au livre"
+            aria-label={t('pages.bookReader.backToBook')}
           >
             <IconArrowLeft className="br-header__back-icon" />
-            <span className="br-header__back-label">Retour</span>
+            <span className="br-header__back-label">{t('common.back')}</span>
           </Link>
 
           {/* Séparateur vertical */}
           <div className="br-header__sep" aria-hidden="true" />
 
-          {/* Logo Terre Noire : entre Retour et infos livre */}
+          {/* Logo Frollot : entre Retour et infos livre */}
           <div className="br-header__logo" aria-hidden="true">
             <img
-              src="/images/logo_terre_noire.png"
+              src="/images/logo_frollot.png"
               alt=""
               className="br-header__logo-img"
             />
           </div>
 
-          {/* Méta : Terre Noire, titre, auteur (poussés à l’extrême gauche du bloc central) */}
+          {/* Méta : Frollot, titre, auteur (poussés à l’extrême gauche du bloc central) */}
           <div className="br-header__meta">
-            <p className="br-header__edition">Terre Noire Éditions</p>
+            <p className="br-header__edition">Frollot</p>
             <h1 className="br-header__title" title={book.title}>{book.title}</h1>
             {authorName && (
               <p className="br-header__author">{authorName}</p>
@@ -591,8 +605,8 @@ const BookReader = () => {
               type="button"
               className="br-header__toggle-pages"
               onClick={() => setSidebarVisible((v) => !v)}
-              title={sidebarVisible ? 'Masquer les miniatures' : 'Afficher les miniatures'}
-              aria-label={sidebarVisible ? 'Masquer les miniatures des pages' : 'Afficher les miniatures des pages'}
+              title={sidebarVisible ? t('pages.bookReader.hideThumbnails') : t('pages.bookReader.showThumbnails')}
+              aria-label={sidebarVisible ? t('pages.bookReader.hideThumbnails') : t('pages.bookReader.showThumbnails')}
             >
               {sidebarVisible ? (
                 <svg className="br-header__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -607,7 +621,7 @@ const BookReader = () => {
                   <rect x="14" y="14" width="7" height="7" rx="1" />
                 </svg>
               )}
-              <span className="br-header__toggle-label">{sidebarVisible ? 'Masquer pages' : 'Pages'}</span>
+              <span className="br-header__toggle-label">{sidebarVisible ? t('pages.bookReader.hidePages') : t('pages.bookReader.pages')}</span>
             </button>
           )}
         </div>
@@ -616,14 +630,14 @@ const BookReader = () => {
       {/* ── Zone de lecture : sidebar gauche (livres) + centre (PDF + miniatures) ── */}
       <div className={`br-main ${!sidebarVisible ? 'br-main--sidebar-hidden' : ''}`}>
         {/* Sidebar gauche : liste des livres disponibles */}
-        <aside className="br-sidebar-left" aria-label="Livres disponibles">
-          <h3 className="br-sidebar-left__title">Livres</h3>
+        <aside className="br-sidebar-left" aria-label={t('pages.bookReader.availableBooks')}>
+          <h3 className="br-sidebar-left__title">{t('pages.bookReader.books')}</h3>
           {catalogLoading ? (
-            <div className="br-sidebar-left__loading">Chargement…</div>
+            <div className="br-sidebar-left__loading">{t('common.loading')}</div>
           ) : (
             <ul className="br-sidebar-left__list">
               {catalogBooks.map((b) => {
-                const cover = b.cover_image || '/images/default-book-cover.jpg';
+                const cover = b.cover_image || '/images/default-book-cover.svg';
                 const isCurrent = String(b.id) === String(id);
                 return (
                   <li key={b.id} className="br-sidebar-left__item">
@@ -643,7 +657,7 @@ const BookReader = () => {
             </ul>
           )}
           {!catalogLoading && catalogBooks.length === 0 && (
-            <p className="br-sidebar-left__empty">Aucun livre</p>
+            <p className="br-sidebar-left__empty">{t('pages.bookReader.noBooks')}</p>
           )}
         </aside>
 
@@ -659,15 +673,15 @@ const BookReader = () => {
           <div className="br-shield">
           <IconLock className="br-shield__icon" />
           <span className="br-shield__text">
-            Lecture numérique protégée — Toute reproduction ou capture d&apos;écran est strictement interdite.
-            <span className="br-shield__copyright"> © Terre Noire Éditions</span>
+            {t('pages.bookReader.protectionNotice')}
+            <span className="br-shield__copyright"> © Frollot</span>
           </span>
         </div>
 
         {/* Chargement PDF */}
         {loadingPdf && (
           <div className="br-loading">
-            <GoldLoader />
+            <GoldLoader label={t('pages.bookReader.loadingDocument')} ariaLabel={t('pages.bookReader.loadingDocument')} />
           </div>
         )}
 
@@ -677,7 +691,7 @@ const BookReader = () => {
             <IconAlertTriangle className="br-pdf-error__icon" />
             <p className="br-pdf-error__msg">{pdfError}</p>
             <p className="br-pdf-error__hint">
-              Veuillez recharger la page ou contacter le support.
+              {t('pages.bookReader.reloadOrContact')}
             </p>
           </div>
         )}
@@ -707,8 +721,8 @@ const BookReader = () => {
 
         {/* Sidebar : miniatures des pages (affichage selon sidebarVisible) */}
         {!loadingPdf && !pdfError && pdfDoc && numPages > 0 && sidebarVisible && (
-          <aside className="br-sidebar" aria-label="Navigation par pages">
-            <h3 className="br-sidebar__title">Pages</h3>
+          <aside className="br-sidebar" aria-label={t('pages.bookReader.pageNavigation')}>
+            <h3 className="br-sidebar__title">{t('pages.bookReader.pages')}</h3>
             <div className="br-sidebar__thumbnails">
               {thumbnails.length > 0 ? (
                 thumbnails.map((url, i) => (
@@ -717,7 +731,7 @@ const BookReader = () => {
                     type="button"
                     className={`br-sidebar__thumb ${currentPage === i + 1 ? 'br-sidebar__thumb--current' : ''}`}
                     onClick={() => scrollToPage(i + 1)}
-                    title={`Aller à la page ${i + 1}`}
+                    title={t('pages.bookReader.goToPage', { page: i + 1 })}
                   >
                     {url ? (
                       <img src={url} alt={`Page ${i + 1}`} />
@@ -733,7 +747,7 @@ const BookReader = () => {
                     type="button"
                     className={`br-sidebar__thumb ${currentPage === i + 1 ? 'br-sidebar__thumb--current' : ''}`}
                     onClick={() => scrollToPage(i + 1)}
-                    title={`Aller à la page ${i + 1}`}
+                    title={t('pages.bookReader.goToPage', { page: i + 1 })}
                   >
                     <span className="br-sidebar__thumb-num">{i + 1}</span>
                   </button>
@@ -751,15 +765,15 @@ const BookReader = () => {
           <div className="br-footer__inner">
             <div className="br-footer__brand">
               <div className="br-footer__logo" aria-hidden="true">
-                <img src="/images/logo_terre_noire.png" alt="" className="br-footer__logo-img" />
+                <img src="/images/logo_frollot.png" alt="" className="br-footer__logo-img" />
               </div>
-              <span className="br-footer__brand-text">Terre Noire Éditions</span>
+              <span className="br-footer__brand-text">Frollot</span>
             </div>
             <div className="br-footer__page-info">
-              Page&nbsp;<strong>{currentPage}</strong>&nbsp;sur&nbsp;<strong>{numPages}</strong>
+              {t('pages.bookReader.pageOf', { current: currentPage, total: numPages })}
             </div>
             <div className="br-footer__copy">
-              Tous droits réservés &mdash; usage personnel exclusif
+              {t('pages.bookReader.allRightsReserved')}
             </div>
           </div>
         </footer>

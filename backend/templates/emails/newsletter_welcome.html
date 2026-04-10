@@ -1,8 +1,13 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>Bonjour,</p>
-<p>Merci de vous être inscrit à la newsletter de <strong>Terre Noire Éditions</strong> !</p>
-<p>Vous recevrez nos actualités : nouveautés, événements, offres et coulisses de notre maison d'édition.</p>
-<p><a href="{{ frontend_url }}" class="btn">Découvrir notre catalogue</a></p>
-<p>À très bientôt !</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour,</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Merci de vous etre inscrit a la newsletter de <strong style="color: #1e3a5f;">Frollot</strong> !</p>
+<p style="margin: 0 0 20px; color: #333333; font-size: 13px;">Vous recevrez nos actualites : nouveautes, evenements et offres.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Decouvrir le catalogue</a>
+  </td></tr>
+</table>
+<p style="margin: 0; color: #333333;">A bientot !</p>
+<p style="font-size: 12px; color: #999; margin-top: 20px;">Pour vous désinscrire, <a href="{{ unsubscribe_url }}" style="color: #999;">cliquez ici</a>.</p>
 {% endblock %}

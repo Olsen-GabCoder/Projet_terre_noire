@@ -1,0 +1,19 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ agent_name }}</strong>,</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">Nouvelle livraison assignee.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Commande</td><td style="padding: 8px 10px; font-weight: bold; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">#{{ order_id }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Vendeur</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ vendor_name }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Client</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ customer_name }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Ville</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_city }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Adresse</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_address }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Tel</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_phone }}</td></tr>
+  {% if delivery_fee %}<tr><td style="padding: 8px 10px; color: #64748b; font-size: 13px;">Commission</td><td style="padding: 8px 10px; font-weight: bold; color: #059669; font-size: 13px;">{{ delivery_fee }} FCFA</td></tr>{% endif %}
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/delivery/assignments" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir mes livraisons</a>
+  </td></tr>
+</table>
+{% endblock %}

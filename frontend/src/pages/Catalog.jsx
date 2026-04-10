@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import BookCard from '../components/BookCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import bookService from '../services/bookService';
+import { organizationAPI } from '../services/api';
+import PageHero from '../components/PageHero';
+import { useReveal } from '../hooks/useReveal';
 import '../styles/Home.css';
 import '../styles/Catalog.css';
+import SEO from '../components/SEO';
 
 const Catalog = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const gridRef = useRef(null);
-  const [heroReady, setHeroReady] = useState(false);
+  const staggerRef = useReveal({ stagger: true });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [books, setBooks] = useState([]);
@@ -22,19 +28,20 @@ const Catalog = () => {
     author: searchParams.get('author') || '',
     book_format: searchParams.get('book_format') || '',
     available: searchParams.get('available') || '',
+    has_listings: searchParams.get('has_listings') || '',
+    in_library: searchParams.get('in_library') || '',
+    publisher: searchParams.get('publisher') || '',
     ordering: searchParams.get('ordering') || '-created_at',
   });
   const [categories, setCategories] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [publishers, setPublishers] = useState([]);
   const [pagination, setPagination] = useState({
     count: 0,
     next: null,
     previous: null,
     currentPage: 1,
   });
-
-  useEffect(() => {
-    requestAnimationFrame(() => setHeroReady(true));
-  }, []);
 
   useEffect(() => {
     if (mobileFiltersOpen) {
@@ -58,20 +65,35 @@ const Catalog = () => {
       author: searchParams.get('author') || '',
       book_format: searchParams.get('book_format') || '',
       available: searchParams.get('available') || '',
+      has_listings: searchParams.get('has_listings') || '',
+      in_library: searchParams.get('in_library') || '',
+      publisher: searchParams.get('publisher') || '',
       ordering: searchParams.get('ordering') || '-created_at',
     });
   }, [searchParams]);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadFiltersData = async () => {
       try {
-        const data = await bookService.getCategories();
-        setCategories(data.results || data);
+        const [catData, authData, orgData] = await Promise.allSettled([
+          bookService.getCategories(),
+          bookService.getAuthors(),
+          organizationAPI.list(),
+        ]);
+        if (catData.status === 'fulfilled') setCategories(catData.value.results || catData.value);
+        if (authData.status === 'fulfilled') {
+          const list = Array.isArray(authData.value) ? authData.value : authData.value.results || [];
+          setAuthors(list);
+        }
+        if (orgData.status === 'fulfilled') {
+          const list = Array.isArray(orgData.value.data) ? orgData.value.data : orgData.value.data?.results || [];
+          setPublishers(list.filter(o => o.org_type === 'MAISON_EDITION'));
+        }
       } catch (err) {
-        console.error('Erreur catégories:', err);
+        console.error('Erreur chargement filtres:', err);
       }
     };
-    loadCategories();
+    loadFiltersData();
   }, []);
 
   const loadBooks = useCallback(async (page = 1) => {
@@ -92,7 +114,7 @@ const Catalog = () => {
         currentPage: page,
       });
     } catch {
-      setError('Erreur lors du chargement des livres');
+      setError(t('catalog.loadingError'));
     } finally {
       setLoading(false);
     }
@@ -119,6 +141,9 @@ const Catalog = () => {
       author: '',
       book_format: '',
       available: '',
+      has_listings: '',
+      in_library: '',
+      publisher: '',
       ordering: '-created_at',
     });
     navigate('/catalog');
@@ -141,12 +166,13 @@ const Catalog = () => {
   const totalPages = Math.ceil(pagination.count / 12);
 
   const ORDER_OPTIONS = [
-    { value: '-created_at', label: 'Plus récents' },
-    { value: 'created_at', label: 'Plus anciens' },
-    { value: 'title', label: 'Titre A-Z' },
-    { value: '-title', label: 'Titre Z-A' },
-    { value: 'price', label: 'Prix croissant' },
-    { value: '-price', label: 'Prix décroissant' },
+    { value: '-created_at', label: t('catalog.sortNewest') },
+    { value: 'created_at', label: t('catalog.sortOldest') },
+    { value: 'title', label: t('catalog.sortTitleAZ') },
+    { value: '-title', label: t('catalog.sortTitleZA') },
+    { value: 'price', label: t('catalog.sortPriceAsc') },
+    { value: '-price', label: t('catalog.sortPriceDesc') },
+    { value: '-rating', label: t('catalog.sortRating', 'Mieux notés') },
   ];
 
   if (loading && books.length === 0) {
@@ -155,38 +181,33 @@ const Catalog = () => {
 
   return (
     <div className="catalog catalog--home-style">
-      {/* Hero — identique à Home */}
-      <section className="home-hero">
-        <div className="home-hero-orb home-hero-orb--1" />
-        <div className="home-hero-orb home-hero-orb--2" />
-        <div className="home-hero-orb home-hero-orb--3" />
-        <div className="home-hero-grid-bg" />
-
-        <div className={`home-hero-inner ${heroReady ? 'is-ready' : ''}`}>
-          <div className="home-hero-line" />
-          <h1 className="home-hero-tagline phase-in">
-            Notre catalogue
-          </h1>
-          <p className="home-hero-sub">
-            Explorez l&apos;ensemble de nos publications — romans, essais, poésie et plus encore.
-          </p>
-          {pagination.count > 0 && (
-            <div className="home-hero-stats">
-              <div className="home-hero-stat">
-                <span className="home-hero-stat__value">{pagination.count}</span>
-                <span className="home-hero-stat__label">Ouvrage{pagination.count > 1 ? 's' : ''} disponible{pagination.count > 1 ? 's' : ''}</span>
-              </div>
+      <SEO
+        title={`${t('catalog.title')}${filters.category ? ` — ${categories.find(c => c.id === parseInt(filters.category))?.name || ''}` : ''} — Frollot`}
+        description={`${t('catalog.subtitle')}`}
+      />
+      {/* Hero */}
+      <PageHero
+        title={t('catalog.title')}
+        subtitle={t('catalog.subtitle')}
+        orbCount={3}
+        className="catalog-hero"
+      >
+        {pagination.count > 0 && (
+          <div className="home-hero-stats">
+            <div className="home-hero-stat">
+              <span className="home-hero-stat__value">{pagination.count}</span>
+              <span className="home-hero-stat__label">{t('home.works')}</span>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        )}
+      </PageHero>
 
       {/* Section livres — structure Home */}
       <section className="home-books" ref={gridRef}>
         <div className="home-books-inner">
           <div className="home-books-heading">
-            <span className="home-books-label">Filtres</span>
-            <h2 className="home-books-title">Affiner votre recherche</h2>
+            <span className="home-books-label">{t('catalog.filtersLabel')}</span>
+            <h2 className="home-books-title">{t('catalog.refineSearch')}</h2>
           </div>
 
           {/* Barre de filtres professionnelle — sur mobile: recherche + bouton Filtres → drawer */}
@@ -197,17 +218,18 @@ const Catalog = () => {
                   <i className="fas fa-search cat-filters__search-ico" />
                   <input
                     type="text"
-                    placeholder="Rechercher un titre, un auteur…"
+                    placeholder={t('catalog.searchPlaceholder')}
                     value={filters.search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                     className="cat-filters__search-input"
+                    aria-label={t('catalog.searchPlaceholder')}
                   />
                   {filters.search && (
                     <button
                       type="button"
                       onClick={() => handleFilterChange('search', '')}
                       className="cat-filters__search-clear"
-                      aria-label="Effacer la recherche"
+                      aria-label={t('header.clearSearch')}
                     >
                       <i className="fas fa-times" />
                     </button>
@@ -216,12 +238,13 @@ const Catalog = () => {
               </div>
               <button
                 type="button"
-                className="cat-filters__mobile-btn"
-                onClick={() => setMobileFiltersOpen(true)}
-                aria-label="Ouvrir les filtres"
+                className={`cat-filters__mobile-btn ${mobileFiltersOpen ? 'cat-filters__mobile-btn--active' : ''}`}
+                onClick={() => setMobileFiltersOpen(prev => !prev)}
+                aria-label={mobileFiltersOpen ? t('catalog.closeFilters') : t('catalog.openFilters')}
+                aria-expanded={mobileFiltersOpen}
               >
-                <i className="fas fa-sliders-h" />
-                <span>Filtres</span>
+                <i className={`fas fa-${mobileFiltersOpen ? 'times' : 'sliders-h'}`} />
+                <span>{t('catalog.filtersLabel')}</span>
                 {activeFilterCount > 0 && (
                   <span className="cat-filters__mobile-btn-badge">{activeFilterCount}</span>
                 )}
@@ -236,12 +259,12 @@ const Catalog = () => {
 
             <div className="cat-filters__drawer">
               <div className="cat-filters__drawer-header">
-                <h3 className="cat-filters__drawer-title">Filtres</h3>
+                <h3 className="cat-filters__drawer-title">{t('catalog.filtersLabel')}</h3>
                 <button
                   type="button"
                   className="cat-filters__drawer-close"
                   onClick={closeMobileFilters}
-                  aria-label="Fermer les filtres"
+                  aria-label={t('catalog.closeFilters')}
                 >
                   <i className="fas fa-times" />
                 </button>
@@ -250,14 +273,14 @@ const Catalog = () => {
             <div className="cat-filters__row">
               {/* Catégories — pills */}
               <div className="cat-filters__group">
-                <span className="cat-filters__label">Catégorie</span>
+                <span className="cat-filters__label">{t('catalog.category')}</span>
                 <div className="cat-filters__pills">
                   <button
                     type="button"
                     className={`cat-filters__pill ${!filters.category ? 'cat-filters__pill--active' : ''}`}
                     onClick={() => handleFilterChange('category', '')}
                   >
-                    Toutes
+                    {t('catalog.allCategories')}
                   </button>
                   {categories.map((c) => (
                     <button
@@ -272,65 +295,128 @@ const Catalog = () => {
                 </div>
               </div>
 
+              {/* Auteur */}
+              {authors.length > 0 && (
+                <div className="cat-filters__group">
+                  <span className="cat-filters__label">{t('catalog.authorFilter')}</span>
+                  <div className="cat-filters__select-wrap">
+                    <select
+                      value={filters.author}
+                      onChange={(e) => handleFilterChange('author', e.target.value)}
+                      className="cat-filters__select"
+                    >
+                      <option value="">{t('catalog.allAuthors')}</option>
+                      {authors.map((a) => (
+                        <option key={a.id} value={a.id}>{a.full_name}</option>
+                      ))}
+                    </select>
+                    <i className="fas fa-chevron-down cat-filters__select-arrow" />
+                  </div>
+                </div>
+              )}
+
+              {/* Éditeur */}
+              {publishers.length > 0 && (
+                <div className="cat-filters__group">
+                  <span className="cat-filters__label">{t('catalog.publisherFilter', 'Éditeur')}</span>
+                  <div className="cat-filters__select-wrap">
+                    <select
+                      value={filters.publisher}
+                      onChange={(e) => handleFilterChange('publisher', e.target.value)}
+                      className="cat-filters__select"
+                    >
+                      <option value="">{t('catalog.allPublishers', 'Tous les éditeurs')}</option>
+                      {publishers.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <i className="fas fa-chevron-down cat-filters__select-arrow" />
+                  </div>
+                </div>
+              )}
+
               {/* Format */}
               <div className="cat-filters__group">
-                <span className="cat-filters__label">Format</span>
+                <span className="cat-filters__label">{t('catalog.format')}</span>
                 <div className="cat-filters__toggles">
                   <button
                     type="button"
                     className={`cat-filters__toggle ${!filters.book_format ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('book_format', '')}
                   >
-                    Tous
+                    {t('catalog.allFormats')}
                   </button>
                   <button
                     type="button"
                     className={`cat-filters__toggle ${filters.book_format === 'PAPIER' ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('book_format', filters.book_format === 'PAPIER' ? '' : 'PAPIER')}
                   >
-                    <i className="fas fa-book" /> Papier
+                    <i className="fas fa-book" /> {t('catalog.paper')}
                   </button>
                   <button
                     type="button"
                     className={`cat-filters__toggle ${filters.book_format === 'EBOOK' ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('book_format', filters.book_format === 'EBOOK' ? '' : 'EBOOK')}
                   >
-                    <i className="fas fa-file-pdf" /> Ebook
+                    <i className="fas fa-file-pdf" /> {t('catalog.ebook')}
                   </button>
                 </div>
               </div>
 
               {/* Disponibilité */}
               <div className="cat-filters__group">
-                <span className="cat-filters__label">Disponibilité</span>
+                <span className="cat-filters__label">{t('catalog.availability')}</span>
                 <div className="cat-filters__toggles">
                   <button
                     type="button"
                     className={`cat-filters__toggle ${!filters.available ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('available', '')}
                   >
-                    Tous
+                    {t('catalog.allAvailability')}
                   </button>
                   <button
                     type="button"
                     className={`cat-filters__toggle ${filters.available === 'true' ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('available', filters.available === 'true' ? '' : 'true')}
                   >
-                    <i className="fas fa-check" /> En stock
+                    <i className="fas fa-check" /> {t('catalog.inStock')}
                   </button>
                   <button
                     type="button"
                     className={`cat-filters__toggle ${filters.available === 'false' ? 'cat-filters__toggle--active' : ''}`}
                     onClick={() => handleFilterChange('available', filters.available === 'false' ? '' : 'false')}
                   >
-                    <i className="fas fa-times" /> Épuisé
+                    <i className="fas fa-times" /> {t('catalog.outOfStock')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Disponible en librairie */}
+              <div className="cat-filters__group">
+                <span className="cat-filters__label">
+                  <i className="fas fa-store" /> Marketplace
+                </span>
+                <div className="cat-filters__toggles">
+                  <button
+                    type="button"
+                    className={`cat-filters__toggle ${filters.has_listings === 'true' ? 'cat-filters__toggle--active' : ''}`}
+                    onClick={() => handleFilterChange('has_listings', filters.has_listings === 'true' ? '' : 'true')}
+                  >
+                    <i className="fas fa-store" /> En librairie
+                  </button>
+                  <button
+                    type="button"
+                    className={`cat-filters__toggle ${filters.in_library === 'true' ? 'cat-filters__toggle--active' : ''}`}
+                    onClick={() => handleFilterChange('in_library', filters.in_library === 'true' ? '' : 'true')}
+                  >
+                    <i className="fas fa-landmark" /> En bibliothèque
                   </button>
                 </div>
               </div>
 
               {/* Tri */}
               <div className="cat-filters__group cat-filters__group--sort">
-                <span className="cat-filters__label">Trier par</span>
+                <span className="cat-filters__label">{t('catalog.sortBy')}</span>
                 <div className="cat-filters__select-wrap">
                   <select
                     value={filters.ordering}
@@ -350,34 +436,58 @@ const Catalog = () => {
             {activeFilterCount > 0 && (
               <div className="cat-filters__active">
                 <span className="cat-filters__active-label">
-                  <i className="fas fa-filter" /> {activeFilterCount} filtre{activeFilterCount > 1 ? 's' : ''} actif{activeFilterCount > 1 ? 's' : ''}
+                  <i className="fas fa-filter" /> {activeFilterCount} {t('catalog.activeFilters', { s: activeFilterCount > 1 ? 's' : '' })}
                 </span>
                 {filters.search && (
                   <span className="cat-filters__chip">
                     « {filters.search} »
-                    <button type="button" onClick={() => handleFilterChange('search', '')} aria-label="Retirer"><i className="fas fa-times" /></button>
+                    <button type="button" onClick={() => handleFilterChange('search', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
                   </span>
                 )}
                 {filters.category && (
                   <span className="cat-filters__chip">
-                    {categories.find((c) => c.id === parseInt(filters.category))?.name || 'Catégorie'}
-                    <button type="button" onClick={() => handleFilterChange('category', '')} aria-label="Retirer"><i className="fas fa-times" /></button>
+                    {categories.find((c) => c.id === parseInt(filters.category))?.name || t('catalog.category')}
+                    <button type="button" onClick={() => handleFilterChange('category', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
+                  </span>
+                )}
+                {filters.author && (
+                  <span className="cat-filters__chip">
+                    {authors.find((a) => a.id === parseInt(filters.author))?.full_name || t('catalog.authorFilter')}
+                    <button type="button" onClick={() => handleFilterChange('author', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
                   </span>
                 )}
                 {filters.book_format && (
                   <span className="cat-filters__chip">
-                    {filters.book_format === 'EBOOK' ? 'Ebook' : 'Papier'}
-                    <button type="button" onClick={() => handleFilterChange('book_format', '')} aria-label="Retirer"><i className="fas fa-times" /></button>
+                    {filters.book_format === 'EBOOK' ? t('catalog.ebook') : t('catalog.paper')}
+                    <button type="button" onClick={() => handleFilterChange('book_format', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
                   </span>
                 )}
                 {filters.available && (
                   <span className="cat-filters__chip">
-                    {filters.available === 'true' ? 'En stock' : 'Épuisé'}
-                    <button type="button" onClick={() => handleFilterChange('available', '')} aria-label="Retirer"><i className="fas fa-times" /></button>
+                    {filters.available === 'true' ? t('catalog.inStock') : t('catalog.outOfStock')}
+                    <button type="button" onClick={() => handleFilterChange('available', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
+                  </span>
+                )}
+                {filters.has_listings === 'true' && (
+                  <span className="cat-filters__chip">
+                    <i className="fas fa-store" /> En librairie
+                    <button type="button" onClick={() => handleFilterChange('has_listings', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
+                  </span>
+                )}
+                {filters.in_library === 'true' && (
+                  <span className="cat-filters__chip">
+                    <i className="fas fa-landmark" /> En bibliothèque
+                    <button type="button" onClick={() => handleFilterChange('in_library', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
+                  </span>
+                )}
+                {filters.publisher && (
+                  <span className="cat-filters__chip">
+                    <i className="fas fa-book-open" /> {publishers.find(p => String(p.id) === filters.publisher)?.name || filters.publisher}
+                    <button type="button" onClick={() => handleFilterChange('publisher', '')} aria-label={t('catalog.remove')}><i className="fas fa-times" /></button>
                   </span>
                 )}
                 <button type="button" className="cat-filters__reset" onClick={resetFilters}>
-                  <i className="fas fa-undo" /> Réinitialiser
+                  <i className="fas fa-undo" /> {t('catalog.reset')}
                 </button>
               </div>
             )}
@@ -394,12 +504,12 @@ const Catalog = () => {
                 </div>
                 <h3 className="cat-empty__title">{error}</h3>
                 <button type="button" className="cat-empty__btn" onClick={() => loadBooks(1)}>
-                  <i className="fas fa-redo" /> Réessayer
+                  <i className="fas fa-redo" /> {t('common.retry')}
                 </button>
               </div>
             ) : books.length > 0 ? (
               <>
-                <div className="home-books-grid">
+                <div className="home-books-grid" ref={staggerRef}>
                   {books.map((book) => (
                     <BookCard key={book.id} book={book} />
                   ))}
@@ -414,7 +524,7 @@ const Catalog = () => {
                       className="cat-pag__btn"
                     >
                       <i className="fas fa-chevron-left" />
-                      <span>Précédent</span>
+                      <span>{t('common.previous')}</span>
                     </button>
                     <div className="cat-pag__pages">
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -431,6 +541,7 @@ const Catalog = () => {
                               type="button"
                               className={`cat-pag__page ${p === pagination.currentPage ? 'is-active' : ''}`}
                               onClick={() => handlePageChange(p)}
+                              {...(p === pagination.currentPage ? { 'aria-current': 'page' } : {})}
                             >
                               {p}
                             </button>
@@ -443,7 +554,7 @@ const Catalog = () => {
                       disabled={!pagination.next}
                       className="cat-pag__btn"
                     >
-                      <span>Suivant</span>
+                      <span>{t('common.next')}</span>
                       <i className="fas fa-chevron-right" />
                     </button>
                   </nav>
@@ -454,10 +565,10 @@ const Catalog = () => {
                 <div className="cat-empty__icon">
                   <i className="fas fa-book-open" />
                 </div>
-                <h3 className="cat-empty__title">Aucun livre trouvé</h3>
-                <p className="cat-empty__text">Modifiez vos critères de recherche pour afficher des résultats.</p>
+                <h3 className="cat-empty__title">{t('catalog.emptyTitle')}</h3>
+                <p className="cat-empty__text">{t('catalog.emptyText')}</p>
                 <button type="button" className="cat-empty__btn" onClick={resetFilters}>
-                  <i className="fas fa-undo" /> Voir tout le catalogue
+                  <i className="fas fa-undo" /> {t('catalog.viewAll')}
                 </button>
               </div>
             )}

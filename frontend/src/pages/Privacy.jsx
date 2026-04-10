@@ -1,52 +1,38 @@
+import { useTranslation } from 'react-i18next';
 import '../styles/Privacy.css';
+import SEO from '../components/SEO';
+import PageHero from '../components/PageHero';
 
 const Privacy = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="privacy-page">
-      <section className="privacy-hero">
-        <div className="privacy-hero__orb privacy-hero__orb--1" />
-        <div className="privacy-hero__grid-bg" />
-        <div className="privacy-hero__inner">
-          <div className="privacy-hero__line" />
-          <h1 className="privacy-hero__title">Politique de confidentialité</h1>
-          <p className="privacy-hero__sub">
-            Terre Noire Éditions s'engage à protéger vos données personnelles.
-          </p>
-        </div>
-      </section>
-
-      <div className="privacy-hero-fade" />
+      <SEO title={t('pages.privacy.seoTitle')} />
+      <PageHero
+        title={t('pages.privacy.heroTitle')}
+        subtitle={t('pages.privacy.heroSub')}
+      />
 
       <div className="privacy-content">
         <div className="privacy-card">
-          <h2>Collecte des données</h2>
+          <h2>{t('pages.privacy.dataCollectionTitle')}</h2>
+          <p>{t('pages.privacy.dataCollectionText')}</p>
+
+          <h2>{t('pages.privacy.submissionTitle')}</h2>
+          <p>{t('pages.privacy.submissionText')}</p>
+
+          <h2>{t('pages.privacy.retentionTitle')}</h2>
+          <p>{t('pages.privacy.retentionText')}</p>
+
+          <h2>{t('pages.privacy.rightsTitle')}</h2>
           <p>
-            Les données collectées via le formulaire de soumission de manuscrit (nom, email, téléphone, description, fichier)
-            sont utilisées exclusivement pour le processus de sélection éditoriale. Elles ne sont ni vendues ni partagées
-            avec des tiers.
+            {t('pages.privacy.rightsText')} <a href="mailto:contact@frollot.com">contact@frollot.com</a>.
           </p>
 
-          <h2>Conditions de soumission</h2>
+          <h2>{t('pages.privacy.contactTitle')}</h2>
           <p>
-            En soumettant un manuscrit, vous acceptez que Terre Noire Éditions examine votre œuvre et vous contacte
-            par email dans un délai de 2 à 4 semaines. La décision du comité de lecture est définitive.
-          </p>
-
-          <h2>Conservation</h2>
-          <p>
-            Les manuscrits non retenus sont conservés pendant 12 mois puis supprimés. Les manuscrits acceptés
-            sont conservés selon les besoins du processus éditorial.
-          </p>
-
-          <h2>Vos droits</h2>
-          <p>
-            Conformément au RGPD, vous pouvez demander l'accès, la rectification ou la suppression de vos données
-            en nous contactant à <a href="mailto:terrenoireeditions@gmail.com">terrenoireeditions@gmail.com</a>.
-          </p>
-
-          <h2>Contact</h2>
-          <p>
-            Pour toute question : <a href="mailto:terrenoireeditions@gmail.com">terrenoireeditions@gmail.com</a>
+            {t('pages.privacy.contactText')} <a href="mailto:contact@frollot.com">contact@frollot.com</a>
           </p>
         </div>
       </div>

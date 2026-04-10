@@ -1,15 +1,20 @@
 /* frontend/src/styles/LoadingSpinner.css */
+@import './design-tokens.css';
 
 /* ============================================
    VARIABLES & RESET
    ============================================ */
 :root {
-  --spinner-primary: #4299e1;
-  --spinner-success: #48bb78;
-  --spinner-warning: #ed8936;
-  --spinner-danger: #f56565;
-  --spinner-light: #e2e8f0;
-  --spinner-dark: #2d3748;
+  --spinner-primary: var(--color-info);
+  --spinner-success: var(--color-success);
+  --spinner-warning: var(--color-warning);
+  --spinner-danger: var(--color-error);
+  --spinner-light: var(--color-gray-200);
+  --spinner-dark: var(--color-gray-700);
+  --spinner-overlay-bg: rgba(255, 255, 255, 0.9);
+  --spinner-overlay-bg-strong: rgba(255, 255, 255, 0.95);
+  --spinner-text-color: var(--color-text-body);
+  --spinner-heading-color: var(--color-text-heading);
   --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -139,7 +144,7 @@
    TEXTE & LABELS
    ============================================ */
 .spinner-text {
-  color: #e2e8f0;
+  color: var(--color-text-light);
   font-size: 1.1rem;
   font-weight: 500;
   text-align: center;
@@ -149,7 +154,7 @@
 
 .spinner-label {
   font-size: 0.9rem;
-  color: #718096;
+  color: var(--spinner-text-color);
   font-weight: 500;
   text-align: center;
 }
@@ -214,7 +219,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--spinner-overlay-bg);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -230,16 +235,16 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--spinner-overlay-bg-strong);
   padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
   z-index: 100;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border-card);
 }
 
 /* Spinner pour modales */
@@ -257,7 +262,7 @@
 }
 
 .modal-spinner-content {
-  background: white;
+  background: var(--color-bg-card);
   padding: 40px;
   border-radius: 20px;
   display: flex;
@@ -268,7 +273,7 @@
 }
 
 .modal-spinner-content h3 {
-  color: #2d3748;
+  color: var(--spinner-heading-color);
   margin: 0;
   font-size: 1.3rem;
   font-weight: 600;
@@ -279,11 +284,11 @@
    ============================================ */
 /* Thème clair */
 .spinner-fullpage.light {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--spinner-overlay-bg-strong);
 }
 
 .spinner-fullpage.light .spinner-text {
-  color: #4a5568;
+  color: var(--spinner-text-color);
 }
 
 /* Thème sombre */
@@ -413,10 +418,10 @@
 
 .skeleton-line {
   height: 20px;
-  background: linear-gradient(90deg, 
-    rgba(66, 153, 225, 0.1) 25%, 
-    rgba(66, 153, 225, 0.3) 50%, 
-    rgba(66, 153, 225, 0.1) 75%);
+  background: linear-gradient(90deg,
+    rgba(var(--color-primary-rgb), 0.1) 25%,
+    rgba(var(--color-primary-rgb), 0.3) 50%,
+    rgba(var(--color-primary-rgb), 0.1) 75%);
   background-size: 200% 100%;
   animation: skeleton 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -429,4 +434,12 @@
 @keyframes skeleton {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   MODE SOMBRE
+   ============================================ */
+:root[data-theme="dark"] {
+  --spinner-overlay-bg: rgba(15, 23, 42, 0.85);
+  --spinner-overlay-bg-strong: rgba(15, 23, 42, 0.95);
 }

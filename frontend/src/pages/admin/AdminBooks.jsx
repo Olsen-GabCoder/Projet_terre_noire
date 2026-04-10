@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import '../../styles/AdminBooks.css';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const AdminBooks = () => {
   const [books, setBooks] = useState([]);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -156,7 +159,7 @@ const AdminBooks = () => {
           message = parts.join('\n');
         }
       }
-      alert(`Erreur lors de la sauvegarde:\n${message}`);
+      toast.error(`Erreur lors de la sauvegarde:\n${message}`);
     }
   };
 
@@ -187,7 +190,7 @@ const AdminBooks = () => {
       fetchBooks();
     } catch (err) {
       console.error('Erreur suppression:', err);
-      alert('Erreur lors de la suppression');
+      toast.error('Erreur lors de la suppression');
     }
   };
 

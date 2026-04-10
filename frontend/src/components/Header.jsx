@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import '../styles/Header.css';
 
-// Logo : placer le fichier logo_terre_noire.png dans public/images/
-const LOGO_SRC = '/images/logo_terre_noire.png';
+// Logo : placer le fichier logo_frollot.png dans public/images/
+const LOGO_SRC = '/images/logo_frollot.png';
 
 const Header = () => {
+  const { t, i18n } = useTranslation();
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { getTotalItems } = useCart();
   const { getWishlistCount } = useWishlist();
@@ -21,31 +23,64 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeItem, setActiveItem] = useState('');
-  
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('frollot-theme') || 'auto';
+    }
+    return 'auto';
+  });
+
   const mobileMenuRef = useRef(null);
   const burgerButtonRef = useRef(null);
   const searchRef = useRef(null);
   const userDropdownRef = useRef(null);
 
+  const progressBarRef = useRef(null);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      if (progressBarRef.current) {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        progressBarRef.current.style.width = `${progress}%`;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'auto') {
+      // Mode auto : détecter prefers-color-scheme et écouter les changements
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      root.setAttribute('data-theme', mq.matches ? 'dark' : 'light');
+      localStorage.removeItem('frollot-theme');
+      const onChange = (e) => root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+    } else {
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('frollot-theme', theme);
+    }
+  }, [theme]);
+
+  useEffect(() => {
     const currentPath = location.pathname;
-    const navItems = [
-      { path: '/', label: 'Accueil' },
-      { path: '/catalog', label: 'Catalogue' },
-      { path: '/authors', label: 'Auteurs' },
-      { path: '/about', label: 'À propos' },
-      { path: '/contact', label: 'Contact' },
+    const allPaths = [
+      { path: '/', label: t('nav.home') },
+      { path: '/catalog', label: t('nav.catalog') },
+      { path: '/authors', label: t('nav.authors') },
+      { path: '/feed', label: t('nav.feed') },
+      { path: '/clubs', label: t('nav.clubs') },
+      { path: '/services', label: t('nav.services') },
+      { path: '/about', label: t('nav.about') },
+      { path: '/contact', label: t('nav.contact') },
     ];
-    
-    const active = navItems.find(item => item.path === currentPath);
+
+    const active = allPaths.find(item => item.path === currentPath);
     if (active) {
       setActiveItem(active.label);
     }
@@ -54,9 +89,10 @@ const Header = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/catalog?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
       setMobileMenuOpen(false);
+      setSearchFocused(false);
       if (searchRef.current) {
         searchRef.current.blur();
       }
@@ -85,22 +121,30 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
+  const cycleTheme = () => {
+    setTheme(prev => prev === 'auto' ? 'dark' : prev === 'dark' ? 'light' : 'auto');
+  };
+
+  const themeIcon = theme === 'dark' ? 'fas fa-moon' : theme === 'light' ? 'fas fa-sun' : 'fas fa-circle-half-stroke';
+  const themeLabel = theme === 'dark' ? t('header.themeDark') : theme === 'light' ? t('header.themeLight') : t('header.themeAuto');
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userDropdownOpen && 
-          userDropdownRef.current && 
+      if (userDropdownOpen &&
+          userDropdownRef.current &&
           !userDropdownRef.current.contains(event.target) &&
           !event.target.closest('.user-trigger')) {
         setUserDropdownOpen(false);
       }
-      
-      if (mobileMenuOpen && 
-          mobileMenuRef.current && 
+
+      if (mobileMenuOpen &&
+          mobileMenuRef.current &&
           !mobileMenuRef.current.contains(event.target) &&
           burgerButtonRef.current &&
           !burgerButtonRef.current.contains(event.target)) {
         setMobileMenuOpen(false);
       }
+
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -115,6 +159,7 @@ const Header = () => {
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -132,12 +177,22 @@ const Header = () => {
   }, [mobileMenuOpen]);
 
   const navItems = [
-    { path: '/', label: 'Accueil', icon: 'fas fa-home' },
-    { path: '/catalog', label: 'Catalogue', icon: 'fas fa-book' },
-    { path: '/authors', label: 'Auteurs', icon: 'fas fa-user-pen' },
-    { path: '/about', label: 'À propos', icon: 'fas fa-info-circle' },
-    { path: '/contact', label: 'Contact', icon: 'fas fa-envelope' },
+    { path: '/', label: t('nav.home'), icon: 'fas fa-home' },
+    { path: '/catalog', label: t('nav.catalog'), icon: 'fas fa-book' },
+    { path: '/authors', label: t('nav.authors'), icon: 'fas fa-user-pen' },
+    ...(isAuthenticated ? [
+      { path: '/feed', label: t('nav.feed'), icon: 'fas fa-rss' },
+      { path: '/clubs', label: t('nav.clubs'), icon: 'fas fa-users' },
+    ] : [
+      { path: '/clubs', label: t('nav.clubs'), icon: 'fas fa-users' },
+    ]),
+    { path: '/services', label: t('nav.services'), icon: 'fas fa-briefcase' },
+    { path: '/about', label: t('nav.about'), icon: 'fas fa-info-circle' },
+    { path: '/contact', label: t('nav.contact'), icon: 'fas fa-envelope' },
   ];
+
+
+
 
   const MobileMenuOverlay = () => (
     <div 
@@ -152,27 +207,29 @@ const Header = () => {
       <div className="mobile-menu-container">
         <div className="mobile-menu-header">
           <div className="mobile-menu-logo">
-            <div className="brand-logo brand-logo--mobile">
-              <img
-                src={LOGO_SRC}
-                alt="Terre Noire Éditions"
-                className="brand-logo-img"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const fallback = e.target.nextElementSibling;
-                  if (fallback) fallback.classList.add('show');
-                }}
-              />
-              <span className="brand-logo-fallback" aria-hidden="true">
-                <i className="fas fa-book-open"></i>
-              </span>
+            <div className="brand-logo-ring" style={{ width: 40, height: 40, padding: 2 }}>
+              <div className="brand-logo">
+                <img
+                  src={LOGO_SRC}
+                  alt="Frollot"
+                  className="brand-logo-img"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = e.target.nextElementSibling;
+                    if (fallback) fallback.classList.add('show');
+                  }}
+                />
+                <span className="brand-logo-fallback" aria-hidden="true">
+                  <i className="fas fa-book-open"></i>
+                </span>
+              </div>
             </div>
-            <span className="mobile-logo-name">Terre Noire Éditions</span>
+            <span className="mobile-logo-name">Frollot</span>
           </div>
           <button 
             className="mobile-menu-close" 
             onClick={() => setMobileMenuOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label={t('header.menuClose')}
           >
             <i className="fas fa-times"></i>
           </button>
@@ -194,7 +251,7 @@ const Header = () => {
                 <span className="header-avatar-dot" aria-hidden="true" />
               </div>
               <div className="mobile-user-details">
-                <h4>Bonjour, <span className="user-highlight">{user?.first_name || user?.username || 'Utilisateur'}</span></h4>
+                <h4>{t('header.greeting', { name: '' })}<span className="user-highlight">{user?.first_name || user?.username || t('common.user')}</span></h4>
                 <p>{user?.email || ''}</p>
               </div>
             </div>
@@ -207,7 +264,7 @@ const Header = () => {
                 ref={searchRef}
                 type="text"
                 className="mobile-search-input"
-                placeholder="Rechercher un livre, auteur..."
+                placeholder={t('header.searchPlaceholderMobile')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
@@ -218,25 +275,25 @@ const Header = () => {
                   type="button" 
                   className="search-clear"
                   onClick={() => setSearchQuery('')}
-                  aria-label="Effacer la recherche"
+                  aria-label={t('header.clearSearch')}
                 >
                   <i className="fas fa-times"></i>
                 </button>
               )}
-              <button type="submit" className="mobile-search-btn" aria-label="Rechercher">
+              <button type="submit" className="mobile-search-btn" aria-label={t('common.search')}>
                 <i className="fas fa-arrow-right"></i>
               </button>
             </div>
             {searchQuery && (
               <div className="search-hint">
                 <i className="fas fa-lightbulb"></i>
-                <span>Appuyez sur Entrée pour rechercher</span>
+                <span>{t('header.searchHint')}</span>
               </div>
             )}
           </form>
 
           <div className="mobile-nav-section">
-            <h4 className="mobile-nav-title">Navigation principale</h4>
+            <h4 className="mobile-nav-title">{t('header.mainNav')}</h4>
             <ul className="mobile-nav-list">
               {navItems.map((item) => (
                 <li className="mobile-nav-item" key={item.path}>
@@ -262,13 +319,25 @@ const Header = () => {
           </div>
 
           <div className="mobile-quick-actions">
-            <h4 className="quick-actions-title">Actions rapides</h4>
+            <h4 className="quick-actions-title">{t('header.quickActions')}</h4>
             <div className="quick-actions-grid">
+              <button className="quick-action" onClick={cycleTheme}>
+                <div className="quick-action-icon theme">
+                  <i className={themeIcon}></i>
+                </div>
+                <span>{themeLabel}</span>
+              </button>
+              <button className="quick-action" onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}>
+                <div className="quick-action-icon lang">
+                  <i className="fas fa-globe"></i>
+                </div>
+                <span>{i18n.language === 'fr' ? 'English' : 'Français'}</span>
+              </button>
               <Link to="/submit-manuscript" className="quick-action" onClick={() => setMobileMenuOpen(false)}>
                 <div className="quick-action-icon submit">
                   <i className="fas fa-file-upload"></i>
                 </div>
-                <span>Soumettre un manuscrit</span>
+                <span>{t('header.submitManuscript')}</span>
               </Link>
               <Link to="/wishlist" className="quick-action" onClick={() => setMobileMenuOpen(false)}>
                 <div className="quick-action-icon wishlist">
@@ -277,7 +346,7 @@ const Header = () => {
                     <span className="quick-cart-count">{getWishlistCount()}</span>
                   )}
                 </div>
-                <span>Liste d&apos;envie</span>
+                <span>{t('header.wishlist')}</span>
               </Link>
               <Link to="/cart" className="quick-action" onClick={() => setMobileMenuOpen(false)}>
                 <div className="quick-action-icon cart">
@@ -286,7 +355,7 @@ const Header = () => {
                     <span className="quick-cart-count">{getTotalItems()}</span>
                   )}
                 </div>
-                <span>Mon panier</span>
+                <span>{t('header.myCart')}</span>
               </Link>
             </div>
           </div>
@@ -295,97 +364,57 @@ const Header = () => {
             {isAuthenticated ? (
               <>
                 <div className="user-actions-section">
-                  <h4 className="user-actions-title">Mon compte</h4>
                   {isAdmin && (
                     <>
-                      <h4 className="mobile-nav-title admin-section-title">Administration</h4>
-                      <Link to="/admin-dashboard/books" className="mobile-action-link admin" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="action-icon"><i className="fas fa-book"></i></div>
-                        <div className="action-content"><span>Livres</span><small>Catalogue et éditions</small></div>
+                      <Link to="/admin-dashboard" className="mobile-action-link mobile-action-link--admin" onClick={() => setMobileMenuOpen(false)}>
+                        <div className="action-icon action-icon--admin"><i className="fas fa-shield-halved"></i></div>
+                        <div className="action-content"><span>{t('header.administration')}</span><small>{t('header.adminSubtitle')}</small></div>
                         <i className="fas fa-external-link-alt"></i>
                       </Link>
-                      <Link to="/admin-dashboard/authors" className="mobile-action-link admin" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="action-icon"><i className="fas fa-user-pen"></i></div>
-                        <div className="action-content"><span>Auteurs</span><small>Gérer les auteurs</small></div>
-                        <i className="fas fa-external-link-alt"></i>
-                      </Link>
-                      <Link to="/admin-dashboard/orders" className="mobile-action-link admin" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="action-icon"><i className="fas fa-shopping-cart"></i></div>
-                        <div className="action-content"><span>Commandes</span><small>Suivi des commandes</small></div>
-                        <i className="fas fa-external-link-alt"></i>
-                      </Link>
-                      <Link to="/admin-dashboard/manuscripts" className="mobile-action-link admin" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="action-icon"><i className="fas fa-file-lines"></i></div>
-                        <div className="action-content"><span>Manuscrits</span><small>Soumissions et suivi</small></div>
-                        <i className="fas fa-external-link-alt"></i>
-                      </Link>
-                      <Link to="/admin-dashboard/users" className="mobile-action-link admin" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="action-icon"><i className="fas fa-users"></i></div>
-                        <div className="action-content"><span>Utilisateurs</span><small>Comptes et rôles</small></div>
-                        <i className="fas fa-external-link-alt"></i>
-                      </Link>
+                      <div className="mobile-divider"></div>
                     </>
                   )}
-                  <Link to="/profile" className="mobile-action-link profile" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="action-icon">
-                      <i className="fas fa-user-cog"></i>
-                    </div>
-                    <div className="action-content">
-                      <span>Mon profil</span>
-                      <small>Gérer vos informations</small>
-                    </div>
-                    <i className="fas fa-external-link-alt"></i>
+                  <h4 className="user-actions-title">{t('footer.accountTitle')}</h4>
+                  <Link to="/profile" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="action-icon"><i className="fas fa-user-circle"></i></div>
+                    <div className="action-content"><span>{t('common.myProfile')}</span><small>{t('header.profileSubtitle')}</small></div>
+                    <i className="fas fa-chevron-right"></i>
                   </Link>
-                  <Link to="/orders" className="mobile-action-link orders" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="action-icon">
-                      <i className="fas fa-box"></i>
-                    </div>
-                    <div className="action-content">
-                      <span>Mes commandes</span>
-                      <small>Suivi et historique</small>
-                    </div>
-                    <i className="fas fa-external-link-alt"></i>
+                  <Link to="/orders" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="action-icon"><i className="fas fa-box"></i></div>
+                    <div className="action-content"><span>{t('common.myOrders')}</span><small>{t('header.ordersSubtitle')}</small></div>
+                    <i className="fas fa-chevron-right"></i>
                   </Link>
-                  <Link to="/wishlist" className="mobile-action-link wishlist" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="action-icon">
-                      <i className="fas fa-heart"></i>
-                    </div>
-                    <div className="action-content">
-                      <span>Ma liste d'envies</span>
-                      <small>Livres sauvegardés</small>
-                    </div>
-                    <i className="fas fa-external-link-alt"></i>
+                  <Link to="/settings" className="mobile-action-link" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="action-icon"><i className="fas fa-cog"></i></div>
+                    <div className="action-content"><span>{t('common.settings')}</span><small>{t('header.settingsSubtitle')}</small></div>
+                    <i className="fas fa-chevron-right"></i>
                   </Link>
                 </div>
                 <div className="mobile-divider"></div>
                 <button onClick={handleLogout} className="mobile-action-link logout">
-                  <div className="action-icon">
-                    <i className="fas fa-sign-out-alt"></i>
-                  </div>
-                  <div className="action-content">
-                    <span>Déconnexion</span>
-                    <small>Se déconnecter du compte</small>
-                  </div>
+                  <div className="action-icon"><i className="fas fa-sign-out-alt"></i></div>
+                  <div className="action-content"><span>{t('common.logout')}</span></div>
                   <i className="fas fa-arrow-right-from-bracket"></i>
                 </button>
               </>
             ) : (
               <>
-                <h4 className="auth-title">Connexion à votre compte</h4>
+                <h4 className="auth-title">{t('header.authTitle')}</h4>
                 <div className="auth-buttons-mobile">
                   <Link to="/login" className="mobile-login-btn" onClick={() => setMobileMenuOpen(false)}>
                     <i className="fas fa-sign-in-alt"></i>
                     <div className="btn-text">
-                      <span>Se connecter</span>
-                      <small>Accéder à votre compte</small>
+                      <span>{t('header.loginBtn')}</span>
+                      <small>{t('header.loginSubtitle')}</small>
                     </div>
                     <i className="fas fa-chevron-right"></i>
                   </Link>
                   <Link to="/register" className="mobile-register-btn" onClick={() => setMobileMenuOpen(false)}>
                     <i className="fas fa-user-plus"></i>
                     <div className="btn-text">
-                      <span>S'inscrire</span>
-                      <small>Créer un nouveau compte</small>
+                      <span>{t('header.registerBtn')}</span>
+                      <small>{t('header.registerSubtitle')}</small>
                     </div>
                     <i className="fas fa-chevron-right"></i>
                   </Link>
@@ -396,15 +425,15 @@ const Header = () => {
 
           <div className="mobile-menu-footer">
             <div className="footer-links">
-              <Link to="/terms" onClick={() => setMobileMenuOpen(false)}>Conditions</Link>
+              <Link to="/terms" onClick={() => setMobileMenuOpen(false)}>{t('header.terms')}</Link>
               <span className="divider">•</span>
-              <Link to="/privacy" onClick={() => setMobileMenuOpen(false)}>Confidentialité</Link>
+              <Link to="/privacy" onClick={() => setMobileMenuOpen(false)}>{t('header.privacy')}</Link>
               <span className="divider">•</span>
-              <Link to="/cookies" onClick={() => setMobileMenuOpen(false)}>Cookies</Link>
+              <Link to="/cookies" onClick={() => setMobileMenuOpen(false)}>{t('header.cookies')}</Link>
             </div>
             <div className="footer-copyright">
               <i className="far fa-copyright"></i>
-              <span>{new Date().getFullYear()} Maison d'Édition</span>
+              <span>{new Date().getFullYear()} Frollot</span>
             </div>
           </div>
         </div>
@@ -416,35 +445,39 @@ const Header = () => {
     <>
       <nav className={`navbar-modern ${scrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
-          <Link to="/" className="brand-modern" onClick={closeAllMenus} aria-label="Terre Noire Éditions - Accueil">
-            <div className="brand-logo">
-              <img
-                src={LOGO_SRC}
-                alt="Terre Noire Éditions"
-                className="brand-logo-img"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const fallback = e.target.nextElementSibling;
-                  if (fallback) fallback.classList.add('show');
-                }}
-              />
-              <span className="brand-logo-fallback" aria-hidden="true">
-                <i className="fas fa-book-open"></i>
-              </span>
+          <Link to="/" className="brand-modern" onClick={closeAllMenus} aria-label={`${t('common.frollot')} - ${t('nav.home')}`}>
+            <div className="brand-logo-ring">
+              <div className="brand-logo">
+                <img
+                  src={LOGO_SRC}
+                  alt="Frollot"
+                  className="brand-logo-img"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = e.target.nextElementSibling;
+                    if (fallback) fallback.classList.add('show');
+                  }}
+                />
+                <span className="brand-logo-fallback" aria-hidden="true">
+                  <i className="fas fa-book-open"></i>
+                </span>
+              </div>
             </div>
-            <span className="brand-name brand-name--long">Terre Noire Éditions</span>
-            <span className="brand-name brand-name--short" aria-hidden="true">T. Noire</span>
+            <div className="brand-text">
+              <span className="brand-name">Frollot</span>
+              <span className="brand-tagline">{t('common.tagline')}</span>
+            </div>
           </Link>
 
           <div className="header-right-mobile">
             <div className="header-mobile-actions">
-              <Link to="/wishlist" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Liste d'envie">
+              <Link to="/wishlist" className="header-mobile-cart" onClick={closeAllMenus} aria-label={t('header.wishlist')}>
                 <i className="far fa-heart"></i>
                 {getWishlistCount() > 0 && (
                   <span className="header-mobile-cart-badge">{getWishlistCount()}</span>
                 )}
               </Link>
-              <Link to="/cart" className="header-mobile-cart" onClick={closeAllMenus} aria-label="Panier">
+              <Link to="/cart" className="header-mobile-cart" onClick={closeAllMenus} aria-label={t('header.myCart')}>
                 <i className="fas fa-shopping-cart"></i>
                 {getTotalItems() > 0 && (
                   <span className="header-mobile-cart-badge">{getTotalItems()}</span>
@@ -468,78 +501,71 @@ const Header = () => {
             <ul className="nav-modern">
               {navItems.map((item) => (
                 <li className="nav-item" key={item.path}>
-                  <Link 
-                    to={item.path} 
+                  <Link
+                    to={item.path}
                     className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
                     onClick={closeAllMenus}
-                    onMouseEnter={() => setActiveItem(item.label)}
-                    onMouseLeave={() => {
-                      const currentPath = location.pathname;
-                      const navItem = navItems.find(item => item.path === currentPath);
-                      setActiveItem(navItem?.label || '');
-                    }}
                   >
-                    <div className="nav-link-inner">
-                      <div className="nav-icon">
-                        <i className={item.icon}></i>
-                      </div>
-                      <span className="nav-label">{item.label}</span>
-                    </div>
-                    {activeItem === item.label && (
-                      <div className="nav-highlight"></div>
-                    )}
-                    {location.pathname === item.path && (
-                      <div className="nav-active-indicator"></div>
-                    )}
+                    <span className="nav-label">{item.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <form onSubmit={handleSearch} className="search-form-modern">
-              <div className={`search-wrapper ${searchFocused ? 'focused' : ''}`}>
-                <div className="search-icon-wrapper">
-                  <i className="fas fa-search"></i>
-                </div>
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Rechercher un livre, un auteur..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  aria-label="Rechercher"
-                  ref={searchRef}
-                />
-                {searchQuery && (
-                  <button 
-                    type="button" 
-                    className="search-clear"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Effacer la recherche"
-                  >
-                    <i className="fas fa-times"></i>
-                  </button>
-                )}
-                <div className="search-divider"></div>
-                <button type="submit" className="search-btn" aria-label="Lancer la recherche">
-                  <i className="fas fa-arrow-right"></i>
-                </button>
-              </div>
-            </form>
-
             <div className="nav-actions">
-              <Link to="/wishlist" className="cart-link wishlist-link" onClick={closeAllMenus} aria-label="Liste d'envie">
+              <form onSubmit={handleSearch} className={`search-expand ${searchFocused ? 'is-open' : ''}`}>
+                <button
+                  type="button"
+                  className="search-expand__trigger"
+                  onClick={() => { setSearchFocused(true); setTimeout(() => searchRef.current?.focus(), 50); }}
+                  aria-label={t('common.search')}
+                >
+                  <i className="fas fa-search"></i>
+                </button>
+                <div className="search-expand__field">
+                  <input
+                    type="text"
+                    className="search-expand__input"
+                    placeholder={t('header.searchPlaceholder')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => { if (!searchQuery) setSearchFocused(false); }}
+                    aria-label={t('common.search')}
+                    ref={searchRef}
+                  />
+                  {searchQuery && (
+                    <button type="button" className="search-expand__clear" onClick={() => { setSearchQuery(''); searchRef.current?.focus(); }} aria-label={t('common.close')}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                  <button type="submit" className="search-expand__submit" aria-label={t('common.search')}>
+                    <i className="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </form>
+
+              <button className="theme-toggle" onClick={cycleTheme} aria-label={t('header.themeLabel', { theme: themeLabel })} title={t('header.themeLabel', { theme: themeLabel })}>
+                <i className={themeIcon}></i>
+              </button>
+              <button
+                className="lang-toggle"
+                onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
+                aria-label={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+                title={i18n.language === 'fr' ? 'English' : 'Français'}
+              >
+                <span className="lang-toggle__flag">{i18n.language === 'fr' ? 'FR' : 'EN'}</span>
+              </button>
+              <Link to="/wishlist" className="cart-link wishlist-link" onClick={closeAllMenus} aria-label={t('header.wishlist')}>
                 <div className="cart-icon-wrapper">
                   <i className="far fa-heart"></i>
                   {getWishlistCount() > 0 && (
                     <span className="cart-badge">{getWishlistCount()}</span>
                   )}
                 </div>
-                <span className="cart-text">Liste</span>
+                <span className="cart-text sr-only">Liste</span>
               </Link>
-              <Link to="/cart" className="cart-link" onClick={closeAllMenus} aria-label={`Panier (${getTotalItems()} article${getTotalItems() > 1 ? 's' : ''})`}>
+              <Link to="/cart" className="cart-link" onClick={closeAllMenus} aria-label={t('header.cartLabel', { count: getTotalItems(), plural: getTotalItems() > 1 ? 's' : '' })}>
                 <div className="cart-icon-wrapper">
                   <i className="fas fa-shopping-cart"></i>
                   <div className="cart-pulse"></div>
@@ -547,16 +573,16 @@ const Header = () => {
                     <span className="cart-badge">{getTotalItems()}</span>
                   )}
                 </div>
-                <span className="cart-text">Panier</span>
+                <span className="cart-text sr-only">Panier</span>
               </Link>
 
-              <button className="mobile-search-trigger" onClick={() => setSearchFocused(true)} aria-label="Ouvrir la recherche">
+              <button className="mobile-search-trigger" onClick={() => setSearchFocused(true)} aria-label={t('header.openSearch')}>
                 <i className="fas fa-search"></i>
               </button>
 
               {isAuthenticated ? (
                 <div className="user-dropdown-container" ref={userDropdownRef}>
-                  <button 
+                  <button
                     className="user-trigger account-link"
                     onClick={toggleUserDropdown}
                     aria-expanded={userDropdownOpen}
@@ -574,7 +600,6 @@ const Header = () => {
                       </div>
                       <span className="header-avatar-dot" title="Connecté" aria-hidden="true" />
                     </div>
-                    <span className="account-name">{user?.first_name || 'Mon compte'}</span>
                     <i className={`fas fa-chevron-${userDropdownOpen ? 'up' : 'down'}`}></i>
                   </button>
 
@@ -595,93 +620,43 @@ const Header = () => {
                             <span className="header-avatar-dot" aria-hidden="true" />
                           </div>
                           <div className="user-details">
-                            <strong>{user?.first_name || user?.username || 'Utilisateur'}</strong>
+                            <strong>{user?.first_name || user?.username || t('common.user')}</strong>
                             <small className="text-muted">{user?.email || ''}</small>
                           </div>
                         </div>
                       </div>
-                      <div className="dropdown-divider"></div>
+
                       {isAdmin && (
-                        <>
-                          <div className="dropdown-section-label">Administration</div>
-                          <Link to="/admin-dashboard/books" className="dropdown-item admin-item" onClick={closeAllMenus}>
-                            <div className="dropdown-icon"><i className="fas fa-book"></i></div>
-                            <div className="dropdown-content"><span>Livres</span><small>Catalogue et éditions</small></div>
-                            <i className="fas fa-chevron-right"></i>
-                          </Link>
-                          <Link to="/admin-dashboard/authors" className="dropdown-item admin-item" onClick={closeAllMenus}>
-                            <div className="dropdown-icon"><i className="fas fa-user-pen"></i></div>
-                            <div className="dropdown-content"><span>Auteurs</span><small>Gérer les auteurs</small></div>
-                            <i className="fas fa-chevron-right"></i>
-                          </Link>
-                          <Link to="/admin-dashboard/orders" className="dropdown-item admin-item" onClick={closeAllMenus}>
-                            <div className="dropdown-icon"><i className="fas fa-shopping-cart"></i></div>
-                            <div className="dropdown-content"><span>Commandes</span><small>Suivi des commandes</small></div>
-                            <i className="fas fa-chevron-right"></i>
-                          </Link>
-                          <Link to="/admin-dashboard/manuscripts" className="dropdown-item admin-item" onClick={closeAllMenus}>
-                            <div className="dropdown-icon"><i className="fas fa-file-lines"></i></div>
-                            <div className="dropdown-content"><span>Manuscrits</span><small>Soumissions et suivi</small></div>
-                            <i className="fas fa-chevron-right"></i>
-                          </Link>
-                          <Link to="/admin-dashboard/users" className="dropdown-item admin-item" onClick={closeAllMenus}>
-                            <div className="dropdown-icon"><i className="fas fa-users"></i></div>
-                            <div className="dropdown-content"><span>Utilisateurs</span><small>Comptes et rôles</small></div>
-                            <i className="fas fa-chevron-right"></i>
-                          </Link>
-                          <div className="dropdown-divider"></div>
-                        </>
+                        <Link to="/admin-dashboard" className="dropdown-item dropdown-item--admin" onClick={closeAllMenus}>
+                          <div className="dropdown-icon dropdown-icon--admin"><i className="fas fa-shield-halved"></i></div>
+                          <div className="dropdown-content"><span>{t('header.administration')}</span><small>{t('header.adminSubtitle')}</small></div>
+                          <i className="fas fa-external-link-alt"></i>
+                        </Link>
                       )}
+
+                      <div className="dropdown-divider"></div>
+
                       <Link to="/profile" className="dropdown-item" onClick={closeAllMenus}>
-                        <div className="dropdown-icon">
-                          <i className="fas fa-user-edit"></i>
-                        </div>
-                        <div className="dropdown-content">
-                          <span>Mon profil</span>
-                          <small>Gérer vos informations</small>
-                        </div>
+                        <div className="dropdown-icon"><i className="fas fa-user-circle"></i></div>
+                        <div className="dropdown-content"><span>{t('common.myProfile')}</span><small>{t('header.profileSubtitle')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
                       <Link to="/orders" className="dropdown-item" onClick={closeAllMenus}>
-                        <div className="dropdown-icon">
-                          <i className="fas fa-box"></i>
-                        </div>
-                        <div className="dropdown-content">
-                          <span>Mes commandes</span>
-                          <small>Suivi et historique</small>
-                        </div>
+                        <div className="dropdown-icon"><i className="fas fa-box"></i></div>
+                        <div className="dropdown-content"><span>{t('common.myOrders')}</span><small>{t('header.ordersSubtitle')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
-                      <Link to="/wishlist" className="dropdown-item" onClick={closeAllMenus}>
-                        <div className="dropdown-icon">
-                          <i className="fas fa-heart"></i>
-                        </div>
-                        <div className="dropdown-content">
-                          <span>Ma liste d'envies</span>
-                          <small>Livres sauvegardés</small>
-                        </div>
-                        <i className="fas fa-chevron-right"></i>
-                      </Link>
-                      <div className="dropdown-divider"></div>
                       <Link to="/settings" className="dropdown-item" onClick={closeAllMenus}>
-                        <div className="dropdown-icon">
-                          <i className="fas fa-cog"></i>
-                        </div>
-                        <div className="dropdown-content">
-                          <span>Paramètres</span>
-                          <small>Préférences du compte</small>
-                        </div>
+                        <div className="dropdown-icon"><i className="fas fa-cog"></i></div>
+                        <div className="dropdown-content"><span>{t('common.settings')}</span><small>{t('header.settingsSubtitle')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
+
                       <div className="dropdown-divider"></div>
+
                       <button onClick={handleLogout} className="dropdown-item logout-btn">
-                        <div className="dropdown-icon">
-                          <i className="fas fa-sign-out-alt"></i>
-                        </div>
-                        <div className="dropdown-content">
-                          <span>Déconnexion</span>
-                          <small>Se déconnecter du compte</small>
-                        </div>
+                        <div className="dropdown-icon"><i className="fas fa-sign-out-alt"></i></div>
+                        <div className="dropdown-content"><span>{t('common.logout')}</span></div>
                         <i className="fas fa-arrow-right-from-bracket"></i>
                       </button>
                     </div>
@@ -691,20 +666,21 @@ const Header = () => {
                 <div className="auth-buttons">
                   <Link to="/login" className="login-link" onClick={closeAllMenus}>
                     <i className="fas fa-sign-in-alt"></i>
-                    <span>Connexion</span>
+                    <span>{t('common.login')}</span>
                   </Link>
                   <Link to="/register" className="btn-register" onClick={closeAllMenus}>
                     <i className="fas fa-user-plus"></i>
-                    <span>Inscription</span>
+                    <span>{t('common.register')}</span>
                   </Link>
                 </div>
               )}
             </div>
           </div>
+
         </div>
 
         <div className="scroll-progress">
-          <div className="scroll-progress-bar"></div>
+          <div className="scroll-progress-bar" ref={progressBarRef}></div>
         </div>
       </nav>
 

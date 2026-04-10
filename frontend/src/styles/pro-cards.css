@@ -10,20 +10,21 @@
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-glass-blur));
+  -webkit-backdrop-filter: blur(var(--card-glass-blur));
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-glass-border);
   padding: 1.25rem 1.5rem;
   overflow: auto;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-card);
 }
 
 .pro-card:hover {
-  border-color: rgba(37, 99, 235, 0.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: var(--card-hover-border);
+  box-shadow: var(--card-hover-glow), var(--shadow-card-hover);
+  transform: translateY(var(--hover-lift));
 }
 
 .pro-card__accent {
@@ -75,7 +76,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(99, 102, 241, 0.08);
   color: var(--color-primary);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
@@ -128,5 +129,5 @@
 
 .pro-btn--outline:hover {
   border-color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(99, 102, 241, 0.05);
 }

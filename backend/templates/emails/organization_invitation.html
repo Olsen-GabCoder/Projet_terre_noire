@@ -1,0 +1,18 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour,</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Vous etes invite(e) a rejoindre <strong style="color: #1e3a5f;">{{ org_name }}</strong> en tant que <strong>{{ role }}</strong>.</p>
+{% if invited_by_name %}<p style="margin: 0 0 12px; color: #333333; font-size: 13px;">Invitation de {{ invited_by_name }}.</p>{% endif %}
+{% if message %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f8f9fa; border-left: 3px solid #1e3a5f; border-radius: 4px; margin: 0 0 16px;">
+  <tr><td style="padding: 12px 16px; color: #333333; font-style: italic; font-size: 13px;">{{ message }}</td></tr>
+</table>
+{% endif %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/profile?tab=invitations" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir l'invitation</a>
+  </td></tr>
+</table>
+<p style="margin: 0 0 12px; font-size: 12px; color: #888888;">Expire le {{ expires_at|date:"d/m/Y" }}. Pas de compte ? <a href="{{ frontend_url }}/register" style="color: #1e3a5f;">Inscrivez-vous</a> avec {{ email }}.</p>
+<p style="margin: 0; color: #333333;">L'equipe Frollot</p>
+{% endblock %}

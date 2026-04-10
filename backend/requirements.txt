@@ -1,19 +1,24 @@
-Django>=5.0,<6.0
-djangorestframework
-mysqlclient
-python-dotenv
-django-cors-headers
-Pillow
-djangorestframework-simplejwt
-django-filter
-drf-spectacular
-drf-spectacular-sidecar
-reportlab
-cloudinary
-django-cloudinary-storage
-django-extensions
+Django==5.1.5
+djangorestframework==3.15.2
+mysqlclient==2.2.7
+python-dotenv==1.0.1
+django-cors-headers==4.6.0
+Pillow==11.1.0
+djangorestframework-simplejwt==5.4.0
+django-filter==24.3
+drf-spectacular==0.28.0
+drf-spectacular-sidecar==2025.1.1
+reportlab==4.2.5
+cloudinary==1.42.1
+django-cloudinary-storage==0.3.0
+django-extensions==3.2.3
+# Async tasks
+celery[redis]==5.4.0
+redis==5.2.1
 # Production (Render)
-gunicorn
-whitenoise
-psycopg2-binary
-dj-database-url
+gunicorn==23.0.0
+whitenoise==6.8.2
+psycopg2-binary==2.9.10
+dj-database-url==2.3.0
+# Auth
+pyotp==2.9.0

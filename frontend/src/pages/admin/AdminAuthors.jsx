@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import '../../styles/AdminAuthors.css';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const AdminAuthors = () => {
   const [authors, setAuthors] = useState([]);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAuthor, setEditingAuthor] = useState(null);
@@ -56,7 +59,7 @@ const AdminAuthors = () => {
     e.preventDefault();
 
     if (!formData.full_name.trim()) {
-      alert('Le nom de l\'auteur est obligatoire');
+      toast.error('Le nom de l\'auteur est obligatoire');
       return;
     }
 
@@ -82,7 +85,7 @@ const AdminAuthors = () => {
       const errorMsg = err.response?.data?.detail ||
         err.response?.data?.message ||
         'Erreur lors de la sauvegarde';
-      alert(`Erreur: ${errorMsg}`);
+      toast.error(`Erreur: ${errorMsg}`);
     }
   };
 
@@ -104,7 +107,7 @@ const AdminAuthors = () => {
       fetchAuthors();
     } catch (err) {
       console.error('Erreur suppression:', err);
-      alert('Erreur lors de la suppression');
+      toast.error('Erreur lors de la suppression');
     }
   };
 

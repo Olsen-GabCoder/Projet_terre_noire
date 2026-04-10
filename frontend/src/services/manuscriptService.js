@@ -1,17 +1,22 @@
-// frontend/src/services/manuscriptService.js
 import api from './api';
 
 const manuscriptService = {
-  // Soumettre un manuscrit
-  submitManuscript: async (formData) => {
-    try {
-      const response = await api.post('/manuscripts/submit/', formData);
-      return response.data;
-    } catch (error) {
-      console.error('Erreur lors de la soumission du manuscrit:', error);
-      throw error;
-    }
-  },
+  // Soumettre un manuscrit (multipart/form-data)
+  submitManuscript: (formData) => api.post('/manuscripts/submit/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000, // 2 min — upload fichier + emails async
+  }),
+
+  // Mes soumissions (auteur connecté)
+  getMyManuscripts: () => api.get('/manuscripts/mine/'),
+  getMyManuscript: (id) => api.get(`/manuscripts/mine/${id}/`),
+
+  // Inbox organisation
+  getOrgManuscripts: (orgId, params) => api.get(`/organizations/${orgId}/manuscripts/`, { params }),
+  getOrgManuscript: (orgId, id) => api.get(`/organizations/${orgId}/manuscripts/${id}/`),
+
+  // Mise à jour de statut (org member ou admin)
+  updateStatus: (id, data) => api.patch(`/manuscripts/${id}/update-status/`, data),
 };
 
 export default manuscriptService;

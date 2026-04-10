@@ -17,11 +17,8 @@ class ContactSubmitView(APIView):
         serializer = ContactMessageSerializer(data=request.data)
         if serializer.is_valid():
             contact = serializer.save()
-            try:
-                from apps.core.email import send_contact_notification
-                send_contact_notification(contact)
-            except Exception:
-                pass
+            from apps.core.tasks import send_contact_notification_task
+            send_contact_notification_task.delay(contact.id)
             return Response(
                 {'success': True, 'message': 'Message envoyé ! Nous vous répondrons très bientôt.'},
                 status=status.HTTP_201_CREATED

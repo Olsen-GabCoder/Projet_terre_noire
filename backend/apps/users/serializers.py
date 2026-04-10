@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .models import UserProfile
 
 User = get_user_model()
 
@@ -102,29 +103,96 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         """
-        Crée un nouvel utilisateur avec le mot de passe haché
+        Crée un nouvel utilisateur avec le mot de passe haché.
+        Le compte est créé inactif (is_active=False) jusqu'à la vérification de l'email.
         """
-        # Retirer password_confirm car ce n'est pas un champ du modèle
         validated_data.pop('password_confirm')
-        
-        # ✅ CORRECTION : Gérer phone_number optionnel
         phone_number = validated_data.pop('phone_number', None)
-        
-        # Créer l'utilisateur avec create_user (hache automatiquement le mot de passe)
+
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
+            is_active=False,  # Inactif jusqu'à vérification email
         )
-        
-        # ✅ Ajouter phone_number seulement s'il est fourni
+
         if phone_number:
             user.phone_number = phone_number
-            user.save()
-        
+            user.save(update_fields=['phone_number'])
+
+        # Créer le token de vérification et envoyer l'email
+        from .models import EmailVerificationToken
+        verification = EmailVerificationToken.objects.create(user=user)
+        try:
+            from apps.core.email import send_templated_email
+            from django.conf import settings as django_settings
+            send_templated_email(
+                subject="Vérifiez votre email — Frollot",
+                template_name='email_verification',
+                context={
+                    'user': user,
+                    'verification_url': f"{django_settings.FRONTEND_URL}/verify-email?token={verification.token}",
+                    'frontend_url': django_settings.FRONTEND_URL,
+                },
+                to_emails=[user.email],
+            )
+        except Exception:
+            pass  # Ne pas bloquer l'inscription si l'email échoue
+
         return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour afficher un profil utilisateur."""
+    profile_type_display = serializers.CharField(source='get_profile_type_display', read_only=True)
+    profile_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'profile_type', 'profile_type_display', 'slug',
+            'profile_image', 'profile_image_url', 'bio', 'website',
+            'is_active', 'is_verified', 'metadata', 'created_at',
+        ]
+        read_only_fields = ['id', 'slug', 'is_verified', 'created_at']
+
+    def get_profile_image_url(self, obj):
+        if obj.profile_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_image.url)
+            return obj.profile_image.url
+        return None
+
+
+class UserProfileCreateSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour activer un nouveau profil."""
+    class Meta:
+        model = UserProfile
+        fields = ['profile_type', 'bio', 'website', 'profile_image', 'metadata']
+
+    def validate_profile_type(self, value):
+        user = self.context['request'].user
+        if UserProfile.objects.filter(user=user, profile_type=value, is_active=True).exists():
+            raise serializers.ValidationError("Vous avez déjà ce type de profil actif.")
+        return value
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        # Réactiver un profil désactivé s'il existe
+        existing = UserProfile.objects.filter(
+            user=user, profile_type=validated_data['profile_type'], is_active=False
+        ).first()
+        if existing:
+            existing.is_active = True
+            existing.bio = validated_data.get('bio') or existing.bio
+            existing.metadata = validated_data.get('metadata') or existing.metadata
+            existing.save()
+            return existing
+        validated_data['user'] = user
+        return super().create(validated_data)
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -132,12 +200,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
     Sérialiseur pour afficher et mettre à jour le profil utilisateur.
     Les champs sensibles (username, email) sont en lecture seule.
     """
-    
+
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     full_address = serializers.CharField(read_only=True)
     has_complete_profile = serializers.BooleanField(read_only=True)
+    is_platform_admin = serializers.BooleanField(read_only=True)
     profile_image = serializers.SerializerMethodField()
-    
+    profiles = UserProfileSerializer(source='active_profiles', many=True, read_only=True)
+    profile_types = serializers.ListField(read_only=True)
+    organization_memberships = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -154,11 +226,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'country',
             'full_address',
             'has_complete_profile',
+            'is_platform_admin',
             'receive_newsletter',
             'date_joined',
             'last_login',
             'is_staff',
             'is_superuser',
+            'profiles',
+            'profile_types',
+            'organization_memberships',
         ]
         read_only_fields = [
             'id',
@@ -169,7 +245,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'is_staff',
             'is_superuser',
         ]
-    
+
     def get_profile_image(self, obj):
         if obj.profile_image:
             request = self.context.get('request')
@@ -177,6 +253,19 @@ class UserDetailSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.profile_image.url)
             return obj.profile_image.url
         return None
+
+    def get_organization_memberships(self, obj):
+        memberships = obj.organization_memberships.filter(is_active=True).select_related('organization')
+        return [
+            {
+                'organization_id': m.organization_id,
+                'organization_name': m.organization.name,
+                'organization_type': m.organization.org_type,
+                'organization_slug': m.organization.slug,
+                'role': m.role,
+            }
+            for m in memberships
+        ]
     
     def validate_phone_number(self, value):
         """

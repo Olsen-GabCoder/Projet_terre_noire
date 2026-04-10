@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.core.cache import cache
-from .models import SiteConfig
+from .models import SiteConfig, DeliveryZone
 
 
 @admin.register(SiteConfig)
@@ -16,3 +16,11 @@ class SiteConfigAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         cache.delete('delivery_config')
+
+
+@admin.register(DeliveryZone)
+class DeliveryZoneAdmin(admin.ModelAdmin):
+    list_display = ['name', 'shipping_cost', 'shipping_free_threshold', 'estimated_days_min', 'estimated_days_max', 'is_active']
+    list_editable = ['shipping_cost', 'shipping_free_threshold', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['name']

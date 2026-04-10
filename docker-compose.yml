@@ -1,0 +1,124 @@
+version: "3.9"
+
+x-backend-env: &backend-env
+  - DEBUG=${DEBUG:-False}
+  - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+  - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+  - DB_NAME=${DB_NAME:-maison_edition}
+  - DB_USER=${DB_USER:-root}
+  - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+  - DB_HOST=db
+  - DB_PORT=3306
+  - CELERY_BROKER_URL=redis://redis:6379/0
+  - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-maison_edition}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment: *backend-env
+    volumes:
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/books/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  celery-worker:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment: *backend-env
+    volumes:
+      - media_data:/app/media
+    command: ["celery", "-A", "config", "worker", "-l", "info"]
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  celery-beat:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment: *backend-env
+    command: ["celery", "-A", "config", "beat", "-l", "info"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  mysql_data:
+  media_data:

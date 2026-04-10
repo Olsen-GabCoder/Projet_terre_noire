@@ -14,10 +14,14 @@ from .serializers import (
     UserDetailSerializer,
     UserUpdateSerializer,
     PasswordChangeSerializer,
-    UserListSerializer
+    UserListSerializer,
+    UserProfileSerializer,
+    UserProfileCreateSerializer,
 )
+from .models import UserProfile
 from .token_serializers import EmailTokenObtainPairSerializer
 from .password_reset_serializers import ForgotPasswordSerializer, ResetPasswordSerializer
+from .throttles import ForgotPasswordThrottle, ResetPasswordThrottle, RegistrationThrottle, ResendVerificationThrottle
 
 User = get_user_model()
 
@@ -33,9 +37,11 @@ class UserRegistrationView(generics.CreateAPIView):
     """
     Vue pour l'inscription d'un nouvel utilisateur.
     Accessible à tous (pas besoin d'être authentifié).
+    Rate limited : 10 inscriptions/heure par IP.
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegistrationThrottle]
 
     def create(self, request, *args, **kwargs):
         """
@@ -45,12 +51,9 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
 
-        # Email de bienvenue (ne pas bloquer l'inscription si l'envoi échoue)
-        try:
-            from apps.core.email import send_welcome_registration
-            send_welcome_registration(user)
-        except Exception:
-            pass
+        # Email de bienvenue (async)
+        from apps.core.tasks import send_welcome_registration_task
+        send_welcome_registration_task.delay(user.id)
 
         # Réponse avec les données de l'utilisateur créé (sans le mot de passe)
         headers = self.get_success_headers(serializer.data)
@@ -64,8 +67,10 @@ class UserRegistrationView(generics.CreateAPIView):
         )
 
     def perform_create(self, serializer):
-        """Sauvegarde l'instance d'utilisateur"""
-        return serializer.save()
+        """Sauvegarde l'utilisateur et crée son profil Lecteur par défaut."""
+        user = serializer.save()
+        UserProfile.objects.get_or_create(user=user, profile_type='LECTEUR')
+        return user
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -134,10 +139,14 @@ class ChangePasswordView(generics.UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
+
+        # Invalider les anciens tokens
+        user.token_version += 1
+        user.save(update_fields=['token_version'])
+
         # Mettre à jour la session pour éviter la déconnexion
         update_session_auth_hash(request, user)
-        
+
         return Response(
             {'message': 'Mot de passe changé avec succès'},
             status=status.HTTP_200_OK
@@ -177,9 +186,11 @@ class ForgotPasswordView(APIView):
     """
     Demande de réinitialisation du mot de passe.
     POST /api/users/forgot-password/ avec { "email": "user@example.com" }
-    Envoie un email avec un lien de réinitialisation (même réponse si email inexistant, pour éviter l'enumération).
+    Envoie un email avec un lien de réinitialisation (même réponse si email inexistant, pour éviter l'énumération).
+    Rate limited : 3 demandes/heure par IP.
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ForgotPasswordThrottle]
 
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
@@ -193,14 +204,14 @@ class ForgotPasswordView(APIView):
             frontend_url = settings.FRONTEND_URL.rstrip('/')
             reset_url = f"{frontend_url}/reset-password?uid={uid}&token={token}"
 
-            subject = "Réinitialisation de votre mot de passe — Terre Noire Éditions"
+            subject = "Réinitialisation de votre mot de passe — Frollot"
             message = (
                 f"Bonjour,\n\n"
                 f"Vous avez demandé la réinitialisation de votre mot de passe.\n\n"
                 f"Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :\n{reset_url}\n\n"
                 f"Ce lien expire dans 24 heures.\n\n"
                 f"Si vous n'avez pas fait cette demande, ignorez cet email.\n\n"
-                f"L'équipe Terre Noire Éditions"
+                f"L'équipe Frollot"
             )
             try:
                 send_mail(
@@ -225,8 +236,10 @@ class ResetPasswordView(APIView):
     """
     Réinitialisation du mot de passe avec token.
     POST /api/users/reset-password/ avec { "uid": "...", "token": "...", "new_password": "..." }
+    Rate limited : 5 tentatives/heure par IP.
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ResetPasswordThrottle]
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -251,8 +264,148 @@ class ResetPasswordView(APIView):
             )
 
         user.set_password(new_password)
-        user.save()
+        user.token_version += 1  # Invalider tous les anciens tokens
+        user.save(update_fields=['password', 'token_version'])
         return Response({'message': 'Mot de passe réinitialisé avec succès.'}, status=status.HTTP_200_OK)
+
+
+class UserProfileListCreateView(generics.ListCreateAPIView):
+    """
+    Lister les profils de l'utilisateur connecté ou en activer un nouveau.
+    GET  /api/users/me/profiles/
+    POST /api/users/me/profiles/  { "profile_type": "AUTEUR", "bio": "..." }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return UserProfileCreateSerializer
+        return UserProfileSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save()
+        return Response(
+            {
+                'message': f'Profil {profile.get_profile_type_display()} activé avec succès.',
+                'profile': UserProfileSerializer(profile).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class UserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Voir, modifier ou désactiver un profil spécifique.
+    Le profil Lecteur ne peut pas être désactivé.
+    """
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+
+    def perform_destroy(self, instance):
+        if instance.profile_type == 'LECTEUR':
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Le profil Lecteur ne peut pas être désactivé.")
+        instance.is_active = False
+        instance.save()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {'message': f'Profil {instance.get_profile_type_display()} désactivé.'},
+            status=status.HTTP_200_OK,
+        )
+
+
+class VerifyEmailView(APIView):
+    """
+    Vérifie l'email de l'utilisateur via un token envoyé par email.
+    POST /api/users/verify-email/ avec { "token": "uuid" }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        token_value = request.data.get('token')
+        if not token_value:
+            return Response(
+                {'message': 'Token de vérification manquant.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        from .models import EmailVerificationToken
+        try:
+            verification = EmailVerificationToken.objects.select_related('user').get(token=token_value)
+        except EmailVerificationToken.DoesNotExist:
+            return Response(
+                {'message': 'Token de vérification invalide.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if verification.is_used:
+            return Response(
+                {'message': 'Ce lien a déjà été utilisé. Connectez-vous.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if verification.is_expired:
+            return Response(
+                {'message': 'Ce lien a expiré. Demandez un nouveau lien de vérification.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Activer le compte
+        verification.is_used = True
+        verification.save(update_fields=['is_used'])
+        user = verification.user
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+        return Response({'message': 'Email vérifié avec succès ! Vous pouvez maintenant vous connecter.'})
+
+
+class ResendVerificationView(APIView):
+    """
+    Renvoie l'email de vérification.
+    POST /api/users/resend-verification/ avec { "email": "..." }
+    Rate limited : 3/heure.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ResendVerificationThrottle]
+
+    def post(self, request):
+        from .models import EmailVerificationToken
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response(
+                {'message': 'Email requis.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = User.objects.filter(email__iexact=email, is_active=False).first()
+        if user:
+            # Supprimer l'ancien token et en créer un nouveau
+            EmailVerificationToken.objects.filter(user=user).delete()
+            verification = EmailVerificationToken.objects.create(user=user)
+            try:
+                from apps.core.email import send_templated_email
+                send_templated_email(
+                    subject="Vérifiez votre email — Frollot",
+                    template_name='email_verification',
+                    context={
+                        'user': user,
+                        'verification_url': f"{settings.FRONTEND_URL}/verify-email?token={verification.token}",
+                        'frontend_url': settings.FRONTEND_URL,
+                    },
+                    to_emails=[user.email],
+                )
+            except Exception:
+                pass
+        # Réponse générique pour éviter l'énumération d'emails
+        return Response({
+            'message': "Si un compte non vérifié existe avec cet email, un nouveau lien a été envoyé."
+        })
 
 
 class CheckAuthView(APIView):
@@ -270,3 +423,302 @@ class CheckAuthView(APIView):
             'authenticated': True,
             'user': UserDetailSerializer(request.user, context={'request': request}).data
         })
+
+
+# ──────────────────────────────────────────────────
+# TOTP 2FA Views
+# ──────────────────────────────────────────────────
+
+class TOTPSetupView(APIView):
+    """
+    Initialise la configuration TOTP 2FA.
+    POST /api/users/totp/setup/
+    Retourne le secret, le QR code base64 et l'URI otpauth.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .totp_manager import generate_totp_secret, get_totp_uri, generate_qr_code_base64
+        secret = generate_totp_secret()
+        uri = get_totp_uri(request.user, secret)
+        qr_code = generate_qr_code_base64(uri)
+        return Response({
+            'secret': secret,
+            'qr_code': qr_code,
+            'otpauth_uri': uri,
+        })
+
+
+class TOTPVerifySetupView(APIView):
+    """
+    Finalise l'activation TOTP 2FA en verifiant un code.
+    POST /api/users/totp/verify-setup/ avec { secret, code }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .totp_manager import verify_totp_code, generate_backup_codes, hash_code
+        from .models import TOTPBackupCode
+
+        secret = request.data.get('secret', '').strip()
+        code = request.data.get('code', '').strip()
+
+        if not secret or not code:
+            return Response(
+                {'detail': 'secret et code sont requis.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not verify_totp_code(secret, code):
+            return Response(
+                {'detail': 'Code TOTP invalide. Verifiez votre application authenticator.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Activer TOTP
+        user = request.user
+        user.totp_secret = secret
+        user.totp_enabled = True
+        user.save(update_fields=['totp_secret', 'totp_enabled'])
+
+        # Generer les codes de secours
+        backup_codes = generate_backup_codes()
+        TOTPBackupCode.objects.filter(user=user).delete()
+        TOTPBackupCode.objects.bulk_create([
+            TOTPBackupCode(user=user, code_hash=hash_code(code_val))
+            for code_val in backup_codes
+        ])
+
+        return Response({
+            'enabled': True,
+            'backup_codes': backup_codes,
+        })
+
+
+class TOTPDisableView(APIView):
+    """
+    Desactive le TOTP 2FA.
+    POST /api/users/totp/disable/ avec { password }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import TOTPBackupCode
+
+        password = request.data.get('password', '')
+        if not request.user.check_password(password):
+            return Response(
+                {'detail': 'Mot de passe incorrect.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = request.user
+        user.totp_enabled = False
+        user.totp_secret = None
+        user.save(update_fields=['totp_enabled', 'totp_secret'])
+        TOTPBackupCode.objects.filter(user=user).delete()
+
+        return Response({'disabled': True})
+
+
+class TOTPBackupCodesView(APIView):
+    """
+    Retourne le nombre de codes de secours restants.
+    GET /api/users/totp/backup-codes/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        count = request.user.totp_backup_codes.filter(is_used=False).count()
+        return Response({'remaining_codes': count})
+
+
+class TOTPRegenerateCodesView(APIView):
+    """
+    Regenere les codes de secours TOTP.
+    POST /api/users/totp/regenerate-codes/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .totp_manager import generate_backup_codes, hash_code
+        from .models import TOTPBackupCode
+
+        if not request.user.totp_enabled:
+            return Response(
+                {'detail': 'TOTP 2FA n\'est pas active.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        TOTPBackupCode.objects.filter(user=request.user).delete()
+        backup_codes = generate_backup_codes()
+        TOTPBackupCode.objects.bulk_create([
+            TOTPBackupCode(user=request.user, code_hash=hash_code(code_val))
+            for code_val in backup_codes
+        ])
+
+        return Response({'backup_codes': backup_codes})
+
+
+# ──────────────────────────────────────────────────
+# Session management Views
+# ──────────────────────────────────────────────────
+
+class ActiveSessionListView(APIView):
+    """
+    Liste les sessions actives (non expirees) de l'utilisateur.
+    GET /api/users/sessions/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from django.utils import timezone as tz
+        sessions = request.user.active_sessions.filter(
+            expires_at__gt=tz.now()
+        ).values(
+            'session_key', 'device_name', 'device_type',
+            'ip_address', 'last_active_at', 'created_at', 'expires_at',
+        )
+        # Mark current session
+        current_session_key = None
+        if hasattr(request, 'auth') and request.auth:
+            current_session_key = request.auth.get('session_key')
+
+        results = []
+        for s in sessions:
+            s['is_current'] = str(s['session_key']) == str(current_session_key) if current_session_key else False
+            results.append(s)
+
+        return Response(results)
+
+
+class RevokeSessionView(APIView):
+    """
+    Revoque une session specifique.
+    DELETE /api/users/sessions/<session_key>/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, session_key):
+        from .models import ActiveSession
+        deleted, _ = ActiveSession.objects.filter(
+            session_key=session_key,
+            user=request.user,
+        ).delete()
+        if deleted:
+            return Response({'revoked': True})
+        return Response(
+            {'detail': 'Session introuvable.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
+class RevokeAllSessionsView(APIView):
+    """
+    Revoque toutes les sessions sauf la session courante.
+    POST /api/users/sessions/revoke-all/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import ActiveSession
+        qs = ActiveSession.objects.filter(user=request.user)
+        # Exclude current session if available
+        if hasattr(request, 'auth') and request.auth:
+            current_session_key = request.auth.get('session_key')
+            if current_session_key:
+                qs = qs.exclude(session_key=current_session_key)
+        count, _ = qs.delete()
+        return Response({'revoked_count': count})
+
+
+class LoginHistoryView(APIView):
+    """
+    Historique des 50 dernieres connexions de l'utilisateur.
+    GET /api/users/me/login-history/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import LoginHistory
+        entries = LoginHistory.objects.filter(
+            user=request.user
+        ).order_by('-created_at')[:50].values(
+            'id', 'email_used', 'ip_address', 'device_info',
+            'status', 'failure_reason', 'created_at',
+        )
+        return Response(list(entries))
+
+
+class DashboardCountsView(APIView):
+    """Compteurs pour les badges de la sidebar du dashboard."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        counts = {}
+
+        # Invitations en attente
+        try:
+            from apps.organizations.models import Invitation
+            counts['invitations'] = Invitation.objects.filter(
+                email=user.email, status='PENDING'
+            ).count()
+        except Exception:
+            counts['invitations'] = 0
+
+        # Manuscrits soumis
+        try:
+            from apps.manuscripts.models import Manuscript
+            counts['manuscripts'] = Manuscript.objects.filter(submitter=user).count()
+        except Exception:
+            counts['manuscripts'] = 0
+
+        # Demandes de service envoyées par le client
+        try:
+            from apps.services.models import ServiceRequest
+            counts['my_service_requests'] = ServiceRequest.objects.filter(client=user).count()
+        except Exception:
+            counts['my_service_requests'] = 0
+
+        # Services pro — demandes reçues (prestataire)
+        try:
+            from apps.services.models import ServiceRequest
+            from apps.users.models import UserProfile
+            pro_profiles = UserProfile.objects.filter(
+                user=user, profile_type__in=['CORRECTEUR', 'ILLUSTRATEUR', 'TRADUCTEUR'], is_active=True
+            )
+            if pro_profiles.exists():
+                counts['pro_requests_total'] = ServiceRequest.objects.filter(provider_profile__in=pro_profiles).count()
+                counts['pro_requests_pending'] = ServiceRequest.objects.filter(provider_profile__in=pro_profiles, status='SUBMITTED').count()
+                counts['pro_orders'] = 0
+                try:
+                    from apps.services.models import ServiceOrder
+                    counts['pro_orders'] = ServiceOrder.objects.filter(provider__in=pro_profiles).exclude(status__in=['COMPLETED', 'CANCELLED']).count()
+                except Exception:
+                    pass
+                counts['pro_listings'] = 0
+                try:
+                    from apps.services.models import ServiceListing
+                    counts['pro_listings'] = ServiceListing.objects.filter(provider__in=pro_profiles, is_active=True).count()
+                except Exception:
+                    pass
+            else:
+                counts['pro_requests_total'] = 0
+                counts['pro_requests_pending'] = 0
+                counts['pro_orders'] = 0
+                counts['pro_listings'] = 0
+        except Exception:
+            counts['pro_requests_total'] = 0
+            counts['pro_requests_pending'] = 0
+            counts['pro_orders'] = 0
+            counts['pro_listings'] = 0
+
+        # Prêts actifs
+        try:
+            from apps.library.models import BookLoan
+            counts['active_loans'] = BookLoan.objects.filter(user=user, status__in=['APPROVED', 'CHECKED_OUT']).count()
+        except Exception:
+            counts['active_loans'] = 0
+
+        return Response(counts)

@@ -2,19 +2,18 @@
 
 import logging
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes as perm_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Avg, Q, F, Exists, OuterRef
+from django.db.models import Count, Avg, Sum, Q, F, Exists, OuterRef, Prefetch
 from django.conf import settings
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
-from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +35,35 @@ from .serializers import (
 
 
 @xframe_options_exempt
-@require_GET
+@api_view(['GET'])
+@perm_classes([IsAuthenticated])
 def serve_book_pdf(request, book_id):
     """
     Sert le PDF d'un livre pour affichage dans l'iframe de l'application.
+    Accès restreint : utilisateur authentifié + achat vérifié (ou admin).
     Exempt de X-Frame-Options pour autoriser l'embedding dans notre frontend.
     """
+    from apps.orders.models import Order
+
     book = get_object_or_404(Book, pk=book_id)
+
     if not book.pdf_file:
         raise Http404("PDF non disponible pour ce livre.")
+
+    # Admin/staff : accès libre
+    if not request.user.is_staff:
+        # Vérifier que l'utilisateur a une commande payée contenant ce livre
+        has_purchased = Order.objects.filter(
+            user=request.user,
+            status='PAID',
+            items__book=book,
+        ).exists()
+        if not has_purchased:
+            return Response(
+                {'detail': "Vous devez acheter ce livre pour accéder au lecteur."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
     try:
         f = book.pdf_file.open('rb')
     except Exception as e:
@@ -167,13 +186,32 @@ class BookViewSet(viewsets.ModelViewSet):
         """
         Optimisation des requêtes selon l'action
         Utilise select_related pour éviter les N+1 queries
+        Prefetch les listings marketplace actives pour list/retrieve
         """
         queryset = super().get_queryset()
-        
-        # Optimisation: précharger les relations
+
         if self.action in ['list', 'retrieve']:
-            queryset = queryset.select_related('category', 'author')
-        
+            from apps.marketplace.models import BookListing
+            from apps.library.models import LibraryCatalogItem
+            queryset = queryset.select_related(
+                'category', 'author', 'publisher_organization',
+            ).prefetch_related(
+                Prefetch(
+                    'listings',
+                    queryset=BookListing.objects.filter(
+                        is_active=True,
+                    ).select_related('vendor').order_by('price'),
+                    to_attr='active_listings',
+                ),
+                Prefetch(
+                    'library_catalog_items',
+                    queryset=LibraryCatalogItem.objects.filter(
+                        is_active=True,
+                    ).select_related('library'),
+                    to_attr='active_catalog_items',
+                ),
+            )
+
         return queryset
     
     @action(detail=False, methods=['get'], url_path='featured')
@@ -453,7 +491,22 @@ class BookViewSet(viewsets.ModelViewSet):
         
         serializer = BookListSerializer(related, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
+    @action(detail=True, methods=['get'], url_path='listings')
+    def listings(self, request, pk=None):
+        """
+        GET /api/books/{id}/listings/
+        Retourne toutes les offres vendeurs actives pour ce livre, triées par prix.
+        """
+        book = self.get_object()
+        from apps.marketplace.models import BookListing
+        from apps.marketplace.serializers import BookListingSerializer
+        listings = BookListing.objects.filter(
+            book=book, is_active=True,
+        ).select_related('vendor').order_by('price')
+        serializer = BookListingSerializer(listings, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'], url_path='statistics')
     def statistics(self, request):
         """
@@ -512,10 +565,72 @@ class BookViewSet(viewsets.ModelViewSet):
             })
 
 
+    @action(detail=False, methods=['get'], url_path='autocomplete',
+            permission_classes=[AllowAny])
+    def autocomplete(self, request):
+        """
+        GET /api/books/autocomplete/?q=term
+        Endpoint léger pour l'autocomplete de la barre de recherche.
+        Retourne max 5 livres + 3 auteurs correspondants.
+        """
+        q = request.query_params.get('q', '').strip()
+        if len(q) < 2:
+            return Response({'books': [], 'authors': []})
+
+        cache_key = f'autocomplete_{q.lower()[:30]}'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        # Livres : recherche sur titre et auteur
+        books_qs = (
+            Book.objects
+            .filter(
+                Q(title__icontains=q) | Q(author__full_name__icontains=q),
+                available=True
+            )
+            .select_related('author')
+            .only('id', 'title', 'cover_image', 'price', 'author__id', 'author__full_name')
+            [:5]
+        )
+        books_data = [
+            {
+                'id': b.id,
+                'title': b.title,
+                'cover_image': request.build_absolute_uri(b.cover_image.url) if b.cover_image else None,
+                'price': str(b.price) if b.price else None,
+                'author': b.author.full_name if b.author else None,
+            }
+            for b in books_qs
+        ]
+
+        # Auteurs : recherche sur le nom
+        authors_qs = (
+            Author.objects
+            .filter(full_name__icontains=q)
+            .annotate(nb_books=Count('books'))
+            .only('id', 'full_name', 'photo')
+            [:3]
+        )
+        authors_data = [
+            {
+                'id': a.id,
+                'full_name': a.full_name,
+                'photo': request.build_absolute_uri(a.photo.url) if a.photo else None,
+                'books_count': a.nb_books,
+            }
+            for a in authors_qs
+        ]
+
+        result = {'books': books_data, 'authors': authors_data}
+        cache.set(cache_key, result, 60)  # cache 1 min
+        return Response(result)
+
+
 class AuthorViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des auteurs
-    
+
     Liste des actions:
     - list: GET /api/authors/ - Liste tous les auteurs
     - retrieve: GET /api/authors/{id}/ - Détail d'un auteur avec ses livres
@@ -548,18 +663,47 @@ class AuthorViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Optimisation: précharger les livres pour le détail
+        Optimisation: précharger les livres et annoter pour éviter les N+1 queries.
         """
         queryset = super().get_queryset()
-        
+
+        if self.action == 'list':
+            queryset = queryset.annotate(
+                num_books=Count('books', filter=Q(books__available=True)),
+                avg_rating=Avg('books__rating', filter=Q(books__rating__gt=0)),
+            )
+
         if self.action == 'retrieve':
             queryset = queryset.prefetch_related(
                 'books__category',
                 'books__author'
             )
-        
+
         return queryset
-    
+
+    @action(detail=False, methods=['get'], url_path='featured')
+    def featured(self, request):
+        """
+        GET /api/authors/featured/?limit=16
+        Auteurs mis en avant : au moins 1 livre, triés par ventes + note moyenne.
+        Retourne plus que nécessaire pour permettre un mélange côté frontend.
+        """
+        limit = min(int(request.query_params.get('limit', 16)), 50)
+        authors = (
+            Author.objects
+            .prefetch_related('books')
+            .annotate(
+                num_books=Count('books', filter=Q(books__available=True)),
+                avg_rating=Avg('books__rating', filter=Q(books__rating__gt=0)),
+                sales=Sum('books__total_sales'),
+            )
+            .filter(num_books__gt=0)
+            .order_by('-sales', '-avg_rating', '-num_books')
+            [:limit]
+        )
+        serializer = AuthorSerializer(authors, many=True, context={'request': request})
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'], url_path='with-books')
     def authors_with_books(self, request):
         """

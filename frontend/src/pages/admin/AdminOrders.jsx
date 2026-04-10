@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import '../../styles/AdminOrders.css';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [location.key]);
 
   const fetchOrders = async () => {
     try {
@@ -37,7 +41,7 @@ const AdminOrders = () => {
       );
     } catch (err) {
       console.error('Erreur mise à jour statut:', err);
-      alert('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour');
     }
   };
 
@@ -198,12 +202,12 @@ const AdminOrders = () => {
                           {(order.items || []).map((item) => (
                             <img
                               key={item.id}
-                              src={item.book?.cover_image || '/images/default-book-cover.jpg'}
+                              src={item.book?.cover_image || '/images/default-book-cover.svg'}
                               alt={item.book?.title}
                               className="admin-orders-mobile-card__cover"
                               loading="lazy"
                               decoding="async"
-                              onError={(e) => { e.target.src = '/images/default-book-cover.jpg'; }}
+                              onError={(e) => { e.target.src = '/images/default-book-cover.svg'; }}
                             />
                           ))}
                         </div>
@@ -292,12 +296,12 @@ const AdminOrders = () => {
                 {(selectedOrder.items || []).map((item, idx) => (
                   <div key={item.id || idx} className="admin-orders-modal__item">
                     <img
-                      src={item.book?.cover_image || '/images/default-book-cover.jpg'}
+                      src={item.book?.cover_image || '/images/default-book-cover.svg'}
                       alt={item.book?.title}
                       className="admin-orders-modal__item-cover"
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => { e.target.src = '/images/default-book-cover.jpg'; }}
+                      onError={(e) => { e.target.src = '/images/default-book-cover.svg'; }}
                     />
                     <div className="admin-orders-modal__item-info">
                       <strong>{item.book?.title || item.book_title}</strong>

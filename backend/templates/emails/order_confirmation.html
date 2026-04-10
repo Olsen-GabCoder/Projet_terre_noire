@@ -1,39 +1,50 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p>Bonjour {{ user.first_name|default:user.username }},</p>
-<p>Nous avons bien reçu votre commande <strong>#{{ order.id|stringformat:"06d" }}</strong>.</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ user.first_name|default:user.username }}</strong>,</p>
+<p style="margin: 0 0 20px; color: #333333; font-size: 14px;">Nous avons bien recu votre commande <strong style="color: #1e3a5f;">#{{ order.id|stringformat:"06d" }}</strong>.</p>
 
-<h3>Récapitulatif</h3>
-<table>
-  <thead>
-    <tr><th>Article</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>
-  </thead>
-  <tbody>
-    {% for item in items %}
-    <tr>
-      <td>{{ item.title }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>{{ item.price|floatformat:0 }} FCFA</td>
-      <td>{{ item.total|floatformat:0 }} FCFA</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f; border-bottom: 1px solid #eeeeee; padding-bottom: 6px;">Recapitulatif</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  <tr style="background-color: #f8f9fa;">
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Article</td>
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; text-align: center; border-bottom: 1px solid #eeeeee;">Qte</td>
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; text-align: right; border-bottom: 1px solid #eeeeee;">Prix</td>
+    <td style="padding: 8px 10px; font-size: 13px; font-weight: bold; color: #555555; text-align: right; border-bottom: 1px solid #eeeeee;">Total</td>
+  </tr>
+  {% for item in items %}
+  <tr>
+    <td style="padding: 8px 10px; color: #333333; border-bottom: 1px solid #eeeeee; font-size: 13px;">{{ item.title }}</td>
+    <td style="padding: 8px 10px; color: #333333; text-align: center; border-bottom: 1px solid #eeeeee; font-size: 13px;">{{ item.quantity }}</td>
+    <td style="padding: 8px 10px; color: #333333; text-align: right; border-bottom: 1px solid #eeeeee; font-size: 13px;">{{ item.price|floatformat:0 }} FCFA</td>
+    <td style="padding: 8px 10px; color: #333333; text-align: right; border-bottom: 1px solid #eeeeee; font-weight: bold; font-size: 13px;">{{ item.total|floatformat:0 }} FCFA</td>
+  </tr>
+  {% endfor %}
 </table>
 
-<p><strong>Sous-total :</strong> {{ subtotal|floatformat:0 }} FCFA</p>
-<p><strong>Frais de livraison :</strong> {% if shipping_cost %} {{ shipping_cost|floatformat:0 }} FCFA {% else %} Gratuit {% endif %}</p>
-{% if discount_amount %}<p><strong>Réduction :</strong> -{{ discount_amount|floatformat:0 }} FCFA</p>{% endif %}
-<p><strong>Total TTC : {{ total_amount|floatformat:0 }} FCFA</strong></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 0 0 20px;">
+  <tr><td style="padding: 12px 16px;">
+    <p style="margin: 4px 0; color: #333333; font-size: 13px;"><strong>Sous-total :</strong> {{ subtotal|floatformat:0 }} FCFA</p>
+    <p style="margin: 4px 0; color: #333333; font-size: 13px;"><strong>Livraison :</strong> {% if shipping_cost %} {{ shipping_cost|floatformat:0 }} FCFA {% else %} Gratuit {% endif %}</p>
+    {% if discount_amount %}<p style="margin: 4px 0; color: #059669; font-size: 13px;"><strong>Reduction :</strong> -{{ discount_amount|floatformat:0 }} FCFA</p>{% endif %}
+    <p style="margin: 8px 0 4px; font-size: 16px; font-weight: bold; color: #1e3a5f;">Total TTC : {{ total_amount|floatformat:0 }} FCFA</p>
+  </td></tr>
+</table>
 
-<h3>Adresse de livraison</h3>
-<p>{{ order.shipping_address }}<br>{{ order.shipping_city }}<br>Tél : {{ order.shipping_phone }}</p>
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f; border-bottom: 1px solid #eeeeee; padding-bottom: 6px;">Adresse de livraison</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 13px;">{{ order.shipping_address }}<br>{{ order.shipping_city }}<br>Tel : {{ order.shipping_phone }}</p>
 
-<p><em>Votre facture est jointe à cet email en pièce attachée (PDF).</em></p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 13px;">📎 Votre facture PDF est jointe à cet email. Elle est aussi disponible dans votre espace "Mes commandes".</p>
 
-<h3>Prochaines étapes</h3>
-<p>Vous recevrez les instructions de paiement (Mobicash, Airtel Money, espèces ou carte Visa) par téléphone ou email. Une fois le paiement effectué, vous recevrez une confirmation.</p>
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f; border-bottom: 1px solid #eeeeee; padding-bottom: 6px;">Prochaines etapes</p>
+<p style="margin: 0 0 20px; color: #333333; font-size: 13px;">Vous recevrez les instructions de paiement (Mobicash, Airtel Money, especes ou carte Visa). Une fois le paiement effectue, vous recevrez une confirmation.</p>
 
-<p><a href="{{ frontend_url }}/orders" class="btn">Voir mes commandes</a></p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr>
+    <td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+      <a href="{{ frontend_url }}/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px; font-family: Arial, sans-serif;">Voir mes commandes</a>
+    </td>
+  </tr>
+</table>
 
-<p>Merci pour votre confiance !</p>
+<p style="margin: 0; color: #333333; font-size: 14px;">Merci pour votre confiance !</p>
 {% endblock %}

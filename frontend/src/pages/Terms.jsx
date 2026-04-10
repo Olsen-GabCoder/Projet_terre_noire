@@ -1,41 +1,43 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import '../styles/Terms.css';
+import SEO from '../components/SEO';
+import PageHero from '../components/PageHero';
 
-const Terms = () => (
-  <div className="terms-page">
-    <section className="terms-hero">
-      <div className="terms-hero__orb terms-hero__orb--1" />
-      <div className="terms-hero__grid-bg" />
-      <div className="terms-hero__inner">
-        <div className="terms-hero__line" />
-        <h1 className="terms-hero__title">Conditions générales d&apos;utilisation</h1>
-        <p className="terms-hero__sub">Conditions d&apos;utilisation du site Terre Noire Éditions.</p>
-      </div>
-    </section>
-    <div className="terms-hero-fade" />
-    <div className="terms-content">
-      <p className="terms-intro">L&apos;accès au site est soumis aux présentes conditions. En naviguant, vous les acceptez.</p>
-      <div className="terms-card">
-        <h2>1. Objet</h2>
-        <p>Les CGU régissent l&apos;accès au site de Terre Noire Éditions (Port-Gentil, Gabon) : catalogue, commandes, informations auteurs.</p>
-        <h2>2. Accès</h2>
-        <p>L&apos;accès est libre. Certaines fonctionnalités (commande, espace client) nécessitent une inscription. Nous pouvons modifier ou interrompre le site sans préavis.</p>
-        <h2>3. Utilisation</h2>
-        <p>Utilisation conforme aux lois. Interdits : fraude, piratage, contenus illicites, spam.</p>
-        <h2>4. Propriété intellectuelle</h2>
-        <p>Contenus protégés. Toute reproduction non autorisée est interdite.</p>
-        <h2>5. Données</h2>
-        <p>Voir notre <Link to="/privacy">politique de confidentialité</Link>.</p>
-        <h2>6. Droit applicable</h2>
-        <p>Droit gabonais. Contact : terrenoireeditions@gmail.com ou +241 65 34 88 87.</p>
-        <div className="terms-cta">
-          <Link to="/cgv" className="terms-btn terms-btn--primary">Voir les CGV</Link>
-          <Link to="/contact" className="terms-btn terms-btn--outline">Nous contacter</Link>
+const Terms = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="terms-page">
+      <SEO title={t('pages.terms.seoTitle')} />
+      <PageHero
+        title={t('pages.terms.heroTitle')}
+        subtitle={t('pages.terms.heroSub')}
+      />
+      <div className="terms-content">
+        <p className="terms-intro">{t('pages.terms.intro')}</p>
+        <div className="terms-card">
+          <h2>{t('pages.terms.section1Title')}</h2>
+          <p>{t('pages.terms.section1p1')}</p>
+          <h2>{t('pages.terms.section2Title')}</h2>
+          <p>{t('pages.terms.section2p1')}</p>
+          <h2>{t('pages.terms.section3Title')}</h2>
+          <p>{t('pages.terms.section3p1')}</p>
+          <h2>{t('pages.terms.section4Title')}</h2>
+          <p>{t('pages.terms.section4p1')}</p>
+          <h2>{t('pages.terms.section5Title')}</h2>
+          <p>{t('pages.terms.section5p1')} <Link to="/privacy">{t('pages.terms.privacyLink')}</Link>.</p>
+          <h2>{t('pages.terms.section6Title')}</h2>
+          <p>{t('pages.terms.section6p1')}</p>
+          <div className="terms-cta">
+            <Link to="/cgv" className="terms-btn terms-btn--primary">{t('pages.terms.viewCGV')}</Link>
+            <Link to="/contact" className="terms-btn terms-btn--outline">{t('pages.terms.contactUs')}</Link>
+          </div>
         </div>
       </div>
+      <div className="terms-footer-fade" />
     </div>
-    <div className="terms-footer-fade" />
-  </div>
-);
+  );
+};
 
 export default Terms;

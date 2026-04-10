@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import Header from './Header'
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import Header from './Header';
 
-// Mock des contextes
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({
     user: null,
@@ -11,39 +10,54 @@ vi.mock('../context/AuthContext', () => ({
     isAuthenticated: false,
     isAdmin: false,
   }),
-}))
+}));
 
 vi.mock('../context/CartContext', () => ({
-  useCart: () => ({
-    getTotalItems: () => 0,
-  }),
-}))
+  useCart: () => ({ getTotalItems: () => 2 }),
+}));
 
 vi.mock('../context/WishlistContext', () => ({
-  useWishlist: () => ({
-    getWishlistCount: () => 0,
-  }),
-}))
+  useWishlist: () => ({ getWishlistCount: () => 1 }),
+}));
 
-const renderWithRouter = (ui) => {
-  return render(<BrowserRouter>{ui}</BrowserRouter>)
-}
+const renderHeader = () =>
+  render(<BrowserRouter><Header /></BrowserRouter>);
 
 describe('Header', () => {
-  it('affiche le lien vers le catalogue', () => {
-    renderWithRouter(<Header />)
-    expect(screen.getByRole('link', { name: /catalogue/i })).toBeInTheDocument()
-  })
+  it('renders brand name', () => {
+    renderHeader();
+    const brands = screen.getAllByText('Frollot');
+    expect(brands.length).toBeGreaterThan(0);
+  });
 
-  it('affiche le lien vers l\'accueil', () => {
-    renderWithRouter(<Header />)
-    const accueilLinks = screen.getAllByRole('link', { name: /accueil/i })
-    expect(accueilLinks.length).toBeGreaterThan(0)
-  })
+  it('renders nav links', () => {
+    renderHeader();
+    const homeLinks = screen.getAllByText('nav.home');
+    expect(homeLinks.length).toBeGreaterThan(0);
+    const catalogLinks = screen.getAllByText('nav.catalog');
+    expect(catalogLinks.length).toBeGreaterThan(0);
+  });
 
-  it('affiche un bouton de recherche avec un label accessible', () => {
-    renderWithRouter(<Header />)
-    const searchButtons = screen.getAllByRole('button', { name: /rechercher|recherche/i })
-    expect(searchButtons.length).toBeGreaterThan(0)
-  })
-})
+  it('shows login/register when not authenticated', () => {
+    renderHeader();
+    expect(screen.getAllByText('common.login').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('common.register').length).toBeGreaterThan(0);
+  });
+
+  it('renders cart badge', () => {
+    renderHeader();
+    const badges = screen.getAllByText('2');
+    expect(badges.length).toBeGreaterThan(0);
+  });
+
+  it('renders language toggle', () => {
+    renderHeader();
+    const langBtns = screen.getAllByText('FR');
+    expect(langBtns.length).toBeGreaterThan(0);
+  });
+
+  it('renders as nav element', () => {
+    renderHeader();
+    expect(screen.getByRole('navigation')).toBeInTheDocument();
+  });
+});

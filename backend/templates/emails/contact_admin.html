@@ -1,11 +1,13 @@
 {% extends "emails/base.html" %}
 {% block content %}
-<p><strong>Nouveau message depuis le formulaire de contact</strong></p>
-<table>
-  <tr><th>Nom</th><td>{{ name }}</td></tr>
-  <tr><th>Email</th><td>{{ email }}</td></tr>
-  <tr><th>Sujet</th><td>{{ subject }}</td></tr>
+<p style="margin: 0 0 16px; color: #333333; font-weight: bold; font-size: 15px;">Nouveau message de contact</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px; width: 80px;">Nom</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ name }}</td></tr>
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Email</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ email }}</td></tr>
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Sujet</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ subject }}</td></tr>
 </table>
-<h3>Message</h3>
-<p>{{ message|linebreaks }}</p>
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f;">Message</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f8f9fa; border-left: 3px solid #1e3a5f; border-radius: 4px;">
+  <tr><td style="padding: 12px 16px; color: #333333; font-size: 13px;">{{ message|linebreaks }}</td></tr>
+</table>
 {% endblock %}

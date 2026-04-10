@@ -1,0 +1,19 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ org_name }}</strong>,</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">Nouveau manuscrit recu sur Frollot.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px; width: 80px;">Titre</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ title }}</td></tr>
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Auteur</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ author_name }}</td></tr>
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Genre</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ genre }}</td></tr>
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Langue</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ language }}</td></tr>
+  {% if page_count %}<tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Pages</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ page_count }}</td></tr>{% endif %}
+  <tr><td style="padding: 8px 10px; background: #f8f9fa; font-weight: bold; color: #555; font-size: 13px;">Ref</td><td style="padding: 8px 10px; color: #333; font-weight: bold; font-size: 13px;">{{ reference }}</td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/organizations" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir le manuscrit</a>
+  </td></tr>
+</table>
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'equipe Frollot</p>
+{% endblock %}

@@ -1,13 +1,16 @@
 /**
- * Charte graphique — couleurs du footer + succès / erreur uniquement.
- * Une seule source pour toute l'application.
+ * Charte graphique Frollot — Source unique pour toute l'application.
+ * Primaire : indigo (#6366f1), accent : violet (#8b5cf6)
  */
 
 :root {
-  /* Couleurs principales (footer) */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
+  /* Couleurs principales */
+  --color-primary: #5b5eea;
+  --color-primary-dark: #4f46e5;
+  --color-primary-light: #a78bfa;
+  --color-primary-rgb: 91, 94, 234;
   --color-accent: #e63946;
+  --color-secondary: #8b5cf6;
 
   /* Fonds et texte */
   --color-bg-dark: #0f172a;
@@ -20,12 +23,16 @@
   --color-success: #10b981;
   --color-error: #ef4444;
 
+  /* Sémantiques complémentaires */
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
   /* Neutres (texte, bordures, fonds clairs) */
   --color-gray-100: #f8fafc;
   --color-gray-200: #e2e8f0;
   --color-gray-300: #cbd5e1;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #64748b;
+  --color-gray-400: #566378;
+  --color-gray-500: #4b5c6f;
   --color-gray-600: #475569;
   --color-gray-700: #334155;
   --color-gray-800: #1e293b;
@@ -36,8 +43,14 @@
   --gradient-bg-dark: linear-gradient(135deg, var(--color-bg-darker) 0%, var(--color-bg-dark) 100%);
   --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #c1121f 100%);
 
-  /* Fond de page (unité visuelle header → contenu → footer) */
+  /* Fonds sémantiques (light par défaut) */
   --color-bg-page: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-section-alt: var(--color-gray-100);
+  --color-text-heading: var(--color-gray-800);
+  --color-text-body: var(--color-gray-600);
+  --color-text-muted-ui: var(--color-gray-400);
+  --color-border-card: var(--color-gray-200);
 
   /* Ombres */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -45,9 +58,9 @@
   --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
   /* Cartes : multicouche pour profondeur, survol avec accent primaire */
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(37, 99, 235, 0.12);
-  --shadow-btn: 0 1px 2px rgba(37, 99, 235, 0.2);
-  --shadow-btn-hover: 0 4px 12px rgba(37, 99, 235, 0.25);
+  --shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(91, 94, 234, 0.12);
+  --shadow-btn: 0 1px 2px rgba(91, 94, 234, 0.2);
+  --shadow-btn-hover: 0 4px 12px rgba(91, 94, 234, 0.25);
 
   /* Rayons */
   --radius-xs: 4px;
@@ -67,6 +80,154 @@
 
   /* Espacements */
   --container-max: 1200px;
+  --content-max-width: 960px;
+  --header-height: 68px;
+  --sidebar-width: 260px;
+  --app-side-w: 320px;
+
+  /* ── Rythme vertical (inspiré OpenClaw : 1 valeur, partout) ── */
+  --section-gap: 4rem;
+  --section-header-gap: 1.25rem;
+  --page-padding-top: 6rem;
+  --page-padding-bottom: 3rem;
+  --page-padding-x: 1.5rem;
+
+  /* ── Cartes — système unifié ── */
+  --card-radius: 14px;
+  --card-bg: var(--color-bg-card);
+  --card-border: 1px solid var(--color-border-card);
+  --card-shadow: var(--shadow-card);
+  --card-hover-shadow: var(--shadow-card-hover);
+  --card-hover-lift: -4px;
+  --card-padding: 1.25rem;
+
+  /* ── Surfaces vitrées (glass-morphism) ── */
+  --surface-glass: rgba(255, 255, 255, 0.88);
+  --surface-glass-border: rgba(255, 255, 255, 0.18);
+  --surface-glass-blur: 12px;
+
+  /* ── Ombres teintées (accent primaire) ── */
+  --shadow-primary-soft: 0 4px 16px rgba(91, 94, 234, 0.10);
+  --shadow-primary-mid: 0 8px 24px rgba(91, 94, 234, 0.18);
+  --shadow-primary-strong: 0 12px 32px rgba(91, 94, 234, 0.28);
+
+  /* ── Hover / interaction — 1 pattern, partout ── */
+  --hover-lift: -4px;
+  --hover-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --hover-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Hero — tokens partagés par <PageHero> ── */
+  --hero-gradient-light: linear-gradient(170deg, #f0f0ff 0%, #e8e6ff 40%, #f5f3ff 100%);
+  --hero-gradient-dark: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  --hero-orb-color: rgba(99, 102, 241, 0.08);
+  --hero-orb-blur: 60px;
+  --hero-grid-color: rgba(99, 102, 241, 0.04);
+  --hero-grid-size: 60px;
+  --hero-fade-height: 60px;
+  --hero-padding: var(--page-padding-top) var(--page-padding-x) 3rem;
+  --hero-inner-max-width: var(--content-max-width);
+
+  /* ── Glow cards ── */
+  --glow-color: rgba(91, 94, 234, 0.18);
+  --glow-color-strong: rgba(91, 94, 234, 0.35);
+  --card-hover-border: rgba(91, 94, 234, 0.3);
+  --card-hover-glow: 0 8px 32px var(--glow-color), 0 0 0 1px var(--card-hover-border);
+
+  /* ── Glass renforcé pour cards ── */
+  --card-glass-bg: rgba(255, 255, 255, 0.72);
+  --card-glass-blur: 16px;
+  --card-glass-border: rgba(255, 255, 255, 0.22);
+
+  /* ── Gradient text shimmer ── */
+  --shimmer-gradient: linear-gradient(
+    110deg,
+    var(--color-text-heading) 0%,
+    var(--color-text-heading) 40%,
+    var(--color-primary-light) 50%,
+    var(--color-text-heading) 60%,
+    var(--color-text-heading) 100%
+  );
+  --shimmer-size: 250% 100%;
+  --shimmer-duration: 4s;
+
+  /* ── Fond immersif (cosmos) ── */
+  --cosmos-nebula-1: rgba(91, 94, 234, 0.03);
+  --cosmos-nebula-2: rgba(139, 92, 246, 0.025);
+  --cosmos-nebula-3: rgba(59, 130, 246, 0.02);
+  --cosmos-star-opacity: 0.04;
+
+  /* ── Transition unifiée ── */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: all 0.25s var(--ease-smooth);
+  --transition-slow: all 0.4s var(--ease-smooth);
+
+  /* ── Ligne accent (petit trait décoratif) ── */
+  --accent-line-width: 48px;
+  --accent-line-height: 3px;
+  --accent-line-gradient: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+}
+
+/* =============================================
+   MODE SOMBRE
+   ============================================= */
+/* Dark mode piloté par data-theme="dark" sur <html>.
+   En mode auto, le JS détecte prefers-color-scheme et
+   applique data-theme automatiquement. Un seul bloc CSS. */
+:root[data-theme="dark"] {
+  --color-bg-page: #0b1120;
+  --color-bg-card: #1e293b;
+  --color-bg-section-alt: #131c2e;
+  --color-text-heading: #f1f5f9;
+  --color-text-body: #94a3b8;
+  --color-text-muted-ui: #9faab8;
+  --color-border-card: rgba(255, 255, 255, 0.08);
+  --color-gray-100: #131c2e;
+  --color-gray-200: rgba(255, 255, 255, 0.08);
+  --color-gray-300: rgba(255, 255, 255, 0.12);
+  --color-gray-400: #9faab8;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #cbd5e1;
+  --color-gray-700: #1e293b;
+  --color-gray-800: #f1f5f9;
+  --color-gray-900: #f8fafc;
+  --color-text-light: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(91, 94, 234, 0.2);
+
+  /* Surfaces vitrées (dark) */
+  --surface-glass: rgba(30, 41, 59, 0.65);
+  --surface-glass-border: rgba(255, 255, 255, 0.06);
+
+  /* Ombres teintées (dark) */
+  --shadow-primary-soft: 0 4px 16px rgba(91, 94, 234, 0.15);
+  --shadow-primary-mid: 0 8px 24px rgba(91, 94, 234, 0.25);
+  --shadow-primary-strong: 0 12px 32px rgba(91, 94, 234, 0.35);
+
+  /* Glow cards (dark — plus prononcé) */
+  --glow-color: rgba(91, 94, 234, 0.28);
+  --glow-color-strong: rgba(91, 94, 234, 0.5);
+  --card-hover-border: rgba(91, 94, 234, 0.4);
+  --card-hover-glow: 0 8px 32px var(--glow-color), 0 0 0 1px var(--card-hover-border);
+
+  /* Glass cards (dark) */
+  --card-glass-bg: rgba(30, 41, 59, 0.55);
+  --card-glass-blur: 16px;
+  --card-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Cosmos (dark — plus visible) */
+  --cosmos-nebula-1: rgba(91, 94, 234, 0.07);
+  --cosmos-nebula-2: rgba(139, 92, 246, 0.05);
+  --cosmos-nebula-3: rgba(59, 130, 246, 0.04);
+  --cosmos-star-opacity: 0.25;
+
+  /* Hero orb dark */
+  --hero-orb-color: rgba(99, 102, 241, 0.10);
+
+  color-scheme: dark;
 }
 
 /* Alias pour compatibilité */
