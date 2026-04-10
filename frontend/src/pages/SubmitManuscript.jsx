@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 import manuscriptService from '../services/manuscriptService';
 import organizationService from '../services/organizationService';
 import '../styles/SubmitManuscript.css';
@@ -29,8 +30,10 @@ const LANGUAGE_OPTIONS = [
 
 const SubmitManuscript = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isAuthor = user?.profile_types?.includes('AUTEUR');
 
   const preselectedOrg = searchParams.get('org');
   const [step, setStep] = useState(preselectedOrg ? 'form' : 'choose');
@@ -166,7 +169,11 @@ const SubmitManuscript = () => {
       setTimeout(() => navigate('/'), 5000);
     } catch (err) {
       const data = err.response?.data;
-      if (data && typeof data === 'object' && !data.detail && !data.message) {
+      if (data?.code === 'AUTHOR_PROFILE_REQUIRED') {
+        setError(data.detail || t('pages.submitManuscript.authorGateTitle'));
+        return;
+      }
+      if (data && typeof data === 'object' && !data.detail && !data.message && !data.code) {
         const normalized = {};
         Object.entries(data).forEach(([k, v]) => { normalized[k] = Array.isArray(v) ? v[0] : v; });
         setFieldErrors(normalized);
@@ -482,6 +489,31 @@ const SubmitManuscript = () => {
             </div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ═════════════════════════════════
+  // Guard : profil AUTEUR requis
+  // ═════════════════════════════════
+  if (!isAuthor) {
+    return (
+      <div className="submit-manuscript-page">
+        <SEO title={t('pages.submitManuscript.authorRequired', 'Profil Auteur requis')} />
+        <div className="ms-author-gate">
+          <div className="ms-author-gate__icon">
+            <i className="fas fa-pen-fancy" />
+          </div>
+          <h1 className="ms-author-gate__title">
+            {t('pages.submitManuscript.authorGateTitle', 'Activez votre profil Auteur pour soumettre un manuscrit')}
+          </h1>
+          <p className="ms-author-gate__desc">
+            {t('pages.submitManuscript.authorGateDesc', 'En activant le profil Auteur, vous pourrez soumettre vos manuscrits aux maisons d\'édition partenaires, recevoir des devis éditoriaux, gérer vos publications et créer votre page auteur publique sur Frollot.')}
+          </p>
+          <Link to="/profile?tab=roles" className="ms-author-gate__btn">
+            <i className="fas fa-user-plus" /> {t('pages.submitManuscript.activateAuthor', 'Activer mon profil Auteur')}
+          </Link>
+        </div>
       </div>
     );
   }

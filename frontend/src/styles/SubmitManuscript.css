@@ -2494,3 +2494,64 @@
   background: var(--color-bg-card);
   color: var(--color-text-body);
 }
+
+/* Guard : profil Auteur requis */
+.ms-author-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 60vh;
+}
+
+.ms-author-gate__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(var(--color-primary-rgb), 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+
+.ms-author-gate__title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  margin: 0 0 1rem;
+  line-height: 1.4;
+}
+
+.ms-author-gate__desc {
+  font-size: 0.92rem;
+  color: var(--color-text-muted-ui);
+  line-height: 1.6;
+  margin: 0 0 2rem;
+}
+
+.ms-author-gate__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.ms-author-gate__btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+}

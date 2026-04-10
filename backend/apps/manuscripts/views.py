@@ -20,20 +20,31 @@ from .serializers import ManuscriptSerializer, ManuscriptListSerializer, Manuscr
 class ManuscriptCreateView(generics.CreateAPIView):
     queryset = Manuscript.objects.all()
     serializer_class = ManuscriptSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [PublicEndpointThrottle]
     parser_classes = [MultiPartParser, FormParser]
 
     def create(self, request, *args, **kwargs):
+        # Vérifier que l'utilisateur a le profil AUTEUR activé
+        profile_types = getattr(request.user, 'profile_types', None) or []
+        if 'AUTEUR' not in profile_types:
+            return Response(
+                {
+                    'code': 'AUTHOR_PROFILE_REQUIRED',
+                    'detail': 'Vous devez activer le profil Auteur pour soumettre un manuscrit.',
+                    'action_url': '/profile?tab=roles',
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         manuscript = serializer.instance
 
-        # Lier au soumetteur si authentifié
-        if request.user and request.user.is_authenticated:
-            manuscript.submitter = request.user
-            manuscript.save(update_fields=['submitter'])
+        # Lier systématiquement au soumetteur (authentifié garanti)
+        manuscript.submitter = request.user
+        manuscript.save(update_fields=['submitter'])
 
         # Répondre immédiatement, puis envoyer les emails en arrière-plan
         headers = self.get_success_headers(serializer.data)
