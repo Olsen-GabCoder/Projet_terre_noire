@@ -27,4 +27,4 @@ RETOUR_*.md
 A_FAIRE.md
 
 # Claude Code
-.claude/
+.claude/backend/logs/*.log
