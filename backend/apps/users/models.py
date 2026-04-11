@@ -95,7 +95,19 @@ class User(AbstractUser):
         auto_now=True,
         verbose_name="Dernière modification"
     )
-    
+
+    # Acceptation des CGU
+    terms_accepted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Date d'acceptation des CGU",
+        help_text="Horodatage côté serveur au moment de l'inscription.",
+    )
+    terms_version = models.CharField(
+        max_length=20, blank=True, default='',
+        verbose_name="Version des CGU acceptées",
+        help_text="Date de publication des CGU acceptées (ex: 2026-04-11).",
+    )
+
     class Meta:
         verbose_name = "Utilisateur"
         verbose_name_plural = "Utilisateurs"

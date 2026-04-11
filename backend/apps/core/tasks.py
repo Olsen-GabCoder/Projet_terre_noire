@@ -247,3 +247,56 @@ def cancel_stale_pending_orders(self):
 
     logger.info("cancel_stale_pending_orders: %d commande(s) annulée(s)", cancelled_count)
     return cancelled_count
+
+
+@shared_task(bind=True, max_retries=1)
+def expire_overdue_quotes(self):
+    """
+    Passe en EXPIRED les devis DQE dont la date de validité est dépassée.
+    Pour chaque manuscrit affecté, vérifie si tous les devis sont terminaux
+    et repasse le manuscrit en REVIEWING le cas échéant.
+
+    Prévu pour être lancé par Celery Beat une fois par jour (2h UTC).
+
+    NOTE : les notifications email (auteur + éditeur) pour l'expiration
+    ne sont pas encore implémentées — à ajouter dans une passe ultérieure.
+    """
+    from django.utils import timezone
+    from apps.services.models import Quote
+
+    today = timezone.now().date()
+
+    # 1. Identifier les devis SENT dont la validité est dépassée
+    overdue = Quote.objects.filter(
+        status='SENT',
+        valid_until__lt=today,
+        manuscript__isnull=False,
+    )
+
+    # 2. Collecter les manuscript_id distincts AVANT le bulk update
+    manuscript_ids = list(
+        overdue.values_list('manuscript_id', flat=True).distinct()
+    )
+
+    # 3. Bulk update
+    expired_count = overdue.update(status='EXPIRED')
+
+    if expired_count == 0:
+        logger.info("expire_overdue_quotes: aucun devis expiré.")
+        return 0
+
+    logger.info("expire_overdue_quotes: %d devis passé(s) en EXPIRED.", expired_count)
+
+    # 4. Pour chaque manuscrit affecté, déclencher la logique métier
+    #    (repasse en REVIEWING si tous les devis sont terminaux)
+    from apps.manuscripts.signals import _handle_quote_expired
+
+    for ms_id in manuscript_ids:
+        try:
+            _handle_quote_expired(ms_id)
+        except Exception:
+            logger.exception(
+                "expire_overdue_quotes: erreur traitement manuscrit %s.", ms_id
+            )
+
+    return expired_count

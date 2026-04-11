@@ -28,7 +28,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         help_text="Confirmez votre mot de passe"
     )
-    
+
+    terms_accepted = serializers.BooleanField(
+        write_only=True,
+        required=True,
+        help_text="L'utilisateur accepte les CGU et la politique de confidentialité."
+    )
+
     class Meta:
         model = User
         fields = [
@@ -39,6 +45,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'phone_number',  # ✅ OPTIONNEL
+            'terms_accepted',
         ]
         extra_kwargs = {
             'first_name': {'required': True},
@@ -94,10 +101,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """
         Vérifie que les deux mots de passe correspondent
+        et que les CGU sont acceptées.
         """
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({
                 'password_confirm': "Les mots de passe ne correspondent pas."
+            })
+        if not attrs.get('terms_accepted'):
+            raise serializers.ValidationError({
+                'terms_accepted': "Vous devez accepter les conditions générales d'utilisation."
             })
         return attrs
     
@@ -105,8 +117,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """
         Crée un nouvel utilisateur avec le mot de passe haché.
         Le compte est créé inactif (is_active=False) jusqu'à la vérification de l'email.
+        Horodate l'acceptation des CGU côté serveur.
         """
         validated_data.pop('password_confirm')
+        validated_data.pop('terms_accepted')
         phone_number = validated_data.pop('phone_number', None)
 
         user = User.objects.create_user(
@@ -118,9 +132,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             is_active=False,  # Inactif jusqu'à vérification email
         )
 
+        # Horodater l'acceptation des CGU (côté serveur, jamais côté client)
+        from django.utils import timezone
+        update_fields = ['terms_accepted_at', 'terms_version']
+        user.terms_accepted_at = timezone.now()
+        user.terms_version = '2026-04-11'
+
         if phone_number:
             user.phone_number = phone_number
-            user.save(update_fields=['phone_number'])
+            update_fields.append('phone_number')
+
+        user.save(update_fields=update_fields)
 
         # Créer le token de vérification et envoyer l'email
         from .models import EmailVerificationToken

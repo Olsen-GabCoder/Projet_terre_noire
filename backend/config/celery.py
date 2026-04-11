@@ -19,4 +19,8 @@ app.conf.beat_schedule = {
         'task': 'apps.core.tasks.cancel_stale_pending_orders',
         'schedule': crontab(minute=0),  # Toutes les heures
     },
+    'expire-overdue-quotes': {
+        'task': 'apps.core.tasks.expire_overdue_quotes',
+        'schedule': crontab(hour=2, minute=0),  # Tous les jours à 2h UTC
+    },
 }

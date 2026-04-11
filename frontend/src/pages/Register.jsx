@@ -112,6 +112,7 @@ const Register = () => {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         phone_number: formData.phone_number.trim() || '',
+        terms_accepted: termsAccepted,
       };
 
       const result = await register(registrationData);

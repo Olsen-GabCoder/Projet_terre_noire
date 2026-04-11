@@ -1407,27 +1407,7 @@
       "contactUs": "Nous contacter",
       "backToCatalog": "Retour au catalogue"
     },
-    "terms": {
-      "seoTitle": "Conditions",
-      "heroTitle": "Conditions générales d'utilisation",
-      "heroSub": "Conditions d'utilisation du site Frollot.",
-      "intro": "L'accès au site est soumis aux présentes conditions. En naviguant, vous les acceptez.",
-      "section1Title": "1. Objet",
-      "section1p1": "Les CGU régissent l'accès au site de Frollot (Port-Gentil, Gabon) : catalogue, commandes, informations auteurs.",
-      "section2Title": "2. Accès",
-      "section2p1": "L'accès est libre. Certaines fonctionnalités (commande, espace client) nécessitent une inscription. Nous pouvons modifier ou interrompre le site sans préavis.",
-      "section3Title": "3. Utilisation",
-      "section3p1": "Utilisation conforme aux lois. Interdits : fraude, piratage, contenus illicites, spam.",
-      "section4Title": "4. Propriété intellectuelle",
-      "section4p1": "Contenus protégés. Toute reproduction non autorisée est interdite.",
-      "section5Title": "5. Données",
-      "section5p1": "Voir notre",
-      "privacyLink": "politique de confidentialité",
-      "section6Title": "6. Droit applicable",
-      "section6p1": "Droit gabonais. Contact : contact@frollot.com ou +241 65 34 88 87.",
-      "viewCGV": "Voir les CGV",
-      "contactUs": "Nous contacter"
-    },
+    "terms": {},
     "privacy": {
       "seoTitle": "Confidentialité",
       "heroTitle": "Politique de confidentialité",

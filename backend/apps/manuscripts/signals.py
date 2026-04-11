@@ -141,19 +141,15 @@ def _handle_quote_rejected(manuscript_id):
     """
     from apps.manuscripts.models import Manuscript
 
-    try:
-        manuscript = Manuscript.objects.get(pk=manuscript_id)
+    manuscript = Manuscript.objects.get(pk=manuscript_id)
 
-        if manuscript.status not in ('QUOTE_SENT', 'COUNTER_PROPOSAL'):
-            return
+    if manuscript.status not in ('QUOTE_SENT', 'COUNTER_PROPOSAL'):
+        return
 
-        if manuscript._all_quotes_terminal():
-            manuscript.status = 'QUOTE_REJECTED'
-            manuscript.save(update_fields=['status'])
-            logger.info("Manuscrit %s passé en QUOTE_REJECTED (tous devis refusés).", manuscript_id)
-
-    except Exception:
-        logger.exception("Erreur handle_quote_rejected pour manuscrit %s.", manuscript_id)
+    if manuscript._all_quotes_terminal():
+        manuscript.status = 'QUOTE_REJECTED'
+        manuscript.save(update_fields=['status'])
+        logger.info("Manuscrit %s passé en QUOTE_REJECTED (tous devis refusés).", manuscript_id)
 
 
 def _handle_quote_expired(manuscript_id):
@@ -163,19 +159,15 @@ def _handle_quote_expired(manuscript_id):
     """
     from apps.manuscripts.models import Manuscript
 
-    try:
-        manuscript = Manuscript.objects.get(pk=manuscript_id)
+    manuscript = Manuscript.objects.get(pk=manuscript_id)
 
-        if manuscript.status not in ('QUOTE_SENT', 'COUNTER_PROPOSAL'):
-            return
+    if manuscript.status not in ('QUOTE_SENT', 'COUNTER_PROPOSAL'):
+        return
 
-        if manuscript._all_quotes_terminal():
-            manuscript.status = 'REVIEWING'
-            manuscript.save(update_fields=['status'])
-            logger.info("Manuscrit %s repassé en REVIEWING (tous devis expirés).", manuscript_id)
-
-    except Exception:
-        logger.exception("Erreur handle_quote_expired pour manuscrit %s.", manuscript_id)
+    if manuscript._all_quotes_terminal():
+        manuscript.status = 'REVIEWING'
+        manuscript.save(update_fields=['status'])
+        logger.info("Manuscrit %s repassé en REVIEWING (tous devis expirés).", manuscript_id)
 
 
 def _handle_quote_revision_requested(manuscript_id):
@@ -185,16 +177,12 @@ def _handle_quote_revision_requested(manuscript_id):
     """
     from apps.manuscripts.models import Manuscript
 
-    try:
-        manuscript = Manuscript.objects.get(pk=manuscript_id)
+    manuscript = Manuscript.objects.get(pk=manuscript_id)
 
-        if manuscript.status == 'QUOTE_SENT':
-            manuscript.status = 'COUNTER_PROPOSAL'
-            manuscript.save(update_fields=['status'])
-            logger.info("Manuscrit %s passé en COUNTER_PROPOSAL.", manuscript_id)
-
-    except Exception:
-        logger.exception("Erreur handle_quote_revision_requested pour manuscrit %s.", manuscript_id)
+    if manuscript.status == 'QUOTE_SENT':
+        manuscript.status = 'COUNTER_PROPOSAL'
+        manuscript.save(update_fields=['status'])
+        logger.info("Manuscrit %s passé en COUNTER_PROPOSAL.", manuscript_id)
 
 
 def _notify_cancelled_orgs(manuscript_id, org_ids):
