@@ -371,6 +371,17 @@ class ServiceOrderDeliverView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Validation taille, extension, magic bytes
+        from apps.core.validators import validate_deliverable_file
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            validate_deliverable_file(file)
+        except DjangoValidationError as e:
+            return Response(
+                {'message': e.message if hasattr(e, 'message') else str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         order.deliverable_file = file
         order.status = 'REVIEW'
         order.save(update_fields=['deliverable_file', 'status', 'updated_at'])

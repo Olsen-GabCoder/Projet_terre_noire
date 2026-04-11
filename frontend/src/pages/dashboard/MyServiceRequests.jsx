@@ -231,11 +231,15 @@ const MyServiceRequests = () => {
                               onClick={() => handleValidateOrder(order.id)}>
                               <i className="fas fa-check" /> Valider
                             </button>
-                            {order.revision_count < order.max_revision_rounds && (
+                            {order.revision_count < order.max_revision_rounds ? (
                               <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
                                 onClick={() => setRevisionModal({ orderId: order.id, reason: '' })}>
                                 <i className="fas fa-redo" /> Révision ({order.revision_count}/{order.max_revision_rounds})
                               </button>
+                            ) : (
+                              <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted-ui)', maxWidth: 160 }}>
+                                Révisions épuisées ({order.revision_count}/{order.max_revision_rounds}). Validez ou contactez le prestataire.
+                              </span>
                             )}
                           </div>
                         )}

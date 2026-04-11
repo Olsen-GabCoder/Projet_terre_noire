@@ -40,8 +40,25 @@ const ProOrders = () => {
     return true;
   });
 
+  const BLOCKED_EXT = ['exe','bat','sh','cmd','ps1','vbs','js','msi','com','scr','jar'];
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 Mo
+
   const handleDeliver = async (orderId, file) => {
     if (!file) return;
+
+    // Validation taille
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('Le fichier est trop volumineux (max. 100 Mo).');
+      return;
+    }
+
+    // Validation extension
+    const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
+    if (BLOCKED_EXT.includes(ext)) {
+      toast.error("Ce type de fichier n'est pas autorisé.");
+      return;
+    }
+
     setUploading(orderId);
     try {
       const fd = new FormData();
