@@ -405,6 +405,23 @@ class PasswordChangeSerializer(serializers.Serializer):
         return user
 
 
+class DeleteAccountSerializer(serializers.Serializer):
+    """Validation pour la suppression de compte self-service."""
+    password = serializers.CharField(required=True, write_only=True)
+    confirmation = serializers.CharField(required=True, write_only=True)
+
+    def validate_confirmation(self, value):
+        if value != 'SUPPRIMER':
+            raise serializers.ValidationError("Saisissez le mot SUPPRIMER pour confirmer.")
+        return value
+
+    def validate_password(self, value):
+        user = self.context.get('user')
+        if user and not user.check_password(value):
+            raise serializers.ValidationError("Mot de passe incorrect.")
+        return value
+
+
 class UserListSerializer(serializers.ModelSerializer):
     """
     Sérialiseur simplifié pour lister les utilisateurs (admin).

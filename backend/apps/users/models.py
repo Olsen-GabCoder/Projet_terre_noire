@@ -108,6 +108,12 @@ class User(AbstractUser):
         help_text="Date de publication des CGU acceptées (ex: 2026-04-11).",
     )
 
+    # Suppression de compte
+    deletion_requested_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Date de demande de suppression",
+    )
+
     class Meta:
         verbose_name = "Utilisateur"
         verbose_name_plural = "Utilisateurs"

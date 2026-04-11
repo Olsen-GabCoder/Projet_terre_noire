@@ -161,6 +161,7 @@ export const authAPI = {
   revokeSession: (key) => api.delete(`/users/sessions/${key}/`),
   revokeAllSessions: () => api.post('/users/sessions/revoke-all/'),
   getLoginHistory: () => api.get('/users/me/login-history/'),
+  deleteAccount: (data) => api.post('/users/me/delete/', data),
 };
 
 // --- HELPER D'ERREUR ---

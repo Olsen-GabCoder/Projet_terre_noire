@@ -112,7 +112,8 @@ class BookLoan(models.Model):
         related_name='loans', verbose_name="Élément catalogue",
     )
     borrower = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='book_loans', verbose_name="Emprunteur",
     )
     loan_type = models.CharField(max_length=10, choices=LOAN_TYPE_CHOICES)

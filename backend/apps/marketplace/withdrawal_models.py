@@ -34,7 +34,8 @@ MIN_WITHDRAWAL_AMOUNT = Decimal('1000')
 class WithdrawalRequest(models.Model):
     """Demande de retrait d'un wallet vers Mobile Money."""
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='withdrawal_requests',
     )
     wallet_type = models.CharField(max_length=20, choices=WALLET_TYPE_CHOICES)

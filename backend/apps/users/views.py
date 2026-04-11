@@ -17,6 +17,7 @@ from .serializers import (
     UserListSerializer,
     UserProfileSerializer,
     UserProfileCreateSerializer,
+    DeleteAccountSerializer,
 )
 from .models import UserProfile
 from .token_serializers import EmailTokenObtainPairSerializer
@@ -722,3 +723,161 @@ class DashboardCountsView(APIView):
             counts['active_loans'] = 0
 
         return Response(counts)
+
+
+class DeleteAccountView(APIView):
+    """
+    Suppression de compte self-service (RGPD).
+    POST /api/users/me/delete/ avec { password, confirmation: 'SUPPRIMER' }
+
+    Vérifie les opérations en cours (blockers), anonymise les contenus publics,
+    efface les données personnelles, désactive le compte. Irréversible.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from django.db import transaction
+        from django.utils import timezone
+        import uuid
+
+        user = request.user
+        serializer = DeleteAccountSerializer(data=request.data, context={'user': user})
+        serializer.is_valid(raise_exception=True)
+
+        # ── Détection des opérations bloquantes ──
+        blockers = []
+
+        # 1. Propriétaire d'organisations
+        from apps.organizations.models import Organization
+        owned_orgs = Organization.objects.filter(owner=user)
+        for org in owned_orgs:
+            blockers.append(
+                f"Vous êtes propriétaire de l'organisation « {org.name} ». "
+                "Transférez la propriété ou dissolvez l'organisation."
+            )
+
+        # 2. Commandes de livres non terminales
+        from apps.orders.models import Order
+        active_orders = Order.objects.filter(user=user).exclude(status__in=['DELIVERED', 'CANCELLED']).count()
+        if active_orders:
+            blockers.append(f"Vous avez {active_orders} commande(s) de livres en cours.")
+
+        # 3. Services en cours (client)
+        from apps.services.models import ServiceOrder
+        active_client_orders = ServiceOrder.objects.filter(client=user).exclude(status__in=['COMPLETED', 'CANCELLED']).count()
+        if active_client_orders:
+            blockers.append(f"Vous avez {active_client_orders} commande(s) de service en cours (client).")
+
+        # 4. Services en cours (prestataire)
+        active_provider_orders = ServiceOrder.objects.filter(provider__user=user).exclude(status__in=['COMPLETED', 'CANCELLED']).count()
+        if active_provider_orders:
+            blockers.append(f"Vous avez {active_provider_orders} commande(s) de service en cours (prestataire).")
+
+        # 5. Retraits en attente
+        from apps.marketplace.withdrawal_models import WithdrawalRequest
+        active_withdrawals = WithdrawalRequest.objects.filter(user=user, status__in=['PENDING', 'PROCESSING']).count()
+        if active_withdrawals:
+            blockers.append(f"Vous avez {active_withdrawals} retrait(s) de fonds en attente.")
+
+        # 6. Prêts non rendus
+        from apps.library.models import BookLoan
+        active_loans = BookLoan.objects.filter(borrower=user).exclude(status__in=['RETURNED', 'CANCELLED']).count()
+        if active_loans:
+            blockers.append(f"Vous avez {active_loans} prêt(s) de bibliothèque non restitué(s).")
+
+        # 7. Soldes de portefeuilles > 0
+        from apps.services.models import ProfessionalWallet
+        for pw in ProfessionalWallet.objects.filter(professional__user=user, balance__gt=0):
+            blockers.append(f"Vous avez un solde de {pw.balance} FCFA dans votre portefeuille prestataire. Effectuez un retrait.")
+
+        from apps.marketplace.models import VendorWallet, DeliveryWallet
+        for vw in VendorWallet.objects.filter(organization__owner=user, balance__gt=0):
+            blockers.append(f"L'organisation « {vw.organization.name} » a un solde de {vw.balance} FCFA.")
+
+        for dw in DeliveryWallet.objects.filter(agent__user=user, balance__gt=0):
+            blockers.append(f"Vous avez un solde de {dw.balance} FCFA dans votre portefeuille livreur. Effectuez un retrait.")
+
+        if blockers:
+            return Response({
+                'message': "Impossible de supprimer votre compte tant que des opérations sont en cours.",
+                'blockers': blockers,
+            }, status=status.HTTP_409_CONFLICT)
+
+        # ── Capturer l'email AVANT effacement pour l'email de confirmation ──
+        original_email = user.email
+        original_name = user.get_full_name() or user.username
+
+        # ── Suppression dans une transaction atomique ──
+        unique_id = uuid.uuid4().hex[:12]
+
+        with transaction.atomic():
+            # Anonymiser les contenus publics (FK → NULL pour les modèles passés en SET_NULL)
+            from apps.books.models import BookReview
+            from apps.social.models import Post, PostComment, BookClubMessage, BookClub
+            from apps.organizations.models import OrganizationReview
+
+            BookReview.objects.filter(user=user).update(user=None)
+            Post.objects.filter(author=user).update(author=None)
+            PostComment.objects.filter(user=user).update(user=None)
+            BookClubMessage.objects.filter(author=user).update(author=None)
+            BookClub.objects.filter(creator=user).update(creator=None)
+            OrganizationReview.objects.filter(user=user).update(user=None)
+
+            # Préserver les données financières (FK → NULL)
+            Order.objects.filter(user=user).update(user=None)
+            ServiceOrder.objects.filter(client=user).update(client=None)
+            from apps.services.models import ServiceRequest
+            ServiceRequest.objects.filter(client=user).update(client=None)
+            WithdrawalRequest.objects.filter(user=user).update(user=None)
+            BookLoan.objects.filter(borrower=user).update(borrower=None)
+            from apps.organizations.models import Inquiry
+            Inquiry.objects.filter(sender=user).update(sender=None)
+
+            # Effacer les champs personnels
+            user.username = f'deleted_{unique_id}'
+            user.email = f'deleted_{unique_id}@frollot.local'
+            user.first_name = ''
+            user.last_name = ''
+            user.phone_number = None
+            user.address = ''
+            user.city = ''
+            user.country = ''
+            user.totp_secret = None
+            user.totp_enabled = False
+            user.receive_newsletter = False
+            user.is_active = False
+            user.deletion_requested_at = timezone.now()
+            user.set_unusable_password()
+
+            # Supprimer l'image de profil
+            if user.profile_image:
+                try:
+                    user.profile_image.delete(save=False)
+                except Exception:
+                    pass
+                user.profile_image = ''
+
+            user.save()
+
+            # Les cascades Django suppriment automatiquement :
+            # sessions, tokens 2FA, social accounts, profiles (→ listings, wallets),
+            # follows, reading lists, wishlist, likes, memberships, invitations, réservations
+
+        # ── Email de confirmation (envoyé à l'ancien email) ──
+        try:
+            from apps.core.email import send_templated_email
+            send_templated_email(
+                subject="Votre compte Frollot a été supprimé",
+                template_name='account_deletion',
+                context={
+                    'user_name': original_name,
+                    'frontend_url': settings.FRONTEND_URL,
+                },
+                to_emails=[original_email],
+            )
+        except Exception:
+            pass
+
+        return Response({
+            'message': 'Votre compte a été supprimé. Vos données personnelles ont été effacées.',
+        })

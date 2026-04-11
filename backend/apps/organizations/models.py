@@ -278,7 +278,8 @@ class OrganizationReview(models.Model):
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='org_reviews',
         verbose_name="Utilisateur",
     )
@@ -320,7 +321,8 @@ class Inquiry(models.Model):
 
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='sent_inquiries',
         verbose_name="Expéditeur",
     )

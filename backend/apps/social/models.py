@@ -145,7 +145,8 @@ class Post(models.Model):
     ]
 
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='posts', verbose_name="Auteur du post",
     )
     content = models.TextField(verbose_name="Contenu")
@@ -204,7 +205,8 @@ class PostLike(models.Model):
 class PostComment(models.Model):
     """Commentaire sur une publication."""
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='post_comments',
     )
     post = models.ForeignKey(
@@ -297,7 +299,8 @@ class BookClub(models.Model):
     )
 
     creator = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='created_clubs', verbose_name="Créateur",
     )
     is_public = models.BooleanField(default=True, verbose_name="Public")
@@ -366,7 +369,8 @@ class BookClubMessage(models.Model):
         related_name='messages', verbose_name="Club",
     )
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='club_messages', verbose_name="Auteur",
     )
     message_type = models.CharField(

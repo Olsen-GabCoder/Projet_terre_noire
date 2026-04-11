@@ -1,0 +1,29 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ user_name }}</strong>,</p>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Votre compte Frollot a été supprimé comme vous l'avez demandé.
+</p>
+
+<div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0 0 8px; color: #333; font-size: 13px; line-height: 1.6;">
+    <strong>Ce qui a été fait :</strong>
+  </p>
+  <ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 13px; line-height: 1.8;">
+    <li>Vos données personnelles (nom, email, téléphone, adresse) ont été effacées</li>
+    <li>Vos contenus publics (avis, commentaires) ont été anonymisés</li>
+    <li>Votre mot de passe et vos identifiants de connexion ont été invalidés</li>
+    <li>Les données relatives à vos commandes et transactions sont conservées conformément aux obligations légales</li>
+  </ul>
+</div>
+
+<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #991b1b; font-size: 13px; line-height: 1.6;">
+    <strong>Si vous n'êtes pas à l'origine de cette demande</strong>, contactez-nous immédiatement
+    à <a href="mailto:support@frollot.com" style="color: #991b1b; font-weight: bold;">support@frollot.com</a>.
+  </p>
+</div>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}

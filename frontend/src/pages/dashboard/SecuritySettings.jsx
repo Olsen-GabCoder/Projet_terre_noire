@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import api, { handleApiError } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import api, { authAPI, handleApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const SecuritySettings = () => {
-  const { refreshUser } = useAuth();
+  const { refreshUser, logout } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [loginHistory, setLoginHistory] = useState([]);
   const [totpEnabled, setTotpEnabled] = useState(false);
@@ -13,6 +16,11 @@ const SecuritySettings = () => {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteBlockers, setDeleteBlockers] = useState(null);
 
   const [setupMode, setSetupMode] = useState(false);
   const [setupData, setSetupData] = useState(null);
@@ -245,6 +253,112 @@ const SecuritySettings = () => {
           })()}
         </div>
       </div>
+      {/* ══ Zone de danger ══ */}
+      <div className="sec-card" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+        <h2 className="sec-title" style={{ color: '#ef4444' }}><i className="fas fa-exclamation-triangle" /> Zone de danger</h2>
+        <p style={{ fontSize: '0.88rem', color: 'var(--color-text-muted-ui)', marginBottom: '1rem', lineHeight: 1.6 }}>
+          La suppression de votre compte est irréversible. Vos données personnelles seront effacées,
+          vos contenus publics anonymisés. Les données relatives à vos commandes sont conservées conformément aux obligations légales.
+        </p>
+        <button
+          className="sec-btn sec-btn--danger"
+          onClick={() => { setDeleteModal(true); setDeleteBlockers(null); setDeletePassword(''); setDeleteConfirmation(''); }}
+        >
+          <i className="fas fa-trash-alt" /> Supprimer mon compte
+        </button>
+      </div>
+
+      {/* ══ Modal de suppression ══ */}
+      {deleteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: 'var(--color-bg-card)', borderRadius: 16, padding: '2rem', maxWidth: 480, width: '90%', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: '#fef2f2', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <i className="fas fa-exclamation-triangle" style={{ fontSize: '1.5rem', color: '#ef4444' }} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Supprimer mon compte</h3>
+            </div>
+
+            <p style={{ color: 'var(--color-text-muted-ui)', fontSize: '0.85rem', lineHeight: 1.7, marginBottom: '0.75rem' }}>
+              Cette action est <strong style={{ color: '#ef4444' }}>irréversible</strong>. Votre compte sera définitivement
+              désactivé et vos données personnelles effacées. Vos avis et publications seront anonymisés.
+            </p>
+
+            {deleteBlockers && (
+              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1rem' }}>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', fontWeight: 700, color: '#92400e' }}>
+                  <i className="fas fa-lock" /> Opérations en cours
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.8rem', color: '#92400e', lineHeight: 1.6 }}>
+                  {deleteBlockers.map((b, i) => <li key={i}>{b}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {!deleteBlockers && (
+              <>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem', color: 'var(--color-text-heading)' }}>
+                    Saisissez le mot <strong style={{ color: '#ef4444' }}>SUPPRIMER</strong> pour confirmer
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder="SUPPRIMER"
+                    className="sec-input"
+                    style={{ width: '100%', borderColor: deleteConfirmation === 'SUPPRIMER' ? '#10b981' : undefined }}
+                    autoComplete="off"
+                  />
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem', color: 'var(--color-text-heading)' }}>
+                    Votre mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="Mot de passe"
+                    className="sec-input"
+                    style={{ width: '100%' }}
+                    autoComplete="current-password"
+                  />
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button className="sec-btn" onClick={() => setDeleteModal(false)}>Annuler</button>
+              {!deleteBlockers && (
+                <button
+                  className="sec-btn sec-btn--danger"
+                  disabled={deleteLoading || deleteConfirmation !== 'SUPPRIMER' || !deletePassword}
+                  onClick={async () => {
+                    setDeleteLoading(true);
+                    try {
+                      await authAPI.deleteAccount({ password: deletePassword, confirmation: deleteConfirmation });
+                      toast.success('Votre compte a été supprimé.');
+                      setDeleteModal(false);
+                      logout();
+                      navigate('/');
+                    } catch (err) {
+                      const data = err.response?.data;
+                      if (err.response?.status === 409 && data?.blockers) {
+                        setDeleteBlockers(data.blockers);
+                      } else {
+                        toast.error(handleApiError(err));
+                      }
+                    } finally { setDeleteLoading(false); }
+                  }}
+                >
+                  {deleteLoading ? <><i className="fas fa-spinner fa-spin" /> Suppression...</> : <><i className="fas fa-trash-alt" /> Supprimer définitivement</>}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

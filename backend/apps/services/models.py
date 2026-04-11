@@ -98,7 +98,8 @@ class ServiceRequest(models.Model):
     ]
 
     client = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='service_requests', verbose_name="Client",
     )
     listing = models.ForeignKey(
@@ -235,7 +236,8 @@ class ServiceOrder(models.Model):
         related_name='order', verbose_name="Devis",
     )
     client = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='service_orders', verbose_name="Client",
     )
     provider = models.ForeignKey(
