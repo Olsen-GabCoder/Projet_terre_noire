@@ -200,6 +200,19 @@ def send_delivery_assignment_task(self, sub_order_id):
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_suborder_update_task(self, sub_order_id, new_status):
+    try:
+        from apps.marketplace.models import SubOrder
+        from apps.core.email import send_suborder_update
+        sub_order = SubOrder.objects.select_related(
+            'order__user', 'vendor',
+        ).prefetch_related('items__book').get(pk=sub_order_id)
+        send_suborder_update(sub_order, new_status)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_service_order_status_task(self, order_id, recipient_role='client', message=''):
     try:
         from apps.services.models import ServiceOrder
@@ -387,4 +400,44 @@ def auto_complete_reviewed_orders(self):
     )
     return {'completed': completed_count, 'warned': warned_count}
 
-    return expired_count
+
+@shared_task(bind=True, max_retries=1)
+def send_loan_reminders(self):
+    """
+    Envoie les rappels d'échéance de prêt de bibliothèque.
+    - J-3 : rappel informatif (reminder_sent 0 → 1)
+    - Jour J (ou rattrapage J+N) : rappel pressant (reminder_sent < 2 → 2)
+    Prévu pour Celery Beat une fois par jour à 8h UTC (9h Libreville).
+    """
+    from django.utils import timezone
+    from apps.library.models import BookLoan
+    from apps.core.email import send_loan_reminder
+
+    today = timezone.now().date()
+    reminded_count = 0
+
+    active_loans = (
+        BookLoan.objects
+        .filter(status='ACTIVE', due_date__isnull=False, borrower__isnull=False, reminder_sent__lt=2)
+        .select_related('borrower', 'catalog_item__book', 'catalog_item__library')
+    )
+
+    for loan in active_loans:
+        days_until_due = (loan.due_date.date() - today).days
+
+        try:
+            if days_until_due <= 0 and loan.reminder_sent < 2:
+                send_loan_reminder(loan, days_remaining=0)
+                loan.reminder_sent = 2
+                loan.save(update_fields=['reminder_sent'])
+                reminded_count += 1
+            elif days_until_due <= 3 and loan.reminder_sent < 1:
+                send_loan_reminder(loan, days_remaining=days_until_due)
+                loan.reminder_sent = 1
+                loan.save(update_fields=['reminder_sent'])
+                reminded_count += 1
+        except Exception:
+            logger.exception("Erreur rappel prêt #%s", loan.id)
+
+    logger.info("send_loan_reminders: %d rappel(s) envoyé(s).", reminded_count)
+    return {'reminded': reminded_count}

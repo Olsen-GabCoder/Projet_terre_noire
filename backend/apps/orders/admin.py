@@ -1,5 +1,18 @@
+import logging
+
 from django.contrib import admin
+from django.db import transaction
+
 from .models import Order, OrderItem, Payment
+
+logger = logging.getLogger(__name__)
+
+NOTIFICATION_MAP = {
+    'PAID': 'apps.core.tasks.send_order_paid_task',
+    'SHIPPED': 'apps.core.tasks.send_order_shipped_task',
+    'DELIVERED': 'apps.core.tasks.send_order_delivered_task',
+    'CANCELLED': 'apps.core.tasks.send_order_cancelled_task',
+}
 
 
 class OrderItemInline(admin.TabularInline):
@@ -36,6 +49,27 @@ class OrderAdmin(admin.ModelAdmin):
     list_editable = ['status']
     inlines = [OrderItemInline, PaymentInline]
     date_hierarchy = 'created_at'
+
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            old_status = form.initial.get('status')
+            new_status = obj.status
+            super().save_model(request, obj, form, change)
+
+            task_path = NOTIFICATION_MAP.get(new_status)
+            if task_path and old_status != new_status:
+                def dispatch():
+                    try:
+                        import importlib
+                        module_path, task_name = task_path.rsplit('.', 1)
+                        module = importlib.import_module(module_path)
+                        task = getattr(module, task_name)
+                        task.delay(obj.id)
+                    except Exception:
+                        logger.exception("Admin: erreur notification commande #%s → %s", obj.id, new_status)
+                transaction.on_commit(dispatch)
+        else:
+            super().save_model(request, obj, form, change)
 
 
 @admin.register(Payment)

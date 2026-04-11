@@ -1,0 +1,42 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ client_name }}</strong>,</p>
+
+{% if new_status == 'CONFIRMED' %}
+<div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #065f46; font-weight: bold; font-size: 14px;">
+    Le vendeur <strong>{{ vendor_name }}</strong> a confirmé une partie de votre commande.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Les articles suivants de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
+  ont été confirmés et sont en cours de préparation.
+</p>
+
+{% elif new_status == 'SHIPPED' %}
+<div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #1e40af; font-weight: bold; font-size: 14px;">
+    Une partie de votre commande est en route !
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Les articles suivants de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
+  ont été expédiés par <strong>{{ vendor_name }}</strong> vers <strong>{{ shipping_city }}</strong>.
+</p>
+{% endif %}
+
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f;">Articles concernés</p>
+<ul style="margin: 0 0 16px; padding-left: 20px; color: #333333; font-size: 13px;">
+  {% for item in items %}<li style="margin-bottom: 4px;">{{ item.title }} (&times; {{ item.quantity }})</li>{% endfor %}
+</ul>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Suivre ma commande</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}

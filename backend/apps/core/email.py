@@ -578,3 +578,68 @@ def send_auto_complete_warning(service_order, days_remaining):
     return send_templated_email(
         subject, 'service_order_auto_complete_warning', context, [client.email]
     )
+
+
+def send_loan_reminder(loan, days_remaining):
+    """
+    Envoie un rappel d'échéance de prêt à l'emprunteur.
+    days_remaining: 3 pour J-3, 0 pour jour J (ou négatif si rattrapage).
+    """
+    borrower = loan.borrower
+    if not borrower or not borrower.email:
+        return False
+
+    book_title = loan.catalog_item.book.title if loan.catalog_item and loan.catalog_item.book else f'Prêt #{loan.id}'
+    library_name = loan.catalog_item.library.name if loan.catalog_item and loan.catalog_item.library else 'votre bibliothèque'
+
+    context = {
+        'borrower_name': borrower.get_full_name() or borrower.username,
+        'book_title': book_title,
+        'library_name': library_name,
+        'due_date': loan.due_date.strftime('%d/%m/%Y') if loan.due_date else '—',
+        'days_remaining': days_remaining,
+        'is_today': days_remaining <= 0,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+
+    if days_remaining <= 0:
+        subject = f"Votre prêt arrive à échéance aujourd'hui — Frollot"
+    else:
+        subject = f"Rappel : votre prêt arrive à échéance dans {days_remaining} jours — Frollot"
+
+    return send_templated_email(subject, 'book_loan_reminder', context, [borrower.email])
+
+
+def send_suborder_update(sub_order, new_status):
+    """
+    Notifie le client d'un changement de statut sur une sous-commande.
+    new_status: 'CONFIRMED' ou 'SHIPPED'.
+    """
+    order = sub_order.order
+    client = order.user
+    if not client or not client.email:
+        return False
+
+    items = sub_order.items.select_related('book')
+    items_list = [{'title': it.book.title, 'quantity': it.quantity} for it in items]
+    vendor_name = sub_order.vendor.name if sub_order.vendor else '—'
+
+    STATUS_LABELS = {
+        'CONFIRMED': 'confirmée par le vendeur',
+        'SHIPPED': 'expédiée',
+    }
+    status_label = STATUS_LABELS.get(new_status, sub_order.get_status_display())
+
+    context = {
+        'client_name': client.get_full_name() or client.username,
+        'order_id': order.id,
+        'vendor_name': vendor_name,
+        'status_label': status_label,
+        'new_status': new_status,
+        'items': items_list,
+        'shipping_city': order.shipping_city,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+
+    subject = f"Commande #{order.id:06d} — une partie a été {status_label} — Frollot"
+    return send_templated_email(subject, 'order_suborder_update', context, [client.email])

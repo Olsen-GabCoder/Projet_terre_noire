@@ -122,6 +122,7 @@ class BookLoan(models.Model):
     due_date = models.DateTimeField(null=True, blank=True, verbose_name="Date de retour prévue")
     returned_at = models.DateTimeField(null=True, blank=True, verbose_name="Date de retour effectif")
     notes = models.TextField(blank=True, verbose_name="Notes")
+    reminder_sent = models.PositiveIntegerField(default=0, verbose_name="Rappels envoyés")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

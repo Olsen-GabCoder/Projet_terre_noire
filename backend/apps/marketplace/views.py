@@ -1,5 +1,9 @@
+import logging
+
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -150,10 +154,20 @@ class SubOrderStatusUpdateView(APIView):
 
         serializer = SubOrderStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        sub_order.status = serializer.validated_data['status']
-        if sub_order.status == 'DELIVERED':
+        new_status = serializer.validated_data['status']
+        sub_order.status = new_status
+        if new_status == 'DELIVERED':
             sub_order.delivered_at = timezone.now()
         sub_order.save()
+
+        # Notifier le client sur les transitions visibles
+        if new_status in ('CONFIRMED', 'SHIPPED'):
+            try:
+                from apps.core.tasks import send_suborder_update_task
+                send_suborder_update_task.delay(sub_order.id, new_status)
+            except Exception:
+                logger.exception("Erreur notification sous-commande #%s %s", sub_order.id, new_status)
+
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',
             'sub_order': SubOrderSerializer(sub_order).data,
@@ -262,14 +276,21 @@ class DeliveryStatusUpdateView(APIView):
             sub_order.delivered_at = timezone.now()
         sub_order.save()
 
-        # Email au client quand livre
+        # Email au client
+        if new_status == 'SHIPPED':
+            try:
+                from apps.core.tasks import send_suborder_update_task
+                send_suborder_update_task.delay(sub_order.id, 'SHIPPED')
+            except Exception:
+                logger.exception("Erreur notification sous-commande #%s SHIPPED", sub_order.id)
+
         if new_status == 'DELIVERED':
             try:
                 from apps.core.tasks import send_order_delivered_task
                 agent_name = livreur_profile.user.get_full_name() if livreur_profile else None
                 send_order_delivered_task.delay(sub_order.order_id, agent_name=agent_name)
             except Exception:
-                pass
+                logger.exception("Erreur notification commande #%s DELIVERED", sub_order.order_id)
 
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',

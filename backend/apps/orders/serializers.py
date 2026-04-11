@@ -227,12 +227,10 @@ class OrderCreateSerializer(serializers.Serializer):
                     id__in=[oi.id for oi in vgroup['items']],
                 ).update(sub_order=sub_order)
 
-        # Envoi email de confirmation
-        try:
-            from apps.core.email import send_order_confirmation
-            send_order_confirmation(order)
-        except Exception:
-            pass
+        # Envoi email de confirmation (async, après commit de la transaction)
+        from django.db import transaction as db_transaction
+        from apps.core.tasks import send_order_confirmation_task
+        db_transaction.on_commit(lambda: send_order_confirmation_task.delay(order.id))
 
         return order
 

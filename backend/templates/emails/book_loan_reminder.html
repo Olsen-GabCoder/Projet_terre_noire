@@ -1,0 +1,53 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ borrower_name }}</strong>,</p>
+
+{% if is_today %}
+<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #991b1b; font-weight: bold; font-size: 14px;">
+    Votre prêt arrive à échéance <strong>aujourd'hui</strong>.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Le livre <strong style="color: #1e3a5f;">&laquo;&nbsp;{{ book_title }}&nbsp;&raquo;</strong>
+  emprunté à la bibliothèque <strong>{{ library_name }}</strong> doit être retourné
+  aujourd'hui (<strong>{{ due_date }}</strong>).
+</p>
+
+<p style="margin: 0 0 20px; color: #333333; font-size: 14px;">
+  Merci de retourner le livre dans les meilleurs délais.
+</p>
+
+{% else %}
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #92400e; font-weight: bold; font-size: 14px;">
+    Votre prêt arrive à échéance dans <strong>{{ days_remaining }} jours</strong>.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Le livre <strong style="color: #1e3a5f;">&laquo;&nbsp;{{ book_title }}&nbsp;&raquo;</strong>
+  emprunté à la bibliothèque <strong>{{ library_name }}</strong> doit être retourné
+  avant le <strong>{{ due_date }}</strong>.
+</p>
+
+<p style="margin: 0 0 20px; color: #333333; font-size: 14px;">
+  Pensez à retourner le livre avant cette date pour éviter tout retard.
+</p>
+{% endif %}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/my-loans" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir mes prêts</a>
+  </td></tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Livre</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ book_title }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Bibliothèque</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ library_name }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; font-size: 13px;">Échéance</td><td style="padding: 8px 10px; color: #333; font-weight: bold; font-size: 13px;">{{ due_date }}</td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}
