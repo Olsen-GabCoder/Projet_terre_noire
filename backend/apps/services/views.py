@@ -382,9 +382,12 @@ class ServiceOrderDeliverView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        from django.utils import timezone as tz
         order.deliverable_file = file
         order.status = 'REVIEW'
-        order.save(update_fields=['deliverable_file', 'status', 'updated_at'])
+        order.delivered_at = tz.now()
+        order.auto_complete_notified = 0  # Reset le timer à chaque (re-)livraison
+        order.save(update_fields=['deliverable_file', 'status', 'delivered_at', 'auto_complete_notified', 'updated_at'])
 
         # Notifier le client que le livrable est disponible
         try:

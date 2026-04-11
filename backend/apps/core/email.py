@@ -545,3 +545,36 @@ def send_service_order_status(service_order, recipient_role='client', message=''
     return send_templated_email(
         subject, 'service_request_status', context, [to_email]
     )
+
+
+def send_auto_complete_warning(service_order, days_remaining):
+    """
+    Envoie un préavis d'auto-complétion au client (J-7 ou J-1).
+    """
+    from datetime import timedelta
+
+    order = service_order
+    client = order.client
+    provider = order.provider.user
+
+    auto_complete_date = order.delivered_at + timedelta(days=14)
+
+    context = {
+        'client_name': client.get_full_name() or client.username,
+        'provider_name': provider.get_full_name() or provider.username,
+        'service_title': order.request.title if hasattr(order, 'request') else f'SVC-{order.id:05d}',
+        'days_remaining': days_remaining,
+        'order_id': order.id,
+        'amount': float(order.amount) if order.amount else 0,
+        'auto_complete_date': auto_complete_date.strftime('%d/%m/%Y'),
+        'frontend_url': settings.FRONTEND_URL,
+    }
+
+    if days_remaining == 1:
+        subject = f"⚠ Commande SVC-{order.id:05d} : validation automatique demain — Frollot"
+    else:
+        subject = f"Commande SVC-{order.id:05d} : validation automatique dans {days_remaining} jours — Frollot"
+
+    return send_templated_email(
+        subject, 'service_order_auto_complete_warning', context, [client.email]
+    )

@@ -224,7 +224,7 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
             'provider', 'provider_name', 'status', 'status_display',
             'amount', 'platform_fee', 'has_deliverable', 'deliverable_filename',
             'deliverable_size', 'revision_count', 'last_revision_reason',
-            'max_revision_rounds', 'deadline', 'completed_at', 'created_at', 'updated_at',
+            'max_revision_rounds', 'delivered_at', 'deadline', 'completed_at', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

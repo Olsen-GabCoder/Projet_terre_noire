@@ -261,6 +261,14 @@ class ServiceOrder(models.Model):
     )
     deadline = models.DateTimeField(verbose_name="Date limite")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminée le")
+    delivered_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Livrable envoyé le",
+        help_text="Horodatage du dernier upload de livrable. Sert de base pour l'auto-complétion à 14 jours.",
+    )
+    auto_complete_notified = models.PositiveIntegerField(
+        default=0, verbose_name="Préavis auto-complétion envoyés",
+        help_text="0 = aucun, 1 = J-7 envoyé, 2 = J-1 envoyé.",
+    )
     revision_count = models.PositiveIntegerField(
         default=0, verbose_name="Révisions effectuées",
     )

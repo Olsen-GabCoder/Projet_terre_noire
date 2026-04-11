@@ -299,4 +299,92 @@ def expire_overdue_quotes(self):
                 "expire_overdue_quotes: erreur traitement manuscrit %s.", ms_id
             )
 
+
+@shared_task(bind=True, max_retries=1)
+def auto_complete_reviewed_orders(self):
+    """
+    Auto-complète les commandes de service en REVIEW depuis plus de 14 jours.
+    Envoie des préavis à J-7 et J-1 avant l'auto-complétion.
+
+    Prévu pour Celery Beat une fois par jour à 3h UTC.
+    """
+    from django.utils import timezone
+    from apps.services.models import ServiceOrder
+
+    now = timezone.now()
+    completed_count = 0
+    warned_count = 0
+
+    orders_in_review = (
+        ServiceOrder.objects
+        .filter(status='REVIEW', delivered_at__isnull=False)
+        .select_related('client', 'provider__user', 'request', 'quote')
+    )
+
+    for order in orders_in_review:
+        delta_days = (now - order.delivered_at).days
+
+        # 1. Auto-complétion à 14 jours
+        if delta_days >= 14:
+            try:
+                from apps.services.services import complete_service_order
+                complete_service_order(order)
+                completed_count += 1
+
+                # Notifier client et prestataire
+                try:
+                    send_service_order_status_task.delay(
+                        order.id, recipient_role='client',
+                        message="Cette commande a été automatiquement validée après 14 jours sans action de votre part.",
+                    )
+                    send_service_order_status_task.delay(
+                        order.id, recipient_role='provider',
+                        message="Cette commande a été validée par validation automatique. Votre portefeuille a été crédité.",
+                    )
+                except Exception:
+                    pass
+
+                logger.info(
+                    "auto_complete_reviewed_orders: commande #%s auto-complétée (livrée il y a %s jours).",
+                    order.id, delta_days,
+                )
+            except Exception:
+                logger.exception(
+                    "auto_complete_reviewed_orders: erreur auto-complétion commande #%s.", order.id
+                )
+            continue
+
+        # 2. Préavis J-1 (delta >= 13 jours)
+        if delta_days >= 13 and order.auto_complete_notified < 2:
+            try:
+                from apps.core.email import send_auto_complete_warning
+                send_auto_complete_warning(order, days_remaining=1)
+                order.auto_complete_notified = 2
+                order.save(update_fields=['auto_complete_notified'])
+                warned_count += 1
+            except Exception:
+                logger.exception(
+                    "auto_complete_reviewed_orders: erreur préavis J-1 commande #%s.", order.id
+                )
+            continue
+
+        # 3. Préavis J-7 (delta >= 7 jours)
+        if delta_days >= 7 and order.auto_complete_notified < 1:
+            try:
+                from apps.core.email import send_auto_complete_warning
+                send_auto_complete_warning(order, days_remaining=7)
+                order.auto_complete_notified = 1
+                order.save(update_fields=['auto_complete_notified'])
+                warned_count += 1
+            except Exception:
+                logger.exception(
+                    "auto_complete_reviewed_orders: erreur préavis J-7 commande #%s.", order.id
+                )
+
+    logger.info(
+        "auto_complete_reviewed_orders: %d complétée(s), %d préavis envoyé(s).",
+        completed_count, warned_count,
+    )
+    return {'completed': completed_count, 'warned': warned_count}
+
     return expired_count

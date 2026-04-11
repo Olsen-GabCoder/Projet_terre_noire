@@ -23,4 +23,8 @@ app.conf.beat_schedule = {
         'task': 'apps.core.tasks.expire_overdue_quotes',
         'schedule': crontab(hour=2, minute=0),  # Tous les jours à 2h UTC
     },
+    'auto-complete-reviewed-orders': {
+        'task': 'apps.core.tasks.auto_complete_reviewed_orders',
+        'schedule': crontab(hour=3, minute=0),  # Tous les jours à 3h UTC
+    },
 }

@@ -1,0 +1,46 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ client_name }}</strong>,</p>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Le prestataire <strong>{{ provider_name }}</strong> a livré le travail pour votre commande
+  <strong style="color: #1e3a5f;">&laquo;&nbsp;{{ service_title }}&nbsp;&raquo;</strong>.
+  Ce livrable est en attente de votre validation.
+</p>
+
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #92400e; font-weight: bold; font-size: 14px;">
+    {% if days_remaining == 1 %}
+      ⚠ Votre commande sera automatiquement validée <strong>demain</strong>.
+    {% else %}
+      Votre commande sera automatiquement validée dans <strong>{{ days_remaining }} jours</strong>.
+    {% endif %}
+  </p>
+</div>
+
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Vous pouvez :</p>
+<ul style="margin: 0 0 16px; padding-left: 20px; color: #333333; font-size: 13px; line-height: 1.8;">
+  <li><strong>Télécharger et valider le livrable</strong> si le travail vous convient</li>
+  <li><strong>Demander une révision</strong> si des modifications sont nécessaires</li>
+</ul>
+
+<p style="margin: 0 0 20px; color: #64748b; font-size: 12px; font-style: italic; line-height: 1.6;">
+  Ce mécanisme protège les prestataires contre les commandes qui restent sans réponse indéfiniment.
+  Vous avez le plein contrôle&nbsp;: validez, demandez une révision, ou laissez la commande se valider
+  automatiquement si tout vous convient.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #f59e0b; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/my-service-requests" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Consulter ma commande</a>
+  </td></tr>
+</table>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Référence</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">SVC-{{ order_id|stringformat:"05d" }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Montant</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ amount }} FCFA</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; font-size: 13px;">Date limite</td><td style="padding: 8px 10px; color: #333; font-weight: bold; font-size: 13px;">{{ auto_complete_date }}</td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}
