@@ -44,7 +44,11 @@ const Orders = ({ embedded = false }) => {
       });
       setCurrentPage(page);
     } catch (err) {
-      setError(t('pages.orders.errorLoad', 'Erreur lors du chargement de vos commandes.'));
+      if (err.response?.status === 401) {
+        setError('401');
+      } else {
+        setError(t('pages.orders.errorLoad', 'Erreur lors du chargement de vos commandes.'));
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -130,7 +134,15 @@ const Orders = ({ embedded = false }) => {
         <div className="ord-wrap">
           {error && (
             <div className="ord-error">
-              <i className="fas fa-exclamation-circle" /> {error}
+              <i className="fas fa-exclamation-circle" />{' '}
+              {error === '401' ? (
+                <>
+                  {t('pages.orders.sessionExpired', 'Votre session a expiré, veuillez')}{' '}
+                  <Link to="/login">{t('pages.orders.reconnect', 'vous reconnecter')}</Link>.
+                </>
+              ) : (
+                error
+              )}
             </div>
           )}
 
