@@ -96,7 +96,7 @@ class ManuscriptCreateView(generics.CreateAPIView):
                 {
                     'code': 'AUTHOR_PROFILE_REQUIRED',
                     'detail': 'Vous devez activer le profil Auteur pour soumettre un manuscrit.',
-                    'action_url': '/profile?tab=roles',
+                    'action_url': '/dashboard/settings',
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )

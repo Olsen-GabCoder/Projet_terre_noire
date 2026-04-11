@@ -194,7 +194,7 @@
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
-  max-width: 1000px;
+  min-width: 0;
 }
 
 /* Common components */
@@ -772,19 +772,19 @@
     align-items: center;
     justify-content: center;
     position: fixed;
-    bottom: 1.25rem;
-    left: 1.25rem;
-    z-index: 999;
-    width: 48px;
-    height: 48px;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 9999;
+    width: 52px;
+    height: 52px;
     border: none;
-    border-radius: 14px;
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: #fff;
     font-size: 1.15rem;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.35);
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.4);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
   .dashboard__fab:hover {
@@ -792,11 +792,17 @@
     box-shadow: 0 6px 24px rgba(var(--color-primary-rgb), 0.45);
   }
 
-  .dashboard--sidebar-open .dashboard__fab {
+  .dashboard--sidebar-open .dashboard__fab,
+  .dashboard__fab--hidden {
     display: none;
   }
 
-  .dashboard__main { padding: 1rem; }
+  .dashboard--sidebar-open {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  .dashboard__main { padding: 0.75rem; }
   .my-orgs__form-grid { grid-template-columns: 1fr; }
   .my-invitations__card .dashboard-card__body { flex-direction: column; align-items: flex-start; }
   .my-profiles__grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }

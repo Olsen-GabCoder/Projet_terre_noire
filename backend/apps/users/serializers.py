@@ -226,6 +226,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     full_address = serializers.CharField(read_only=True)
     has_complete_profile = serializers.BooleanField(read_only=True)
+    has_password = serializers.SerializerMethodField()
     is_platform_admin = serializers.BooleanField(read_only=True)
     profile_image = serializers.SerializerMethodField()
     profiles = UserProfileSerializer(source='active_profiles', many=True, read_only=True)
@@ -249,6 +250,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'full_address',
             'has_complete_profile',
             'is_platform_admin',
+            'has_password',
             'receive_newsletter',
             'date_joined',
             'last_login',
@@ -275,6 +277,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.profile_image.url)
             return obj.profile_image.url
         return None
+
+    def get_has_password(self, obj):
+        return obj.has_usable_password()
 
     def get_organization_memberships(self, obj):
         memberships = obj.organization_memberships.filter(is_active=True).select_related('organization')
@@ -407,7 +412,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 class DeleteAccountSerializer(serializers.Serializer):
     """Validation pour la suppression de compte self-service."""
-    password = serializers.CharField(required=True, write_only=True)
+    password = serializers.CharField(required=False, write_only=True, allow_blank=True, default='')
     confirmation = serializers.CharField(required=True, write_only=True)
 
     def validate_confirmation(self, value):
@@ -417,7 +422,15 @@ class DeleteAccountSerializer(serializers.Serializer):
 
     def validate_password(self, value):
         user = self.context.get('user')
-        if user and not user.check_password(value):
+        if not user:
+            return value
+        # Les utilisateurs OAuth n'ont pas de mot de passe — pas de vérification
+        if not user.has_usable_password():
+            return value
+        # Les utilisateurs classiques doivent fournir leur mot de passe
+        if not value:
+            raise serializers.ValidationError("Veuillez saisir votre mot de passe.")
+        if not user.check_password(value):
             raise serializers.ValidationError("Mot de passe incorrect.")
         return value
 

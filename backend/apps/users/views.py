@@ -725,6 +725,81 @@ class DashboardCountsView(APIView):
         return Response(counts)
 
 
+class PublicPresenceView(APIView):
+    """
+    GET /api/users/me/public-presence/
+    Retourne la liste des facettes publiques de l'utilisateur connecté :
+    pages auteur, profils prestataires, organisations.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        facets = []
+
+        # 1. Author facet
+        try:
+            from apps.books.models import Author
+            author = Author.objects.filter(user=user).first()
+            if author:
+                books_count = author.books.filter(available=True).count()
+                if books_count > 0:
+                    facets.append({
+                        'type': 'author',
+                        'url': f'/authors/{author.id}',
+                        'books_count': books_count,
+                    })
+        except Exception:
+            pass
+
+        # 2. Professional facets (CORRECTEUR, ILLUSTRATEUR, TRADUCTEUR)
+        pro_profiles = UserProfile.objects.filter(
+            user=user,
+            profile_type__in=['CORRECTEUR', 'ILLUSTRATEUR', 'TRADUCTEUR'],
+            is_active=True,
+        ).exclude(slug='')
+        for profile in pro_profiles:
+            facets.append({
+                'type': 'professional',
+                'profile_type': profile.profile_type,
+                'url': f'/professionals/{profile.slug}',
+                'is_verified': profile.is_verified,
+            })
+
+        # 3. Organization facets
+        try:
+            from apps.organizations.models import Organization, OrganizationMembership
+            from django.db.models import Q
+
+            org_ids_seen = set()
+
+            # Organizations owned by user
+            for org in Organization.objects.filter(owner=user, is_active=True):
+                org_ids_seen.add(org.id)
+                facets.append({
+                    'type': 'organization',
+                    'name': org.name,
+                    'url': f'/organizations/{org.slug}',
+                    'role': 'PROPRIETAIRE',
+                })
+
+            # Organizations where user is active member (not already owner)
+            memberships = OrganizationMembership.objects.filter(
+                user=user, is_active=True, organization__is_active=True,
+            ).select_related('organization').exclude(organization__id__in=org_ids_seen)
+            for m in memberships:
+                facets.append({
+                    'type': 'organization',
+                    'name': m.organization.name,
+                    'url': f'/organizations/{m.organization.slug}',
+                    'role': m.role,
+                })
+        except Exception:
+            pass
+
+        return Response({'facets': facets})
+
+
 class DeleteAccountView(APIView):
     """
     Suppression de compte self-service (RGPD).
@@ -791,8 +866,8 @@ class DeleteAccountView(APIView):
             blockers.append(f"Vous avez un solde de {pw.balance} FCFA dans votre portefeuille prestataire. Effectuez un retrait.")
 
         from apps.marketplace.models import VendorWallet, DeliveryWallet
-        for vw in VendorWallet.objects.filter(organization__owner=user, balance__gt=0):
-            blockers.append(f"L'organisation « {vw.organization.name} » a un solde de {vw.balance} FCFA.")
+        for vw in VendorWallet.objects.filter(vendor__owner=user, balance__gt=0):
+            blockers.append(f"L'organisation « {vw.vendor.name} » a un solde de {vw.balance} FCFA.")
 
         for dw in DeliveryWallet.objects.filter(agent__user=user, balance__gt=0):
             blockers.append(f"Vous avez un solde de {dw.balance} FCFA dans votre portefeuille livreur. Effectuez un retrait.")

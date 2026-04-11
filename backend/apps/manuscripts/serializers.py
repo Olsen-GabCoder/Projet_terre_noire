@@ -182,6 +182,7 @@ class ManuscriptListSerializer(serializers.ModelSerializer):
     genre_display = serializers.CharField(source='get_genre_display', read_only=True)
     language_display = serializers.CharField(source='get_language_display', read_only=True)
     target_organization_name = serializers.SerializerMethodField()
+    has_file = serializers.SerializerMethodField()
 
     class Meta:
         model = Manuscript
@@ -205,6 +206,7 @@ class ManuscriptListSerializer(serializers.ModelSerializer):
             'reviewed_at',
             'rejection_reason',
             'submitted_at',
+            'has_file',
         ]
         read_only_fields = fields
 
@@ -212,6 +214,9 @@ class ManuscriptListSerializer(serializers.ModelSerializer):
         if obj.target_organization:
             return obj.target_organization.name
         return None
+
+    def get_has_file(self, obj):
+        return bool(obj.file)
 
 
 class ManuscriptStatusSerializer(serializers.Serializer):

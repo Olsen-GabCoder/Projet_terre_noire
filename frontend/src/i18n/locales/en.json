@@ -1673,6 +1673,101 @@
       "pageOf": "Page {{current}} of {{total}}",
       "allRightsReserved": "All rights reserved — personal use only"
     },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage your account, profile and preferences.",
+      "nav": {
+        "profile": "My profile",
+        "roles": "My roles",
+        "appearance": "Appearance",
+        "notifications": "Notifications",
+        "security": "Security",
+        "privacy": "Privacy"
+      },
+      "profile": {
+        "title": "My profile",
+        "subtitle": "Your personal information and contact details.",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "username": "Username",
+        "email": "Email address",
+        "emailHint": "Your email address cannot be changed.",
+        "phone": "Phone",
+        "address": "Address",
+        "city": "City",
+        "country": "Country",
+        "photo": "Profile photo",
+        "changePhoto": "Change photo",
+        "photoHint": "JPG, PNG or WebP. Max 2 MB.",
+        "photoSaved": "Photo updated.",
+        "imageTooLarge": "Image too large (max 2 MB).",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "saved": "Profile updated.",
+        "error": "An error occurred while saving.",
+        "publicPages": {
+          "title": "My public pages on Frollot",
+          "subtitle": "Here's where you appear publicly on the platform.",
+          "empty": "You don't have any public pages on Frollot yet. Activate a professional role or publish a book to appear in the directory.",
+          "author": "Author page",
+          "proofreader": "Proofreader profile",
+          "illustrator": "Illustrator profile",
+          "translator": "Translator profile",
+          "booksCount": "{{count}} book(s) published",
+          "verified": "Verified",
+          "view": "View",
+          "copyLink": "Copy link",
+          "linkCopied": "Link copied!",
+          "owner": "Owner",
+          "admin": "Administrator",
+          "editor": "Editor",
+          "commercial": "Commercial",
+          "member": "Member"
+        }
+      },
+      "roles": {
+        "title": "Activity roles",
+        "subtitle": "Enable or disable your roles on the platform."
+      },
+      "appearance": {
+        "title": "Appearance",
+        "subtitle": "Customize how the app looks.",
+        "language": "Interface language",
+        "languageHint": "The interface will be translated to the selected language.",
+        "french": "Français",
+        "english": "English"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Manage your notification preferences.",
+        "newsletter": "Newsletter",
+        "newsletterDesc": "Receive our latest news and updates by email.",
+        "enabled": "Newsletter enabled.",
+        "disabled": "Newsletter disabled.",
+        "error": "An error occurred while saving."
+      },
+      "security": {
+        "title": "Security",
+        "subtitle": "Protect your account with two-factor authentication.",
+        "twoFactor": "Two-factor authentication",
+        "twoFactorEnabled": "Enabled",
+        "twoFactorDisabled": "Disabled",
+        "activeSessions": "Active sessions",
+        "sessionCount": "{{count}} active session(s)",
+        "lastLogin": "Last login",
+        "manage": "Manage account security",
+        "loading": "Loading..."
+      },
+      "privacy": {
+        "title": "Privacy & data",
+        "subtitle": "Managing your personal data.",
+        "description": "Frollot respects your privacy and complies with applicable data protection regulations. You can review our privacy policy to learn more about how we collect and use your data.",
+        "policyLink": "View our privacy policy",
+        "deleteAccount": "Delete my account",
+        "deleteAccountDesc": "This action is irreversible. All your personal data will be anonymized."
+      }
+    },
     "notFound": {
       "title": "Page not found",
       "description": "The page you are looking for does not exist or has been moved.",

@@ -54,7 +54,7 @@ const Delivery = () => {
           <div className="card card--md">
             <span className="card__tag">{t('pages.delivery.tagTracking')}</span>
             <h2>{t('pages.delivery.trackingTitle')}</h2>
-            <p>{t('pages.delivery.trackingp1')} <Link to="/profile">{t('pages.delivery.clientArea')}</Link>.</p>
+            <p>{t('pages.delivery.trackingp1')} <Link to="/dashboard">{t('pages.delivery.clientArea')}</Link>.</p>
             <p>{t('pages.delivery.trackingp2')}</p>
           </div>
 

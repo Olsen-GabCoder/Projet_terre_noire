@@ -12,7 +12,6 @@ const ROUTE_LABEL_KEYS = {
   '/checkout': 'breadcrumbs.checkout',
   '/order-success': 'breadcrumbs.orderSuccess',
   '/orders': 'breadcrumbs.orders',
-  '/profile': 'breadcrumbs.profile',
   '/settings': 'breadcrumbs.settings',
   '/submit-manuscript': 'breadcrumbs.submitManuscript',
   '/login': 'breadcrumbs.login',

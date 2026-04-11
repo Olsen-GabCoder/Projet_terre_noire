@@ -24,6 +24,7 @@ const MyManuscripts = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [lockModal, setLockModal] = useState(null); // 'lock' | 'unlock' | null
   const [lockLoading, setLockLoading] = useState(false);
+  const [downloading, setDownloading] = useState(null);
 
   const fetchList = useCallback(() => {
     manuscriptService.getMyManuscripts()
@@ -123,6 +124,7 @@ const MyManuscripts = () => {
                   <th>Destination</th>
                   <th>Statut</th>
                   <th>Date</th>
+                  <th style={{ width: 40 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -156,12 +158,30 @@ const MyManuscripts = () => {
                           </span>
                         </td>
                         <td className="text-muted">{formatDate(ms.submitted_at)}</td>
+                        <td>
+                          {ms.has_file !== false && (
+                            <button
+                              title="Télécharger le manuscrit"
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '0.9rem', padding: '0.25rem 0.5rem', borderRadius: 4, transition: 'background 0.15s' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDownloading(ms.id);
+                                manuscriptService.downloadManuscript(ms.id, ms.title)
+                                  .catch(() => toast.error('Erreur lors du téléchargement.'))
+                                  .finally(() => setDownloading(null));
+                              }}
+                              disabled={downloading === ms.id}
+                            >
+                              {downloading === ms.id ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-download" />}
+                            </button>
+                          )}
+                        </td>
                       </tr>
 
                       {/* Panneau de détail pour marché ouvert */}
                       {isExpanded && ms.is_open_market && (
                         <tr key={`detail-${ms.id}`}>
-                          <td colSpan={6} style={{ padding: 0, background: 'var(--color-bg-section-alt)' }}>
+                          <td colSpan={7} style={{ padding: 0, background: 'var(--color-bg-section-alt)' }}>
                             {detailLoading ? (
                               <div style={{ padding: '1.5rem', textAlign: 'center' }}><i className="fas fa-spinner fa-spin" /> Chargement...</div>
                             ) : detail ? (

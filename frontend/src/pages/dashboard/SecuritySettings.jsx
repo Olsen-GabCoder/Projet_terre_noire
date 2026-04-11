@@ -4,6 +4,7 @@ import api, { authAPI, handleApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import '../../styles/Profile.css';
 
 const SecuritySettings = () => {
   const { refreshUser, logout } = useAuth();
@@ -21,6 +22,8 @@ const SecuritySettings = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteBlockers, setDeleteBlockers] = useState(null);
+  const [hasPassword, setHasPassword] = useState(true);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   const [setupMode, setSetupMode] = useState(false);
   const [setupData, setSetupData] = useState(null);
@@ -48,6 +51,7 @@ const SecuritySettings = () => {
         setLoginHistory(Array.isArray(historyRes.data) ? historyRes.data : []);
         const user = authRes.data?.user || authRes.data;
         setTotpEnabled(user?.totp_enabled || false);
+        setHasPassword(user?.has_password !== false);
         if (user?.totp_enabled) {
           const codesRes = await api.get('/users/totp/backup-codes/');
           setBackupCodesCount(codesRes.data.remaining_codes || 0);
@@ -210,47 +214,24 @@ const SecuritySettings = () => {
         <div className="sec-card__body sec-card__body--flush">
           {loginHistory.length === 0 ? (
             <div className="sec-empty"><i className="fas fa-history" /> {t('pages.profile.security.noRecentActivity')}</div>
-          ) : (() => {
-            // Grouper par jour, limiter à 7 jours
-            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-            const recent = loginHistory.filter(e => new Date(e.created_at).getTime() > sevenDaysAgo);
-            const grouped = {};
-            recent.forEach(entry => {
-              const day = new Date(entry.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-              if (!grouped[day]) grouped[day] = [];
-              grouped[day].push(entry);
-            });
-            const days = Object.entries(grouped);
-
-            if (days.length === 0) return <div className="sec-empty"><i className="fas fa-check-circle" /> {t('pages.profile.security.noActivityLast7Days')}</div>;
-
-            return days.map(([day, entries]) => (
-              <div key={day}>
-                <div className="sec-history-day">{day}</div>
-                {entries.slice(0, 5).map(entry => {
-                  const st = STATUS_LABELS[entry.status] || { label: entry.status, cls: '' };
-                  return (
-                    <div key={entry.id} className="sec-history-row">
-                      <div className={`sec-history-dot ${entry.status === 'SUCCESS' ? 'sec-history-dot--ok' : 'sec-history-dot--fail'}`} />
-                      <div className="sec-history-info">
-                        <div className="sec-history-top">
-                          <span className={`sec-badge sec-badge--sm ${st.cls}`}>{st.label}</span>
-                          <span className="sec-history-device">{entry.device_info || t('pages.profile.security.unknownDevice')}</span>
-                        </div>
-                        <span className="sec-history-meta">
-                          {new Date(entry.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} — IP {entry.ip_address}
-                          {entry.failure_reason && <> — <em>{entry.failure_reason.replace('_', ' ').toLowerCase()}</em></>}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {entries.length > 5 && (
-                  <div className="sec-history-more">{t('pages.profile.security.moreAttempts', { count: entries.length - 5 })}</div>
-                )}
+          ) : loginHistory.slice(0, 5).map(entry => {
+            const st = STATUS_LABELS[entry.status] || { label: entry.status, cls: '' };
+            return (
+              <div key={entry.id} className="sec-history-row">
+                <div className={`sec-history-dot ${entry.status === 'SUCCESS' ? 'sec-history-dot--ok' : 'sec-history-dot--fail'}`} />
+                <div className="sec-history-info">
+                  <div className="sec-history-top">
+                    <span className={`sec-badge sec-badge--sm ${st.cls}`}>{st.label}</span>
+                    <span className="sec-history-device">{entry.device_info || t('pages.profile.security.unknownDevice')}</span>
+                  </div>
+                  <span className="sec-history-meta">
+                    {new Date(entry.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} {new Date(entry.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} — IP {entry.ip_address}
+                    {entry.failure_reason && <> — <em>{entry.failure_reason.replace('_', ' ').toLowerCase()}</em></>}
+                  </span>
+                </div>
               </div>
-            ));
-          })()}
+            );
+          })}
         </div>
       </div>
       {/* ══ Zone de danger ══ */}
@@ -262,7 +243,7 @@ const SecuritySettings = () => {
         </p>
         <button
           className="sec-btn sec-btn--danger"
-          onClick={() => { setDeleteModal(true); setDeleteBlockers(null); setDeletePassword(''); setDeleteConfirmation(''); }}
+          onClick={() => { setDeleteModal(true); setDeleteBlockers(null); setDeletePassword(''); setDeleteConfirmation(''); setShowDeletePassword(false); }}
         >
           <i className="fas fa-trash-alt" /> Supprimer mon compte
         </button>
@@ -271,35 +252,45 @@ const SecuritySettings = () => {
       {/* ══ Modal de suppression ══ */}
       {deleteModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: 'var(--color-bg-card)', borderRadius: 16, padding: '2rem', maxWidth: 480, width: '90%', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
-            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+          <div style={{ background: 'var(--color-bg-card)', borderRadius: 16, padding: '2rem', maxWidth: 500, width: '92%', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: '#fef2f2', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
                 <i className="fas fa-exclamation-triangle" style={{ fontSize: '1.5rem', color: '#ef4444' }} />
               </div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Supprimer mon compte</h3>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-text-heading)' }}>
+                {deleteBlockers ? 'Suppression impossible pour le moment' : 'Supprimer mon compte'}
+              </h3>
             </div>
 
-            <p style={{ color: 'var(--color-text-muted-ui)', fontSize: '0.85rem', lineHeight: 1.7, marginBottom: '0.75rem' }}>
-              Cette action est <strong style={{ color: '#ef4444' }}>irréversible</strong>. Votre compte sera définitivement
-              désactivé et vos données personnelles effacées. Vos avis et publications seront anonymisés.
-            </p>
-
-            {deleteBlockers && (
-              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1rem' }}>
-                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', fontWeight: 700, color: '#92400e' }}>
-                  <i className="fas fa-lock" /> Opérations en cours
-                </p>
-                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.8rem', color: '#92400e', lineHeight: 1.6 }}>
-                  {deleteBlockers.map((b, i) => <li key={i}>{b}</li>)}
-                </ul>
-              </div>
-            )}
-
-            {!deleteBlockers && (
+            {deleteBlockers ? (
               <>
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem', color: 'var(--color-text-heading)' }}>
-                    Saisissez le mot <strong style={{ color: '#ef4444' }}>SUPPRIMER</strong> pour confirmer
+                <p style={{ fontSize: '0.88rem', color: 'var(--color-text-muted-ui)', lineHeight: 1.7, marginBottom: '1rem' }}>
+                  Votre compte ne peut pas être supprimé tant que les points suivants ne sont pas résolus. Veuillez
+                  les traiter un par un, puis réessayez.
+                </p>
+                <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: '#92400e', lineHeight: 1.8 }}>
+                    {deleteBlockers.map((b, i) => <li key={i}>{b}</li>)}
+                  </ul>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button className="sec-btn sec-btn--primary" onClick={() => setDeleteModal(false)} style={{ padding: '0.6rem 2rem' }}>
+                    <i className="fas fa-arrow-left" /> Compris, fermer
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.88rem', color: 'var(--color-text-muted-ui)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
+                  Cette action est <strong style={{ color: '#ef4444' }}>irréversible</strong>. Votre compte sera définitivement
+                  désactivé, vos données personnelles effacées et vos contenus publics anonymisés.
+                </p>
+
+                {/* Étape 1 : Confirmation textuelle */}
+                <div style={{ background: 'var(--color-bg-page)', border: '1px solid var(--color-border-card)', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                    <i className="fas fa-keyboard" style={{ color: '#ef4444' }} />
+                    Saisissez le mot <strong style={{ color: '#ef4444', margin: '0 0.25rem' }}>SUPPRIMER</strong> pour confirmer
                   </label>
                   <input
                     type="text"
@@ -307,55 +298,69 @@ const SecuritySettings = () => {
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
                     placeholder="SUPPRIMER"
                     className="sec-input"
-                    style={{ width: '100%', borderColor: deleteConfirmation === 'SUPPRIMER' ? '#10b981' : undefined }}
+                    style={{ width: '100%', fontSize: '1rem', padding: '0.65rem 0.85rem', borderColor: deleteConfirmation === 'SUPPRIMER' ? '#10b981' : undefined }}
                     autoComplete="off"
                   />
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem', color: 'var(--color-text-heading)' }}>
-                    Votre mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    placeholder="Mot de passe"
-                    className="sec-input"
-                    style={{ width: '100%' }}
-                    autoComplete="current-password"
-                  />
+
+                {/* Étape 2 : Mot de passe (uniquement pour les comptes classiques) */}
+                {hasPassword && (
+                  <div style={{ background: 'var(--color-bg-page)', border: '1px solid var(--color-border-card)', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                      <i className="fas fa-lock" style={{ color: '#ef4444' }} />
+                      Confirmez votre mot de passe
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showDeletePassword ? 'text' : 'password'}
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        placeholder="Votre mot de passe actuel"
+                        className="sec-input"
+                        style={{ width: '100%', fontSize: '1rem', padding: '0.65rem 2.75rem 0.65rem 0.85rem' }}
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDeletePassword(v => !v)}
+                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.35rem', color: 'var(--color-gray-400)', fontSize: '1rem' }}
+                        tabIndex={-1}
+                        aria-label={showDeletePassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      >
+                        <i className={`fas fa-eye${showDeletePassword ? '-slash' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button className="sec-btn" onClick={() => setDeleteModal(false)}>Annuler</button>
+                  <button
+                    className="sec-btn sec-btn--danger"
+                    disabled={deleteLoading || deleteConfirmation !== 'SUPPRIMER' || (hasPassword && !deletePassword)}
+                    onClick={async () => {
+                      setDeleteLoading(true);
+                      try {
+                        await authAPI.deleteAccount({ password: deletePassword, confirmation: deleteConfirmation });
+                        toast.success('Votre compte a été supprimé.');
+                        setDeleteModal(false);
+                        logout();
+                        navigate('/');
+                      } catch (err) {
+                        const data = err.response?.data;
+                        if (err.response?.status === 409 && data?.blockers) {
+                          setDeleteBlockers(data.blockers);
+                        } else {
+                          toast.error(handleApiError(err));
+                        }
+                      } finally { setDeleteLoading(false); }
+                    }}
+                  >
+                    {deleteLoading ? <><i className="fas fa-spinner fa-spin" /> Suppression...</> : <><i className="fas fa-trash-alt" /> Supprimer définitivement</>}
+                  </button>
                 </div>
               </>
             )}
-
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button className="sec-btn" onClick={() => setDeleteModal(false)}>Annuler</button>
-              {!deleteBlockers && (
-                <button
-                  className="sec-btn sec-btn--danger"
-                  disabled={deleteLoading || deleteConfirmation !== 'SUPPRIMER' || !deletePassword}
-                  onClick={async () => {
-                    setDeleteLoading(true);
-                    try {
-                      await authAPI.deleteAccount({ password: deletePassword, confirmation: deleteConfirmation });
-                      toast.success('Votre compte a été supprimé.');
-                      setDeleteModal(false);
-                      logout();
-                      navigate('/');
-                    } catch (err) {
-                      const data = err.response?.data;
-                      if (err.response?.status === 409 && data?.blockers) {
-                        setDeleteBlockers(data.blockers);
-                      } else {
-                        toast.error(handleApiError(err));
-                      }
-                    } finally { setDeleteLoading(false); }
-                  }}
-                >
-                  {deleteLoading ? <><i className="fas fa-spinner fa-spin" /> Suppression...</> : <><i className="fas fa-trash-alt" /> Supprimer définitivement</>}
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}

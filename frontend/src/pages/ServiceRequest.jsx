@@ -90,7 +90,7 @@ const ServiceRequest = () => {
 
       await servicesService.createRequest(formData);
       toast.success(t('pages.serviceRequest.success'));
-      navigate('/profile?tab=orders');
+      navigate('/dashboard/orders');
     } catch (err) {
       const data = err.response?.data;
       if (data && typeof data === 'object' && !data.detail) {

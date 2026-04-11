@@ -654,14 +654,6 @@ const Header = () => {
 
                       <div className="dropdown-divider"></div>
 
-                      <Link to="/profile" className="dropdown-item dropdown-item--secondary" onClick={closeAllMenus}>
-                        <div className="dropdown-icon"><i className="fas fa-user-circle"></i></div>
-                        <div className="dropdown-content"><span>{t('header.publicProfile', 'Voir mon profil')}</span><small>{t('header.publicProfileSubtitle', 'Page publique')}</small></div>
-                        <i className="fas fa-chevron-right"></i>
-                      </Link>
-
-                      <div className="dropdown-divider"></div>
-
                       <button onClick={handleLogout} className="dropdown-item logout-btn">
                         <div className="dropdown-icon"><i className="fas fa-sign-out-alt"></i></div>
                         <div className="dropdown-content"><span>{t('common.logout')}</span></div>

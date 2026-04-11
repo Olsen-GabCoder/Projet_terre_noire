@@ -143,7 +143,7 @@ const DashboardOverview = () => {
           icon: 'fas fa-user-edit',
           color: '#3b82f6',
           title: t('dashboard.ov.profileAction', 'Complétez votre profil pour une meilleure expérience'),
-          link: '/dashboard/profile',
+          link: '/dashboard/settings',
         });
       }
 
@@ -218,7 +218,7 @@ const DashboardOverview = () => {
     // Always show role activation for users without specialized roles
     if (!isAuthor && !isPublisher && !user?.profile_types?.some(pt => ['CORRECTEUR', 'ILLUSTRATEUR', 'TRADUCTEUR', 'LIVREUR'].includes(pt))) {
       list.push(
-        { icon: 'fas fa-star', label: t('dashboard.ov.activateRoles', 'Devenir auteur, éditeur ou prestataire'), to: '/dashboard/profile', accent: true },
+        { icon: 'fas fa-star', label: t('dashboard.ov.activateRoles', 'Devenir auteur, éditeur ou prestataire'), to: '/dashboard/settings', accent: true },
       );
     }
 

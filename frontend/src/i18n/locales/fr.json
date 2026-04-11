@@ -1653,6 +1653,101 @@
       "pageOf": "Page {{current}} sur {{total}}",
       "allRightsReserved": "Tous droits réservés — usage personnel exclusif"
     },
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Gérez votre compte, votre profil et vos préférences.",
+      "nav": {
+        "profile": "Mon profil",
+        "roles": "Mes rôles",
+        "appearance": "Apparence",
+        "notifications": "Notifications",
+        "security": "Sécurité",
+        "privacy": "Confidentialité"
+      },
+      "profile": {
+        "title": "Mon profil",
+        "subtitle": "Vos informations personnelles et coordonnées.",
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "username": "Nom d'utilisateur",
+        "email": "Adresse email",
+        "emailHint": "L'adresse email ne peut pas être modifiée.",
+        "phone": "Téléphone",
+        "address": "Adresse",
+        "city": "Ville",
+        "country": "Pays",
+        "photo": "Photo de profil",
+        "changePhoto": "Changer la photo",
+        "photoHint": "JPG, PNG ou WebP. Max 2 Mo.",
+        "photoSaved": "Photo mise à jour.",
+        "imageTooLarge": "Image trop volumineuse (max 2 Mo).",
+        "edit": "Modifier",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "saved": "Profil mis à jour.",
+        "error": "Erreur lors de la mise à jour.",
+        "publicPages": {
+          "title": "Mes pages publiques sur Frollot",
+          "subtitle": "Voici où vous apparaissez publiquement sur la plateforme.",
+          "empty": "Vous n'avez pas encore de page publique sur Frollot. Activez un rôle professionnel ou publiez un livre pour apparaître dans l'annuaire.",
+          "author": "Page auteur",
+          "proofreader": "Profil correcteur",
+          "illustrator": "Profil illustrateur",
+          "translator": "Profil traducteur",
+          "booksCount": "{{count}} livre(s) publié(s)",
+          "verified": "Vérifié",
+          "view": "Voir",
+          "copyLink": "Copier le lien",
+          "linkCopied": "Lien copié !",
+          "owner": "Propriétaire",
+          "admin": "Administrateur",
+          "editor": "Éditeur",
+          "commercial": "Commercial",
+          "member": "Membre"
+        }
+      },
+      "roles": {
+        "title": "Mes rôles d'activité",
+        "subtitle": "Activez ou désactivez vos rôles sur la plateforme."
+      },
+      "appearance": {
+        "title": "Apparence",
+        "subtitle": "Personnalisez l'affichage de l'application.",
+        "language": "Langue de l'interface",
+        "languageHint": "L'interface sera traduite dans la langue choisie.",
+        "french": "Français",
+        "english": "English"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Gérez vos préférences de notification.",
+        "newsletter": "Newsletter",
+        "newsletterDesc": "Recevez nos nouveautés et actualités par email.",
+        "enabled": "Newsletter activée.",
+        "disabled": "Newsletter désactivée.",
+        "error": "Erreur lors de la mise à jour."
+      },
+      "security": {
+        "title": "Sécurité",
+        "subtitle": "Protégez votre compte avec l'authentification à deux facteurs.",
+        "twoFactor": "Authentification 2FA",
+        "twoFactorEnabled": "Activée",
+        "twoFactorDisabled": "Désactivée",
+        "activeSessions": "Sessions actives",
+        "sessionCount": "{{count}} session(s) active(s)",
+        "lastLogin": "Dernière connexion",
+        "manage": "Gérer la sécurité de mon compte",
+        "loading": "Chargement..."
+      },
+      "privacy": {
+        "title": "Confidentialité et données",
+        "subtitle": "Gestion de vos données personnelles.",
+        "description": "Frollot respecte votre vie privée et se conforme aux réglementations en vigueur sur la protection des données personnelles. Vous pouvez consulter notre politique de confidentialité pour en savoir plus sur la collecte et l'utilisation de vos données.",
+        "policyLink": "Consulter notre politique de confidentialité",
+        "deleteAccount": "Supprimer mon compte",
+        "deleteAccountDesc": "Cette action est irréversible. Toutes vos données personnelles seront anonymisées."
+      }
+    },
     "notFound": {
       "title": "Page non trouvée",
       "description": "La page que vous recherchez n'existe pas ou a été déplacée.",

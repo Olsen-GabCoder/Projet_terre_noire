@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -94,9 +95,12 @@ const DashboardLayout = () => {
 
   return (
     <div className={`dashboard ${sidebarOpen ? 'dashboard--sidebar-open' : ''}`}>
-      <button className="dashboard__fab" onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
-        <i className="fas fa-bars" />
-      </button>
+      {createPortal(
+        <button className={`dashboard__fab ${sidebarOpen ? 'dashboard__fab--hidden' : ''}`} onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
+          <i className="fas fa-th-large" />
+        </button>,
+        document.body
+      )}
 
       {sidebarOpen && <div className="dashboard__overlay" onClick={() => setSidebarOpen(false)} />}
 
@@ -156,9 +160,6 @@ const DashboardLayout = () => {
 
           {/* Gestion du compte */}
           <div className="dashboard__sub-title">{t('dashboard.account', 'Mon compte')}</div>
-          <NavLink to="/dashboard/profile" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
-            <i className="fas fa-user" /> {t('dashboard.myProfile', 'Mon profil')}
-          </NavLink>
           <NavLink to="/dashboard/security" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
             <i className="fas fa-shield-alt" /> {t('dashboard.security', 'Sécurité')}
           </NavLink>

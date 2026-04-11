@@ -6,6 +6,7 @@ import bookService from '../../services/bookService';
 import authorDashboardService from '../../services/authorDashboardService';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import '../../styles/Profile.css';
 import '../../styles/AuthorSpace.css';
 
 const AuthorProfile = () => {
@@ -70,7 +71,7 @@ const AuthorProfile = () => {
             <div className="as-empty__icon"><i className="fas fa-pen-fancy" /></div>
             <h3>{t('dashboard.authorProfile.notActivated')}</h3>
             <p>{t('dashboard.authorProfile.notActivatedDesc')}</p>
-            <Link to="/profile?tab=roles" className="dashboard-btn dashboard-btn--primary" style={{ marginTop: '1rem' }}>
+            <Link to="/dashboard/settings" className="dashboard-btn dashboard-btn--primary" style={{ marginTop: '1rem' }}>
               <i className="fas fa-id-badge" /> {t('dashboard.authorProfile.myProfiles')}
             </Link>
           </div>
@@ -137,7 +138,7 @@ const AuthorProfile = () => {
               )}
             </div>
             <p style={{ margin: '0.4rem 0 0', fontSize: '0.7rem', color: 'var(--color-text-muted-ui)' }}>
-              {t('dashboard.authorProfile.photoNote')} <Link to="/profile" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>{t('dashboard.authorProfile.yourAccount')}</Link>.
+              {t('dashboard.authorProfile.photoNote')} <Link to="/dashboard/settings" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>{t('dashboard.authorProfile.yourAccount')}</Link>.
             </p>
           </div>
         </div>

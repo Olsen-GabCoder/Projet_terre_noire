@@ -21,6 +21,21 @@ const manuscriptService = {
   // Verrouillage marché ouvert (auteur)
   lockMarket: (id) => api.post(`/manuscripts/mine/${id}/lock-market/`),
   unlockMarket: (id) => api.post(`/manuscripts/mine/${id}/unlock-market/`),
+
+  // Téléchargement du fichier manuscrit par l'auteur
+  downloadManuscript: async (id, title) => {
+    const response = await api.get(`/manuscripts/${id}/download/`, { responseType: 'blob' });
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeName = (title || `manuscrit-${id}`).replace(/[^a-zA-Z0-9À-ÿ _-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60);
+    link.download = `${safeName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export default manuscriptService;

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -59,7 +59,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const Profile = lazy(() => import('./pages/Profile'));
+// Profile.jsx supprimé (phase 2 refonte) — redirect via ProfileRedirect
 const Authors = lazy(() => import('./pages/Authors'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -71,7 +71,7 @@ const Support = lazy(() => import('./pages/Support'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Cookies = lazy(() => import('./pages/Cookies'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const Settings = lazy(() => import('./pages/Settings'));
+const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage'));
 const AuthorDetail = lazy(() => import('./pages/AuthorDetail'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Orders = lazy(() => import('./pages/Orders'));
@@ -99,7 +99,6 @@ const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings'));
 const OrgPrintRequests = lazy(() => import('./pages/dashboard/OrgPrintRequests'));
 
 // Pages dashboard — Mon compte
-const DashboardProfile = lazy(() => import('./pages/dashboard/DashboardProfile'));
 const SecuritySettings = lazy(() => import('./pages/dashboard/SecuritySettings'));
 const MyInvitations = lazy(() => import('./pages/dashboard/MyInvitations'));
 
@@ -169,6 +168,22 @@ const BookClubDetail = lazy(() => import('./pages/BookClubDetail'));
 
 import './App.css';
 
+// Redirect smart pour les anciennes URL /profile?tab=X
+const ProfileRedirect = () => {
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get('tab');
+  const MAP = {
+    overview: '/dashboard',
+    info: '/dashboard/settings',
+    orders: '/dashboard/orders',
+    roles: '/dashboard/settings',
+    organizations: '/dashboard',
+    invitations: '/dashboard/invitations',
+    security: '/dashboard/security',
+  };
+  return <Navigate to={MAP[tab] || '/dashboard/settings'} replace />;
+};
+
 // ── Routeur de sidebar contextuelle ──
 function SidebarRouter({ pathname }) {
   const p = pathname;
@@ -186,7 +201,7 @@ function SidebarRouter({ pathname }) {
   if (p === '/authors' || p.startsWith('/authors/')) return <AuthorsSidebar />;
 
   // Utilisateur
-  if (['/profile', '/orders', '/wishlist', '/settings', '/submit-manuscript'].includes(p)) return <UserSidebar pathname={p} />;
+  if (['/orders', '/wishlist', '/submit-manuscript'].includes(p)) return <UserSidebar pathname={p} />;
 
   // Frollot Connect
   if (p.startsWith('/organizations') || p.startsWith('/professionals') || p.startsWith('/services') || p.startsWith('/inquiries')) return <ConnectSidebar pathname={p} />;
@@ -243,7 +258,7 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
   const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/vendor');
-  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/');
+  const isFullWidthPage = ['/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
   const isClubChatPage = location.pathname.match(/^\/clubs\/[^/]+$/) && !location.pathname.endsWith('/create');
   const FOOTER_PAGES = ['/'];
@@ -290,7 +305,7 @@ function AppContent() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile" element={<ProfileRedirect />} />
                 <Route path="/orders" element={<Orders />} />
 
                 {/* Frollot Connect — Annuaire & Vitrines */}
@@ -334,9 +349,9 @@ function AppContent() {
                   <Route path="my-loans" element={<MyLoans />} />
                   <Route path="lists" element={<ReadingLists />} />
                   <Route path="clubs" element={<BookClubs />} />
-                  <Route path="profile" element={<DashboardProfile />} />
+                  <Route path="profile" element={<Navigate to="/dashboard/settings" replace />} />
                   <Route path="security" element={<SecuritySettings />} />
-                  <Route path="settings" element={<Settings embedded />} />
+                  <Route path="settings" element={<SettingsPage />} />
                   <Route path="invitations" element={<MyInvitations />} />
                   <Route path="projects" element={<EditorialProjects />} />
                   <Route path="projects/:id" element={<EditorialProjectDetail />} />
@@ -397,7 +412,7 @@ function AppContent() {
                 {/* Routes informatives */}
                 <Route path="/authors" element={<Authors />} />
                 <Route path="/authors/:id" element={<AuthorDetail />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/delivery" element={<Delivery />} />

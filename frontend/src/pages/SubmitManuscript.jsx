@@ -554,7 +554,7 @@ const SubmitManuscript = () => {
           <p className="ms-author-gate__desc">
             {t('pages.submitManuscript.authorGateDesc', 'En activant le profil Auteur, vous pourrez soumettre vos manuscrits aux maisons d\'édition partenaires, recevoir des devis éditoriaux, gérer vos publications et créer votre page auteur publique sur Frollot.')}
           </p>
-          <Link to="/profile?tab=roles" className="ms-author-gate__btn">
+          <Link to="/dashboard/settings" className="ms-author-gate__btn">
             <i className="fas fa-user-plus" /> {t('pages.submitManuscript.activateAuthor', 'Activer mon profil Auteur')}
           </Link>
         </div>
@@ -694,7 +694,7 @@ const SubmitManuscript = () => {
                     <input type="text" id="author_name" name="author_name" value={formData.author_name} readOnly className="form-input" required />
                     <span className="input-group__lock" aria-hidden><i className="fas fa-lock" /></span>
                   </div>
-                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/profile">Mon profil</Link>.</div>
+                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/settings">Paramètres</Link>.</div>
                 </div>
 
                 <div className="form-group">
@@ -713,7 +713,7 @@ const SubmitManuscript = () => {
                     <input type="email" id="email" name="email" value={formData.email} readOnly className="form-input" required />
                     <span className="input-group__lock" aria-hidden><i className="fas fa-lock" /></span>
                   </div>
-                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/profile">Mon profil</Link>.</div>
+                  <div className="field-hint">Information de votre compte. Pour la modifier, rendez-vous dans <Link to="/dashboard/settings">Paramètres</Link>.</div>
                 </div>
 
                 <div className="form-group">
