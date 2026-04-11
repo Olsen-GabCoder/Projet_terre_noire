@@ -685,6 +685,7 @@ class Quote(models.Model):
         ('ACCEPTED', 'Accepté'),
         ('REJECTED', 'Refusé'),
         ('REVISION_REQUESTED', 'Révision demandée'),
+        ('SUPERSEDED', 'Remplacé par une révision'),
         ('EXPIRED', 'Expiré'),
         ('CANCELLED', 'Annulé'),
     ]

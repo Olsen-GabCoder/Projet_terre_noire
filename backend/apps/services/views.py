@@ -1033,7 +1033,7 @@ class QuoteDetailView(generics.RetrieveAPIView):
         return Quote.objects.filter(
             models.Q(created_by=user) | models.Q(client=user) |
             models.Q(provider_organization_id__in=org_ids)
-        ).prefetch_related('lots__items').select_related(
+        ).prefetch_related('lots__items', 'revisions').select_related(
             'provider_organization', 'client', 'template'
         ).distinct()
 
@@ -1138,6 +1138,16 @@ class QuoteSendView(APIView):
                 quote.manuscript.transition_status('QUOTE_SENT', request.user)
             except ValidationError:
                 pass  # Le manuscrit est peut-être déjà en QUOTE_SENT (autre devis)
+
+        # Si le devis est une révision, passer le devis parent en SUPERSEDED
+        if quote.parent_quote_id:
+            try:
+                parent = Quote.objects.filter(pk=quote.parent_quote_id, status='REVISION_REQUESTED').first()
+                if parent:
+                    parent.status = 'SUPERSEDED'
+                    parent.save(update_fields=['status'])
+            except Exception:
+                pass  # Ne pas bloquer l'envoi sur une erreur de transition parent
 
         # Envoyer email avec PDF en pièce jointe (asynchrone)
         if quote.manuscript:

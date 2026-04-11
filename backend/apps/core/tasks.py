@@ -132,7 +132,7 @@ def send_editorial_quote_task(self, quote_id):
         from apps.services.models import Quote
         from apps.core.email import send_editorial_quote
         quote = Quote.objects.select_related(
-            'provider_organization', 'client', 'manuscript',
+            'provider_organization', 'client', 'manuscript', 'parent_quote',
         ).get(pk=quote_id)
         send_editorial_quote(quote)
     except Exception as exc:

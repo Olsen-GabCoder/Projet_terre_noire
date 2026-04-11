@@ -546,13 +546,17 @@ class QuoteDetailSerializer(serializers.ModelSerializer):
     client_display = serializers.SerializerMethodField()
     template_name = serializers.CharField(source='template.name', default=None)
     publishing_model_display = serializers.CharField(source='get_publishing_model_display', default='', read_only=True)
+    replaced_by = serializers.SerializerMethodField()
+
     class Meta:
         model = Quote
         fields = [
             'id', 'reference', 'title', 'status',
             'template', 'template_name',
             'publishing_model', 'publishing_model_display',
-            'royalty_terms', 'print_run', 'retail_price', 'parent_quote',
+            'royalty_terms', 'print_run', 'retail_price',
+            'author_must_purchase', 'author_purchase_quantity',
+            'parent_quote', 'replaced_by',
             'provider_organization', 'provider_organization_name',
             'provider_profile', 'created_by',
             'client', 'client_display', 'client_name', 'client_email',
@@ -565,10 +569,17 @@ class QuoteDetailSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'sent_at', 'accepted_at',
             'rejected_at', 'rejection_reason',
         ]
+
     def get_client_display(self, obj):
         if obj.client:
             return obj.client.get_full_name() or obj.client.username
         return obj.client_name or obj.client_email or '—'
+
+    def get_replaced_by(self, obj):
+        revision = obj.revisions.order_by('-created_at').first()
+        if revision:
+            return {'id': revision.id, 'reference': revision.reference}
+        return None
 
 class QuoteCreateSerializer(serializers.Serializer):
     """Serializer pour créer un devis complet (quote + lots + items) en une seule requête."""

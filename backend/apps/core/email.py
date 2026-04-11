@@ -315,6 +315,11 @@ def send_editorial_quote(quote):
     ms_title = ms.title if ms else quote.title
     ms_reference = f"MS-{ms.id:05d}" if ms else '—'
 
+    is_revision = bool(quote.parent_quote_id)
+    parent_quote_reference = None
+    if is_revision and quote.parent_quote:
+        parent_quote_reference = quote.parent_quote.reference
+
     context = {
         'author_name': author_name,
         'org_name': quote.provider_organization.name if quote.provider_organization else '—',
@@ -328,6 +333,8 @@ def send_editorial_quote(quote):
         'validity_days': quote.validity_days,
         'valid_until': quote.valid_until.strftime('%d/%m/%Y') if quote.valid_until else '—',
         'royalty_summary': royalty_summary,
+        'is_revision': is_revision,
+        'parent_quote_reference': parent_quote_reference,
         'frontend_url': settings.FRONTEND_URL,
     }
 
@@ -375,6 +382,7 @@ def send_quote_response_notification(quote, action, reason=''):
         'author_name': author_name or 'Auteur',
         'manuscript_title': ms_title,
         'quote_reference': quote.reference,
+        'quote_id': quote.id,
         'publishing_model_display': model_display,
         'total_ttc': f"{float(quote.total_ttc):,.0f}".replace(',', ' ') if quote.total_ttc else '—',
         'frontend_url': settings.FRONTEND_URL,

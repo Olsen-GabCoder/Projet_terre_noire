@@ -1,11 +1,24 @@
 {% extends "emails/base.html" %}
 {% block content %}
+{% if is_revision %}
+<div style="background: #f0fdf4; border-left: 4px solid #059669; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #065f46; font-weight: bold; font-size: 14px;">
+    Version révisée{% if parent_quote_reference %} — en réponse à votre demande sur le devis {{ parent_quote_reference }}{% endif %}
+  </p>
+</div>
+{% endif %}
 <p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ author_name }}</strong>,</p>
 
 <p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  {% if is_revision %}
+  La maison d'edition <strong>{{ org_name }}</strong> vous propose une <strong style="color: #059669;">version révisée</strong>
+  de son devis pour votre manuscrit <strong>&laquo; {{ manuscript_title }} &raquo;</strong>
+  (ref. {{ manuscript_reference }}).
+  {% else %}
   La maison d'edition <strong>{{ org_name }}</strong> vous adresse un devis
   pour votre manuscrit <strong>&laquo; {{ manuscript_title }} &raquo;</strong>
   (ref. {{ manuscript_reference }}).
+  {% endif %}
 </p>
 
 <!-- Modèle éditorial en clair -->
