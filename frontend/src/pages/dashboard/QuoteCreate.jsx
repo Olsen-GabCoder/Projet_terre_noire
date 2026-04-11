@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -90,6 +90,55 @@ const QuoteCreate = () => {
   const manuscriptId = searchParams.get('manuscript') || null;
   const serviceRequestId = searchParams.get('service_request') || null;
   const clientIdParam = searchParams.get('client_id') || '';
+  const sourceId = searchParams.get('source') || null;
+
+  const [parentQuoteId, setParentQuoteId] = useState(null);
+  const [sourceRef, setSourceRef] = useState('');
+  const sourceFetched = useRef(false);
+
+  // Pre-fill from source quote (révision)
+  useEffect(() => {
+    if (!sourceId || sourceFetched.current) return;
+    sourceFetched.current = true;
+    quoteService.getQuote(sourceId)
+      .then(res => {
+        const src = res.data;
+        setParentQuoteId(src.id);
+        setSourceRef(src.reference);
+        setTitle(src.title);
+        if (src.client_name) setClientName(src.client_name);
+        if (src.client_email) setClientEmail(src.client_email);
+        if (src.provider_organization) setOrganizationId(String(src.provider_organization));
+        if (src.publishing_model) setPublishingModel(src.publishing_model);
+        if (src.print_run) setPrintRun(String(src.print_run));
+        if (src.retail_price) setRetailPrice(String(src.retail_price));
+        if (src.royalty_terms?.length) setRoyaltyTerms(src.royalty_terms);
+        if (src.author_must_purchase) setAuthorMustPurchase(src.author_must_purchase);
+        setDiscountType(src.discount_type || 'PERCENT');
+        setDiscountValue(src.discount_value || 0);
+        setTaxRate(src.tax_rate || 0);
+        setDeliveryDays(src.delivery_days || 30);
+        setValidityDays(src.validity_days || 30);
+        setRevisionRounds(src.revision_rounds || 1);
+        if (src.notes) setNotes(src.notes);
+        if (src.payment_schedule?.length) setPaymentSchedule(src.payment_schedule);
+        if (src.lots?.length) {
+          setLots(src.lots.map((lot, li) => ({
+            name: lot.name,
+            order: li + 1,
+            items: (lot.items || []).map((item, ii) => ({
+              designation: item.designation || '',
+              description: item.description || '',
+              unit: item.unit || 'FORFAIT',
+              quantity: item.quantity || 1,
+              unit_price: item.unit_price || 0,
+              order: ii + 1,
+            })),
+          })));
+        }
+      })
+      .catch(() => toast.error('Impossible de charger le devis source.'));
+  }, [sourceId]);
 
   // Load templates
   useEffect(() => {
@@ -178,6 +227,7 @@ const QuoteCreate = () => {
         organization_id: organizationId || null,
         manuscript_id: manuscriptId,
         service_request_id: serviceRequestId,
+        parent_quote_id: parentQuoteId,
         publishing_model: publishingModel || '',
         print_run: needsPrintRun ? (parseInt(printRun) || null) : null,
         retail_price: publishingModel ? (parseFloat(retailPrice) || null) : null,
@@ -226,8 +276,15 @@ const QuoteCreate = () => {
 
   return (
     <div className="author-space">
-      <h1 className="author-space__title"><i className="fas fa-file-invoice-dollar" style={{ color: 'var(--color-primary)' }} /> Nouveau devis DQE</h1>
-      <p className="author-space__subtitle">Créez un devis quantitatif détaillé</p>
+      <h1 className="author-space__title"><i className="fas fa-file-invoice-dollar" style={{ color: 'var(--color-primary)' }} /> {sourceRef ? 'Révision de devis DQE' : 'Nouveau devis DQE'}</h1>
+      <p className="author-space__subtitle">{sourceRef ? `Révision du devis ${sourceRef} — modifiez les champs souhaités` : 'Créez un devis quantitatif détaillé'}</p>
+
+      {sourceRef && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '10px 14px', borderRadius: 8, background: '#ede9fe', border: '1px solid #c4b5fd', marginBottom: '1.25rem', fontSize: '0.85rem', color: '#6d28d9', fontWeight: 600 }}>
+          <i className="fas fa-sync-alt" />
+          Révision du devis <strong style={{ marginLeft: 4 }}>{sourceRef}</strong> — tous les champs ont été pré-remplis avec les valeurs du devis précédent.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* ── Header ── */}

@@ -13,6 +13,7 @@ const STATUS_CONFIG = {
   ACCEPTED: { color: '#059669', bg: '#d1fae5', label: 'Accepté', icon: 'fas fa-check-circle' },
   REJECTED: { color: '#dc2626', bg: '#fee2e2', label: 'Refusé', icon: 'fas fa-times-circle' },
   REVISION_REQUESTED: { color: '#8b5cf6', bg: '#ede9fe', label: 'Révision demandée', icon: 'fas fa-sync-alt' },
+  SUPERSEDED: { color: '#94a3b8', bg: '#f1f5f9', label: 'Remplacé par une révision', icon: 'fas fa-history' },
   EXPIRED: { color: '#d97706', bg: '#fef3c7', label: 'Expiré', icon: 'fas fa-clock' },
   CANCELLED: { color: '#6b7280', bg: '#f3f4f6', label: 'Annulé', icon: 'fas fa-ban' },
 };
@@ -82,6 +83,16 @@ const QuoteDetail = () => {
 
   return (
     <div className="author-space">
+      {/* Bandeau SUPERSEDED */}
+      {quote.status === 'SUPERSEDED' && quote.replaced_by && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', padding: '12px 16px', borderRadius: 10, background: '#f1f5f9', border: '1px solid #cbd5e1', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#475569' }}>
+          <span><i className="fas fa-history" style={{ marginRight: 8 }} />Ce devis a été remplacé par une version révisée.</span>
+          <Link to={`/dashboard/services/quotes/${quote.replaced_by.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 14px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-primary)', background: 'rgba(91,94,234,0.06)', textDecoration: 'none', border: '1px solid rgba(91,94,234,0.12)' }}>
+            <i className="fas fa-external-link-alt" /> Voir la nouvelle version ({quote.replaced_by.reference})
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
@@ -106,6 +117,15 @@ const QuoteDetail = () => {
             <button className="dashboard-btn dashboard-btn--primary" onClick={handleSend} disabled={acting}>
               <i className="fas fa-paper-plane" /> Envoyer au client
             </button>
+          )}
+          {isProvider && quote.status === 'REVISION_REQUESTED' && (
+            <Link
+              to={`/dashboard/services/quotes/create?source=${quote.id}${quote.manuscript ? `&manuscript=${quote.manuscript}` : ''}${quote.provider_organization ? `&organization=${quote.provider_organization}` : ''}`}
+              className="dashboard-btn"
+              style={{ background: '#7c3aed', color: '#fff', border: 'none', textDecoration: 'none' }}
+            >
+              <i className="fas fa-edit" /> Réviser ce devis
+            </Link>
           )}
           {isClient && quote.status === 'SENT' && (
             <>

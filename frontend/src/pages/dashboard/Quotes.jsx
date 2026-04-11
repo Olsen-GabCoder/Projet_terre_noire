@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import quoteService from '../../services/quoteService';
 import { handleApiError } from '../../services/api';
@@ -11,6 +11,7 @@ const STATUS_CONFIG = {
   ACCEPTED:  { color: '#059669', bg: 'rgba(5,150,105,0.08)',   icon: 'fas fa-check-circle', label: 'Accepté' },
   REJECTED:  { color: '#dc2626', bg: 'rgba(220,38,38,0.08)',   icon: 'fas fa-times-circle', label: 'Refusé' },
   REVISION_REQUESTED: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', icon: 'fas fa-sync-alt', label: 'Révision demandée' },
+  SUPERSEDED: { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', icon: 'fas fa-history', label: 'Remplacé' },
   EXPIRED:   { color: '#d97706', bg: 'rgba(217,119,6,0.08)',   icon: 'fas fa-clock', label: 'Expiré' },
   CANCELLED: { color: '#6b7280', bg: 'rgba(107,114,128,0.08)', icon: 'fas fa-ban', label: 'Annulé' },
 };
@@ -18,6 +19,7 @@ const STATUS_CONFIG = {
 const Quotes = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const isClientView = location.pathname.includes('/my-quotes');
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -235,16 +237,34 @@ const Quotes = () => {
                     </td>
                     <td style={{ padding: '14px 16px', fontSize: '0.8rem', color: 'var(--color-text-muted-ui)' }}>{formatDate(q.created_at)}</td>
                     <td style={{ padding: '14px 16px' }}>
-                      <Link to={detailPath} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 5,
-                        padding: '5px 14px', borderRadius: 8,
-                        fontSize: '0.78rem', fontWeight: 600,
-                        color: 'var(--color-primary)', background: 'rgba(91,94,234,0.06)',
-                        textDecoration: 'none', border: '1px solid rgba(91,94,234,0.12)',
-                        transition: 'var(--transition-base)',
-                      }}>
-                        <i className="fas fa-eye" /> Voir
-                      </Link>
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                        <Link to={detailPath} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          padding: '5px 14px', borderRadius: 8,
+                          fontSize: '0.78rem', fontWeight: 600,
+                          color: 'var(--color-primary)', background: 'rgba(91,94,234,0.06)',
+                          textDecoration: 'none', border: '1px solid rgba(91,94,234,0.12)',
+                          transition: 'var(--transition-base)',
+                        }}>
+                          <i className="fas fa-eye" /> Voir
+                        </Link>
+                        {!isClientView && q.status === 'REVISION_REQUESTED' && (
+                          <button
+                            onClick={() => navigate(`/dashboard/services/quotes/create?source=${q.id}${q.manuscript ? `&manuscript=${q.manuscript}` : ''}${q.provider_organization ? `&organization=${q.provider_organization}` : ''}`)}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              padding: '5px 14px', borderRadius: 8,
+                              fontSize: '0.78rem', fontWeight: 600,
+                              color: '#7c3aed', background: 'rgba(124,58,237,0.07)',
+                              border: '1px solid rgba(124,58,237,0.18)',
+                              cursor: 'pointer', fontFamily: 'inherit',
+                              transition: 'var(--transition-base)',
+                            }}
+                          >
+                            <i className="fas fa-edit" /> Réviser
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
