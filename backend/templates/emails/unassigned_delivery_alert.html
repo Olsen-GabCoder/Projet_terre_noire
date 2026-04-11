@@ -1,0 +1,38 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour,</p>
+
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #92400e; font-weight: bold; font-size: 14px;">
+    La sous-commande <strong>#SO-{{ sub_order_id|stringformat:"05d" }}</strong> est prête pour livraison depuis plus de 24 heures, mais aucun livreur n'a été attribué.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Cette sous-commande fait partie de la commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
+  gérée par <strong>{{ vendor_name }}</strong>. Le client attend sa livraison.
+</p>
+
+<p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f;">Articles concernés</p>
+<ul style="margin: 0 0 16px; padding-left: 20px; color: #333333; font-size: 13px;">
+  {% for item in items %}<li style="margin-bottom: 4px;">{{ item.title }} (&times; {{ item.quantity }})</li>{% endfor %}
+</ul>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Destination</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ shipping_city }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Prête depuis</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-weight: bold; font-size: 13px;">{{ ready_at }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; font-size: 13px;">Vendeur</td><td style="padding: 8px 10px; color: #333; font-weight: bold; font-size: 13px;">{{ vendor_name }}</td></tr>
+</table>
+
+<p style="margin: 0 0 20px; color: #333333; font-size: 14px;">
+  Veuillez attribuer un livreur depuis votre espace vendeur pour que le client puisse recevoir sa commande.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #f59e0b; border-radius: 6px;">
+    <a href="{{ frontend_url }}/dashboard/organizations/{{ vendor_id }}" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Gérer mes sous-commandes</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">Cordialement,<br>L'équipe Frollot</p>
+{% endblock %}

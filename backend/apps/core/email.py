@@ -643,3 +643,28 @@ def send_suborder_update(sub_order, new_status):
 
     subject = f"Commande #{order.id:06d} — une partie a été {status_label} — Frollot"
     return send_templated_email(subject, 'order_suborder_update', context, [client.email])
+
+
+def send_unassigned_suborder_alert(sub_order, to_emails):
+    """
+    Alerte opérationnelle : sous-commande READY sans livreur depuis plus de 24h.
+    Envoyée aux responsables du vendeur + admin plateforme.
+    """
+    order = sub_order.order
+    items = sub_order.items.select_related('book')
+    items_list = [{'title': it.book.title, 'quantity': it.quantity} for it in items]
+    vendor_name = sub_order.vendor.name if sub_order.vendor else '—'
+
+    context = {
+        'sub_order_id': sub_order.id,
+        'order_id': order.id,
+        'vendor_name': vendor_name,
+        'items': items_list,
+        'shipping_city': order.shipping_city,
+        'ready_at': sub_order.ready_at.strftime('%d/%m/%Y à %Hh%M') if sub_order.ready_at else '—',
+        'vendor_id': sub_order.vendor_id,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+
+    subject = f"Sous-commande #SO-{sub_order.id:05d} en attente de livreur depuis plus de 24h — Frollot"
+    return send_templated_email(subject, 'unassigned_delivery_alert', context, to_emails)

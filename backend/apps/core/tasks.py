@@ -441,3 +441,63 @@ def send_loan_reminders(self):
 
     logger.info("send_loan_reminders: %d rappel(s) envoyé(s).", reminded_count)
     return {'reminded': reminded_count}
+
+
+@shared_task(bind=True, max_retries=1)
+def alert_unassigned_suborders(self):
+    """
+    Alerte les vendeurs et l'admin quand une sous-commande est en statut READY
+    sans livreur attribué depuis plus de 24h.
+    Prévu pour Celery Beat une fois par jour à 9h UTC (10h Libreville).
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    from django.conf import settings as django_settings
+    from apps.marketplace.models import SubOrder
+    from apps.organizations.models import OrganizationMembership
+    from apps.core.email import send_unassigned_suborder_alert
+
+    cutoff = timezone.now() - timedelta(hours=24)
+    alerted_count = 0
+
+    suborders = (
+        SubOrder.objects
+        .filter(
+            status='READY',
+            delivery_agent__isnull=True,
+            ready_at__isnull=False,
+            ready_at__lte=cutoff,
+            unassigned_alert_sent=False,
+        )
+        .select_related('order__user', 'vendor')
+        .prefetch_related('items__book')
+    )
+
+    admin_email = getattr(django_settings, 'ADMIN_EMAIL', None)
+
+    for sub_order in suborders:
+        try:
+            # Emails des responsables du vendeur
+            vendor_emails = list(
+                OrganizationMembership.objects.filter(
+                    organization=sub_order.vendor,
+                    role__in=['PROPRIETAIRE', 'ADMINISTRATEUR'],
+                    is_active=True,
+                ).select_related('user').values_list('user__email', flat=True)
+            )
+
+            # Ajouter l'admin plateforme
+            if admin_email and admin_email not in vendor_emails:
+                vendor_emails.append(admin_email)
+
+            if vendor_emails:
+                send_unassigned_suborder_alert(sub_order, vendor_emails)
+
+            sub_order.unassigned_alert_sent = True
+            sub_order.save(update_fields=['unassigned_alert_sent'])
+            alerted_count += 1
+        except Exception:
+            logger.exception("Erreur alerte sous-commande #%s sans livreur", sub_order.id)
+
+    logger.info("alert_unassigned_suborders: %d alerte(s) envoyée(s).", alerted_count)
+    return {'alerted': alerted_count}

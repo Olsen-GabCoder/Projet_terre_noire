@@ -31,4 +31,8 @@ app.conf.beat_schedule = {
         'task': 'apps.core.tasks.send_loan_reminders',
         'schedule': crontab(hour=8, minute=0),  # Tous les jours à 8h UTC (9h Libreville)
     },
+    'alert-unassigned-suborders': {
+        'task': 'apps.core.tasks.alert_unassigned_suborders',
+        'schedule': crontab(hour=9, minute=0),  # Tous les jours à 9h UTC (10h Libreville)
+    },
 }

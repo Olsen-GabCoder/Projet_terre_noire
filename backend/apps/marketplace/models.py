@@ -117,6 +117,8 @@ class SubOrder(models.Model):
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     delivered_at = models.DateTimeField(null=True, blank=True)
     delivery_notes = models.TextField(blank=True)
+    ready_at = models.DateTimeField(null=True, blank=True, verbose_name="Prêt depuis")
+    unassigned_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livreur envoyée")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

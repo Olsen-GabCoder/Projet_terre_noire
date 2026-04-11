@@ -156,6 +156,8 @@ class SubOrderStatusUpdateView(APIView):
         serializer.is_valid(raise_exception=True)
         new_status = serializer.validated_data['status']
         sub_order.status = new_status
+        if new_status == 'READY' and not sub_order.ready_at:
+            sub_order.ready_at = timezone.now()
         if new_status == 'DELIVERED':
             sub_order.delivered_at = timezone.now()
         sub_order.save()
