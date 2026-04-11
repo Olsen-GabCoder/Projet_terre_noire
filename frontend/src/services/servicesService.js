@@ -38,6 +38,19 @@ const servicesService = {
   getOrder: (id) => api.get(`/services/orders/${id}/`),
   updateOrderStatus: (id, data) => api.patch(`/services/orders/${id}/status/`, data),
   deliverOrder: (id, data) => api.post(`/services/orders/${id}/deliver/`, data),
+  requestRevision: (id, data) => api.post(`/services/orders/${id}/request-revision/`, data),
+  downloadDeliverable: async (orderId, filename) => {
+    const response = await api.get(`/services/orders/${orderId}/deliverable/`, { responseType: 'blob' });
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || `livrable-${String(orderId).padStart(6, '0')}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 
   // Editorial Projects
   getProjects: (params) => api.get('/services/projects/', { params }),

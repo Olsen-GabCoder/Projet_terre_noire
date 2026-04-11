@@ -114,7 +114,15 @@ const ProOrders = () => {
                         <span><i className="fas fa-user" style={{ width: 14 }} /> Client : {order.client_name}</span>
                         <span><i className="fas fa-coins" style={{ width: 14 }} /> {fmtPrice(order.amount)} F (commission : {fmtPrice(order.platform_fee)} F)</span>
                         {order.deadline && <span><i className="fas fa-calendar" style={{ width: 14 }} /> Deadline : {new Date(order.deadline).toLocaleDateString('fr-FR')}</span>}
-                        {order.has_deliverable && <span><i className="fas fa-file" style={{ width: 14 }} /> Livrable envoyé</span>}
+                        {order.has_deliverable && (
+                          <span style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => servicesService.downloadDeliverable(order.id, order.deliverable_filename).catch(() => toast.error('Erreur téléchargement.'))}>
+                            <i className="fas fa-download" style={{ width: 14 }} /> {order.deliverable_filename || 'Livrable envoyé'}
+                          </span>
+                        )}
+                        {order.last_revision_reason && order.status === 'REVISION' && (
+                          <span style={{ color: '#f59e0b' }}><i className="fas fa-exclamation-triangle" style={{ width: 14 }} /> Révision demandée</span>
+                        )}
                       </div>
                     </div>
 

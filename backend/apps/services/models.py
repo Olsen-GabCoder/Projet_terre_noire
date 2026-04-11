@@ -261,6 +261,12 @@ class ServiceOrder(models.Model):
     )
     deadline = models.DateTimeField(verbose_name="Date limite")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminée le")
+    revision_count = models.PositiveIntegerField(
+        default=0, verbose_name="Révisions effectuées",
+    )
+    last_revision_reason = models.TextField(
+        blank=True, default='', verbose_name="Motif de la dernière révision",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

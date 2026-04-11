@@ -503,10 +503,11 @@ def send_delivery_assignment(sub_order):
     )
 
 
-def send_service_order_status(service_order, recipient_role='client'):
+def send_service_order_status(service_order, recipient_role='client', message=''):
     """
     Notifier un changement de statut sur une commande de service.
     recipient_role: 'client' ou 'provider'
+    message: texte optionnel affiché dans l'email (ex: motif de révision)
     """
     STATUS_COLORS = {
         'PENDING': '#3b82f6',
@@ -537,7 +538,7 @@ def send_service_order_status(service_order, recipient_role='client'):
         'service_type': listing.get_service_type_display() if listing else '',
         'request_id': order.id,
         'price': float(order.amount) if order.amount else None,
-        'message': '',
+        'message': message,
         'frontend_url': settings.FRONTEND_URL,
     }
     subject = f"Service SVC-{order.id:05d} : {order.get_status_display()} — Frollot"

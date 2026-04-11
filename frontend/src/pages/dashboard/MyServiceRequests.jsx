@@ -27,6 +27,8 @@ const MyServiceRequests = () => {
   const [error, setError] = useState('');
   const [reviewForm, setReviewForm] = useState(null); // { orderId, rating, comment }
   const [submitting, setSubmitting] = useState(false);
+  const [revisionModal, setRevisionModal] = useState(null); // { orderId, reason }
+  const [downloading, setDownloading] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -74,6 +76,50 @@ const MyServiceRequests = () => {
   };
 
   const fmtPrice = (v) => Math.round(parseFloat(v) || 0).toLocaleString('fr-FR');
+
+  const fmtSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} o`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+  };
+
+  const refreshOrders = async () => {
+    const [reqRes, ordRes] = await Promise.all([
+      servicesService.getRequests({ role: 'client' }).catch(() => ({ data: [] })),
+      servicesService.getOrders().catch(() => ({ data: [] })),
+    ]);
+    setRequests(Array.isArray(reqRes.data) ? reqRes.data : reqRes.data?.results || []);
+    setOrders(Array.isArray(ordRes.data) ? ordRes.data : ordRes.data?.results || []);
+  };
+
+  const handleDownloadDeliverable = async (order) => {
+    setDownloading(order.id);
+    try {
+      await servicesService.downloadDeliverable(order.id, order.deliverable_filename);
+    } catch (err) { toast.error('Erreur lors du téléchargement.'); }
+    finally { setDownloading(null); }
+  };
+
+  const handleRequestRevision = async () => {
+    if (!revisionModal || revisionModal.reason.trim().length < 10) return;
+    setSubmitting(true);
+    try {
+      await servicesService.requestRevision(revisionModal.orderId, { reason: revisionModal.reason.trim() });
+      toast.success('Demande de révision envoyée au prestataire.');
+      setRevisionModal(null);
+      await refreshOrders();
+    } catch (err) { toast.error(handleApiError(err)); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleValidateOrder = async (orderId) => {
+    try {
+      await servicesService.updateOrderStatus(orderId, { status: 'COMPLETED' });
+      toast.success('Commande terminée !');
+      await refreshOrders();
+    } catch (err) { toast.error(handleApiError(err)); }
+  };
 
   if (loading) return <div className="dashboard-loading"><div className="admin-spinner" /></div>;
   if (error) return <div className="dashboard-alert dashboard-alert--error">{error}</div>;
@@ -170,12 +216,28 @@ const MyServiceRequests = () => {
                         {order.has_deliverable && <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted-ui)', marginTop: 2 }}><i className="fas fa-file" /> Livrable reçu</div>}
                       </td>
                       <td>
-                        {/* Valider la livraison */}
-                        {order.status === 'REVIEW' && (
-                          <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }}
-                            onClick={async () => { try { await servicesService.updateOrderStatus(order.id, { status: 'COMPLETED' }); toast.success('Commande terminée !'); window.location.reload(); } catch (err) { toast.error(handleApiError(err)); } }}>
-                            <i className="fas fa-check" /> Valider
+                        {/* Télécharger le livrable */}
+                        {order.has_deliverable && (
+                          <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', marginBottom: 4 }}
+                            onClick={() => handleDownloadDeliverable(order)} disabled={downloading === order.id}>
+                            {downloading === order.id ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-download" />}
+                            {' '}{order.deliverable_filename || 'Livrable'} {order.deliverable_size ? `(${fmtSize(order.deliverable_size)})` : ''}
                           </button>
+                        )}
+                        {/* Valider ou demander une révision */}
+                        {order.status === 'REVIEW' && (
+                          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }}
+                              onClick={() => handleValidateOrder(order.id)}>
+                              <i className="fas fa-check" /> Valider
+                            </button>
+                            {order.revision_count < order.max_revision_rounds && (
+                              <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }}
+                                onClick={() => setRevisionModal({ orderId: order.id, reason: '' })}>
+                                <i className="fas fa-redo" /> Révision ({order.revision_count}/{order.max_revision_rounds})
+                              </button>
+                            )}
+                          </div>
                         )}
                         {/* Laisser un avis */}
                         {order.status === 'COMPLETED' && !isReviewOpen && (
@@ -219,6 +281,42 @@ const MyServiceRequests = () => {
             <Link to="/services" className="as-cta" style={{ marginTop: '1rem' }}>
               <i className="fas fa-store" /> Parcourir la marketplace
             </Link>
+          </div>
+        </div>
+      )}
+      {/* ══ Modal de demande de révision ══ */}
+      {revisionModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: 'var(--color-bg-card)', borderRadius: 16, padding: '2rem', maxWidth: 480, width: '90%', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: '#fef3c7', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <i className="fas fa-redo" style={{ fontSize: '1.5rem', color: '#f59e0b' }} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Demander une révision</h3>
+            </div>
+            <p style={{ color: 'var(--color-text-muted-ui)', fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '1rem' }}>
+              Décrivez les modifications souhaitées. Le prestataire recevra votre demande par email.
+            </p>
+            <textarea
+              rows={4}
+              value={revisionModal.reason}
+              onChange={(e) => setRevisionModal(m => ({ ...m, reason: e.target.value }))}
+              placeholder="Détaillez ce qui doit être modifié..."
+              style={{ width: '100%', padding: '0.75rem', borderRadius: 8, border: '1px solid var(--color-border-card)', fontSize: '0.88rem', fontFamily: 'inherit', resize: 'vertical', marginBottom: '0.5rem' }}
+              maxLength={2000}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.75rem', color: revisionModal.reason.trim().length < 10 ? 'var(--color-error)' : 'var(--color-text-muted-ui)' }}>
+                {revisionModal.reason.trim().length}/2 000 caractères (min. 10)
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button className="dashboard-btn" onClick={() => setRevisionModal(null)}>Annuler</button>
+              <button className="dashboard-btn" onClick={handleRequestRevision} disabled={submitting || revisionModal.reason.trim().length < 10}
+                style={{ background: '#f59e0b', color: '#fff', border: 'none' }}>
+                {submitting ? <><i className="fas fa-spinner fa-spin" /> Envoi...</> : <><i className="fas fa-redo" /> Envoyer la demande</>}
+              </button>
+            </div>
           </div>
         </div>
       )}

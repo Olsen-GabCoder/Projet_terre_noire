@@ -200,14 +200,14 @@ def send_delivery_assignment_task(self, sub_order_id):
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def send_service_order_status_task(self, order_id, recipient_role='client'):
+def send_service_order_status_task(self, order_id, recipient_role='client', message=''):
     try:
         from apps.services.models import ServiceOrder
         from apps.core.email import send_service_order_status
         order = ServiceOrder.objects.select_related(
             'client', 'provider__user', 'request__listing',
         ).get(pk=order_id)
-        send_service_order_status(order, recipient_role=recipient_role)
+        send_service_order_status(order, recipient_role=recipient_role, message=message)
     except Exception as exc:
         self.retry(exc=exc)
 

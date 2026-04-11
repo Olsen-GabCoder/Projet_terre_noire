@@ -215,6 +215,7 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
     has_deliverable = serializers.SerializerMethodField()
     deliverable_filename = serializers.SerializerMethodField()
     deliverable_size = serializers.SerializerMethodField()
+    max_revision_rounds = serializers.SerializerMethodField()
 
     class Meta:
         model = ServiceOrder
@@ -222,7 +223,8 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
             'id', 'request', 'request_title', 'quote', 'client', 'client_name',
             'provider', 'provider_name', 'status', 'status_display',
             'amount', 'platform_fee', 'has_deliverable', 'deliverable_filename',
-            'deliverable_size', 'deadline', 'completed_at', 'created_at', 'updated_at',
+            'deliverable_size', 'revision_count', 'last_revision_reason',
+            'max_revision_rounds', 'deadline', 'completed_at', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -248,6 +250,11 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
             except (FileNotFoundError, OSError):
                 return None
         return None
+
+    def get_max_revision_rounds(self, obj):
+        if obj.quote:
+            return obj.quote.revision_rounds
+        return 0
 
 
 class ServiceOrderStatusSerializer(serializers.Serializer):

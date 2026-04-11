@@ -322,6 +322,13 @@ class ServiceOrderStatusUpdateView(APIView):
         serializer.is_valid(raise_exception=True)
         new_status = serializer.validated_data['status']
 
+        # Seul le client ou un admin peut valider la livraison
+        if new_status == 'COMPLETED' and order.client != request.user and not request.user.is_platform_admin:
+            return Response(
+                {'message': 'Seul le client peut valider la livraison.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         if new_status == 'COMPLETED':
             complete_service_order(order)
         else:
@@ -417,6 +424,67 @@ class ServiceOrderDeliverableDownloadView(APIView):
             filename=filename,
             content_type=content_type,
         )
+
+
+class ServiceOrderRequestRevisionView(APIView):
+    """Le client demande une révision sur un livrable en cours de revue."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        order = get_object_or_404(ServiceOrder, pk=pk)
+
+        # Seul le client peut demander une révision
+        if order.client != request.user:
+            return Response(
+                {'message': 'Seul le client peut demander une révision.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Vérifier le statut
+        if order.status != 'REVIEW':
+            return Response(
+                {'message': 'Une révision ne peut être demandée que lorsque le livrable est en cours de revue.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Valider le motif
+        reason = (request.data.get('reason') or '').strip()
+        if len(reason) < 10:
+            return Response(
+                {'message': 'Le motif doit contenir au moins 10 caractères.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(reason) > 2000:
+            return Response(
+                {'message': 'Le motif ne peut pas dépasser 2 000 caractères.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Vérifier le compteur de révisions
+        max_rounds = order.quote.revision_rounds if order.quote else 1
+        if order.revision_count >= max_rounds:
+            return Response(
+                {'message': f'Vous avez atteint le nombre maximum de révisions incluses dans le devis ({max_rounds} révision{"s" if max_rounds > 1 else ""}).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Appliquer la révision
+        order.status = 'REVISION'
+        order.revision_count += 1
+        order.last_revision_reason = reason
+        order.save(update_fields=['status', 'revision_count', 'last_revision_reason', 'updated_at'])
+
+        # Notifier le prestataire avec le motif
+        try:
+            from apps.core.tasks import send_service_order_status_task
+            send_service_order_status_task.delay(order.id, recipient_role='provider', message=reason)
+        except Exception:
+            pass
+
+        return Response({
+            'message': 'Demande de révision envoyée au prestataire.',
+            'order': ServiceOrderSerializer(order).data,
+        })
 
 
 # ══════════════════════════════════════════════════════════════
