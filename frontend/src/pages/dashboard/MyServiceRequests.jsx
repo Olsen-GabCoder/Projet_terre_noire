@@ -167,7 +167,7 @@ const MyServiceRequests = () => {
                       <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{fmtPrice(order.amount)} F</td>
                       <td>
                         <span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700, background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                        {order.deliverable_file && <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted-ui)', marginTop: 2 }}><i className="fas fa-file" /> Livrable reçu</div>}
+                        {order.has_deliverable && <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted-ui)', marginTop: 2 }}><i className="fas fa-file" /> Livrable reçu</div>}
                       </td>
                       <td>
                         {/* Valider la livraison */}

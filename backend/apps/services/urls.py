@@ -32,6 +32,7 @@ urlpatterns = [
     path('orders/<int:pk>/', views.ServiceOrderDetailView.as_view(), name='order-detail'),
     path('orders/<int:pk>/status/', views.ServiceOrderStatusUpdateView.as_view(), name='order-status'),
     path('orders/<int:pk>/deliver/', views.ServiceOrderDeliverView.as_view(), name='order-deliver'),
+    path('orders/<int:pk>/deliverable/', views.ServiceOrderDeliverableDownloadView.as_view(), name='order-deliverable'),
 
     # Editorial Projects
     path('projects/', views.EditorialProjectListView.as_view(), name='project-list'),

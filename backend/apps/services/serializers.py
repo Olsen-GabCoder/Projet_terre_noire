@@ -212,14 +212,17 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
     provider_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     request_title = serializers.CharField(source='request.title', read_only=True)
+    has_deliverable = serializers.SerializerMethodField()
+    deliverable_filename = serializers.SerializerMethodField()
+    deliverable_size = serializers.SerializerMethodField()
 
     class Meta:
         model = ServiceOrder
         fields = [
             'id', 'request', 'request_title', 'quote', 'client', 'client_name',
             'provider', 'provider_name', 'status', 'status_display',
-            'amount', 'platform_fee', 'deliverable_file', 'deadline',
-            'completed_at', 'created_at', 'updated_at',
+            'amount', 'platform_fee', 'has_deliverable', 'deliverable_filename',
+            'deliverable_size', 'deadline', 'completed_at', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -228,6 +231,23 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
 
     def get_provider_name(self, obj):
         return obj.provider.user.get_full_name()
+
+    def get_has_deliverable(self, obj):
+        return bool(obj.deliverable_file)
+
+    def get_deliverable_filename(self, obj):
+        if obj.deliverable_file:
+            import os
+            return os.path.basename(obj.deliverable_file.name)
+        return None
+
+    def get_deliverable_size(self, obj):
+        if obj.deliverable_file:
+            try:
+                return obj.deliverable_file.size
+            except (FileNotFoundError, OSError):
+                return None
+        return None
 
 
 class ServiceOrderStatusSerializer(serializers.Serializer):

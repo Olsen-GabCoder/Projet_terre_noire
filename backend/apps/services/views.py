@@ -381,6 +381,44 @@ class ServiceOrderDeliverView(APIView):
         })
 
 
+class ServiceOrderDeliverableDownloadView(APIView):
+    """Téléchargement sécurisé du fichier livrable d'une commande de service."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        order = get_object_or_404(ServiceOrder, pk=pk)
+
+        # Vérifier que l'utilisateur est participant à la commande ou admin
+        if not request.user.is_platform_admin:
+            profile = _get_user_professional_profile(request.user)
+            is_client = order.client == request.user
+            is_provider = profile and order.provider == profile
+            if not is_client and not is_provider:
+                return Response(
+                    {'message': 'Non autorisé.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        if not order.deliverable_file:
+            return Response(
+                {'message': 'Aucun livrable disponible.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        import mimetypes
+        import os
+        filename = os.path.basename(order.deliverable_file.name)
+        content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+        from django.http import FileResponse
+        return FileResponse(
+            order.deliverable_file.open('rb'),
+            as_attachment=True,
+            filename=filename,
+            content_type=content_type,
+        )
+
+
 # ══════════════════════════════════════════════════════════════
 # EditorialProject
 # ══════════════════════════════════════════════════════════════

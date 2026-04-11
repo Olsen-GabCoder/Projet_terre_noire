@@ -114,7 +114,7 @@ const ProOrders = () => {
                         <span><i className="fas fa-user" style={{ width: 14 }} /> Client : {order.client_name}</span>
                         <span><i className="fas fa-coins" style={{ width: 14 }} /> {fmtPrice(order.amount)} F (commission : {fmtPrice(order.platform_fee)} F)</span>
                         {order.deadline && <span><i className="fas fa-calendar" style={{ width: 14 }} /> Deadline : {new Date(order.deadline).toLocaleDateString('fr-FR')}</span>}
-                        {order.deliverable_file && <span><i className="fas fa-file" style={{ width: 14 }} /> Livrable envoyé</span>}
+                        {order.has_deliverable && <span><i className="fas fa-file" style={{ width: 14 }} /> Livrable envoyé</span>}
                       </div>
                     </div>
 
