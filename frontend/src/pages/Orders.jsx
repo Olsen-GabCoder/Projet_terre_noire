@@ -130,7 +130,7 @@ const Orders = ({ embedded = false }) => {
         </PageHero>
       )}
 
-      <div className="ord-content reveal-section" ref={embedded ? undefined : revealRef}>
+      <div className={`ord-content${embedded ? '' : ' reveal-section'}`} ref={embedded ? undefined : revealRef}>
         <div className="ord-wrap">
           {error && (
             <div className="ord-error">
