@@ -500,7 +500,7 @@ class ManuscriptModelTests(ManuscriptTestBase):
         self.assertEqual(m.status, 'PENDING')
 
     def test_ordering_is_latest_first(self):
-        m1 = Manuscript.objects.create(
+        Manuscript.objects.create(
             title='Premier',
             author_name='A',
             email='a@a.com',

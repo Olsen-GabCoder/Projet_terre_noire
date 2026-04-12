@@ -15,8 +15,6 @@ from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-logger = logging.getLogger(__name__)
-
 from .models import Book, Author, Category, BookReview, ReviewLike
 from .filters import BookFilter
 from .serializers import (
@@ -32,6 +30,8 @@ from .serializers import (
     BookReviewCreateSerializer,
     BookReviewReplySerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @xframe_options_exempt
@@ -96,7 +96,7 @@ class ReviewResultsSetPagination(PageNumberPagination):
 class BookViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion complète des livres
-    
+
     Liste des actions disponibles:
     - list: GET /api/books/ - Liste paginée des livres
     - retrieve: GET /api/books/{id}/ - Détail d'un livre
@@ -104,7 +104,7 @@ class BookViewSet(viewsets.ModelViewSet):
     - update: PUT /api/books/{id}/ - Modifier un livre (admin)
     - partial_update: PATCH /api/books/{id}/ - Modifier partiellement (admin)
     - destroy: DELETE /api/books/{id}/ - Supprimer un livre (admin)
-    
+
     Filtres disponibles:
     - ?category=1 - Filtrer par catégorie
     - ?author=2 - Filtrer par auteur
@@ -747,7 +747,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des catégories
-    
+
     Liste des actions:
     - list: GET /api/categories/ - Liste toutes les catégories
     - retrieve: GET /api/categories/{id}/ - Détail d'une catégorie avec ses livres

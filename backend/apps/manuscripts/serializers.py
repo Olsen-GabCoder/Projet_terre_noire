@@ -118,7 +118,6 @@ class ManuscriptSerializer(serializers.ModelSerializer):
         header = value.read(4)
         value.seek(0)
 
-        ext = value.name.rsplit('.', 1)[-1].lower() if '.' in value.name else ''
         matched = any(header.startswith(sig) for sig in MAGIC_SIGNATURES)
         if not matched:
             raise serializers.ValidationError(

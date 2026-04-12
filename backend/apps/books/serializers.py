@@ -227,7 +227,7 @@ class BookListSerializer(serializers.ModelSerializer):
         active = self._get_active_listings(obj)
         if not active:
             return None
-        prices = [l.price for l in active if l.in_stock]
+        prices = [listing.price for listing in active if listing.in_stock]
         return str(min(prices)) if prices else None
 
     def get_listings_count(self, obj):
@@ -390,7 +390,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
         active = self._get_active_listings(obj)
         if not active:
             return None
-        prices = [l.price for l in active if l.in_stock]
+        prices = [listing.price for listing in active if listing.in_stock]
         return str(min(prices)) if prices else None
 
     def get_listings_count(self, obj):

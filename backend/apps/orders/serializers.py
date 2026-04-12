@@ -76,7 +76,7 @@ class OrderCreateSerializer(serializers.Serializer):
         listings_map = {}
         if listing_ids:
             listings_map = {
-                l.id: l for l in BookListing.objects.select_for_update().filter(
+                listing.id: listing for listing in BookListing.objects.select_for_update().filter(
                     id__in=listing_ids, is_active=True,
                 ).select_related('vendor')
             }

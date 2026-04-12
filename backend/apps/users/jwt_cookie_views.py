@@ -113,7 +113,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         if response.status_code == 200:
             clear_failed_attempts(email)
             access = response.data.get('access')
-            refresh = response.data.get('refresh')
+            refresh = response.data.get('refresh')  # noqa: F841 — extrait pour nettoyer response.data, réutilisé implicitement via pop() plus bas
 
             if access:
                 try:
@@ -143,7 +143,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
                 # No TOTP: normal login flow with session
                 session_key = uuid.uuid4()
-                session = create_session(user, request, session_key=session_key)
+                create_session(user, request, session_key=session_key)
                 new_refresh = _generate_tokens_with_session(user, session_key)
                 _set_auth_cookies(
                     response,
@@ -216,7 +216,7 @@ class TOTPVerifyLoginView(APIView):
         # Valid — delete challenge, create session, set cookies
         challenge.delete()
         session_key = uuid.uuid4()
-        session = create_session(user, request, session_key=session_key)
+        create_session(user, request, session_key=session_key)
         refresh = _generate_tokens_with_session(user, session_key)
 
         response = Response({

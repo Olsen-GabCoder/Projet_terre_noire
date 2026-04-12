@@ -35,11 +35,7 @@ def get_recommendations(user, limit=12):
 
     if not source_book_ids:
         # Fallback : livres les plus commandés
-        bestseller_ids = (
-            OrderItem.objects
-            .values_list('book_id', flat=True)
-            .order_by()  # supprime l'ordering par défaut
-        )
+        # noqa: F841 — bestseller_ids supprimé (fallback non utilisé, remplacé par l'annotation ci-dessous)
         # Comptage manuel via annotation
         from django.db.models import Count
         bestsellers = (

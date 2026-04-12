@@ -10,6 +10,8 @@ import os
 import sys
 from dotenv import load_dotenv
 from datetime import timedelta
+import dj_database_url
+import django
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
@@ -19,9 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Ajout du dossier 'apps' au chemin système pour des imports propres
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
-
-# Render / production : DATABASE_URL (PostgreSQL) fourni par Render
-import dj_database_url
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -185,7 +184,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Dossiers sources pour collectstatic : notre static/ + static de l'admin Django (CSS/JS admin en prod)
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-import django
 _admin_static = Path(django.__file__).parent / 'contrib' / 'admin' / 'static'
 if _admin_static.exists():
     STATICFILES_DIRS = list(STATICFILES_DIRS) + [str(_admin_static)]

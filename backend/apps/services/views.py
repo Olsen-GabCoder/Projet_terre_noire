@@ -13,6 +13,7 @@ from .models import (
     ServiceListing, ServiceRequest, ServiceQuote, ServiceOrder,
     EditorialProject, ProjectTask, PrintRequest,
     ProfessionalWallet, ProfessionalWalletTransaction,
+    QuoteTemplate, Quote, QuoteLot, QuoteItem,
 )
 from .permissions import (
     IsServiceProvider, IsListingProvider, IsServiceParticipant, IsPublisherMember,
@@ -26,6 +27,8 @@ from .serializers import (
     ProjectTaskSerializer, ProjectTaskCreateSerializer, ProjectTaskStatusSerializer,
     PrintRequestSerializer, PrintRequestCreateSerializer, PrintRequestStatusSerializer,
     ProfessionalWalletSerializer, ProfessionalWalletTransactionSerializer,
+    QuoteTemplateListSerializer, QuoteTemplateDetailSerializer, QuoteTemplatePublicSerializer,
+    QuoteListSerializer, QuoteDetailSerializer, QuoteCreateSerializer,
 )
 from .services import accept_quote, complete_service_order
 
@@ -954,11 +957,7 @@ class ServiceProviderReviewCreateView(APIView):
 # ═══════════════════════════════════════════════════
 #  DQE — Views
 # ═══════════════════════════════════════════════════
-from .models import QuoteTemplate, Quote, QuoteLot, QuoteItem
-from .serializers import (
-    QuoteTemplateListSerializer, QuoteTemplateDetailSerializer, QuoteTemplatePublicSerializer,
-    QuoteListSerializer, QuoteDetailSerializer, QuoteCreateSerializer,
-)
+
 
 class QuoteTemplateListView(generics.ListAPIView):
     """Liste des modèles de devis disponibles."""

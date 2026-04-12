@@ -129,13 +129,13 @@ def generate_front_cover(title, author_name, category_name, idx, path):
         lines = textwrap.wrap(title, width=22)
 
     heights = []
-    for l in lines:
-        bb = draw.textbbox((0, 0), l, font=font_title)
+    for line in lines:
+        bb = draw.textbbox((0, 0), line, font=font_title)
         heights.append(bb[3] - bb[1] + 10)
     total_h = sum(heights)
     y = 130 + (350 - total_h) // 2
-    for i, l in enumerate(lines):
-        text_center(draw, y, l, font_title, txt, W)
+    for i, line in enumerate(lines):
+        text_center(draw, y, line, font_title, txt, W)
         y += heights[i]
 
     # Separateur auteur
@@ -144,9 +144,9 @@ def generate_front_cover(title, author_name, category_name, idx, path):
 
     # Auteur
     font_author = get_font(22)
-    for l in textwrap.wrap(author_name, width=30):
+    for line in textwrap.wrap(author_name, width=30):
         sep_y += 18
-        text_center(draw, sep_y, l, font_author, accent, W)
+        text_center(draw, sep_y, line, font_author, accent, W)
 
     # Editeur
     font_pub = get_font(14, bold=True)
@@ -195,8 +195,8 @@ def generate_back_cover(title, author_name, description, price, isbn, idx, path)
     font_desc = get_font(18)
     desc_lines = textwrap.wrap(description or "Aucune description disponible.", width=38)
     max_lines = 14
-    for i, l in enumerate(desc_lines[:max_lines]):
-        text_center(draw, y, l, font_desc, txt, W)
+    for i, line in enumerate(desc_lines[:max_lines]):
+        text_center(draw, y, line, font_desc, txt, W)
         y += 28
     if len(desc_lines) > max_lines:
         text_center(draw, y, "...", font_desc, txt, W)
@@ -211,10 +211,10 @@ def generate_back_cover(title, author_name, description, price, isbn, idx, path)
     # Citation ou accroche
     font_quote = get_font(15)
     quote = f'"{title}" - {author_name}'
-    for l in textwrap.wrap(quote, width=42):
-        bb = draw.textbbox((0, 0), l, font=font_quote)
+    for line in textwrap.wrap(quote, width=42):
+        bb = draw.textbbox((0, 0), line, font=font_quote)
         tw = bb[2] - bb[0]
-        draw.text(((W - tw) // 2, y), l, font=font_quote, fill=accent)
+        draw.text(((W - tw) // 2, y), line, font=font_quote, fill=accent)
         y += 24
 
     # Bas de page : prix + ISBN
@@ -292,8 +292,8 @@ def generate_author_portrait(full_name, idx, path):
     font_name = get_font(20, bold=True)
     lines = textwrap.wrap(full_name, width=24)
     y = S // 2 + 60
-    for l in lines:
-        text_center(draw, y, l, font_name, txt, S)
+    for line in lines:
+        text_center(draw, y, line, font_name, txt, S)
         y += 28
 
     # Petit texte "Auteur Frollot"

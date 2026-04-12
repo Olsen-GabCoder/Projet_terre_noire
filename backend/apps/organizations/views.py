@@ -588,24 +588,24 @@ class OrganizationCatalogView(APIView):
 
             data = [
                 {
-                    'id': l.book.id,
-                    'title': l.book.title,
-                    'slug': l.book.slug,
-                    'author': l.book.author.full_name if l.book.author else None,
-                    'cover_image': request.build_absolute_uri(l.book.cover_image.url) if l.book.cover_image else None,
-                    'format': l.book.format,
-                    'rating': str(l.book.rating) if l.book.rating else None,
-                    'book_price': str(l.book.price),
-                    'listing_id': l.id,
-                    'price': str(l.price),
-                    'original_price': str(l.original_price) if l.original_price else None,
-                    'condition': l.condition,
-                    'stock': l.stock,
-                    'in_stock': l.stock > 0 if l.book.format != 'EBOOK' else True,
-                    'has_discount': l.original_price and l.price < l.original_price,
+                    'id': listing.book.id,
+                    'title': listing.book.title,
+                    'slug': listing.book.slug,
+                    'author': listing.book.author.full_name if listing.book.author else None,
+                    'cover_image': request.build_absolute_uri(listing.book.cover_image.url) if listing.book.cover_image else None,
+                    'format': listing.book.format,
+                    'rating': str(listing.book.rating) if listing.book.rating else None,
+                    'book_price': str(listing.book.price),
+                    'listing_id': listing.id,
+                    'price': str(listing.price),
+                    'original_price': str(listing.original_price) if listing.original_price else None,
+                    'condition': listing.condition,
+                    'stock': listing.stock,
+                    'in_stock': listing.stock > 0 if listing.book.format != 'EBOOK' else True,
+                    'has_discount': listing.original_price and listing.price < listing.original_price,
                 }
-                for l in listings
-                if l.book.available
+                for listing in listings
+                if listing.book.available
             ]
             return Response(data)
 
@@ -992,7 +992,6 @@ class ManuscriptRecommendationsView(APIView):
 
     def get(self, request):
         genre = request.query_params.get('genre', '')
-        language = request.query_params.get('language', '')
 
         qs = Organization.objects.filter(
             is_active=True,
@@ -1032,19 +1031,19 @@ class ServiceRecommendationsView(APIView):
 
         data = [
             {
-                'listing_id': l.id,
-                'listing_title': l.title,
-                'listing_slug': l.slug,
-                'service_type': l.service_type,
-                'base_price': str(l.base_price),
-                'turnaround_days': l.turnaround_days,
-                'provider_id': l.provider.id,
-                'provider_name': l.provider.user.get_full_name(),
-                'provider_slug': l.provider.slug,
-                'provider_rating': str(l.provider.avg_rating),
-                'provider_review_count': l.provider.review_count,
-                'provider_completed_projects': l.provider.completed_projects,
+                'listing_id': item.id,
+                'listing_title': item.title,
+                'listing_slug': item.slug,
+                'service_type': item.service_type,
+                'base_price': str(item.base_price),
+                'turnaround_days': item.turnaround_days,
+                'provider_id': item.provider.id,
+                'provider_name': item.provider.user.get_full_name(),
+                'provider_slug': item.provider.slug,
+                'provider_rating': str(item.provider.avg_rating),
+                'provider_review_count': item.provider.review_count,
+                'provider_completed_projects': item.provider.completed_projects,
             }
-            for l in qs
+            for item in qs
         ]
         return Response(data)

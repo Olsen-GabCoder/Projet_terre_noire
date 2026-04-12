@@ -54,11 +54,9 @@ def generate_order_invoice_pdf(order):
 
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle('InvTitle', parent=styles['Heading1'], fontSize=20, spaceAfter=2, textColor=DARK)
-    h2_style = ParagraphStyle('InvH2', parent=styles['Heading2'], fontSize=12, spaceAfter=4, textColor=DARK)
     h3_style = ParagraphStyle('InvH3', parent=styles['Heading3'], fontSize=10, spaceAfter=3, textColor=PRIMARY)
     normal = styles['Normal']
     small = ParagraphStyle('InvSmall', parent=normal, fontSize=9, spaceAfter=2, textColor=MUTED)
-    bold_small = ParagraphStyle('InvBoldSmall', parent=normal, fontSize=9, spaceAfter=2)
     footer_style = ParagraphStyle('InvFooter', parent=normal, fontSize=7, textColor=MUTED, spaceAfter=1)
 
     elements = []
@@ -250,7 +248,8 @@ def generate_order_invoice_pdf(order):
     discount = float(order.discount_amount or 0)
     total = float(order.total_amount)
 
-    fmt = lambda v: f"{v:,.0f}".replace(',', ' ') + ' FCFA'
+    def fmt(v):
+        return f"{v:,.0f}".replace(',', ' ') + ' FCFA'
 
     totals_data = [
         ['Sous-total', fmt(subtotal)],
@@ -320,7 +319,9 @@ def generate_service_order_invoice_pdf(service_order):
     normal = styles['Normal']
     small = ParagraphStyle('InvSmall', parent=normal, fontSize=9, spaceAfter=2, textColor=MUTED)
     footer_style = ParagraphStyle('InvFooter', parent=normal, fontSize=7, textColor=MUTED, spaceAfter=1)
-    fmt = lambda v: f"{float(v):,.0f}".replace(',', ' ') + ' FCFA'
+
+    def fmt(v):
+        return f"{float(v):,.0f}".replace(',', ' ') + ' FCFA'
 
     elements = []
 
@@ -439,7 +440,8 @@ def generate_print_request_quote_pdf(print_request):
     normal = styles['Normal']
     small = ParagraphStyle('InvSmall', parent=normal, fontSize=9, spaceAfter=2, textColor=MUTED)
     footer_style = ParagraphStyle('InvFooter', parent=normal, fontSize=7, textColor=MUTED, spaceAfter=1)
-    fmt = lambda v: f"{float(v):,.0f}".replace(',', ' ') + ' FCFA' if v else '—'
+    def fmt(v):
+        return f"{float(v):,.0f}".replace(',', ' ') + ' FCFA' if v else '—'
 
     elements = []
 
@@ -581,8 +583,12 @@ def generate_service_quote_pdf(quote):
     sm = ParagraphStyle('QSm', parent=n, fontSize=8, textColor=MUTED, leading=11)
     bd = ParagraphStyle('QBd', parent=n, fontSize=9, textColor=DARK, leading=13)
     ft = ParagraphStyle('QFt', parent=n, fontSize=7, textColor=MUTED)
-    fmt = lambda v: f"{float(v):,.0f}".replace(',', ' ')
-    p = lambda txt, s=bd: Paragraph(str(txt).replace('\n', '<br/>'), s)
+
+    def fmt(v):
+        return f"{float(v):,.0f}".replace(',', ' ')
+
+    def p(txt, s=bd):
+        return Paragraph(str(txt).replace('\n', '<br/>'), s)
     W = 174 * mm  # usable width
 
     # Shared table style helper
@@ -635,10 +641,13 @@ def generate_service_quote_pdf(quote):
     p_name = prov.get_full_name() if prov else '—'
     p_phone = getattr(prov, 'phone_number', '') or '' if prov else ''
     ct = f"<b>CLIENT</b><br/>{c_name}<br/>{client.email}"
-    if c_phone: ct += f"<br/>{c_phone}"
+    if c_phone:
+        ct += f"<br/>{c_phone}"
     pt = f"<b>PRESTATAIRE</b><br/>{p_name}"
-    if prov: pt += f"<br/>{prov.email}"
-    if p_phone: pt += f"<br/>{p_phone}"
+    if prov:
+        pt += f"<br/>{prov.email}"
+    if p_phone:
+        pt += f"<br/>{p_phone}"
 
     parties = Table([[p(ct, sm), p(pt, sm)]], colWidths=[W/2, W/2])
     parties.setStyle(TableStyle([
@@ -655,13 +664,17 @@ def generate_service_quote_pdf(quote):
     # ═══ TABLEAU RÉCAPITULATIF ═══
     els.append(Paragraph("Récapitulatif du projet", h2))
     desc = (req.description or '')[:300]
-    if len(req.description or '') > 300: desc += '...'
+    if len(req.description or '') > 300:
+        desc += '...'
     recap = [
         ['Projet', p(f"<b>{req.title}</b>")],
     ]
-    if desc: recap.append(['Description', p(desc)])
-    if req.page_count: recap.append(['Pages', str(req.page_count)])
-    if req.word_count: recap.append(['Mots', f"{req.word_count:,}".replace(',', ' ')])
+    if desc:
+        recap.append(['Description', p(desc)])
+    if req.page_count:
+        recap.append(['Pages', str(req.page_count)])
+    if req.word_count:
+        recap.append(['Mots', f"{req.word_count:,}".replace(',', ' ')])
     recap.append(['Délai proposé', f"{quote.turnaround_days} jours"])
     recap.append(['Révisions incluses', str(quote.revision_rounds or 1)])
     if quote.reporting_frequency:
@@ -821,9 +834,10 @@ def generate_dqe_quote_pdf(quote):
     h3 = ParagraphStyle('DQH3', parent=styles['Heading3'], fontSize=10, spaceAfter=3, textColor=PRIMARY)
     normal = styles['Normal']
     small = ParagraphStyle('DQSmall', parent=normal, fontSize=9, spaceAfter=2, textColor=MUTED)
-    bold_small = ParagraphStyle('DQBold', parent=normal, fontSize=9, fontName='Helvetica-Bold', spaceAfter=2)
     footer_style = ParagraphStyle('DQFooter', parent=normal, fontSize=7, textColor=MUTED, spaceAfter=1)
-    fmt = lambda v: f"{float(v):,.0f}".replace(',', ' ') + ' FCFA'
+
+    def fmt(v):
+        return f"{float(v):,.0f}".replace(',', ' ') + ' FCFA'
 
     elements = []
 

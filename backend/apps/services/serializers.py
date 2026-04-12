@@ -5,6 +5,7 @@ from .models import (
     EditorialProject, ProjectTask, PrintRequest,
     ProfessionalWallet, ProfessionalWalletTransaction,
     ServiceProviderReview,
+    QuoteTemplate, QuoteTemplateLot, QuoteTemplateItem, Quote, QuoteLot, QuoteItem,
 )
 
 
@@ -441,7 +442,7 @@ class ServiceProviderReviewCreateSerializer(serializers.ModelSerializer):
 # ═══════════════════════════════════════════════════
 #  DQE — Serializers
 # ═══════════════════════════════════════════════════
-from .models import QuoteTemplate, QuoteTemplateLot, QuoteTemplateItem, Quote, QuoteLot, QuoteItem
+
 
 class QuoteTemplateItemSerializer(serializers.ModelSerializer):
     class Meta:

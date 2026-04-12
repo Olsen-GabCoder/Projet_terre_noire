@@ -43,7 +43,7 @@ def test_registration():
                 print("🔍 Détails des erreurs:")
                 for field, message in errors.items():
                     print(f"  - {field}: {message}")
-            except:
+            except Exception:
                 print(f"📝 Réponse brute: {response.text}")
 
     except Exception as e:

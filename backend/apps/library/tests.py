@@ -335,7 +335,7 @@ class BookLoanTests(LibraryTestBase):
 
     def test_create_loan_expired_membership_rejected(self):
         """Un membre avec adhesion expiree ne peut pas emprunter."""
-        expired_membership = self._create_membership(
+        self._create_membership(
             user=self.other_user, days_until_expiry=-1,
         )
         self.client.force_authenticate(user=self.other_user)
@@ -378,7 +378,7 @@ class BookLoanTests(LibraryTestBase):
 
     def test_list_loans_member_sees_own(self):
         """Un membre voit ses propres prets."""
-        loan = BookLoan.objects.create(
+        BookLoan.objects.create(
             catalog_item=self.catalog_item,
             borrower=self.regular_user,
             loan_type='PHYSICAL',

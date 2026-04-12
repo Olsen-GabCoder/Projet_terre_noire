@@ -9,7 +9,7 @@ class DeliveryConfigTest(APITestCase):
     """Tests de la config livraison."""
 
     def test_get_delivery_config(self):
-        config = SiteConfig.get_config()
+        SiteConfig.get_config()  # initialise la config si absente
         response = self.client.get('/api/config/delivery/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('shipping_free_threshold', response.data)

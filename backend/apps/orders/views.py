@@ -11,8 +11,6 @@ from rest_framework.views import APIView
 from django.db.models import Prefetch
 from django.http import HttpResponse
 
-logger = logging.getLogger(__name__)
-
 from .models import Order, OrderItem, Payment
 from apps.core.invoice import generate_order_invoice_pdf
 from apps.users.throttles import OrderCreateThrottle
@@ -22,6 +20,8 @@ from .serializers import (
     OrderStatusUpdateSerializer,
     PaymentSerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -247,7 +247,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 class PaymentViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des paiements
-    
+
     Actions:
     - create: POST /api/payments/ - Enregistrer un paiement
     - retrieve: GET /api/payments/{id}/ - Détail d'un paiement
