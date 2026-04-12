@@ -227,10 +227,30 @@ class OrderCreateSerializer(serializers.Serializer):
                     id__in=[oi.id for oi in vgroup['items']],
                 ).update(sub_order=sub_order)
 
-        # Envoi email de confirmation (async, après commit de la transaction)
+        # Envoi emails (async, après commit de la transaction)
         from django.db import transaction as db_transaction
-        from apps.core.tasks import send_order_confirmation_task
+        from apps.core.tasks import (
+            send_order_confirmation_task,
+            send_vendor_new_order_task,
+            send_delivery_assignment_task,
+        )
+
         db_transaction.on_commit(lambda: send_order_confirmation_task.delay(order.id))
+
+        # U2 : notifier chaque vendeur de la nouvelle sous-commande
+        # U4 : notifier le livreur s'il a été choisi au checkout
+        sub_order_ids = list(
+            SubOrder.objects.filter(order=order).values_list('id', flat=True)
+        )
+        for so_id in sub_order_ids:
+            db_transaction.on_commit(
+                lambda _id=so_id: send_vendor_new_order_task.delay(_id)
+            )
+        if selected_rate:
+            for so_id in sub_order_ids:
+                db_transaction.on_commit(
+                    lambda _id=so_id: send_delivery_assignment_task.delay(_id)
+                )
 
         return order
 

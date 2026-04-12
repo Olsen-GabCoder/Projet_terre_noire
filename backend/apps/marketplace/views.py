@@ -294,6 +294,24 @@ class DeliveryStatusUpdateView(APIView):
             except Exception:
                 logger.exception("Erreur notification commande #%s DELIVERED", sub_order.order_id)
 
+            # ── P1 : propager le statut vers l'Order parent ──
+            try:
+                order = sub_order.order
+                sibling_statuses = set(
+                    order.sub_orders.values_list('status', flat=True)
+                )
+                if sibling_statuses == {'DELIVERED'}:
+                    order.status = 'DELIVERED'
+                    order.save(update_fields=['status', 'updated_at'])
+                elif 'DELIVERED' in sibling_statuses and sibling_statuses - {'DELIVERED', 'CANCELLED'}:
+                    order.status = 'PARTIAL'
+                    order.save(update_fields=['status', 'updated_at'])
+            except Exception:
+                logger.exception(
+                    "Erreur propagation statut Order #%s après livraison SubOrder #%s",
+                    sub_order.order_id, sub_order.id,
+                )
+
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',
         })

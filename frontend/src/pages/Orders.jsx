@@ -105,6 +105,7 @@ const Orders = ({ embedded = false }) => {
       PAID: { label: t('pages.orders.statusPaid', 'Payé'), class: 'ord-status--paid' },
       SHIPPED: { label: t('pages.orders.statusShipped', 'Expédié'), class: 'ord-status--shipped' },
       DELIVERED: { label: t('pages.orders.statusDelivered', 'Livré'), class: 'ord-status--delivered' },
+      PARTIAL: { label: t('pages.orders.statusPartial', 'Partiellement livré'), class: 'ord-status--partial' },
       CANCELLED: { label: t('pages.orders.statusCancelled', 'Annulé'), class: 'ord-status--cancelled' },
     };
     return configs[status] || configs.PENDING;

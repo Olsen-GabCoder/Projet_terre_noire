@@ -113,7 +113,9 @@ const DeliveryAssignments = () => {
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                         <span><i className="fas fa-store" style={{ width: 14, marginRight: 4 }} /> {sub.vendor_name || `Vendeur #${sub.vendor}`}</span>
-                        {sub.order_user_name && <span><i className="fas fa-user" style={{ width: 14, marginRight: 4 }} /> {sub.order_user_name}</span>}
+                        {sub.client_full_name && <span><i className="fas fa-user" style={{ width: 14, marginRight: 4 }} /> {sub.client_full_name}</span>}
+                        {sub.shipping_address && <span><i className="fas fa-map-marker-alt" style={{ width: 14, marginRight: 4 }} /> {sub.shipping_address}, {sub.shipping_city}</span>}
+                        {sub.client_phone && <span><i className="fas fa-phone" style={{ width: 14, marginRight: 4 }} /> <a href={`tel:${sub.client_phone}`} style={{ color: 'var(--color-primary)' }}>{sub.client_phone}</a></span>}
                         <span><i className="fas fa-coins" style={{ width: 14, marginRight: 4 }} /> {Math.round(parseFloat(sub.subtotal || 0)).toLocaleString('fr-FR')} F · {t('dashboard.deliveryAssignments.deliveryFee')} : {Math.round(parseFloat(sub.delivery_fee || 0)).toLocaleString('fr-FR')} F</span>
                         {sub.delivered_at && <span><i className="fas fa-check" style={{ width: 14, marginRight: 4 }} /> {t('dashboard.deliveryAssignments.deliveredOn')} {new Date(sub.delivered_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
                       </div>

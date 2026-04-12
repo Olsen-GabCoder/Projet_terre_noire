@@ -87,6 +87,16 @@ const VendorOrders = () => {
                 </ul>
               )}
 
+              {/* Coordonnées client */}
+              {so.client_full_name && (
+                <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                  <span><i className="fas fa-user" style={{ width: 16, marginRight: 4 }} /> {so.client_full_name}</span>
+                  {so.shipping_address && <span><i className="fas fa-map-marker-alt" style={{ width: 16, marginRight: 4 }} /> {so.shipping_address}, {so.shipping_city}</span>}
+                  {so.client_phone && <span><i className="fas fa-phone" style={{ width: 16, marginRight: 4 }} /> <a href={`tel:${so.client_phone}`}>{so.client_phone}</a></span>}
+                  {so.client_email && <span><i className="fas fa-envelope" style={{ width: 16, marginRight: 4 }} /> <a href={`mailto:${so.client_email}`}>{so.client_email}</a></span>}
+                </div>
+              )}
+
               {so.delivery_agent_name && (
                 <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
                   <i className="fas fa-truck" /> {t('vendor.orders.deliveryAgent')} {so.delivery_agent_name}

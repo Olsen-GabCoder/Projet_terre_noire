@@ -163,6 +163,90 @@ def send_order_paid(order):
     )
 
 
+def _get_vendor_recipients(vendor):
+    """Retourne les emails des PROPRIETAIRE/ADMINISTRATEUR/COMMERCIAL d'une organisation vendeuse."""
+    from apps.organizations.models import OrganizationMembership
+    return list(
+        OrganizationMembership.objects.filter(
+            organization=vendor,
+            is_active=True,
+            role__in=['PROPRIETAIRE', 'ADMINISTRATEUR', 'COMMERCIAL'],
+        ).select_related('user').values_list('user__email', flat=True)
+    )
+
+
+def send_vendor_new_order(sub_order):
+    """Notifier le vendeur qu'une nouvelle sous-commande a été créée."""
+    from apps.orders.models import OrderItem
+    vendor = sub_order.vendor
+    if not vendor:
+        return False
+    recipients = _get_vendor_recipients(vendor)
+    if not recipients:
+        return False
+    order = sub_order.order
+    items = [
+        {
+            'title': item.book.title,
+            'quantity': item.quantity,
+            'price': float(item.price),
+            'total': float(item.price * item.quantity),
+        }
+        for item in OrderItem.objects.filter(sub_order=sub_order).select_related('book')
+    ]
+    context = {
+        'vendor_name': vendor.name,
+        'order_id': f"{order.id:06d}",
+        'sub_order_id': sub_order.id,
+        'customer_name': order.user.get_full_name() or order.user.username if order.user else 'Client',
+        'shipping_city': order.shipping_city,
+        'shipping_address': order.shipping_address,
+        'shipping_phone': order.shipping_phone,
+        'items': items,
+        'subtotal': float(sub_order.subtotal),
+        'event': 'new_order',
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Nouvelle commande #{order.id:06d} — Frollot"
+    return send_templated_email(subject, 'vendor_new_order', context, recipients)
+
+
+def send_vendor_payment_received(sub_order):
+    """Notifier le vendeur qu'un paiement a été reçu sur une sous-commande."""
+    from apps.orders.models import OrderItem
+    vendor = sub_order.vendor
+    if not vendor:
+        return False
+    recipients = _get_vendor_recipients(vendor)
+    if not recipients:
+        return False
+    order = sub_order.order
+    items = [
+        {
+            'title': item.book.title,
+            'quantity': item.quantity,
+            'price': float(item.price),
+            'total': float(item.price * item.quantity),
+        }
+        for item in OrderItem.objects.filter(sub_order=sub_order).select_related('book')
+    ]
+    context = {
+        'vendor_name': vendor.name,
+        'order_id': f"{order.id:06d}",
+        'sub_order_id': sub_order.id,
+        'customer_name': order.user.get_full_name() or order.user.username if order.user else 'Client',
+        'shipping_city': order.shipping_city,
+        'shipping_address': order.shipping_address,
+        'shipping_phone': order.shipping_phone,
+        'items': items,
+        'subtotal': float(sub_order.subtotal),
+        'event': 'payment_received',
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Paiement recu — Commande #{order.id:06d} — Preparez la sous-commande — Frollot"
+    return send_templated_email(subject, 'vendor_new_order', context, recipients)
+
+
 def send_newsletter_welcome(email):
     """Email de bienvenue après inscription à la newsletter."""
     context = {'email': email, 'frontend_url': settings.FRONTEND_URL}

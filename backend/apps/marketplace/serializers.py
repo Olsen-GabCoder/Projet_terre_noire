@@ -64,6 +64,13 @@ class SubOrderSerializer(serializers.ModelSerializer):
     delivery_agent_name = serializers.SerializerMethodField()
     items = serializers.SerializerMethodField()
 
+    # U3 — Coordonnées client pour vendeur et livreur
+    client_full_name = serializers.SerializerMethodField()
+    client_email = serializers.SerializerMethodField()
+    client_phone = serializers.SerializerMethodField()
+    shipping_address = serializers.CharField(source='order.shipping_address', read_only=True)
+    shipping_city = serializers.CharField(source='order.shipping_city', read_only=True)
+
     class Meta:
         model = SubOrder
         fields = [
@@ -71,6 +78,8 @@ class SubOrderSerializer(serializers.ModelSerializer):
             'status', 'status_display', 'subtotal', 'shipping_cost',
             'delivery_agent', 'delivery_agent_name', 'delivery_fee',
             'delivered_at', 'delivery_notes',
+            'client_full_name', 'client_email', 'client_phone',
+            'shipping_address', 'shipping_city',
             'items', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'order', 'vendor', 'subtotal', 'created_at', 'updated_at']
@@ -79,6 +88,19 @@ class SubOrderSerializer(serializers.ModelSerializer):
         if obj.delivery_agent:
             return obj.delivery_agent.user.get_full_name()
         return None
+
+    def get_client_full_name(self, obj):
+        user = obj.order.user if obj.order else None
+        if user:
+            return user.get_full_name() or user.username
+        return None
+
+    def get_client_email(self, obj):
+        user = obj.order.user if obj.order else None
+        return user.email if user else None
+
+    def get_client_phone(self, obj):
+        return obj.order.shipping_phone if obj.order else None
 
     def get_items(self, obj):
         from apps.orders.models import OrderItem

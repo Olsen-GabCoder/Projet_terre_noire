@@ -108,14 +108,24 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Restaurer le stock des listings marketplace
-        for item in order.items.select_related('listing', 'listing__book'):
-            if item.listing and item.listing.book.format != 'EBOOK':
-                item.listing.stock += item.quantity
-                item.listing.save(update_fields=['stock'])
+        from django.db import transaction
+        from django.db.models import F
 
-        order.status = 'CANCELLED'
-        order.save()
+        with transaction.atomic():
+            # Restaurer le stock des listings marketplace (F() pour éviter les race conditions)
+            for item in order.items.select_related('listing', 'listing__book'):
+                if item.listing and item.listing.book.format != 'EBOOK':
+                    item.listing.stock = F('stock') + item.quantity
+                    item.listing.save(update_fields=['stock'])
+
+            order.status = 'CANCELLED'
+            order.save(update_fields=['status', 'updated_at'])
+
+            # P4 : annuler les SubOrders enfants non livrées
+            from apps.marketplace.models import SubOrder
+            SubOrder.objects.filter(order=order).exclude(
+                status__in=['DELIVERED', 'CANCELLED'],
+            ).update(status='CANCELLED')
 
         from apps.core.tasks import send_order_cancelled_task
         send_order_cancelled_task.delay(order.id)

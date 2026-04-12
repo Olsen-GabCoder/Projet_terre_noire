@@ -44,9 +44,15 @@ def send_order_confirmation_task(self, order_id):
 def send_order_paid_task(self, order_id):
     try:
         from apps.orders.models import Order
-        from apps.core.email import send_order_paid
+        from apps.core.email import send_order_paid, send_vendor_payment_received
         order = Order.objects.select_related('user').prefetch_related('items__book').get(pk=order_id)
         send_order_paid(order)
+        # U2 : notifier chaque vendeur que le paiement est reçu
+        for sub_order in order.sub_orders.select_related('vendor', 'order__user').all():
+            try:
+                send_vendor_payment_received(sub_order)
+            except Exception:
+                logger.exception("Erreur email vendeur paiement SubOrder #%s", sub_order.id)
     except Exception as exc:
         self.retry(exc=exc)
 
@@ -58,6 +64,20 @@ def send_order_cancelled_task(self, order_id):
         from apps.core.email import send_order_cancelled
         order = Order.objects.select_related('user').prefetch_related('items__book').get(pk=order_id)
         send_order_cancelled(order)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_vendor_new_order_task(self, sub_order_id):
+    """U2 : notifier le vendeur qu'une nouvelle sous-commande a été créée."""
+    try:
+        from apps.marketplace.models import SubOrder
+        from apps.core.email import send_vendor_new_order
+        sub_order = SubOrder.objects.select_related(
+            'vendor', 'order__user',
+        ).get(pk=sub_order_id)
+        send_vendor_new_order(sub_order)
     except Exception as exc:
         self.retry(exc=exc)
 
@@ -229,29 +249,45 @@ def send_service_order_status_task(self, order_id, recipient_role='client', mess
 def cancel_stale_pending_orders(self):
     """
     Annule automatiquement les commandes PENDING depuis plus de 24 heures.
-    Restaure le stock des listings marketplace si applicable.
+    Restaure le stock des listings marketplace (F() pour éviter les race conditions).
+    Annule les SubOrders enfants non livrées.
+    Chaque commande est traitée dans un bloc atomique (P12).
     Prévu pour être lancé par Celery Beat toutes les heures.
     """
     from datetime import timedelta
+    from django.db import transaction
+    from django.db.models import F
     from django.utils import timezone
-    from apps.orders.models import Order, OrderItem
+    from apps.orders.models import Order
 
     cutoff = timezone.now() - timedelta(hours=24)
     stale_orders = Order.objects.filter(status='PENDING', created_at__lt=cutoff)
     cancelled_count = 0
 
     for order in stale_orders.select_related('user').prefetch_related('items__listing'):
-        # Restaurer le stock des listings
-        for item in order.items.all():
-            if item.listing and item.listing.book.format != 'EBOOK':
-                item.listing.stock += item.quantity
-                item.listing.save(update_fields=['stock'])
+        try:
+            with transaction.atomic():
+                # P3 : restaurer le stock des listings avec F() (race-condition safe)
+                for item in order.items.all():
+                    if item.listing and item.listing.book.format != 'EBOOK':
+                        item.listing.stock = F('stock') + item.quantity
+                        item.listing.save(update_fields=['stock'])
 
-        order.status = 'CANCELLED'
-        order.save(update_fields=['status', 'updated_at'])
-        cancelled_count += 1
+                order.status = 'CANCELLED'
+                order.save(update_fields=['status', 'updated_at'])
 
-        # Notifier le client
+                # P4 : annuler les SubOrders enfants non livrées
+                from apps.marketplace.models import SubOrder
+                SubOrder.objects.filter(order=order).exclude(
+                    status__in=['DELIVERED', 'CANCELLED'],
+                ).update(status='CANCELLED')
+
+            cancelled_count += 1
+        except Exception:
+            logger.exception("Erreur annulation commande périmée #%s", order.id)
+            continue
+
+        # Notifier le client (hors transaction pour ne pas bloquer en cas d'erreur email)
         try:
             from apps.core.email import send_order_cancelled
             send_order_cancelled(order)

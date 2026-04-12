@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ vendor_name }}</strong>,</p>
+{% if event == 'payment_received' %}
+<div style="background: #d1fae5; border-left: 4px solid #059669; padding: 12px 16px; border-radius: 4px; margin: 0 0 16px; font-size: 14px; color: #065f46;">
+  <strong>Paiement recu !</strong> La commande <strong>#{{ order_id }}</strong> est payee. Veuillez preparer la sous-commande #{{ sub_order_id }}.
+</div>
+{% else %}
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Vous avez recu une nouvelle commande sur Frollot.
+</p>
+{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Commande</td><td style="padding: 8px 10px; font-weight: bold; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">#{{ order_id }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Sous-commande</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">#{{ sub_order_id }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Client</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ customer_name }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Ville</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_city }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Adresse</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_address }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Telephone</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ shipping_phone }}</td></tr>
+</table>
+<h3 style="margin: 0 0 8px; font-size: 14px; color: #1e293b;">Articles commandes</h3>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  {% for item in items %}
+  <tr>
+    <td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #333;">{{ item.title }} x{{ item.quantity }}</td>
+    <td style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #333; text-align: right; font-weight: bold;">{{ item.total|floatformat:0 }} FCFA</td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <td style="padding: 8px 10px; font-weight: bold; font-size: 14px; color: #1e293b;">Total sous-commande</td>
+    <td style="padding: 8px 10px; font-weight: bold; font-size: 14px; color: #059669; text-align: right;">{{ subtotal|floatformat:0 }} FCFA</td>
+  </tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/vendor/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Gerer mes commandes</a>
+  </td></tr>
+</table>
+{% endblock %}
