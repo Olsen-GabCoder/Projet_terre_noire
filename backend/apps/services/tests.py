@@ -6,7 +6,7 @@ service request listing by role, quote creation, and quote PDF download.
 """
 from decimal import Decimal
 from io import BytesIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile

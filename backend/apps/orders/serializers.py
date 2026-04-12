@@ -50,13 +50,13 @@ class OrderCreateSerializer(serializers.Serializer):
     def validate_items(self, value):
         if not value:
             raise serializers.ValidationError("La commande doit contenir au moins un article.")
-        
+
         for item in value:
             if 'book_id' not in item or 'quantity' not in item:
                 raise serializers.ValidationError("Chaque article doit avoir book_id et quantity.")
             if item['quantity'] < 1:
                 raise serializers.ValidationError("La quantité doit être au moins 1.")
-        
+
         return value
 
     @transaction.atomic
@@ -102,7 +102,7 @@ class OrderCreateSerializer(serializers.Serializer):
                     )
                 if listing.book_id != book.id:
                     raise serializers.ValidationError(
-                        f"L'offre vendeur ne correspond pas au livre."
+                        "L'offre vendeur ne correspond pas au livre."
                     )
                 # Vérifier stock (ebooks : stock illimité)
                 if book.format != 'EBOOK' and listing.stock < quantity:

@@ -43,7 +43,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     http_method_names = ['get', 'post', 'put', 'patch', 'head', 'options']
-    
+
     def get_queryset(self):
         from django.db.models import Q
         from apps.marketplace.models import SubOrder
@@ -101,14 +101,14 @@ class OrderViewSet(viewsets.ModelViewSet):
             qs = qs.filter(sub_orders__vendor_id=vendor).distinct()
 
         return qs
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return OrderCreateSerializer
         if self.action in ('partial_update', 'update'):
             return OrderStatusUpdateSerializer
         return OrderListSerializer
-    
+
     def get_throttles(self):
         if self.action == 'create':
             return [OrderCreateThrottle()]
@@ -165,7 +165,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             send_order_shipped_task.delay(instance.id)
         response_serializer = OrderListSerializer(instance, context={'request': request})
         return Response(response_serializer.data)
-    
+
     @action(detail=True, methods=['post'], url_path='cancel')
     def cancel_order(self, request, pk=None):
         """
@@ -252,23 +252,23 @@ class PaymentViewSet(viewsets.ModelViewSet):
     - create: POST /api/payments/ - Enregistrer un paiement
     - retrieve: GET /api/payments/{id}/ - Détail d'un paiement
     """
-    
+
     permission_classes = [IsAuthenticated]
     serializer_class = PaymentSerializer
     http_method_names = ['get', 'post']
-    
+
     def get_queryset(self):
         return Payment.objects.filter(order__user=self.request.user).select_related('order')
-    
+
     def create(self, request, *args, **kwargs):
         order_id = request.data.get('order_id')
-        
+
         if not order_id:
             return Response(
                 {'error': 'order_id requis'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             order = Order.objects.get(id=order_id, user=request.user)
         except Order.DoesNotExist:
@@ -276,7 +276,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 {'error': 'Commande introuvable'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         if order.status != 'PENDING':
             return Response(
                 {'error': 'Cette commande ne peut plus être payée'},

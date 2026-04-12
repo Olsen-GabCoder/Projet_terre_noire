@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 
 from apps.books.models import Book, Category, Author
 from apps.core.models import SiteConfig
-from .models import Order, OrderItem, Payment
+from .models import Order, Payment
 
 User = get_user_model()
 

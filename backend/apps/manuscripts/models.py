@@ -35,7 +35,7 @@ class Manuscript(models.Model):
         ('ES', 'Espagnol'),
         ('AUTRE', 'Autre'),
     ]
-    
+
     submitter = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True,
@@ -62,20 +62,20 @@ class Manuscript(models.Model):
     email = models.EmailField(verbose_name="Email de contact")
     phone_number = models.CharField(max_length=20, verbose_name="Numéro de téléphone")
     country = models.CharField(max_length=100, blank=True, verbose_name="Pays / Nationalité")
-    
+
     genre = models.CharField(max_length=20, choices=GENRE_CHOICES, default='ROMAN', verbose_name="Genre littéraire")
     language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='FR', verbose_name="Langue du manuscrit")
     page_count = models.PositiveIntegerField(null=True, blank=True, verbose_name="Nombre de pages")
-    
+
     file = models.FileField(
         upload_to='manuscripts/',
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'doc'])],
         verbose_name="Fichier manuscrit"
     )
-    
+
     description = models.TextField(verbose_name="Description du manuscrit")
     terms_accepted = models.BooleanField(verbose_name="Conditions acceptées")
-    
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -119,7 +119,7 @@ class Manuscript(models.Model):
             models.Index(fields=['submitter']),
             models.Index(fields=['-submitted_at']),
         ]
-    
+
     def __str__(self):
         return f"{self.title} - {self.author_name}"
 

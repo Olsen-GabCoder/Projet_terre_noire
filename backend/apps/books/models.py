@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils.text import slugify
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
 
@@ -194,7 +194,7 @@ class Book(models.Model):
         default=True,
         verbose_name="Disponible"
     )
-    
+
     # Relations - Note: Utilisez des chaînes pour éviter les problèmes de référence circulaire
     category = models.ForeignKey(
         Category,
@@ -208,7 +208,7 @@ class Book(models.Model):
         related_name='books',
         verbose_name="Auteur"
     )
-    
+
     # === NOUVEAUX CHAMPS AJOUTÉS ===
     # Prix d'origine pour les promotions
     original_price = models.DecimalField(
@@ -220,7 +220,7 @@ class Book(models.Model):
         verbose_name="Prix d'origine (FCFA)",
         help_text="Prix avant promotion. Laissez vide si pas de promotion."
     )
-    
+
     # Best-seller — calculé automatiquement à partir des ventes
     is_bestseller = models.BooleanField(
         default=False,
@@ -232,7 +232,7 @@ class Book(models.Model):
         verbose_name="Ventes totales",
         help_text="Nombre total d'exemplaires vendus (mis à jour au paiement).",
     )
-    
+
     # Note moyenne (ex: 4.5)
     rating = models.DecimalField(
         max_digits=3,
@@ -242,7 +242,7 @@ class Book(models.Model):
         verbose_name="Note moyenne",
         help_text="Note sur 5 (ex: 4.5)"
     )
-    
+
     # Nombre d'avis
     rating_count = models.PositiveIntegerField(
         default=0,
@@ -300,13 +300,13 @@ class Book(models.Model):
     def get_format_display(self):
         """Retourne la version lisible du format"""
         return dict(self.FORMAT_CHOICES).get(self.format, self.format)
-    
+
     # === NOUVELLES PROPRIÉTÉS ===
     @property
     def has_discount(self):
         """Vérifie si le livre a une promotion"""
         return self.original_price is not None and self.original_price > self.price
-    
+
     @property
     def discount_percentage(self):
         """Calcule le pourcentage de réduction"""
@@ -314,7 +314,7 @@ class Book(models.Model):
             return 0
         discount = ((self.original_price - self.price) / self.original_price) * 100
         return round(discount, 0)
-    
+
     @property
     def discount_amount(self):
         """Calcule le montant de la réduction"""

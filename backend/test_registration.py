@@ -2,13 +2,12 @@
 Script de test pour l'inscription d'utilisateurs.
 """
 import requests
-import json
 
 BASE_URL = "http://127.0.0.1:8000/api"
 
 def test_registration():
     print("🧪 Test d'inscription...")
-    
+
     # Données de test
     user_data = {
         "username": "testuser",
@@ -19,7 +18,7 @@ def test_registration():
         "last_name": "User",
         "phone_number": "+243123456789"
     }
-    
+
     try:
         response = requests.post(
             f"{BASE_URL}/users/register/",
@@ -27,17 +26,17 @@ def test_registration():
             headers={"Content-Type": "application/json"},
             timeout=10
         )
-        
+
         print(f"📊 Status: {response.status_code}")
         print(f"📦 Headers: {response.headers}")
-        
+
         if response.status_code in [200, 201]:
             print("✅ Inscription réussie!")
             print(f"📝 Réponse: {response.text}")
         else:
             print("❌ Erreur d'inscription")
             print(f"📝 Réponse: {response.text}")
-            
+
             # Afficher les erreurs de validation
             try:
                 errors = response.json()
@@ -46,19 +45,19 @@ def test_registration():
                     print(f"  - {field}: {message}")
             except:
                 print(f"📝 Réponse brute: {response.text}")
-                
+
     except Exception as e:
         print(f"❌ Erreur de connexion: {e}")
 
 def test_login():
     print("\n🧪 Test de connexion...")
-    
+
     # Test avec username
     credentials = {
         "username": "testuser",
         "password": "SecurePass123!"
     }
-    
+
     try:
         response = requests.post(
             f"{BASE_URL}/token/",
@@ -66,9 +65,9 @@ def test_login():
             headers={"Content-Type": "application/json"},
             timeout=10
         )
-        
+
         print(f"📊 Status: {response.status_code}")
-        
+
         if response.status_code == 200:
             data = response.json()
             print("✅ Connexion réussie!")
@@ -77,7 +76,7 @@ def test_login():
         else:
             print("❌ Erreur de connexion")
             print(f"📝 Réponse: {response.text}")
-                
+
     except Exception as e:
         print(f"❌ Erreur de connexion: {e}")
 

@@ -14,14 +14,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     Sérialiseur pour l'inscription d'un nouvel utilisateur.
     Gère la création sécurisée avec hachage du mot de passe.
     """
-    
+
     password = serializers.CharField(
         write_only=True,
         required=True,
         style={'input_type': 'password'},
         help_text="Mot de passe (minimum 8 caractères)"
     )
-    
+
     password_confirm = serializers.CharField(
         write_only=True,
         required=True,
@@ -53,7 +53,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'email': {'required': True},
             'phone_number': {'required': False, 'allow_blank': True},  # ✅ CORRECTION ICI
         }
-    
+
     def validate_email(self, value):
         """
         Vérifie que l'email n'est pas déjà utilisé
@@ -63,7 +63,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "Un compte avec cet email existe déjà."
             )
         return value.lower()
-    
+
     def validate_username(self, value):
         """
         Vérifie que le nom d'utilisateur n'est pas déjà pris
@@ -73,7 +73,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "Ce nom d'utilisateur est déjà pris."
             )
         return value.lower()
-    
+
     def validate_phone_number(self, value):
         """
         Vérifie que le numéro de téléphone n'est pas déjà utilisé (si fourni)
@@ -81,13 +81,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # ✅ CORRECTION : Accepter les valeurs vides
         if not value or value.strip() == '':
             return None  # Retourner None si vide
-        
+
         if User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError(
                 "Ce numéro de téléphone est déjà associé à un compte."
             )
         return value
-    
+
     def validate_password(self, value):
         """
         Valide le mot de passe selon les règles Django
@@ -97,7 +97,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
-    
+
     def validate(self, attrs):
         """
         Vérifie que les deux mots de passe correspondent
@@ -112,7 +112,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 'terms_accepted': "Vous devez accepter les conditions générales d'utilisation."
             })
         return attrs
-    
+
     def create(self, validated_data):
         """
         Crée un nouvel utilisateur avec le mot de passe haché.
@@ -293,7 +293,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             }
             for m in memberships
         ]
-    
+
     def validate_phone_number(self, value):
         """
         Vérifie que le nouveau numéro n'est pas déjà utilisé par un autre utilisateur
@@ -301,7 +301,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         # ✅ CORRECTION : Accepter les valeurs vides
         if not value or value.strip() == '':
             return None
-        
+
         user = self.context['request'].user
         if User.objects.filter(phone_number=value).exclude(id=user.id).exists():
             raise serializers.ValidationError(
@@ -315,7 +315,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     Sérialiseur pour la mise à jour du profil utilisateur.
     Permet de modifier uniquement les informations de profil.
     """
-    
+
     class Meta:
         model = User
         fields = [
@@ -328,7 +328,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'country',
             'receive_newsletter',
         ]
-    
+
     def validate_phone_number(self, value):
         """
         Vérifie que le nouveau numéro n'est pas déjà utilisé
@@ -336,7 +336,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         # ✅ CORRECTION : Accepter les valeurs vides
         if not value or value.strip() == '':
             return None
-        
+
         user = self.instance
         if User.objects.filter(phone_number=value).exclude(id=user.id).exists():
             raise serializers.ValidationError(
@@ -350,25 +350,25 @@ class PasswordChangeSerializer(serializers.Serializer):
     Sérialiseur pour le changement de mot de passe.
     Nécessite l'ancien mot de passe pour des raisons de sécurité.
     """
-    
+
     old_password = serializers.CharField(
         required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
-    
+
     new_password = serializers.CharField(
         required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
-    
+
     new_password_confirm = serializers.CharField(
         required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
-    
+
     def validate_old_password(self, value):
         """
         Vérifie que l'ancien mot de passe est correct
@@ -379,7 +379,7 @@ class PasswordChangeSerializer(serializers.Serializer):
                 "L'ancien mot de passe est incorrect."
             )
         return value
-    
+
     def validate_new_password(self, value):
         """
         Valide le nouveau mot de passe
@@ -389,7 +389,7 @@ class PasswordChangeSerializer(serializers.Serializer):
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
-    
+
     def validate(self, attrs):
         """
         Vérifie que les deux nouveaux mots de passe correspondent
@@ -399,7 +399,7 @@ class PasswordChangeSerializer(serializers.Serializer):
                 'new_password_confirm': "Les mots de passe ne correspondent pas."
             })
         return attrs
-    
+
     def save(self, **kwargs):
         """
         Change le mot de passe de l'utilisateur
@@ -439,9 +439,9 @@ class UserListSerializer(serializers.ModelSerializer):
     """
     Sérialiseur simplifié pour lister les utilisateurs (admin).
     """
-    
+
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    
+
     class Meta:
         model = User
         fields = [

@@ -4,7 +4,7 @@ from apps.books.serializers import BookListSerializer
 from .models import (
     UserFollow, AuthorFollow, OrganizationFollow,
     ReadingList, ReadingListItem,
-    Post, PostLike, PostComment,
+    Post, PostComment,
     BookClub, BookClubMembership, BookClubMessage,
 )
 

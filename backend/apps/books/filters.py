@@ -1,7 +1,6 @@
 # backend/apps/books/filters.py
 
 import django_filters
-from django.db.models import Q
 from .models import Book
 
 

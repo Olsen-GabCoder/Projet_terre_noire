@@ -113,22 +113,22 @@ class BookViewSet(viewsets.ModelViewSet):
     - ?search=victor - Rechercher dans titre/description/auteur
     - ?ordering=-created_at - Trier par date (descendant)
     """
-    
+
     # Évite N+1 sur category, author, publisher_organization (accédés par BookListSerializer)
     queryset = Book.objects.select_related('category', 'author', 'publisher_organization').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
-    
+
     # Configuration des filtres
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    
+
     # Utiliser le filtre personnalisé au lieu de filterset_fields
     filterset_class = BookFilter
-    
+
     # Champs dans lesquels on peut rechercher
     search_fields = [
         'title',
@@ -136,7 +136,7 @@ class BookViewSet(viewsets.ModelViewSet):
         'author__full_name',
         'reference'
     ]
-    
+
     # Champs sur lesquels on peut trier
     ordering_fields = [
         'title',
@@ -145,10 +145,10 @@ class BookViewSet(viewsets.ModelViewSet):
         'updated_at',
         'rating'
     ]
-    
+
     # Tri par défaut
     ordering = ['-created_at']
-    
+
     def get_serializer_class(self):
         """
         Retourne le sérialiseur approprié selon l'action
@@ -214,7 +214,7 @@ class BookViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
-    
+
     @action(detail=False, methods=['get'], url_path='featured')
     def featured_books(self, request):
         """
@@ -261,7 +261,7 @@ class BookViewSet(viewsets.ModelViewSet):
             data = serializer.data
             cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
         return Response(data)
-    
+
     @action(detail=False, methods=['get'], url_path='by-format/(?P<format_type>[^/.]+)')
     def by_format(self, request, format_type=None):
         """
@@ -273,17 +273,17 @@ class BookViewSet(viewsets.ModelViewSet):
                 {'error': 'Format invalide. Utilisez EBOOK ou PAPIER'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         books = self.get_queryset().filter(format=format_type, available=True)
         page = self.paginate_queryset(books)
-        
+
         if page is not None:
             serializer = BookListSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = BookListSerializer(books, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'], url_path='reviews/me')
     def my_review(self, request, pk=None):
         """
@@ -483,13 +483,13 @@ class BookViewSet(viewsets.ModelViewSet):
         Retourne des livres similaires (même catégorie ou même auteur)
         """
         book = self.get_object()
-        
+
         # Livres de la même catégorie ou du même auteur, excluant le livre actuel
         related = self.get_queryset().filter(
             Q(category=book.category) | Q(author=book.author),
             available=True
         ).exclude(id=book.id).distinct()[:6]
-        
+
         serializer = BookListSerializer(related, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -518,22 +518,22 @@ class BookViewSet(viewsets.ModelViewSet):
             # Calcul des statistiques
             total_books = Book.objects.count()
             available_books = Book.objects.filter(available=True).count()
-            
+
             # Prix moyen
             avg_price = Book.objects.aggregate(Avg('price'))['price__avg']
             average_price = round(float(avg_price), 2) if avg_price else 0.0
-            
+
             # Note moyenne
             avg_rating = Book.objects.filter(rating__gt=0).aggregate(Avg('rating'))['rating__avg']
             average_rating = round(float(avg_rating), 2) if avg_rating else 0.0
-            
+
             # Livres avec remise (original_price existe et est supérieur au prix actuel)
             books_with_discount = Book.objects.filter(
                 original_price__isnull=False
             ).filter(
                 original_price__gt=F('price')
             ).count()
-            
+
             stats = {
                 'total_books': total_books,
                 'total_authors': Author.objects.count(),
@@ -546,11 +546,11 @@ class BookViewSet(viewsets.ModelViewSet):
                 'average_rating': average_rating,
                 'books_with_discount': books_with_discount
             }
-            
+
             serializer = BookStatisticsSerializer(stats)
             return Response(serializer.data)
-            
-        except Exception as e:
+
+        except Exception:
             # En cas d'erreur, retourner des statistiques par défaut
             return Response({
                 'total_books': 0,
@@ -639,21 +639,21 @@ class AuthorViewSet(viewsets.ModelViewSet):
     - update: PUT/PATCH /api/authors/{id}/ - Modifier (admin)
     - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
     """
-    
+
     # Évite N+1 sur author.user (accédé par is_registered property)
     queryset = Author.objects.select_related('user').prefetch_related('books').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
-    
+
     filter_backends = [
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    
+
     search_fields = ['full_name', 'biography']
     ordering_fields = ['full_name', 'created_at']
     ordering = ['full_name']
-    
+
     def get_serializer_class(self):
         """
         Liste: Version simple
@@ -662,7 +662,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return AuthorDetailSerializer
         return AuthorSerializer
-    
+
     def get_queryset(self):
         """
         Optimisation: précharger les livres et annoter pour éviter les N+1 queries.
@@ -715,16 +715,16 @@ class AuthorViewSet(viewsets.ModelViewSet):
         authors = self.get_queryset().annotate(
             num_books=Count('books')
         ).filter(num_books__gt=0).order_by('-num_books')
-        
+
         page = self.paginate_queryset(authors)
-        
+
         if page is not None:
             serializer = AuthorSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = AuthorSerializer(authors, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'], url_path='books')
     def author_books(self, request, pk=None):
         """
@@ -733,13 +733,13 @@ class AuthorViewSet(viewsets.ModelViewSet):
         """
         author = self.get_object()
         books = author.books.filter(available=True).select_related('category', 'author')
-        
+
         page = self.paginate_queryset(books)
-        
+
         if page is not None:
             serializer = BookListSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = BookListSerializer(books, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -755,20 +755,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
     - update: PUT/PATCH /api/categories/{id}/ - Modifier (admin)
     - destroy: DELETE /api/categories/{id}/ - Supprimer (admin)
     """
-    
+
     queryset = Category.objects.prefetch_related('books').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
-    
+
     filter_backends = [
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    
+
     search_fields = ['name']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
-    
+
     def get_serializer_class(self):
         """
         Liste: Version simple
@@ -777,21 +777,21 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return CategoryDetailSerializer
         return CategorySerializer
-    
+
     def get_queryset(self):
         """
         Optimisation: précharger les livres pour le détail
         """
         queryset = super().get_queryset()
-        
+
         if self.action == 'retrieve':
             queryset = queryset.prefetch_related(
                 'books__category',
                 'books__author'
             )
-        
+
         return queryset
-    
+
     @action(detail=False, methods=['get'], url_path='with-books')
     def categories_with_books(self, request):
         """
@@ -801,10 +801,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
         categories = self.get_queryset().annotate(
             num_books=Count('books')
         ).filter(num_books__gt=0).order_by('-num_books')
-        
+
         serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'], url_path='books')
     def category_books(self, request, pk=None):
         """
@@ -813,12 +813,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
         """
         category = self.get_object()
         books = category.books.filter(available=True).select_related('category', 'author')
-        
+
         page = self.paginate_queryset(books)
-        
+
         if page is not None:
             serializer = BookListSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = BookListSerializer(books, many=True, context={'request': request})
         return Response(serializer.data)

@@ -7,15 +7,15 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 logger = logging.getLogger(__name__)
-from rest_framework import generics, status, permissions
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework import generics, status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 
 from apps.core.throttling import PublicEndpointThrottle
 from apps.organizations.models import Organization, OrganizationMembership
-from apps.organizations.permissions import IsOrganizationEditor, IsOrganizationMember, user_has_org_permission
+from apps.organizations.permissions import IsOrganizationEditor, user_has_org_permission
 from .models import Manuscript
 from .serializers import ManuscriptSerializer, ManuscriptListSerializer, ManuscriptStatusSerializer
 

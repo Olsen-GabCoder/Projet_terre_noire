@@ -769,7 +769,6 @@ class PublicPresenceView(APIView):
         # 3. Organization facets
         try:
             from apps.organizations.models import Organization, OrganizationMembership
-            from django.db.models import Q
 
             org_ids_seen = set()
 

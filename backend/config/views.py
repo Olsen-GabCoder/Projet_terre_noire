@@ -10,7 +10,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
-from django.db.models import Count, Sum, Avg, Q, F
+from django.db.models import Count, Sum, F
 from django.db.models.functions import TruncMonth, TruncDate
 
 @api_view(['GET'])
@@ -33,7 +33,7 @@ def api_root(request):
     Endpoint racine de l'API qui liste tous les endpoints disponibles.
     """
     base_url = request.build_absolute_uri('/api/')
-    
+
     return Response({
         'message': 'API Maison d\'Édition - Bienvenue !',
         'version': '1.0.0',
@@ -71,14 +71,14 @@ def health_check(request):
     """
     from django.db import connection
     from django.db.utils import OperationalError
-    
+
     # Vérifier la connexion à la base de données
     db_connected = True
     try:
         connection.ensure_connection()
     except OperationalError:
         db_connected = False
-    
+
     return Response({
         'status': 'healthy',
         'database': 'connected' if db_connected else 'disconnected',

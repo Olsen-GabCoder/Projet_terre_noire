@@ -3,7 +3,6 @@ Commande pour afficher un résumé de la base de données.
 Usage : python manage.py show_data
 """
 from django.core.management.base import BaseCommand
-from django.db.models import Count
 
 
 class Command(BaseCommand):
@@ -12,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from apps.books.models import Book, Author, Category
         from apps.users.models import User
-        from apps.orders.models import Order, OrderItem
+        from apps.orders.models import Order
         from apps.manuscripts.models import Manuscript
 
         self.stdout.write("\n" + "=" * 50)

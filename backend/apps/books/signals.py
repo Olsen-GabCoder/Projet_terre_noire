@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.db.models import Avg, Count, Sum
 from django.core.cache import cache
 
-from .models import Book, BookReview
+from .models import BookReview
 
 BESTSELLER_MIN_SALES = 500  # Seuil minimum pour être best-seller
 

@@ -15,7 +15,7 @@ from .models import (
     BookListing, SubOrder, VendorWallet, WalletTransaction, DeliveryWallet,
 )
 from .permissions import (
-    IsVendorMember, IsListingOwner, IsSubOrderVendor, IsDeliveryAgent,
+    IsVendorMember, IsListingOwner, IsDeliveryAgent,
 )
 from .serializers import (
     BookListingSerializer, BookListingCreateSerializer, BookListingUpdateSerializer,

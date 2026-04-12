@@ -15,8 +15,7 @@ from .models import (
     ProfessionalWallet, ProfessionalWalletTransaction,
 )
 from .permissions import (
-    IsServiceProvider, IsListingProvider, IsServiceClient,
-    IsServiceParticipant, IsPublisherMember, IsPrinterMember,
+    IsServiceProvider, IsListingProvider, IsServiceParticipant, IsPublisherMember,
 )
 from .serializers import (
     ServiceListingSerializer, ServiceListingCreateSerializer,
@@ -927,7 +926,7 @@ class ServiceProviderReviewCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        from .models import ServiceOrder, ServiceProviderReview
+        from .models import ServiceOrder
         from .serializers import ServiceProviderReviewCreateSerializer, ServiceProviderReviewSerializer
 
         order_id = request.data.get('service_order')

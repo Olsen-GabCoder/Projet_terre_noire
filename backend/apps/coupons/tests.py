@@ -1,5 +1,4 @@
 """Tests pour l'app coupons."""
-from decimal import Decimal
 from rest_framework.test import APITestCase
 from rest_framework import status
 

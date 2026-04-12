@@ -7,7 +7,7 @@ Verifie la session active pour supporter la revocation de session.
 from datetime import timedelta
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError, AuthenticationFailed
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed as DRFAuthFailed
 from django.conf import settings
 from django.utils import timezone

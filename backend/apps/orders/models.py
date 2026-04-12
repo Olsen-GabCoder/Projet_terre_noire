@@ -13,7 +13,7 @@ class Order(models.Model):
         ('PARTIAL', 'Partiellement livré'),
         ('CANCELLED', 'Annulé'),
     ]
-    
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0)
@@ -21,7 +21,7 @@ class Order(models.Model):
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0)
     coupon_code = models.CharField(max_length=50, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    
+
     shipping_address = models.TextField()
     shipping_phone = models.CharField(max_length=20)
     shipping_city = models.CharField(max_length=100)
@@ -29,10 +29,10 @@ class Order(models.Model):
     # Livreur choisi par le client (optionnel)
     delivery_agent_name = models.CharField(max_length=200, blank=True, default='')
     delivery_agent_phone = models.CharField(max_length=20, blank=True, default='')
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -77,20 +77,20 @@ class Payment(models.Model):
         ('CASH', 'Espèces'),
         ('VISA', 'Carte Visa'),
     ]
-    
+
     STATUS_CHOICES = [
         ('SUCCESS', 'Réussi'),
         ('FAILED', 'Échoué'),
         ('PENDING', 'En attente'),
     ]
-    
+
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
     transaction_id = models.CharField(max_length=100, unique=True)
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f"Paiement {self.transaction_id} - {self.status}"
 

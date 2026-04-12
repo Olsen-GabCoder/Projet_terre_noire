@@ -2,7 +2,6 @@
 Espace Auteur — Vues pour le dashboard auteur.
 Endpoints /api/authors/me/...
 """
-from decimal import Decimal
 
 from django.db.models import Sum, Avg, Count, Q, F
 from django.shortcuts import get_object_or_404
@@ -179,7 +178,7 @@ class AuthorSalesView(APIView):
 
     def get(self, request):
         author = _get_author_for_user(request.user)
-        from apps.orders.models import OrderItem, Order
+        from apps.orders.models import OrderItem
 
         paid_statuses = ['PAID', 'SHIPPED', 'DELIVERED']
         items = OrderItem.objects.filter(

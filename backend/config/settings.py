@@ -58,14 +58,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     *_cloudinary_apps,
     'django.contrib.staticfiles',
-    
+
     # Bibliothèques tierces (Page 4 PDF)
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
-    
+
     # Nos applications (créées dans le dossier apps/)
     'apps.books',
     'apps.users',

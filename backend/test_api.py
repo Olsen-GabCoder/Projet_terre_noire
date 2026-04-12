@@ -4,9 +4,9 @@ import sys
 
 def test_api():
     base_url = "http://127.0.0.1:8000/api"
-    
+
     print("🧪 Test de l'API Django...")
-    
+
     # Test 1: Vérifier que le serveur est en ligne
     try:
         response = requests.get(base_url, timeout=5)
@@ -15,7 +15,7 @@ def test_api():
         print("❌ Impossible de se connecter au serveur")
         print("   Assurez-vous que Django tourne: python manage.py runserver")
         return False
-    
+
     # Test 2: Tester l'endpoint token (sans authentification)
     try:
         response = requests.post(
@@ -29,10 +29,10 @@ def test_api():
     except Exception as e:
         print(f"❌ Erreur avec /token/: {e}")
         return False
-    
 
-    
-    
+
+
+
     # Test 3: Tester l'endpoint users (sans authentification)
     try:
         response = requests.get(f"{base_url}/users/", timeout=5)
@@ -40,10 +40,10 @@ def test_api():
     except Exception as e:
         print(f"❌ Erreur avec /users/: {e}")
         return False
-    
+
     print("\n🎉 Tous les tests d'accessibilité API sont passés!")
     print("   Le backend est correctement configuré.")
-    
+
     return True
 
 if __name__ == "__main__":

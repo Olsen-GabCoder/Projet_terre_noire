@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from apps.users.models import UserProfile
 
-from .models import Organization, OrganizationMembership, Invitation, OrganizationReview, Inquiry
+from .models import Organization, OrganizationMembership, Invitation, Inquiry
 from .permissions import IsOrganizationAdmin, IsOrganizationMember
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import (

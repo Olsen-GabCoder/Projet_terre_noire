@@ -357,5 +357,5 @@ class Command(BaseCommand):
         self.stdout.write(f"  Coupons       : {Coupon.objects.count()}")
         self.stdout.write(f"  Newsletter    : {NewsletterSubscriber.objects.count()}")
         self.stdout.write("")
-        self.stdout.write(f"  Mot de passe de tous les utilisateurs test : Frollot2026!")
+        self.stdout.write("  Mot de passe de tous les utilisateurs test : Frollot2026!")
         self.stdout.write(self.style.SUCCESS("=" * 50))

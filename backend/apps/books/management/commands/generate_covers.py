@@ -6,7 +6,6 @@ Usage : python manage.py generate_covers
 import os
 import textwrap
 import random
-import math
 
 from django.core.management.base import BaseCommand
 from django.conf import settings

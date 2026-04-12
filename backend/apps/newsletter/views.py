@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.throttling import PublicEndpointThrottle
-from .models import NewsletterSubscriber
 from .serializers import NewsletterSubscribeSerializer
 
 logger = logging.getLogger(__name__)

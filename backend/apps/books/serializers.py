@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Author, Book, BookReview, ReviewLike
+from .models import Category, Author, Book, BookReview
 
 
 class LibraryCatalogMiniSerializer(serializers.Serializer):
@@ -42,7 +42,7 @@ class CategorySerializer(serializers.ModelSerializer):
     Sérialiseur pour le modèle Category
     Transforme les catégories en JSON pour l'API
     """
-    
+
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'created_at', 'updated_at']
@@ -114,14 +114,14 @@ class BookListSerializer(serializers.ModelSerializer):
     Sérialiseur optimisé pour la liste des livres
     Version allégée pour les performances (liste de catalogue)
     """
-    
+
     # Nested serializers pour avoir les détails complets au lieu de simples IDs
     category = CategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
-    
+
     # Champs calculés
     format_display = serializers.CharField(source='get_format_display', read_only=True)
-    
+
     # === NOUVEAUX CHAMPS ===
     # Promotions et prix
     original_price = serializers.DecimalField(
@@ -137,7 +137,7 @@ class BookListSerializer(serializers.ModelSerializer):
         decimal_places=2,
         read_only=True
     )
-    
+
     # Best-seller et notes
     is_bestseller = serializers.BooleanField(read_only=True)
     rating = serializers.DecimalField(
@@ -146,10 +146,10 @@ class BookListSerializer(serializers.ModelSerializer):
         read_only=True
     )
     rating_count = serializers.IntegerField(read_only=True)
-    
+
     # Formatage de la note (ex: "4.5/5")
     rating_display = serializers.SerializerMethodField()
-    
+
     # Organisation éditrice (compact pour la liste)
     publisher_name = serializers.SerializerMethodField()
     publisher_slug = serializers.SerializerMethodField()
@@ -259,11 +259,11 @@ class BookDetailSerializer(serializers.ModelSerializer):
     Sérialiseur complet pour le détail d'un livre
     Inclut toutes les informations nécessaires pour la page de détail
     """
-    
+
     # Nested serializers pour les relations
     category = CategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
-    
+
     # IDs pour la création/modification (write_only)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
@@ -275,12 +275,12 @@ class BookDetailSerializer(serializers.ModelSerializer):
         source='author',
         write_only=True
     )
-    
+
     # Champs calculés
     format_display = serializers.CharField(source='get_format_display', read_only=True)
     is_ebook = serializers.BooleanField(read_only=True)
     is_available = serializers.BooleanField(read_only=True)
-    
+
     # === NOUVEAUX CHAMPS ===
     # Promotions et prix
     original_price = serializers.DecimalField(
@@ -296,7 +296,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
         decimal_places=2,
         read_only=True
     )
-    
+
     # Best-seller et notes
     is_bestseller = serializers.BooleanField(read_only=True)
     rating = serializers.DecimalField(
@@ -305,7 +305,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     rating_count = serializers.IntegerField(read_only=True)
-    
+
     # Formatage de la note
     rating_display = serializers.SerializerMethodField()
     rating_stars = serializers.SerializerMethodField()
@@ -370,7 +370,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'library_count',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-    
+
     def get_publisher_name(self, obj):
         return obj.publisher_organization.name if obj.publisher_organization else None
 
@@ -420,19 +420,19 @@ class BookDetailSerializer(serializers.ModelSerializer):
         """Retourne les étoiles de notation pour l'affichage"""
         if not obj.rating or obj.rating == 0:
             return []
-        
+
         rating = float(obj.rating)
         full_stars = int(rating)
         half_star = 1 if rating - full_stars >= 0.5 else 0
         empty_stars = 5 - full_stars - half_star
-        
+
         return {
             'full': full_stars,
             'half': half_star,
             'empty': empty_stars,
             'value': rating
         }
-    
+
     def validate_price(self, value):
         """Validation personnalisée du prix"""
         if value < 0:
@@ -440,7 +440,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
         if value > 1000000:
             raise serializers.ValidationError("Le prix semble anormalement élevé.")
         return value
-    
+
     def validate_reference(self, value):
         """Validation personnalisée de la référence"""
         if len(value) < 3:
@@ -479,7 +479,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'author',
             'publisher_organization',
         ]
-    
+
     def validate(self, data):
         """
         Validation globale des données
@@ -490,12 +490,12 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'author': "Un livre doit avoir un auteur."
             })
-        
+
         if 'category' in data and not data['category']:
             raise serializers.ValidationError({
                 'category': "Un livre doit appartenir à une catégorie."
             })
-        
+
         # Validation du prix d'origine vs prix actuel
         if 'original_price' in data and 'price' in data:
             if data['original_price'] is not None:
@@ -507,14 +507,14 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({
                         'price': "Le prix en promotion doit être inférieur au prix d'origine."
                     })
-        
+
         # Validation de la note
         if 'rating' in data:
             if data['rating'] < 0 or data['rating'] > 5:
                 raise serializers.ValidationError({
                     'rating': "La note doit être comprise entre 0 et 5."
                 })
-        
+
         return data
 
 
@@ -586,16 +586,16 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
     Sérialiseur détaillé pour une catégorie
     Inclut la liste des livres de cette catégorie
     """
-    
+
     # Liste des livres de la catégorie
     books = BookListSerializer(many=True, read_only=True)
     books_count = serializers.SerializerMethodField()
-    
+
     # Statistiques de la catégorie
     average_rating = serializers.SerializerMethodField()
     bestsellers_count = serializers.SerializerMethodField()
     average_price = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Category
         fields = [
@@ -611,7 +611,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-    
+
     def get_books_count(self, obj):
         """Retourne le nombre de livres dans cette catégorie"""
         if hasattr(obj, 'num_books'):

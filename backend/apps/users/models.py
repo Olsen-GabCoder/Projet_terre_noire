@@ -16,13 +16,13 @@ class User(AbstractUser):
     Hérite de AbstractUser et ajoute les champs spécifiques au contexte africain
     (Mobile Money, adresse complète, etc.)
     """
-    
+
     # Validateur pour le numéro de téléphone - ASSOUPLI
     phone_regex = RegexValidator(
         regex=r'^\+?\d{8,15}$',
         message="Le numéro de téléphone doit contenir entre 8 et 15 chiffres. Format accepté: +243123456789 ou 0123456789"
     )
-    
+
     # Champs supplémentaires - TÉLÉPHONE CORRIGÉ
     phone_number = models.CharField(
         validators=[phone_regex],
@@ -33,27 +33,27 @@ class User(AbstractUser):
         verbose_name="Numéro de téléphone",
         help_text="Format: +243XXXXXXXXX (requis pour Mobile Money)"
     )
-    
+
     address = models.TextField(
         blank=True,
         null=True,
         verbose_name="Adresse complète",
         help_text="Rue, avenue, numéro, quartier"
     )
-    
+
     city = models.CharField(
         max_length=100,
         blank=True,
         null=True,
         verbose_name="Ville"
     )
-    
+
     country = models.CharField(
         max_length=100,
         default="Gabon",
         verbose_name="Pays"
     )
-    
+
     profile_image = models.ImageField(
         upload_to='users/avatars/',
         blank=True,
@@ -66,7 +66,7 @@ class User(AbstractUser):
         default=False,
         verbose_name="Recevoir la newsletter"
     )
-    
+
     # Sécurité — invalidation des tokens après changement de mot de passe
     token_version = models.PositiveIntegerField(
         default=0,
@@ -118,17 +118,17 @@ class User(AbstractUser):
         verbose_name = "Utilisateur"
         verbose_name_plural = "Utilisateurs"
         ordering = ['-date_joined']
-    
+
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
-    
+
     def get_full_name(self):
         """
         Retourne le nom complet de l'utilisateur
         """
         full_name = f"{self.first_name} {self.last_name}".strip()
         return full_name if full_name else self.username
-    
+
     @property
     def has_complete_profile(self):
         """
@@ -141,7 +141,7 @@ class User(AbstractUser):
             self.address,
             self.city,
         ])
-    
+
     @property
     def full_address(self):
         """

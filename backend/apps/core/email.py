@@ -7,7 +7,7 @@ import logging
 import mimetypes
 
 from django.conf import settings
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
@@ -845,7 +845,7 @@ def send_loan_reminder(loan, days_remaining):
     }
 
     if days_remaining <= 0:
-        subject = f"Votre prêt arrive à échéance aujourd'hui — Frollot"
+        subject = "Votre prêt arrive à échéance aujourd'hui — Frollot"
     else:
         subject = f"Rappel : votre prêt arrive à échéance dans {days_remaining} jours — Frollot"
 
