@@ -89,6 +89,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # Doit être placé haut
     'django.middleware.security.SecurityMiddleware',
+    'apps.core.middleware.SecurityHeadersMiddleware',  # Permissions-Policy + COOP
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files en production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -413,8 +414,15 @@ if not DEBUG:
     # Référer complet pour les redirections (évite la fuite d'info dans Referer)
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
+    # Protection XSS héritée (obsolète mais encore scanné par les outils de sécurité)
+    SECURE_BROWSER_XSS_FILTER = True
+
     # Proxy SSL (derrière nginx)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Cookies HttpOnly — actif en dev ET en production
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
 
 
 # =============================================================================

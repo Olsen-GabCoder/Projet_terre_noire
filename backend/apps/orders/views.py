@@ -46,12 +46,28 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         from django.db.models import Q
+        from apps.marketplace.models import SubOrder
+        from apps.orders.models import OrderEvent
 
+        # Évite N+1 sur items → book/vendor, sub_orders → vendor/agent, events → actor
         items_prefetch = Prefetch(
             'items',
-            queryset=OrderItem.objects.select_related('book__category', 'book__author')
+            queryset=OrderItem.objects.select_related('book__category', 'book__author', 'vendor')
         )
-        qs = Order.objects.select_related('user').prefetch_related(items_prefetch).order_by('-created_at')
+        suborders_prefetch = Prefetch(
+            'sub_orders',
+            queryset=SubOrder.objects.select_related('vendor', 'delivery_agent__user')
+        )
+        events_prefetch = Prefetch(
+            'events',
+            queryset=OrderEvent.objects.select_related('actor').order_by('-created_at')
+        )
+        qs = (
+            Order.objects
+            .select_related('user')
+            .prefetch_related(items_prefetch, suborders_prefetch, events_prefetch)
+            .order_by('-created_at')
+        )
         # Admin voit toutes les commandes, utilisateur voit les siennes
         if not self.request.user.is_staff:
             return qs.filter(user=self.request.user)

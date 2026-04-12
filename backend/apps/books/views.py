@@ -114,7 +114,8 @@ class BookViewSet(viewsets.ModelViewSet):
     - ?ordering=-created_at - Trier par date (descendant)
     """
     
-    queryset = Book.objects.select_related('category', 'author').all()
+    # Évite N+1 sur category, author, publisher_organization (accédés par BookListSerializer)
+    queryset = Book.objects.select_related('category', 'author', 'publisher_organization').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     
@@ -639,7 +640,8 @@ class AuthorViewSet(viewsets.ModelViewSet):
     - destroy: DELETE /api/authors/{id}/ - Supprimer (admin)
     """
     
-    queryset = Author.objects.prefetch_related('books').all()
+    # Évite N+1 sur author.user (accédé par is_registered property)
+    queryset = Author.objects.select_related('user').prefetch_related('books').all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     

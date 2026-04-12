@@ -284,7 +284,13 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostSerializer
 
     def get_queryset(self):
-        return Post.objects.select_related('author', 'book').prefetch_related('likes', 'comments')
+        from django.db.models import Prefetch
+        from .models import PostComment
+        # Évite N+1 sur author, book, comments.user (accédés par PostSerializer)
+        return Post.objects.select_related('author', 'book').prefetch_related(
+            'likes',
+            Prefetch('comments', queryset=PostComment.objects.select_related('user')),
+        )
 
     def list(self, request, *args, **kwargs):
         """Feed : posts des utilisateurs suivis + membres des mêmes orgs + propres posts.
