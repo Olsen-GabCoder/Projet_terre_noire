@@ -248,6 +248,11 @@ class OrderCreateSerializer(serializers.Serializer):
 
         db_transaction.on_commit(lambda: send_order_confirmation_task.delay(order.id))
 
+        # C3 : journal d'activité
+        from apps.orders.utils import log_order_event
+        log_order_event(order, 'ORDER_CREATED', f"Commande #{order.id} créée ({len(order_items)} article(s))",
+                        actor=user, actor_role='client', to_status='PENDING')
+
         # U2 : notifier chaque vendeur de la nouvelle sous-commande
         # U4 : notifier le livreur s'il a été choisi au checkout
         sub_order_ids = list(
@@ -279,11 +284,30 @@ class OrderUserSerializer(serializers.Serializer):
         }
 
 
+class OrderEventSerializer(serializers.ModelSerializer):
+    actor_name = serializers.SerializerMethodField()
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+
+    class Meta:
+        from .models import OrderEvent
+        model = OrderEvent
+        fields = [
+            'id', 'event_type', 'event_type_display', 'actor_name', 'actor_role',
+            'from_status', 'to_status', 'description', 'metadata', 'created_at',
+        ]
+
+    def get_actor_name(self, obj):
+        if obj.actor:
+            return obj.actor.get_full_name() or obj.actor.username
+        return 'Système'
+
+
 class OrderListSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     user = OrderUserSerializer(read_only=True)
     sub_orders = serializers.SerializerMethodField()
+    events = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -306,6 +330,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             'items',
             'user',
             'sub_orders',
+            'events',
         ]
         read_only_fields = [
             'id', 'status_display', 'subtotal', 'shipping_cost', 'discount_amount', 'coupon_code',
@@ -319,6 +344,10 @@ class OrderListSerializer(serializers.ModelSerializer):
         if sub_orders.exists():
             return SubOrderSerializer(sub_orders, many=True).data
         return []
+
+    def get_events(self, obj):
+        events = obj.events.select_related('actor').all()[:50]
+        return OrderEventSerializer(events, many=True).data
 
 
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):

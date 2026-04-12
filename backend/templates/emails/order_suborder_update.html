@@ -50,6 +50,19 @@
   ont été expédiés par <strong>{{ vendor_name }}</strong> vers <strong>{{ shipping_city }}</strong>.
 </p>
 
+{% elif new_status == 'ATTEMPTED' %}
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #92400e; font-weight: bold; font-size: 14px;">
+    Tentative de livraison n°{{ attempt_count }} — Le livreur n'a pas pu vous remettre votre colis.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  {% if last_attempt_reason %}Raison : <strong>{{ last_attempt_reason }}</strong>. {% endif %}
+  Le livreur retentera la livraison prochainement.
+  Assurez-vous d'être joignable au numéro indiqué lors de la commande.
+</p>
+
 {% elif new_status == 'CANCELLED' %}
 <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
   <p style="margin: 0; color: #991b1b; font-weight: bold; font-size: 14px;">

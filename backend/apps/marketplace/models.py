@@ -85,6 +85,7 @@ class SubOrder(models.Model):
         ('PREPARING', 'En préparation'),
         ('READY', 'Prêt pour livraison'),
         ('SHIPPED', 'Expédié'),
+        ('ATTEMPTED', 'Tentative de livraison échouée'),
         ('DELIVERED', 'Livré'),
         ('CANCELLED', 'Annulé'),
     ]
@@ -121,6 +122,11 @@ class SubOrder(models.Model):
     unassigned_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livreur envoyée")
     reminder_sent = models.BooleanField(default=False, verbose_name="Rappel vendeur envoyé")
     shipment_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livraison en retard envoyée")
+
+    # C1 — Suivi des tentatives de livraison
+    attempt_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de tentatives")
+    last_attempt_at = models.DateTimeField(null=True, blank=True, verbose_name="Dernière tentative")
+    last_attempt_reason = models.CharField(max_length=200, blank=True, verbose_name="Raison dernière tentative")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -5,6 +5,7 @@ import { handleApiError } from '../../services/api';
 import toast from 'react-hot-toast';
 import '../../styles/AuthorSpace.css';
 import '../../styles/OrgBooks.css';
+import '../../styles/Orders.css';
 
 const STATUS_CONFIG_BASE = {
   PENDING: { key: 'pending', bg: '#fef3c7', color: '#d97706' },
@@ -12,15 +13,26 @@ const STATUS_CONFIG_BASE = {
   PREPARING: { key: 'preparing', bg: '#dbeafe', color: '#2563eb' },
   READY: { key: 'ready', bg: '#d1fae5', color: '#059669' },
   SHIPPED: { key: 'shipped', bg: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' },
+  ATTEMPTED: { key: 'attempted', bg: '#fef3c7', color: '#d97706' },
   DELIVERED: { key: 'delivered', bg: '#d1fae5', color: '#059669' },
   CANCELLED: { key: 'cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
+
+const ATTEMPT_REASONS = [
+  'Client absent',
+  'Adresse introuvable',
+  'Client refuse le colis',
+  'Téléphone injoignable',
+  'Autre',
+];
 
 const DeliveryAssignments = () => {
   const { t } = useTranslation();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [attemptModal, setAttemptModal] = useState(null); // sub_order id
+  const [attemptReason, setAttemptReason] = useState('');
   const [filter, setFilter] = useState('active'); // active | delivered | all
   const [updating, setUpdating] = useState(null);
 
@@ -35,21 +47,29 @@ const DeliveryAssignments = () => {
 
   useEffect(() => { fetchAssignments(); }, []);
 
-  const handleStatusUpdate = async (subOrderId, newStatus) => {
+  const handleStatusUpdate = async (subOrderId, newStatus, extra = {}) => {
     setUpdating(subOrderId);
     try {
-      await marketplaceService.updateDeliveryStatus(subOrderId, { status: newStatus });
-      toast.success(
-        newStatus === 'SHIPPED'
-          ? 'Colis pris en charge ! Le client a été notifié.'
-          : 'Livraison confirmée ! Le client et le vendeur ont été notifiés.'
-      );
+      await marketplaceService.updateDeliveryStatus(subOrderId, { status: newStatus, ...extra });
+      const msgs = {
+        SHIPPED: 'Colis pris en charge ! Le client a été notifié.',
+        DELIVERED: 'Livraison confirmée ! Le client et le vendeur ont été notifiés.',
+        ATTEMPTED: 'Tentative échouée enregistrée. Le client a été prévenu.',
+      };
+      toast.success(msgs[newStatus] || 'Statut mis à jour.');
       fetchAssignments();
     } catch (err) {
       const msg = err.response?.data?.message || handleApiError(err);
       toast.error(msg);
     }
     finally { setUpdating(null); }
+  };
+
+  const submitAttempt = () => {
+    if (!attemptModal || !attemptReason) return;
+    handleStatusUpdate(attemptModal, 'ATTEMPTED', { attempt_reason: attemptReason });
+    setAttemptModal(null);
+    setAttemptReason('');
   };
 
   const filtered = assignments.filter(a => {
@@ -102,8 +122,9 @@ const DeliveryAssignments = () => {
           {filtered.map(sub => {
             const cfgBase = STATUS_CONFIG_BASE[sub.status];
             const cfg = cfgBase ? { label: t(`dashboard.deliveryAssignments.status_${cfgBase.key}`), bg: cfgBase.bg, color: cfgBase.color } : { label: sub.status, bg: 'var(--color-bg-section-alt)', color: 'var(--color-text-body)' };
-            const canShip = ['READY', 'CONFIRMED', 'PREPARING'].includes(sub.status);
-            const canDeliver = sub.status === 'SHIPPED';
+            const canShip = ['READY', 'CONFIRMED', 'PREPARING', 'ATTEMPTED'].includes(sub.status);
+            const canDeliver = sub.status === 'SHIPPED' || sub.status === 'ATTEMPTED';
+            const canAttempt = sub.status === 'SHIPPED';
             return (
               <div key={sub.id} className="as-card">
                 <div className="as-card__body" style={{ padding: '1rem 1.25rem' }}>
@@ -118,13 +139,31 @@ const DeliveryAssignments = () => {
                           {cfg.label}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                        <span><i className="fas fa-store" style={{ width: 14, marginRight: 4 }} /> {sub.vendor_name || `Vendeur #${sub.vendor}`}
-                          {sub.vendor_phone && <> · <a href={`tel:${sub.vendor_phone}`} style={{ color: 'var(--color-primary)' }}>{sub.vendor_phone}</a></>}
-                        </span>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <span><i className="fas fa-store" style={{ width: 14, marginRight: 4 }} /> {sub.vendor_name || `Vendeur #${sub.vendor}`}</span>
+                        {(sub.vendor_phone || sub.vendor_email) && (
+                          <div className="ord-suborder__contacts" style={{ marginTop: 0 }}>
+                            {sub.vendor_phone && (
+                              <a href={`tel:${sub.vendor_phone}`} className="ord-contact ord-contact--phone">
+                                <i className="fas fa-phone" /> {sub.vendor_phone}
+                              </a>
+                            )}
+                            {sub.vendor_email && (
+                              <a href={`mailto:${sub.vendor_email}`} className="ord-contact ord-contact--email">
+                                <i className="fas fa-envelope" /> Email
+                              </a>
+                            )}
+                          </div>
+                        )}
                         {sub.client_full_name && <span><i className="fas fa-user" style={{ width: 14, marginRight: 4 }} /> {sub.client_full_name}</span>}
                         {sub.shipping_address && <span><i className="fas fa-map-marker-alt" style={{ width: 14, marginRight: 4 }} /> {sub.shipping_address}, {sub.shipping_city}</span>}
-                        {sub.client_phone && <span><i className="fas fa-phone" style={{ width: 14, marginRight: 4 }} /> <a href={`tel:${sub.client_phone}`} style={{ color: 'var(--color-primary)' }}>{sub.client_phone}</a></span>}
+                        {sub.client_phone && (
+                          <div className="ord-suborder__contacts" style={{ marginTop: 0 }}>
+                            <a href={`tel:${sub.client_phone}`} className="ord-contact ord-contact--phone">
+                              <i className="fas fa-phone" /> {sub.client_phone}
+                            </a>
+                          </div>
+                        )}
                         <span><i className="fas fa-coins" style={{ width: 14, marginRight: 4 }} /> {Math.round(parseFloat(sub.subtotal || 0)).toLocaleString('fr-FR')} F · {t('dashboard.deliveryAssignments.deliveryFee')} : {Math.round(parseFloat(sub.delivery_fee || 0)).toLocaleString('fr-FR')} F</span>
                         {sub.delivered_at && <span><i className="fas fa-check" style={{ width: 14, marginRight: 4 }} /> {t('dashboard.deliveryAssignments.deliveredOn')} {new Date(sub.delivered_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
                       </div>
@@ -152,12 +191,53 @@ const DeliveryAssignments = () => {
                           {updating === sub.id ? <i className="fas fa-spinner fa-spin" /> : <><i className="fas fa-check-circle" /> {t('dashboard.deliveryAssignments.confirmDelivery')}</>}
                         </button>
                       )}
+                      {canAttempt && (
+                        <button
+                          className="as-cta"
+                          onClick={() => setAttemptModal(sub.id)}
+                          disabled={updating === sub.id}
+                          style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                        >
+                          <i className="fas fa-exclamation-triangle" /> Tentative échouée
+                        </button>
+                      )}
+                      {sub.status === 'ATTEMPTED' && sub.attempt_count > 0 && (
+                        <span style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 600 }}>
+                          {sub.attempt_count} tentative{sub.attempt_count > 1 ? 's' : ''} · {sub.last_attempt_reason || '—'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modale tentative échouée */}
+      {attemptModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setAttemptModal(null)}>
+          <div style={{ background: 'var(--color-bg-card, #fff)', borderRadius: 12, padding: '1.5rem', maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--color-text-heading)' }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#d97706', marginRight: 6 }} /> Tentative de livraison échouée
+            </h3>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-body)' }}>Raison</label>
+            <select
+              value={attemptReason}
+              onChange={(e) => setAttemptReason(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: 8, border: '1px solid var(--color-gray-300, #d1d5db)', marginBottom: '1rem', fontSize: '0.85rem' }}
+            >
+              <option value="">— Choisir la raison —</option>
+              {ATTEMPT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setAttemptModal(null)} className="dashboard-btn" style={{ fontSize: '0.8rem' }}>Annuler</button>
+              <button onClick={submitAttempt} disabled={!attemptReason} className="as-cta" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', opacity: attemptReason ? 1 : 0.5 }}>
+                Confirmer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

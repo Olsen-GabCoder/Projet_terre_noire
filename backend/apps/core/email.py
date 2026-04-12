@@ -307,6 +307,31 @@ def send_stale_shipment_alert(sub_order, to_emails):
     return send_templated_email(subject, 'stale_shipment_alert', context, to_emails)
 
 
+def send_max_attempts_reached_alert(sub_order):
+    """C1 : alerter l'admin quand un livreur a atteint 3 tentatives échouées."""
+    from django.conf import settings as django_settings
+    admin_email = getattr(django_settings, 'ADMIN_EMAIL', None)
+    if not admin_email:
+        return False
+    order = sub_order.order
+    agent_name = sub_order.delivery_agent.user.get_full_name() if sub_order.delivery_agent else '—'
+    context = {
+        'sub_order_id': sub_order.id,
+        'order_id': f"{order.id:06d}",
+        'vendor_name': sub_order.vendor.name if sub_order.vendor else '—',
+        'agent_name': agent_name,
+        'customer_name': order.user.get_full_name() if order.user else 'Client',
+        'shipping_city': order.shipping_city,
+        'shipping_address': order.shipping_address,
+        'shipping_phone': order.shipping_phone,
+        'attempt_count': sub_order.attempt_count,
+        'last_attempt_reason': sub_order.last_attempt_reason,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"⚠ {sub_order.attempt_count} tentatives échouées — Commande #{order.id:06d} — Frollot"
+    return send_templated_email(subject, 'max_attempts_reached', context, [admin_email])
+
+
 def send_vendor_delivery_completed(sub_order):
     """Notifier le vendeur qu'une sous-commande a été livrée au client."""
     vendor = sub_order.vendor
@@ -846,6 +871,7 @@ def send_suborder_update(sub_order, new_status):
         'PREPARING': 'en cours de préparation',
         'READY': 'prête, le livreur va la récupérer',
         'SHIPPED': 'expédiée',
+        'ATTEMPTED': 'tentative de livraison échouée',
         'CANCELLED': 'annulée par le vendeur',
     }
     status_label = STATUS_LABELS.get(new_status, sub_order.get_status_display())
@@ -858,6 +884,8 @@ def send_suborder_update(sub_order, new_status):
         'new_status': new_status,
         'items': items_list,
         'shipping_city': order.shipping_city,
+        'attempt_count': getattr(sub_order, 'attempt_count', 0),
+        'last_attempt_reason': getattr(sub_order, 'last_attempt_reason', ''),
         'frontend_url': settings.FRONTEND_URL,
     }
 

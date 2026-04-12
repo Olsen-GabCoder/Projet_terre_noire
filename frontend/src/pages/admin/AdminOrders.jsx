@@ -5,6 +5,12 @@ import '../../styles/AdminOrders.css';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
+const STATUS_OPTIONS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'PARTIAL', 'CANCELLED'];
+const STATUS_LABELS_MAP = {
+  PENDING: 'En attente', PAID: 'Payé', SHIPPED: 'Expédié',
+  DELIVERED: 'Livré', PARTIAL: 'Partiel', CANCELLED: 'Annulé',
+};
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const { t } = useTranslation();
@@ -12,14 +18,30 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const location = useLocation();
 
+  // C2 — Filtres
+  const [filters, setFilters] = useState({ status: '', search: '', date_from: '', date_to: '', vendor: '' });
+  const [vendors, setVendors] = useState([]);
+
   useEffect(() => {
     fetchOrders();
-  }, [location.key]);
+  }, [location.key, filters]);
+
+  useEffect(() => {
+    api.get('/organizations/', { params: { type: 'MAISON_EDITION,LIBRAIRIE' } })
+      .then(res => setVendors(Array.isArray(res.data) ? res.data : res.data?.results || []))
+      .catch(() => {});
+  }, []);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/orders/', { params: { page_size: 50 } });
+      const params = { page_size: 50 };
+      if (filters.status) params.status = filters.status;
+      if (filters.search) params.search = filters.search;
+      if (filters.date_from) params.date_from = filters.date_from;
+      if (filters.date_to) params.date_to = filters.date_to;
+      if (filters.vendor) params.vendor = filters.vendor;
+      const res = await api.get('/orders/', { params });
       setOrders(res.data.results || res.data || []);
     } catch (err) {
       console.error('Erreur chargement commandes:', err);
@@ -27,6 +49,18 @@ const AdminOrders = () => {
       setLoading(false);
     }
   };
+
+  const handleExportCSV = () => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set('status', filters.status);
+    if (filters.search) params.set('search', filters.search);
+    if (filters.date_from) params.set('date_from', filters.date_from);
+    if (filters.date_to) params.set('date_to', filters.date_to);
+    if (filters.vendor) params.set('vendor', filters.vendor);
+    window.open(`/api/orders/export/?${params.toString()}`, '_blank');
+  };
+
+  const resetFilters = () => setFilters({ status: '', search: '', date_from: '', date_to: '', vendor: '' });
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -51,6 +85,9 @@ const AdminOrders = () => {
       PENDING: { label: 'En attente', class: 'order-status-badge--pending' },
       PAID: { label: 'Payé', class: 'order-status-badge--paid' },
       SHIPPED: { label: 'Expédié', class: 'order-status-badge--shipped' },
+      DELIVERED: { label: 'Livré', class: 'order-status-badge--paid' },
+      PARTIAL: { label: 'Partiel', class: 'order-status-badge--shipped' },
+      ATTEMPTED: { label: 'Tentative échouée', class: 'order-status-badge--pending' },
       CANCELLED: { label: 'Annulé', class: 'order-status-badge--cancelled' },
     };
     return configs[s] || { label: status || '—', class: 'order-status-badge--pending' };
@@ -107,6 +144,41 @@ const AdminOrders = () => {
               </span>
               <span className="admin-orders-stat__label">En attente</span>
             </div>
+          </div>
+
+          {/* C2 — Barre de filtres */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem', alignItems: 'flex-end' }}>
+            <input
+              type="text"
+              placeholder="Rechercher (n°, nom, email, ville)..."
+              value={filters.search}
+              onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+              style={{ flex: '1 1 200px', padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+            />
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
+              style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+            >
+              <option value="">Tous les statuts</option>
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_LABELS_MAP[s]}</option>)}
+            </select>
+            <select
+              value={filters.vendor}
+              onChange={(e) => setFilters(f => ({ ...f, vendor: e.target.value }))}
+              style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+            >
+              <option value="">Tous les vendeurs</option>
+              {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+            </select>
+            <input type="date" value={filters.date_from} onChange={(e) => setFilters(f => ({ ...f, date_from: e.target.value }))} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
+            <input type="date" value={filters.date_to} onChange={(e) => setFilters(f => ({ ...f, date_to: e.target.value }))} style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
+            <button onClick={resetFilters} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid #d1d5db', background: 'transparent', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <i className="fas fa-times" /> Réinitialiser
+            </button>
+            <button onClick={handleExportCSV} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: 'none', background: '#1e3a5f', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>
+              <i className="fas fa-download" /> Export CSV
+            </button>
           </div>
 
           {/* Vue tableau — desktop */}
@@ -314,6 +386,45 @@ const AdminOrders = () => {
                 <h3>Montant total</h3>
                 <p className="admin-orders-modal__total">{formatPrice(selectedOrder.total_amount)} FCFA</p>
               </div>
+
+              {/* C2 — SubOrders */}
+              {selectedOrder.sub_orders && selectedOrder.sub_orders.length > 0 && (
+                <div className="admin-orders-modal__section">
+                  <h3>Sous-commandes</h3>
+                  {selectedOrder.sub_orders.map((so) => (
+                    <div key={so.id} style={{ padding: '0.75rem', marginBottom: '0.5rem', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                        <strong style={{ fontSize: '0.85rem' }}>#{so.id} — {so.vendor_name}</strong>
+                        <span className={`order-status-badge ${getStatusConfig(so.status).class}`} style={{ fontSize: '0.7rem' }}>
+                          {so.status_display}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                        {formatPrice(so.subtotal)} FCFA
+                        {so.delivery_agent_name && <> · Livreur : {so.delivery_agent_name}</>}
+                        {so.attempt_count > 0 && <> · {so.attempt_count} tentative(s)</>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* C3 — Historique */}
+              {selectedOrder.events && selectedOrder.events.length > 0 && (
+                <div className="admin-orders-modal__section">
+                  <h3>Historique</h3>
+                  <div style={{ maxHeight: 200, overflowY: 'auto', paddingLeft: '0.75rem', borderLeft: '2px solid #e2e8f0' }}>
+                    {selectedOrder.events.map((evt) => (
+                      <div key={evt.id} style={{ padding: '0.35rem 0 0.35rem 0.5rem', fontSize: '0.75rem', borderBottom: '1px solid #f8fafc' }}>
+                        <div style={{ fontWeight: 500, color: '#334155' }}>{evt.description}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                          {evt.actor_name} ({evt.actor_role}) · {new Date(evt.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="admin-orders-modal__section">
                 <h3>Changer le statut</h3>
                 <div className="admin-orders-modal__status-actions">

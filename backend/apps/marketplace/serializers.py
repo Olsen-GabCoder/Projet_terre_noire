@@ -89,6 +89,7 @@ class SubOrderSerializer(serializers.ModelSerializer):
             'client_full_name', 'client_email', 'client_phone',
             'shipping_address', 'shipping_city',
             'vendor_phone', 'vendor_email', 'vendor_address',
+            'attempt_count', 'last_attempt_at', 'last_attempt_reason',
             'items', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'order', 'vendor', 'subtotal', 'created_at', 'updated_at']

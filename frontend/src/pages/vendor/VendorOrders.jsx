@@ -117,11 +117,21 @@ const VendorOrders = () => {
 
               {/* Coordonnées client */}
               {so.client_full_name && (
-                <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   <span><i className="fas fa-user" style={{ width: 16, marginRight: 4 }} /> {so.client_full_name}</span>
                   {so.shipping_address && <span><i className="fas fa-map-marker-alt" style={{ width: 16, marginRight: 4 }} /> {so.shipping_address}, {so.shipping_city}</span>}
-                  {so.client_phone && <span><i className="fas fa-phone" style={{ width: 16, marginRight: 4 }} /> <a href={`tel:${so.client_phone}`}>{so.client_phone}</a></span>}
-                  {so.client_email && <span><i className="fas fa-envelope" style={{ width: 16, marginRight: 4 }} /> <a href={`mailto:${so.client_email}`}>{so.client_email}</a></span>}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {so.client_phone && (
+                      <a href={`tel:${so.client_phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 20, fontSize: '0.7rem', fontWeight: 600, background: 'rgba(59,130,246,0.1)', color: '#2563eb', textDecoration: 'none' }}>
+                        <i className="fas fa-phone" /> {so.client_phone}
+                      </a>
+                    )}
+                    {so.client_email && (
+                      <a href={`mailto:${so.client_email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 20, fontSize: '0.7rem', fontWeight: 600, background: 'rgba(99,102,241,0.1)', color: '#6366f1', textDecoration: 'none' }}>
+                        <i className="fas fa-envelope" /> {so.client_email}
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
 

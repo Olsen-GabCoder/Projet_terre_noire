@@ -45,15 +45,46 @@ class OrderViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'patch', 'head', 'options']
     
     def get_queryset(self):
+        from django.db.models import Q
+
         items_prefetch = Prefetch(
             'items',
             queryset=OrderItem.objects.select_related('book__category', 'book__author')
         )
         qs = Order.objects.select_related('user').prefetch_related(items_prefetch).order_by('-created_at')
         # Admin voit toutes les commandes, utilisateur voit les siennes
-        if self.request.user.is_staff:
-            return qs
-        return qs.filter(user=self.request.user)
+        if not self.request.user.is_staff:
+            return qs.filter(user=self.request.user)
+
+        # C2 : filtres admin
+        params = self.request.query_params
+        status_filter = params.get('status', '').strip()
+        if status_filter:
+            qs = qs.filter(status__in=status_filter.split(','))
+
+        search = params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(id__icontains=search) |
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(shipping_city__icontains=search)
+            )
+
+        date_from = params.get('date_from', '').strip()
+        if date_from:
+            qs = qs.filter(created_at__date__gte=date_from)
+
+        date_to = params.get('date_to', '').strip()
+        if date_to:
+            qs = qs.filter(created_at__date__lte=date_to)
+
+        vendor = params.get('vendor', '').strip()
+        if vendor:
+            qs = qs.filter(sub_orders__vendor_id=vendor).distinct()
+
+        return qs
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -66,6 +97,32 @@ class OrderViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [OrderCreateThrottle()]
         return super().get_throttles()
+
+    @action(detail=False, methods=['get'], url_path='export', permission_classes=[IsAdminUser])
+    def export_csv(self, request):
+        """C2 : GET /api/orders/export/ — export CSV filtré (admin)."""
+        import csv
+        from io import StringIO
+
+        qs = self.get_queryset()
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Statut', 'Client', 'Email', 'Date', 'Total FCFA', 'Ville', 'Articles', 'SubOrders'])
+
+        for order in qs[:500]:
+            client_name = order.user.get_full_name() if order.user else '—'
+            client_email = order.user.email if order.user else '—'
+            items_summary = '; '.join(f"{i.book.title} x{i.quantity}" for i in order.items.all())
+            sub_count = order.sub_orders.count()
+            writer.writerow([
+                order.id, order.get_status_display(), client_name, client_email,
+                order.created_at.strftime('%Y-%m-%d'), float(order.total_amount),
+                order.shipping_city, items_summary, sub_count,
+            ])
+
+        response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="commandes-frollot.csv"'
+        return response
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -134,6 +191,11 @@ class OrderViewSet(viewsets.ModelViewSet):
             SubOrder.objects.filter(order=order).exclude(
                 status__in=['DELIVERED', 'CANCELLED'],
             ).update(status='CANCELLED')
+
+        # C3 : journal d'activité
+        from apps.orders.utils import log_order_event
+        log_order_event(order, 'CANCELLATION', f"Commande #{order.id} annulée par le client",
+                        actor=request.user, actor_role='client', from_status='PENDING', to_status='CANCELLED')
 
         from apps.core.tasks import send_order_cancelled_task, send_cancellation_notice_task
         send_order_cancelled_task.delay(order.id)

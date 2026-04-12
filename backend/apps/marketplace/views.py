@@ -194,6 +194,7 @@ class SubOrderStatusUpdateView(APIView):
         if not valid:
             return Response({'message': error_msg}, status=status.HTTP_400_BAD_REQUEST)
 
+        old_status = sub_order.status
         sub_order.status = new_status
         if new_status == 'READY' and not sub_order.ready_at:
             sub_order.ready_at = timezone.now()
@@ -223,6 +224,14 @@ class SubOrderStatusUpdateView(APIView):
                 send_suborder_update_task.delay(sub_order.id, new_status)
             except Exception:
                 logger.exception("Erreur notification sous-commande #%s %s", sub_order.id, new_status)
+
+        # C3 : journal d'activité
+        from apps.orders.utils import log_order_event
+        evt = 'CANCELLATION' if new_status == 'CANCELLED' else 'STATUS_CHANGE'
+        log_order_event(sub_order.order, evt,
+                        f"SubOrder #{sub_order.id} : {old_status} → {new_status}",
+                        actor=request.user, actor_role=actor_type,
+                        sub_order=sub_order, from_status=old_status, to_status=new_status)
 
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',
@@ -330,18 +339,31 @@ class DeliveryStatusUpdateView(APIView):
         if not valid:
             return Response({'message': error_msg}, status=status.HTTP_400_BAD_REQUEST)
 
+        old_status = sub_order.status
         sub_order.status = new_status
         if new_status == 'DELIVERED':
             sub_order.delivered_at = timezone.now()
+        if new_status == 'ATTEMPTED':
+            sub_order.attempt_count += 1
+            sub_order.last_attempt_at = timezone.now()
+            sub_order.last_attempt_reason = request.data.get('attempt_reason', '')
         sub_order.save()
 
         # Email au client
-        if new_status == 'SHIPPED':
+        if new_status in ('SHIPPED', 'ATTEMPTED'):
             try:
                 from apps.core.tasks import send_suborder_update_task
-                send_suborder_update_task.delay(sub_order.id, 'SHIPPED')
+                send_suborder_update_task.delay(sub_order.id, new_status)
             except Exception:
-                logger.exception("Erreur notification sous-commande #%s SHIPPED", sub_order.id)
+                logger.exception("Erreur notification sous-commande #%s %s", sub_order.id, new_status)
+
+        # C1 : alerte admin après 3 tentatives
+        if new_status == 'ATTEMPTED' and sub_order.attempt_count >= 3:
+            try:
+                from apps.core.tasks import send_max_attempts_alert_task
+                send_max_attempts_alert_task.delay(sub_order.id)
+            except Exception:
+                logger.exception("Erreur alerte max tentatives SubOrder #%s", sub_order.id)
 
         if new_status == 'DELIVERED':
             try:
@@ -375,6 +397,17 @@ class DeliveryStatusUpdateView(APIView):
                     "Erreur propagation statut Order #%s après livraison SubOrder #%s",
                     sub_order.order_id, sub_order.id,
                 )
+
+        # C3 : journal d'activité
+        from apps.orders.utils import log_order_event
+        evt = 'DELIVERY_ATTEMPTED' if new_status == 'ATTEMPTED' else 'STATUS_CHANGE'
+        meta = {}
+        if new_status == 'ATTEMPTED':
+            meta = {'attempt_count': sub_order.attempt_count, 'reason': sub_order.last_attempt_reason}
+        log_order_event(sub_order.order, evt,
+                        f"SubOrder #{sub_order.id} : {old_status} → {new_status}",
+                        actor=request.user, actor_role=actor_type,
+                        sub_order=sub_order, from_status=old_status, to_status=new_status, metadata=meta)
 
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',

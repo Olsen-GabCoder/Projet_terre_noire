@@ -13,6 +13,10 @@ ALLOWED_TRANSITIONS = {
     ('READY', 'SHIPPED'):       {'delivery', 'admin'},
     ('READY', 'CANCELLED'):     {'admin'},
     ('SHIPPED', 'DELIVERED'):   {'delivery', 'admin'},
+    ('SHIPPED', 'ATTEMPTED'):   {'delivery', 'admin'},
+    ('ATTEMPTED', 'SHIPPED'):   {'delivery', 'admin'},
+    ('ATTEMPTED', 'DELIVERED'): {'delivery', 'admin'},
+    ('ATTEMPTED', 'CANCELLED'): {'admin'},
 }
 
 # Statuts terminaux — aucune transition sortante
@@ -25,17 +29,18 @@ STATUS_LABELS = {
     'PREPARING': 'en préparation',
     'READY': 'prête pour livraison',
     'SHIPPED': 'expédiée',
+    'ATTEMPTED': 'tentative de livraison échouée',
     'DELIVERED': 'livrée',
     'CANCELLED': 'annulée',
 }
 
-# Étape suivante attendue par statut (pour les messages d'aide)
 NEXT_STEP_HINT = {
     'PENDING': 'Vous devez d\'abord confirmer la commande.',
     'CONFIRMED': 'Passez la commande en préparation.',
     'PREPARING': 'Marquez la commande comme prête quand le colis est emballé.',
     'READY': 'Le livreur doit récupérer le colis et marquer l\'expédition.',
     'SHIPPED': 'Le livreur doit confirmer la remise au client.',
+    'ATTEMPTED': 'Le livreur peut réessayer (SHIPPED) ou confirmer la remise (DELIVERED).',
 }
 
 

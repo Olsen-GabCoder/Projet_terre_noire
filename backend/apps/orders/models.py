@@ -93,3 +93,45 @@ class Payment(models.Model):
     
     def __str__(self):
         return f"Paiement {self.transaction_id} - {self.status}"
+
+
+class OrderEvent(models.Model):
+    """C3 : Journal d'activité — trace chaque changement sur une commande."""
+    EVENT_TYPES = [
+        ('ORDER_CREATED', 'Commande créée'),
+        ('PAYMENT_RECEIVED', 'Paiement reçu'),
+        ('PAYMENT_FAILED', 'Paiement échoué'),
+        ('STATUS_CHANGE', 'Changement de statut'),
+        ('DELIVERY_ASSIGNED', 'Livreur assigné'),
+        ('DELIVERY_ATTEMPTED', 'Tentative de livraison'),
+        ('CANCELLATION', 'Annulation'),
+        ('STOCK_RESTORED', 'Stock restauré'),
+        ('COUPON_RESTORED', 'Coupon restauré'),
+        ('WALLET_CREDITED', 'Portefeuille crédité'),
+    ]
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='events')
+    sub_order = models.ForeignKey(
+        'marketplace.SubOrder', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='events',
+    )
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='order_events',
+    )
+    actor_role = models.CharField(max_length=20, blank=True, default='system')
+    from_status = models.CharField(max_length=20, blank=True)
+    to_status = models.CharField(max_length=20, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    description = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Événement commande"
+        verbose_name_plural = "Événements commandes"
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['order', '-created_at'])]
+
+    def __str__(self):
+        return f"[{self.event_type}] Order #{self.order_id} — {self.description}"

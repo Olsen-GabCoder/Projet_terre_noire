@@ -86,6 +86,20 @@ def send_order_cancelled_task(self, order_id):
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_max_attempts_alert_task(self, sub_order_id):
+    """C1 : alerter l'admin après 3 tentatives de livraison échouées."""
+    try:
+        from apps.marketplace.models import SubOrder
+        from apps.core.email import send_max_attempts_reached_alert
+        sub_order = SubOrder.objects.select_related(
+            'vendor', 'order__user', 'delivery_agent__user',
+        ).get(pk=sub_order_id)
+        send_max_attempts_reached_alert(sub_order)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_vendor_new_order_task(self, sub_order_id):
     """U2 : notifier le vendeur qu'une nouvelle sous-commande a été créée."""
     try:

@@ -9,6 +9,63 @@ import '../styles/Orders.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 
+const EVENT_ICONS = {
+  ORDER_CREATED: 'fas fa-plus-circle',
+  PAYMENT_RECEIVED: 'fas fa-credit-card',
+  PAYMENT_FAILED: 'fas fa-times-circle',
+  STATUS_CHANGE: 'fas fa-exchange-alt',
+  DELIVERY_ASSIGNED: 'fas fa-truck',
+  DELIVERY_ATTEMPTED: 'fas fa-exclamation-triangle',
+  CANCELLATION: 'fas fa-ban',
+  STOCK_RESTORED: 'fas fa-boxes',
+  COUPON_RESTORED: 'fas fa-tag',
+  WALLET_CREDITED: 'fas fa-wallet',
+};
+
+const OrderTimeline = ({ events }) => {
+  const [open, setOpen] = useState(false);
+  if (!events || events.length === 0) return null;
+
+  const formatAgo = (dateStr) => {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 60) return 'À l\'instant';
+    if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)}h`;
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getItemClass = (type) => {
+    if (type.includes('CANCEL')) return 'ord-timeline__item--cancel';
+    if (type.includes('PAYMENT')) return 'ord-timeline__item--payment';
+    if (type.includes('DELIVERY')) return 'ord-timeline__item--delivery';
+    return '';
+  };
+
+  return (
+    <div className="ord-timeline">
+      <button className="ord-timeline__toggle" onClick={() => setOpen(!open)}>
+        <i className={`fas fa-chevron-${open ? 'up' : 'down'}`} />
+        Historique ({events.length})
+      </button>
+      {open && (
+        <div className="ord-timeline__list">
+          {events.map((evt) => (
+            <div key={evt.id} className={`ord-timeline__item ${getItemClass(evt.event_type)}`}>
+              <span className="ord-timeline__desc">
+                <i className={EVENT_ICONS[evt.event_type] || 'fas fa-circle'} style={{ marginRight: 4, fontSize: '0.65rem' }} />
+                {evt.description}
+              </span>
+              <div className="ord-timeline__meta">
+                {evt.actor_name} · {formatAgo(evt.created_at)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Orders = ({ embedded = false }) => {
   const { t } = useTranslation();
   const revealRef = useReveal();
@@ -106,6 +163,7 @@ const Orders = ({ embedded = false }) => {
       SHIPPED: { label: t('pages.orders.statusShipped', 'Expédié'), class: 'ord-status--shipped' },
       DELIVERED: { label: t('pages.orders.statusDelivered', 'Livré'), class: 'ord-status--delivered' },
       PARTIAL: { label: t('pages.orders.statusPartial', 'Partiellement livré'), class: 'ord-status--partial' },
+      ATTEMPTED: { label: t('pages.orders.statusAttempted', 'Tentative échouée'), class: 'ord-status--partial' },
       CANCELLED: { label: t('pages.orders.statusCancelled', 'Annulé'), class: 'ord-status--cancelled' },
     };
     return configs[status] || configs.PENDING;
@@ -231,34 +289,54 @@ const Orders = ({ embedded = false }) => {
                             </div>
                             <div className="ord-suborder__meta">
                               <span>{formatPrice(sub.subtotal)}</span>
-                              {sub.vendor_phone && (
-                                <span><a href={`tel:${sub.vendor_phone}`}><i className="fas fa-phone" /> {sub.vendor_phone}</a></span>
-                              )}
-                              {sub.vendor_email && (
-                                <span><a href={`mailto:${sub.vendor_email}`}><i className="fas fa-envelope" /> Contact</a></span>
-                              )}
-                              {sub.vendor_phone && (
-                                <span><a href={`https://wa.me/${sub.vendor_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour, concernant ma commande #${order.id}...`)}`} target="_blank" rel="noopener noreferrer"><i className="fab fa-whatsapp" /> WhatsApp</a></span>
-                              )}
-                            </div>
-                            <div className="ord-suborder__meta">
-                              {sub.delivery_agent_name && (
-                                <span className="ord-suborder__agent">
-                                  <i className="fas fa-motorcycle" /> {sub.delivery_agent_name}
-                                </span>
-                              )}
-                              {sub.delivery_agent_phone && (
-                                <span><a href={`tel:${sub.delivery_agent_phone}`}><i className="fas fa-phone" /> {sub.delivery_agent_phone}</a></span>
-                              )}
                               {sub.delivered_at && (
                                 <span className="ord-suborder__delivered">
                                   <i className="fas fa-check-circle" /> Livré le {formatDate(sub.delivered_at)}
                                 </span>
                               )}
+                              {sub.status === 'ATTEMPTED' && sub.attempt_count > 0 && (
+                                <span style={{ color: '#d97706', fontWeight: 600, fontSize: '0.75rem' }}>
+                                  <i className="fas fa-exclamation-triangle" /> {sub.attempt_count} tentative{sub.attempt_count > 1 ? 's' : ''} — {sub.last_attempt_reason || 'Raison non précisée'}
+                                </span>
+                              )}
                             </div>
+                            {(sub.vendor_phone || sub.vendor_email) && (
+                              <div className="ord-suborder__contacts">
+                                {sub.vendor_phone && (
+                                  <a href={`tel:${sub.vendor_phone}`} className="ord-contact ord-contact--phone">
+                                    <i className="fas fa-phone" /> {sub.vendor_phone}
+                                  </a>
+                                )}
+                                {sub.vendor_email && (
+                                  <a href={`mailto:${sub.vendor_email}`} className="ord-contact ord-contact--email">
+                                    <i className="fas fa-envelope" /> Écrire au vendeur
+                                  </a>
+                                )}
+                                {sub.vendor_phone && (
+                                  <a href={`https://wa.me/${sub.vendor_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour, concernant ma commande #${order.id}...`)}`} target="_blank" rel="noopener noreferrer" className="ord-contact ord-contact--whatsapp">
+                                    <i className="fab fa-whatsapp" /> WhatsApp
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                            {sub.delivery_agent_name && (
+                              <div className="ord-suborder__delivery">
+                                <i className="fas fa-motorcycle" /> {sub.delivery_agent_name}
+                                {sub.delivery_agent_phone && (
+                                  <a href={`tel:${sub.delivery_agent_phone}`} className="ord-contact ord-contact--phone">
+                                    <i className="fas fa-phone" /> {sub.delivery_agent_phone}
+                                  </a>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {/* C3 : Timeline historique */}
+                    {order.events && order.events.length > 0 && (
+                      <OrderTimeline events={order.events} />
                     )}
 
                     <div className="ord-card__footer">

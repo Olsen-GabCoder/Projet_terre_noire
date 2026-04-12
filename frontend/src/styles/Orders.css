@@ -607,6 +607,61 @@
   font-weight: 600;
 }
 
+/* ── Contacts vendeur / livreur ── */
+.ord-suborder__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.ord-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.ord-contact:hover {
+  opacity: 0.8;
+}
+
+.ord-contact--phone {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.ord-contact--email {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.ord-contact--whatsapp {
+  background: rgba(37, 211, 102, 0.1);
+  color: #128c7e;
+}
+
+.ord-suborder__delivery {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--color-gray-200);
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.ord-suborder__delivery i {
+  color: var(--color-primary);
+}
+
 /* Dark mode */
 :root[data-theme="dark"] .ord-suborder {
   background: var(--color-bg-card);
@@ -614,4 +669,89 @@
 
 :root[data-theme="dark"] .ord-suborder__vendor {
   color: var(--color-gray-200);
+}
+
+:root[data-theme="dark"] .ord-contact--phone {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+:root[data-theme="dark"] .ord-contact--email {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+}
+
+:root[data-theme="dark"] .ord-contact--whatsapp {
+  background: rgba(37, 211, 102, 0.15);
+  color: #25d366;
+}
+
+:root[data-theme="dark"] .ord-suborder__delivery {
+  border-top-color: var(--color-gray-700);
+}
+
+/* ── Timeline historique commande ── */
+.ord-timeline {
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: 0.75rem;
+}
+
+.ord-timeline__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.ord-timeline__list {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-gray-200);
+}
+
+.ord-timeline__item {
+  position: relative;
+  padding: 0.35rem 0 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-gray-600);
+}
+
+.ord-timeline__item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0.55rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.ord-timeline__item--cancel::before { background: #ef4444; }
+.ord-timeline__item--payment::before { background: #10b981; }
+.ord-timeline__item--delivery::before { background: #f59e0b; }
+
+.ord-timeline__desc {
+  font-weight: 500;
+  color: var(--color-text-body);
+}
+
+.ord-timeline__meta {
+  font-size: 0.7rem;
+  color: var(--color-gray-400);
+}
+
+:root[data-theme="dark"] .ord-timeline {
+  border-top-color: var(--color-gray-700);
+}
+
+:root[data-theme="dark"] .ord-timeline__list {
+  border-left-color: var(--color-gray-700);
 }
