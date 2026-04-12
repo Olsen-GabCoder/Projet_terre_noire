@@ -1,0 +1,18 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ vendor_name }}</strong>,</p>
+<div style="background: #d1fae5; border-left: 4px solid #059669; padding: 12px 16px; border-radius: 4px; margin: 0 0 16px; font-size: 14px; color: #065f46;">
+  <strong>Livraison terminée !</strong> La sous-commande #{{ sub_order_id }} (commande #{{ order_id }}) a été remise au client.
+</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Client</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ customer_name }}</td></tr>
+  {% if agent_name %}<tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Livreur</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ agent_name }}</td></tr>{% endif %}
+  <tr><td style="padding: 8px 10px; color: #64748b; border-bottom: 1px solid #eee; font-size: 13px;">Livré le</td><td style="padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 13px;">{{ delivered_at }}</td></tr>
+  <tr><td style="padding: 8px 10px; color: #64748b; font-size: 13px;">Montant</td><td style="padding: 8px 10px; font-weight: bold; color: #059669; font-size: 13px;">{{ subtotal|floatformat:0 }} FCFA</td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/vendor/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir mes commandes</a>
+  </td></tr>
+</table>
+{% endblock %}

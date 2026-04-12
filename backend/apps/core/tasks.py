@@ -83,6 +83,34 @@ def send_vendor_new_order_task(self, sub_order_id):
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_vendor_delivery_completed_task(self, sub_order_id):
+    """A3 : notifier le vendeur que la livraison est terminée."""
+    try:
+        from apps.marketplace.models import SubOrder
+        from apps.core.email import send_vendor_delivery_completed
+        sub_order = SubOrder.objects.select_related(
+            'vendor', 'order__user', 'delivery_agent__user',
+        ).get(pk=sub_order_id)
+        send_vendor_delivery_completed(sub_order)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_cancellation_notice_task(self, sub_order_id, recipient_type):
+    """A4 : notifier vendeur ou livreur de l'annulation d'une sous-commande."""
+    try:
+        from apps.marketplace.models import SubOrder
+        from apps.core.email import send_cancellation_notice
+        sub_order = SubOrder.objects.select_related(
+            'vendor', 'order__user', 'delivery_agent__user',
+        ).get(pk=sub_order_id)
+        send_cancellation_notice(sub_order, recipient_type)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_order_shipped_task(self, order_id):
     try:
         from apps.orders.models import Order
@@ -273,6 +301,14 @@ def cancel_stale_pending_orders(self):
                         item.listing.stock = F('stock') + item.quantity
                         item.listing.save(update_fields=['stock'])
 
+                # A5 : restaurer le coupon
+                if order.coupon_code:
+                    from apps.coupons.models import Coupon
+                    Coupon.objects.filter(code=order.coupon_code).update(
+                        usage_count=F('usage_count') - 1
+                    )
+                    logger.info("Coupon '%s' restauré (annulation auto commande #%s)", order.coupon_code, order.id)
+
                 order.status = 'CANCELLED'
                 order.save(update_fields=['status', 'updated_at'])
 
@@ -293,6 +329,19 @@ def cancel_stale_pending_orders(self):
             send_order_cancelled(order)
         except Exception:
             logger.warning("Email annulation échoué pour commande #%s", order.id)
+
+        # A4 : notifier vendeurs et livreurs des SubOrders annulées
+        try:
+            from apps.core.email import send_cancellation_notice
+            for so in SubOrder.objects.filter(order=order, status='CANCELLED').select_related(
+                'vendor', 'delivery_agent__user',
+            ):
+                if so.vendor:
+                    send_cancellation_notice(so, 'vendor')
+                if so.delivery_agent:
+                    send_cancellation_notice(so, 'delivery')
+        except Exception:
+            logger.exception("Erreur notifications annulation SubOrders commande #%s", order.id)
 
     logger.info("cancel_stale_pending_orders: %d commande(s) annulée(s)", cancelled_count)
     return cancelled_count

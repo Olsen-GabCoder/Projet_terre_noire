@@ -118,6 +118,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                     item.listing.stock = F('stock') + item.quantity
                     item.listing.save(update_fields=['stock'])
 
+            # A5 : restaurer le coupon
+            if order.coupon_code:
+                from apps.coupons.models import Coupon
+                Coupon.objects.filter(code=order.coupon_code).update(
+                    usage_count=F('usage_count') - 1
+                )
+                logger.info("Coupon '%s' restauré (annulation commande #%s)", order.coupon_code, order.id)
+
             order.status = 'CANCELLED'
             order.save(update_fields=['status', 'updated_at'])
 
@@ -127,8 +135,19 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status__in=['DELIVERED', 'CANCELLED'],
             ).update(status='CANCELLED')
 
-        from apps.core.tasks import send_order_cancelled_task
+        from apps.core.tasks import send_order_cancelled_task, send_cancellation_notice_task
         send_order_cancelled_task.delay(order.id)
+
+        # A4 : notifier vendeurs et livreurs des SubOrders annulées
+        from apps.marketplace.models import SubOrder as SO
+        for so in SO.objects.filter(order=order, status='CANCELLED').select_related('vendor', 'delivery_agent'):
+            try:
+                if so.vendor:
+                    send_cancellation_notice_task.delay(so.id, 'vendor')
+                if so.delivery_agent:
+                    send_cancellation_notice_task.delay(so.id, 'delivery')
+            except Exception:
+                logger.exception("Erreur notification annulation SubOrder #%s", so.id)
 
         serializer = OrderListSerializer(order, context={'request': request})
         return Response(serializer.data)

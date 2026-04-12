@@ -14,6 +14,30 @@
   ont été confirmés et sont en cours de préparation.
 </p>
 
+{% elif new_status == 'PREPARING' %}
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #92400e; font-weight: bold; font-size: 14px;">
+    Votre commande est en cours de préparation !
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Le vendeur <strong>{{ vendor_name }}</strong> prépare les articles suivants
+  de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>.
+</p>
+
+{% elif new_status == 'READY' %}
+<div style="background: #d1fae5; border-left: 4px solid #059669; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #065f46; font-weight: bold; font-size: 14px;">
+    Votre commande est prête !
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Les articles suivants de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
+  sont prêts chez <strong>{{ vendor_name }}</strong>. Le livreur va les récupérer prochainement.
+</p>
+
 {% elif new_status == 'SHIPPED' %}
 <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
   <p style="margin: 0; color: #1e40af; font-weight: bold; font-size: 14px;">

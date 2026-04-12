@@ -39,9 +39,16 @@ const DeliveryAssignments = () => {
     setUpdating(subOrderId);
     try {
       await marketplaceService.updateDeliveryStatus(subOrderId, { status: newStatus });
-      toast.success(newStatus === 'SHIPPED' ? t('dashboard.deliveryAssignments.markedShipped') : t('dashboard.deliveryAssignments.deliveryConfirmed'));
+      toast.success(
+        newStatus === 'SHIPPED'
+          ? 'Colis pris en charge ! Le client a été notifié.'
+          : 'Livraison confirmée ! Le client et le vendeur ont été notifiés.'
+      );
       fetchAssignments();
-    } catch (err) { toast.error(handleApiError(err)); }
+    } catch (err) {
+      const msg = err.response?.data?.message || handleApiError(err);
+      toast.error(msg);
+    }
     finally { setUpdating(null); }
   };
 

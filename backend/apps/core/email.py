@@ -247,6 +247,71 @@ def send_vendor_payment_received(sub_order):
     return send_templated_email(subject, 'vendor_new_order', context, recipients)
 
 
+def send_vendor_delivery_completed(sub_order):
+    """Notifier le vendeur qu'une sous-commande a été livrée au client."""
+    vendor = sub_order.vendor
+    if not vendor:
+        return False
+    recipients = _get_vendor_recipients(vendor)
+    if not recipients:
+        return False
+    order = sub_order.order
+    agent_name = sub_order.delivery_agent.user.get_full_name() if sub_order.delivery_agent else None
+    context = {
+        'vendor_name': vendor.name,
+        'order_id': f"{order.id:06d}",
+        'sub_order_id': sub_order.id,
+        'customer_name': order.user.get_full_name() or order.user.username if order.user else 'Client',
+        'agent_name': agent_name,
+        'delivered_at': sub_order.delivered_at.strftime('%d/%m/%Y à %Hh%M') if sub_order.delivered_at else '—',
+        'subtotal': float(sub_order.subtotal),
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Livraison terminée — Commande #{order.id:06d} — Frollot"
+    return send_templated_email(subject, 'vendor_delivery_completed', context, recipients)
+
+
+def send_cancellation_notice(sub_order, recipient_type):
+    """
+    Notifier un acteur (vendeur ou livreur) de l'annulation d'une sous-commande.
+    recipient_type: 'vendor' ou 'delivery'
+    """
+    order = sub_order.order
+    if recipient_type == 'vendor':
+        vendor = sub_order.vendor
+        if not vendor:
+            return False
+        recipients = _get_vendor_recipients(vendor)
+        recipient_name = vendor.name
+    elif recipient_type == 'delivery':
+        agent = sub_order.delivery_agent
+        if not agent or not agent.user.email:
+            return False
+        recipients = [agent.user.email]
+        recipient_name = agent.user.get_full_name() or agent.user.username
+    else:
+        return False
+
+    if not recipients:
+        return False
+
+    from apps.orders.models import OrderItem
+    items = [
+        {'title': item.book.title, 'quantity': item.quantity}
+        for item in OrderItem.objects.filter(sub_order=sub_order).select_related('book')
+    ]
+    context = {
+        'recipient_name': recipient_name,
+        'recipient_type': recipient_type,
+        'order_id': f"{order.id:06d}",
+        'sub_order_id': sub_order.id,
+        'items': items,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Commande #{order.id:06d} annulée — Frollot"
+    return send_templated_email(subject, 'cancellation_notice', context, recipients)
+
+
 def send_newsletter_welcome(email):
     """Email de bienvenue après inscription à la newsletter."""
     context = {'email': email, 'frontend_url': settings.FRONTEND_URL}
@@ -718,6 +783,8 @@ def send_suborder_update(sub_order, new_status):
 
     STATUS_LABELS = {
         'CONFIRMED': 'confirmée par le vendeur',
+        'PREPARING': 'en cours de préparation',
+        'READY': 'prête, le livreur va la récupérer',
         'SHIPPED': 'expédiée',
     }
     status_label = STATUS_LABELS.get(new_status, sub_order.get_status_display())

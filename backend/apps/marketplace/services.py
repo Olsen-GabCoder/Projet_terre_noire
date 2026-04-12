@@ -1,7 +1,10 @@
 """Services métier de la marketplace — split payment, etc."""
 from decimal import Decimal
 
-from .models import CommissionConfig, VendorWallet, WalletTransaction, DeliveryWallet
+from .models import (
+    CommissionConfig, VendorWallet, WalletTransaction,
+    DeliveryWallet, DeliveryWalletTransaction,
+)
 
 
 def split_payment(order):
@@ -42,3 +45,15 @@ def split_payment(order):
             d_wallet.balance += sub_order.delivery_fee
             d_wallet.total_earned += sub_order.delivery_fee
             d_wallet.save()
+
+            # A6 : créer la transaction pour l'audit trail
+            DeliveryWalletTransaction.objects.create(
+                wallet=d_wallet,
+                sub_order=sub_order,
+                transaction_type='CREDIT_DELIVERY',
+                amount=sub_order.delivery_fee,
+                description=(
+                    f"Livraison commande #{order.id}, "
+                    f"sous-commande #{sub_order.id}"
+                ),
+            )

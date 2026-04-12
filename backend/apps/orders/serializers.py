@@ -69,7 +69,7 @@ class OrderCreateSerializer(serializers.Serializer):
         subtotal = Decimal('0')
         order_items = []
         book_ids = [item['book_id'] for item in items_data]
-        books_map = {b.id: b for b in Book.objects.filter(id__in=book_ids).select_related('category', 'author')}
+        books_map = {b.id: b for b in Book.objects.filter(id__in=book_ids).select_related('category', 'author', 'publisher_organization')}
 
         # Résoudre les listings si fournis
         listing_ids = [item['listing_id'] for item in items_data if item.get('listing_id')]
@@ -118,6 +118,9 @@ class OrderCreateSerializer(serializers.Serializer):
                 vendor = listing.vendor
             else:
                 price = book.price
+                # Achat catalogue direct : utiliser publisher_organization comme vendeur
+                if book.publisher_organization_id:
+                    vendor = book.publisher_organization
 
             subtotal += price * quantity
             order_items.append({
@@ -223,9 +226,17 @@ class OrderCreateSerializer(serializers.Serializer):
                     sub_kwargs['delivery_agent'] = selected_rate.agent
                     sub_kwargs['delivery_fee'] = selected_rate.price
                 sub_order = SubOrder.objects.create(**sub_kwargs)
-                OrderItem.objects.filter(
-                    id__in=[oi.id for oi in vgroup['items']],
-                ).update(sub_order=sub_order)
+                oi_ids = [oi.id for oi in vgroup['items']]
+                OrderItem.objects.filter(id__in=oi_ids).update(
+                    sub_order=sub_order, vendor=vgroup['vendor'],
+                )
+            else:
+                # Livres orphelins sans publisher_organization — pas de SubOrder
+                for oi in vgroup['items']:
+                    logger.warning(
+                        "OrderItem #%s (book=%s) sans vendeur ni publisher_organization — pas de SubOrder",
+                        oi.id, oi.book_id,
+                    )
 
         # Envoi emails (async, après commit de la transaction)
         from django.db import transaction as db_transaction

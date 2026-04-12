@@ -134,10 +134,11 @@ class VendorWalletSerializer(serializers.ModelSerializer):
 
 class WalletTransactionSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
+    vendor_name = serializers.CharField(source='wallet.vendor.name', read_only=True)
 
     class Meta:
         model = WalletTransaction
-        fields = ['id', 'transaction_type', 'type_display', 'amount', 'description', 'sub_order', 'created_at']
+        fields = ['id', 'transaction_type', 'type_display', 'amount', 'description', 'sub_order', 'vendor_name', 'created_at']
         read_only_fields = fields
 
 

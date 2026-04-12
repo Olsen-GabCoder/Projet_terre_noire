@@ -2,19 +2,40 @@ import { useState, useEffect } from 'react';
 import marketplaceService from '../../services/marketplaceService';
 import { handleApiError } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+
+const SUCCESS_MESSAGES = {
+  CONFIRMED: 'Commande confirmée ! Le client a été notifié.',
+  PREPARING: 'Commande passée en préparation.',
+  READY: 'Commande marquée comme prête. Le livreur sera notifié.',
+  SHIPPED: 'Commande expédiée.',
+  DELIVERED: 'Commande livrée !',
+  CANCELLED: 'Commande annulée.',
+};
 
 const VendorOrders = () => {
   const [orders, setOrders] = useState([]);
   const { t } = useTranslation();
 
-  const STATUS_OPTIONS = [
-    { value: 'CONFIRMED', label: t('vendor.orders.statusConfirm') },
-    { value: 'PREPARING', label: t('vendor.orders.statusPreparing') },
-    { value: 'READY', label: t('vendor.orders.statusReady') },
-    { value: 'SHIPPED', label: t('vendor.orders.statusShipped') },
-    { value: 'DELIVERED', label: t('vendor.orders.statusDelivered') },
-    { value: 'CANCELLED', label: t('vendor.orders.statusCancel') },
-  ];
+  // Transitions valides par statut actuel (machine à états A1, vue vendeur)
+  const NEXT_ACTIONS = {
+    PENDING:   [
+      { value: 'CONFIRMED', label: 'Confirmer la commande', primary: true },
+      { value: 'CANCELLED', label: 'Refuser' },
+    ],
+    CONFIRMED: [
+      { value: 'PREPARING', label: 'Passer en préparation', primary: true },
+      { value: 'CANCELLED', label: 'Annuler' },
+    ],
+    PREPARING: [
+      { value: 'READY', label: 'Marquer comme prête', primary: true },
+      { value: 'CANCELLED', label: 'Annuler' },
+    ],
+    READY: [],  // Le vendeur attend le livreur — aucune action
+    SHIPPED: [],  // Le livreur gère
+    DELIVERED: [],
+    CANCELLED: [],
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(null);
@@ -36,9 +57,11 @@ const VendorOrders = () => {
     setUpdating(id);
     try {
       await marketplaceService.updateSubOrderStatus(id, { status: newStatus });
+      toast.success(SUCCESS_MESSAGES[newStatus] || 'Statut mis à jour.');
       fetchOrders();
     } catch (err) {
-      setError(handleApiError(err));
+      const msg = err.response?.data?.message || handleApiError(err);
+      toast.error(msg);
     } finally {
       setUpdating(null);
     }
@@ -61,12 +84,17 @@ const VendorOrders = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {orders.map((so) => (
             <div key={so.id} className="dashboard-card" style={{ padding: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.25rem' }}>
                 <div>
                   <strong>{t('vendor.orders.subOrder', { id: so.id })}</strong>
                   <span className="text-muted" style={{ marginLeft: '0.5rem' }}>
                     ({t('vendor.orders.order', { id: so.order })})
                   </span>
+                  {so.vendor_name && (
+                    <span style={{ marginLeft: '0.5rem', padding: '0.15rem 0.5rem', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600, background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>
+                      <i className="fas fa-building" style={{ marginRight: 3 }} />{so.vendor_name}
+                    </span>
+                  )}
                 </div>
                 <span className={`my-profiles__badge ${so.status === 'DELIVERED' ? 'my-profiles__badge--active' : ''}`}>
                   {so.status_display}
@@ -103,19 +131,24 @@ const VendorOrders = () => {
                 </div>
               )}
 
-              {so.status !== 'DELIVERED' && so.status !== 'CANCELLED' && (
+              {(NEXT_ACTIONS[so.status] || []).length > 0 && (
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {STATUS_OPTIONS.filter((s) => s.value !== so.status).map((s) => (
+                  {NEXT_ACTIONS[so.status].map((action) => (
                     <button
-                      key={s.value}
-                      className={`dashboard-btn ${s.value === 'CANCELLED' ? '' : 'dashboard-btn--primary'}`}
-                      onClick={() => updateStatus(so.id, s.value)}
+                      key={action.value}
+                      className={`dashboard-btn ${action.primary ? 'dashboard-btn--primary' : ''}`}
+                      onClick={() => updateStatus(so.id, action.value)}
                       disabled={updating === so.id}
                       style={{ fontSize: '0.75rem' }}
                     >
-                      {s.label}
+                      {action.label}
                     </button>
                   ))}
+                </div>
+              )}
+              {so.status === 'READY' && (
+                <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
+                  En attente du livreur pour la prise en charge.
                 </div>
               )}
             </div>

@@ -26,13 +26,23 @@ from .serializers import (
 
 
 def _get_user_vendor(user):
-    """Retourne la première organisation vendeur de l'utilisateur."""
+    """Retourne la première organisation vendeur de l'utilisateur (pour les créations)."""
     membership = OrganizationMembership.objects.filter(
         user=user, is_active=True,
         organization__org_type__in=['MAISON_EDITION', 'LIBRAIRIE'],
         role__in=['PROPRIETAIRE', 'ADMINISTRATEUR', 'COMMERCIAL'],
     ).select_related('organization').first()
     return membership.organization if membership else None
+
+
+def _get_user_vendor_orgs(user):
+    """Retourne toutes les organisations vendeuses de l'utilisateur (pour les lectures agrégées)."""
+    return Organization.objects.filter(
+        org_type__in=['MAISON_EDITION', 'LIBRAIRIE'],
+        memberships__user=user,
+        memberships__is_active=True,
+        memberships__role__in=['PROPRIETAIRE', 'ADMINISTRATEUR', 'COMMERCIAL'],
+    ).distinct()
 
 
 # ── BookListing ──
@@ -57,17 +67,38 @@ class BookListingListView(generics.ListAPIView):
 
 
 class BookListingCreateView(generics.CreateAPIView):
-    """Créer une offre (vendeur authentifié)."""
+    """Créer une offre (vendeur authentifié). Accepte organization_id dans le payload."""
     serializer_class = BookListingCreateSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
-        ctx['vendor'] = _get_user_vendor(self.request.user)
+        # Résoudre l'organisation cible
+        vendor_orgs = _get_user_vendor_orgs(self.request.user)
+        org_id = self.request.data.get('organization_id')
+        if org_id:
+            vendor = vendor_orgs.filter(id=org_id).first()
+            if not vendor:
+                ctx['vendor'] = None
+                ctx['vendor_error'] = "Organisation non trouvée ou vous n'en êtes pas responsable."
+            else:
+                ctx['vendor'] = vendor
+        elif vendor_orgs.count() == 1:
+            ctx['vendor'] = vendor_orgs.first()
+        else:
+            ctx['vendor'] = None
+            ctx['vendor_error'] = (
+                "Vous gérez plusieurs organisations. "
+                "Précisez organization_id pour indiquer laquelle doit porter cette offre."
+            )
         return ctx
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        # Vérifier l'erreur vendor avant validation du serializer
+        vendor_error = serializer.context.get('vendor_error')
+        if vendor_error:
+            return Response({'message': vendor_error}, status=status.HTTP_400_BAD_REQUEST)
         serializer.is_valid(raise_exception=True)
         listing = serializer.save()
         return Response(
@@ -111,29 +142,29 @@ class VendorListingsView(generics.ListAPIView):
 
 
 class MyListingsView(generics.ListAPIView):
-    """Mes offres (vendeur connecté)."""
+    """Offres de toutes les organisations vendeuses de l'utilisateur."""
     serializer_class = BookListingSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
 
     def get_queryset(self):
-        vendor = _get_user_vendor(self.request.user)
-        if not vendor:
+        vendor_orgs = _get_user_vendor_orgs(self.request.user)
+        if not vendor_orgs.exists():
             return BookListing.objects.none()
-        return BookListing.objects.filter(vendor=vendor).select_related('book', 'vendor')
+        return BookListing.objects.filter(vendor__in=vendor_orgs).select_related('book', 'vendor')
 
 
 # ── SubOrder ──
 
 class VendorSubOrderListView(generics.ListAPIView):
-    """Sous-commandes du vendeur connecté."""
+    """Sous-commandes de toutes les organisations vendeuses de l'utilisateur."""
     serializer_class = SubOrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
 
     def get_queryset(self):
-        vendor = _get_user_vendor(self.request.user)
-        if not vendor:
+        vendor_orgs = _get_user_vendor_orgs(self.request.user)
+        if not vendor_orgs.exists():
             return SubOrder.objects.none()
-        return SubOrder.objects.filter(vendor=vendor).select_related(
+        return SubOrder.objects.filter(vendor__in=vendor_orgs).select_related(
             'order__user', 'vendor', 'delivery_agent__user',
         ).order_by('-created_at')
 
@@ -155,6 +186,14 @@ class SubOrderStatusUpdateView(APIView):
         serializer = SubOrderStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_status = serializer.validated_data['status']
+
+        # A1 : validation stricte de la machine à états
+        from .utils import validate_suborder_transition
+        actor_type = 'admin' if request.user.is_platform_admin else 'vendor'
+        valid, error_msg = validate_suborder_transition(sub_order.status, new_status, actor_type)
+        if not valid:
+            return Response({'message': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+
         sub_order.status = new_status
         if new_status == 'READY' and not sub_order.ready_at:
             sub_order.ready_at = timezone.now()
@@ -162,8 +201,8 @@ class SubOrderStatusUpdateView(APIView):
             sub_order.delivered_at = timezone.now()
         sub_order.save()
 
-        # Notifier le client sur les transitions visibles
-        if new_status in ('CONFIRMED', 'SHIPPED'):
+        # A2 : notifier le client sur les transitions visibles
+        if new_status in ('CONFIRMED', 'PREPARING', 'READY', 'SHIPPED'):
             try:
                 from apps.core.tasks import send_suborder_update_task
                 send_suborder_update_task.delay(sub_order.id, new_status)
@@ -268,11 +307,14 @@ class DeliveryStatusUpdateView(APIView):
         serializer = SubOrderStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_status = serializer.validated_data['status']
-        if new_status not in ('SHIPPED', 'DELIVERED'):
-            return Response(
-                {'message': 'Un livreur ne peut que marquer comme Expédié ou Livré.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
+        # A1 : validation stricte de la machine à états
+        from .utils import validate_suborder_transition
+        actor_type = 'admin' if request.user.is_platform_admin else 'delivery'
+        valid, error_msg = validate_suborder_transition(sub_order.status, new_status, actor_type)
+        if not valid:
+            return Response({'message': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+
         sub_order.status = new_status
         if new_status == 'DELIVERED':
             sub_order.delivered_at = timezone.now()
@@ -294,7 +336,14 @@ class DeliveryStatusUpdateView(APIView):
             except Exception:
                 logger.exception("Erreur notification commande #%s DELIVERED", sub_order.order_id)
 
-            # ── P1 : propager le statut vers l'Order parent ──
+            # A3 : notifier le vendeur que la livraison est terminée
+            try:
+                from apps.core.tasks import send_vendor_delivery_completed_task
+                send_vendor_delivery_completed_task.delay(sub_order.id)
+            except Exception:
+                logger.exception("Erreur notification vendeur livraison SubOrder #%s", sub_order.id)
+
+            # P1 : propager le statut vers l'Order parent
             try:
                 order = sub_order.order
                 sibling_statuses = set(
@@ -320,28 +369,31 @@ class DeliveryStatusUpdateView(APIView):
 # ── Wallet ──
 
 class VendorWalletView(APIView):
-    """Portefeuille du vendeur connecté."""
+    """Portefeuilles de toutes les organisations vendeuses de l'utilisateur."""
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
 
     def get(self, request):
-        vendor = _get_user_vendor(request.user)
-        if not vendor:
+        vendor_orgs = _get_user_vendor_orgs(request.user)
+        if not vendor_orgs.exists():
             return Response({'message': 'Aucune organisation vendeur.'}, status=404)
-        wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
-        return Response(VendorWalletSerializer(wallet).data)
+        wallets = []
+        for org in vendor_orgs:
+            wallet, _ = VendorWallet.objects.get_or_create(vendor=org)
+            wallets.append(wallet)
+        return Response(VendorWalletSerializer(wallets, many=True).data)
 
 
 class WalletTransactionListView(generics.ListAPIView):
-    """Historique des transactions du vendeur."""
+    """Historique des transactions de toutes les organisations vendeuses de l'utilisateur."""
     serializer_class = WalletTransactionSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
 
     def get_queryset(self):
-        vendor = _get_user_vendor(self.request.user)
-        if not vendor:
+        vendor_orgs = _get_user_vendor_orgs(self.request.user)
+        if not vendor_orgs.exists():
             return WalletTransaction.objects.none()
         return WalletTransaction.objects.filter(
-            wallet__vendor=vendor,
+            wallet__vendor__in=vendor_orgs,
         ).order_by('-created_at')
 
 
