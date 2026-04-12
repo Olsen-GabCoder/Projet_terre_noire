@@ -13,6 +13,9 @@ from datetime import timedelta
 import dj_database_url
 import django
 
+# Détection de l'exécution des tests Django (désactive SSL redirect et cookies secure)
+TESTING = 'test' in sys.argv
+
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
 
@@ -391,17 +394,17 @@ CORS_ALLOWED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 # =============================================================================
 if not DEBUG:
-    # Redirection HTTP → HTTPS
-    SECURE_SSL_REDIRECT = True
+    # Redirection HTTP → HTTPS (désactivé pendant les tests Django)
+    SECURE_SSL_REDIRECT = not TESTING
 
     # HSTS (HTTP Strict Transport Security) — force le navigateur à utiliser HTTPS
     SECURE_HSTS_SECONDS = 31536000  # 1 an
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    # Cookies uniquement en HTTPS
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # Cookies uniquement en HTTPS (désactivé pendant les tests Django)
+    SESSION_COOKIE_SECURE = not TESTING
+    CSRF_COOKIE_SECURE = not TESTING
 
     # Protection contre le sniffing MIME
     SECURE_CONTENT_TYPE_NOSNIFF = True
