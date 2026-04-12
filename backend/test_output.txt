@@ -1,0 +1,16 @@
+Using existing test database for alias 'default'...
+
+System check identified some issues:
+
+WARNINGS:
+books.Book.slug: (mysql.W003) MySQL may not allow unique CharFields to have a max_length > 255.
+	HINT: See: https://docs.djangoproject.com/en/5.2/ref/databases/#mysql-character-fields
+books.BookReview: (models.W036) MySQL does not support unique constraints with conditions.
+	HINT: A constraint won't be created. Silence this warning if you don't care about it.
+services.ServiceListing.slug: (mysql.W003) MySQL may not allow unique CharFields to have a max_length > 255.
+	HINT: See: https://docs.djangoproject.com/en/5.2/ref/databases/#mysql-character-fields
+
+System check identified 3 issues (0 silenced).
+..............................2026-04-12 20:25:37 INFO apps.core.email Email envoyÚ: [Contact] Commande ù Jean Dupont -> ['tolsenkampala@gmail.com']
+2026-04-12 20:25:37 INFO apps.core.email Email envoyÚ: Nous avons bien reþu votre message ù Frollot -> ['jean@example.com']
+.........................................................................................................2026-04-12 20:25:58 INFO apps.core.email Email envoyÚ: Bienvenue dans la newsletter ù Frollot -> ['news@example.com']

@@ -11,6 +11,7 @@ from rest_framework.test import APITestCase
 
 from apps.manuscripts.models import Manuscript
 from apps.organizations.models import Organization, OrganizationMembership
+from apps.users.models import UserProfile
 
 User = get_user_model()
 
@@ -63,17 +64,20 @@ class ManuscriptTestBase(APITestCase):
 
     @staticmethod
     def _fake_docx(name='manuscript.docx', size=1024):
-        return SimpleUploadedFile(name, b'PK' + b'0' * size, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        return SimpleUploadedFile(name, b'PK\x03\x04' + b'0' * size, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
     def _valid_payload(self, **overrides):
         data = {
             'title': 'Mon Premier Roman',
             'author_name': 'Jean Auteur',
+            'pen_name': 'J. Auteur',
             'email': 'auteur1@frollot.test',
             'phone_number': '+24101234567',
+            'country': 'GA',
             'genre': 'ROMAN',
             'language': 'FR',
             'description': 'A' * 60,  # > 50 chars
+            'page_count': 120,
             'terms_accepted': True,
             'file': self._fake_pdf(),
         }
@@ -90,8 +94,21 @@ class ManuscriptSubmitTests(ManuscriptTestBase):
 
     url = '/api/manuscripts/submit/'
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
+    def setUp(self):
+        super().setUp()
+        # L'endpoint exige IsAuthenticated + profil AUTEUR
+        UserProfile.objects.get_or_create(user=self.regular_user, profile_type='AUTEUR')
+        self.client.force_authenticate(user=self.regular_user)
+
+    def test_submit_anonymous_rejected(self):
+        """Soumission anonyme doit être rejetée (401)."""
+        self.client.force_authenticate(user=None)
+        payload = self._valid_payload()
+        response = self.client.post(self.url, payload, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
     def test_submit_success_with_pdf(self, mock_org, mock_ack):
         """Soumission complète avec fichier PDF doit réussir (201)."""
         payload = self._valid_payload()
@@ -104,16 +121,16 @@ class ManuscriptSubmitTests(ManuscriptTestBase):
         self.assertEqual(m.status, 'PENDING')
         mock_ack.delay.assert_called_once()
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
     def test_submit_success_with_docx(self, mock_org, mock_ack):
         """Soumission avec fichier DOCX doit réussir (201)."""
         payload = self._valid_payload(file=self._fake_docx())
         response = self.client.post(self.url, payload, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
     def test_submit_links_authenticated_submitter(self, mock_org, mock_ack):
         """Soumission par un utilisateur connecté lie le manuscrit au submitter."""
         self.client.force_authenticate(user=self.regular_user)
@@ -123,15 +140,15 @@ class ManuscriptSubmitTests(ManuscriptTestBase):
         m = Manuscript.objects.first()
         self.assertEqual(m.submitter, self.regular_user)
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
-    def test_submit_anonymous_no_submitter(self, mock_org, mock_ack):
-        """Soumission anonyme : submitter reste null."""
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
+    def test_submit_authenticated_has_submitter(self, mock_org, mock_ack):
+        """Soumission authentifiée lie le manuscrit au submitter."""
         payload = self._valid_payload()
         response = self.client.post(self.url, payload, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         m = Manuscript.objects.first()
-        self.assertIsNone(m.submitter)
+        self.assertEqual(m.submitter, self.regular_user)
 
     def test_submit_missing_file_rejected(self):
         """Soumission sans fichier doit être rejetée (400)."""
@@ -172,8 +189,8 @@ class ManuscriptSubmitTests(ManuscriptTestBase):
         response = self.client.post(self.url, payload, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
     def test_submit_with_target_organization(self, mock_org, mock_ack):
         """Soumission ciblée vers une organisation."""
         payload = self._valid_payload(target_organization=self.org.pk)
@@ -192,6 +209,11 @@ class ManuscriptFileValidationTests(ManuscriptTestBase):
     """Tests de validation du fichier uploadé."""
 
     url = '/api/manuscripts/submit/'
+
+    def setUp(self):
+        super().setUp()
+        UserProfile.objects.get_or_create(user=self.regular_user, profile_type='AUTEUR')
+        self.client.force_authenticate(user=self.regular_user)
 
     def test_reject_txt_file(self):
         """Fichier .txt doit être rejeté."""
@@ -225,11 +247,11 @@ class ManuscriptFileValidationTests(ManuscriptTestBase):
         response = self.client.post(self.url, payload, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('apps.manuscripts.views.send_manuscript_acknowledgment_task')
-    @patch('apps.manuscripts.views.send_manuscript_org_notification_task')
+    @patch('apps.core.tasks.send_manuscript_acknowledgment_task')
+    @patch('apps.core.tasks.send_manuscript_org_notification_task')
     def test_accept_doc_file(self, mock_org, mock_ack):
         """Fichier .doc doit etre accepte (extension autorisee dans le modele)."""
-        doc_file = SimpleUploadedFile('manuscript.doc', b'\xd0\xcf' + b'\x00' * 100, content_type='application/msword')
+        doc_file = SimpleUploadedFile('manuscript.doc', b'\xd0\xcf\x11\xe0' + b'\x00' * 100, content_type='application/msword')
         payload = self._valid_payload(file=doc_file)
         response = self.client.post(self.url, payload, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -396,7 +418,7 @@ class ManuscriptStatusWorkflowTests(ManuscriptTestBase):
             format='json',
         )
 
-    @patch('apps.manuscripts.views.send_manuscript_status_update', return_value=None)
+    @patch('apps.core.email.send_manuscript_status_update', return_value=None)
     def test_admin_can_update_to_reviewing(self, mock_email):
         """Admin peut passer PENDING -> REVIEWING."""
         self.client.force_authenticate(user=self.admin_user)
@@ -407,16 +429,14 @@ class ManuscriptStatusWorkflowTests(ManuscriptTestBase):
         self.assertEqual(self.manuscript.reviewed_by, self.admin_user)
         self.assertIsNotNone(self.manuscript.reviewed_at)
 
-    @patch('apps.manuscripts.views.send_manuscript_status_update', return_value=None)
-    def test_admin_can_update_to_accepted(self, mock_email):
-        """Admin peut passer PENDING -> ACCEPTED."""
+    @patch('apps.core.email.send_manuscript_status_update', return_value=None)
+    def test_admin_cannot_skip_to_accepted(self, mock_email):
+        """Admin ne peut pas passer PENDING -> ACCEPTED directement (DQE obligatoire)."""
         self.client.force_authenticate(user=self.admin_user)
         response = self._update_status(self.manuscript.pk, 'ACCEPTED')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.manuscript.refresh_from_db()
-        self.assertEqual(self.manuscript.status, 'ACCEPTED')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('apps.manuscripts.views.send_manuscript_status_update', return_value=None)
+    @patch('apps.core.email.send_manuscript_status_update', return_value=None)
     def test_admin_can_reject_with_reason(self, mock_email):
         """Admin peut rejeter avec un motif."""
         self.client.force_authenticate(user=self.admin_user)
@@ -426,19 +446,19 @@ class ManuscriptStatusWorkflowTests(ManuscriptTestBase):
         self.assertEqual(self.manuscript.status, 'REJECTED')
         self.assertEqual(self.manuscript.rejection_reason, 'Hors ligne editoriale.')
 
-    @patch('apps.manuscripts.views.send_manuscript_status_update', return_value=None)
-    def test_full_workflow_pending_reviewing_accepted(self, mock_email):
-        """Workflow complet : PENDING -> REVIEWING -> ACCEPTED."""
+    @patch('apps.core.email.send_manuscript_status_update', return_value=None)
+    def test_full_workflow_pending_reviewing_rejected(self, mock_email):
+        """Workflow complet : PENDING -> REVIEWING -> REJECTED."""
         self.client.force_authenticate(user=self.admin_user)
 
         resp1 = self._update_status(self.manuscript.pk, 'REVIEWING')
         self.assertEqual(resp1.status_code, status.HTTP_200_OK)
 
-        resp2 = self._update_status(self.manuscript.pk, 'ACCEPTED')
+        resp2 = self._update_status(self.manuscript.pk, 'REJECTED', 'Hors ligne.')
         self.assertEqual(resp2.status_code, status.HTTP_200_OK)
 
         self.manuscript.refresh_from_db()
-        self.assertEqual(self.manuscript.status, 'ACCEPTED')
+        self.assertEqual(self.manuscript.status, 'REJECTED')
 
     def test_regular_user_cannot_update_status(self):
         """Un utilisateur non-admin/non-org ne peut pas changer le statut."""
@@ -457,7 +477,7 @@ class ManuscriptStatusWorkflowTests(ManuscriptTestBase):
         response = self._update_status(self.manuscript.pk, 'INVALID_STATUS')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('apps.manuscripts.views.send_manuscript_status_update', return_value=None)
+    @patch('apps.core.email.send_manuscript_status_update', return_value=None)
     def test_org_member_with_permission_can_update(self, mock_email):
         """
         Un membre de l'org cible avec permission manage_manuscripts peut mettre a jour.

@@ -39,6 +39,7 @@ def _registration_payload(**overrides):
         'password_confirm': VALID_PASSWORD,
         'first_name': 'Alice',
         'last_name': 'Dupont',
+        'terms_accepted': True,
     }
     data.update(overrides)
     return data
@@ -583,7 +584,7 @@ class UserModelTests(APITestCase):
         self.assertEqual(user.full_address, 'Rue 1, Libreville, Gabon')
 
     def test_full_address_empty(self):
-        user = User()
+        user = User(country='')  # Pas de pays par défaut pour tester le cas vide
         self.assertIn('non renseign', user.full_address.lower())
 
     def test_str_representation(self):

@@ -26,10 +26,15 @@ class LoginRateThrottle(AnonRateThrottle):
     """Limite les tentatives de connexion a 5/minute par IP."""
     rate = '5/minute'
 
+    def allow_request(self, request, view):
+        if getattr(settings, 'TESTING', False):
+            return True
+        return super().allow_request(request, view)
+
 
 def _set_auth_cookies(response, access_token, refresh_token=None, remember_me=False):
     """Configure les cookies HttpOnly pour les tokens."""
-    secure = not getattr(settings, 'DEBUG', True)
+    secure = not getattr(settings, 'DEBUG', True) and not getattr(settings, 'TESTING', False)
     samesite = 'Lax'
 
     if remember_me:

@@ -354,6 +354,18 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Neutralisation du throttling pendant les tests Django
+# Les rates sont gardées mais rendues très permissives pour éviter les 429 parasites.
+# Les scopes custom des vues (anon_burst, anon_sustained, login) restent déclarés
+# pour ne pas casser les throttle_classes qui y font référence.
+if TESTING:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = []
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+        'anon_burst': '9999/minute',
+        'anon_sustained': '9999/hour',
+        'login': '9999/minute',
+    }
+
 # Documentation API OpenAPI / Swagger
 SPECTACULAR_SETTINGS = {
     'TITLE': "API Frollot",

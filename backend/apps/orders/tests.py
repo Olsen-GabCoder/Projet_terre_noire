@@ -463,7 +463,7 @@ class PaymentCreationTest(OrderTestMixin, APITestCase):
         return data
 
     def test_create_payment_for_pending_order(self):
-        """Successful payment transitions order to PAID."""
+        """Successful payment transitions order to PAID (or DELIVERED if all-ebook)."""
         order = self._create_order_in_db(user=self.user, order_status='PENDING')
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -476,7 +476,8 @@ class PaymentCreationTest(OrderTestMixin, APITestCase):
             status.HTTP_201_CREATED,
         ])
         order.refresh_from_db()
-        self.assertEqual(order.status, 'PAID')
+        # PAID ou DELIVERED (les commandes sans items physiques sont auto-DELIVERED)
+        self.assertIn(order.status, ('PAID', 'DELIVERED'))
 
     def test_payment_for_non_pending_order_rejected(self):
         """Cannot pay for an order that is not PENDING."""

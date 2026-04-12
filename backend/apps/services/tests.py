@@ -450,7 +450,7 @@ class ServiceRequestDetailTest(ServiceTestMixin, APITestCase):
 # ══════════════════════════════════════════════════════════════
 
 class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
-    """Tests for POST /api/services/quotes/create/."""
+    """Tests for POST /api/services/service-quotes/create/."""
 
     def setUp(self):
         self._create_base_data()
@@ -474,7 +474,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
         """Provider can create a quote for a request addressed to them."""
         self.client.force_authenticate(user=self.provider_user)
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             self._quote_payload(),
             format='json',
         )
@@ -486,7 +486,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
         """Provider who is NOT the one addressed gets 403."""
         self.client.force_authenticate(user=self.provider_user2)
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             self._quote_payload(),
             format='json',
         )
@@ -496,7 +496,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
         """Regular client (no provider profile) gets 403."""
         self.client.force_authenticate(user=self.client_user)
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             self._quote_payload(),
             format='json',
         )
@@ -505,7 +505,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
     def test_unauthenticated_cannot_create_quote(self):
         """Unauthenticated request is rejected."""
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             self._quote_payload(),
             format='json',
         )
@@ -517,7 +517,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
         payload = self._quote_payload()
         del payload['price']
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             payload,
             format='json',
         )
@@ -527,7 +527,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
         """Platform admin bypasses provider check."""
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
-            f'{BASE_URL}/quotes/create/',
+            f'{BASE_URL}/service-quotes/create/',
             self._quote_payload(),
             format='json',
         )
@@ -539,7 +539,7 @@ class ServiceQuoteCreateTest(ServiceTestMixin, APITestCase):
 # ══════════════════════════════════════════════════════════════
 
 class ServiceQuotePDFTest(ServiceTestMixin, APITestCase):
-    """Tests for GET /api/services/quotes/{id}/pdf/."""
+    """Tests for GET /api/services/service-quotes/{id}/pdf/."""
 
     def setUp(self):
         self._create_base_data()
@@ -558,7 +558,7 @@ class ServiceQuotePDFTest(ServiceTestMixin, APITestCase):
         """Client of the request can download the quote PDF."""
         mock_pdf.return_value = BytesIO(b'%PDF-1.4 fake')
         self.client.force_authenticate(user=self.client_user)
-        response = self.client.get(f'{BASE_URL}/quotes/{self.quote.id}/pdf/')
+        response = self.client.get(f'{BASE_URL}/service-quotes/{self.quote.id}/pdf/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('application/pdf', response['Content-Type'])
 
@@ -567,24 +567,24 @@ class ServiceQuotePDFTest(ServiceTestMixin, APITestCase):
         """Provider of the request can download the quote PDF."""
         mock_pdf.return_value = BytesIO(b'%PDF-1.4 fake')
         self.client.force_authenticate(user=self.provider_user)
-        response = self.client.get(f'{BASE_URL}/quotes/{self.quote.id}/pdf/')
+        response = self.client.get(f'{BASE_URL}/service-quotes/{self.quote.id}/pdf/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unrelated_user_cannot_download_pdf(self):
         """User who is neither client nor provider gets 403."""
         self.client.force_authenticate(user=self.provider_user2)
-        response = self.client.get(f'{BASE_URL}/quotes/{self.quote.id}/pdf/')
+        response = self.client.get(f'{BASE_URL}/service-quotes/{self.quote.id}/pdf/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_cannot_download_pdf(self):
         """Unauthenticated user is rejected."""
-        response = self.client.get(f'{BASE_URL}/quotes/{self.quote.id}/pdf/')
+        response = self.client.get(f'{BASE_URL}/service-quotes/{self.quote.id}/pdf/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_nonexistent_quote_404(self):
         """Non-existent quote id returns 404."""
         self.client.force_authenticate(user=self.client_user)
-        response = self.client.get(f'{BASE_URL}/quotes/99999/pdf/')
+        response = self.client.get(f'{BASE_URL}/service-quotes/99999/pdf/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
