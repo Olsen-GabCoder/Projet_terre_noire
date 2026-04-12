@@ -156,6 +156,7 @@ describe('Register', () => {
         first_name: 'Jean',
         last_name: 'Dupont',
         phone_number: '',
+        terms_accepted: true,
       });
     });
   });

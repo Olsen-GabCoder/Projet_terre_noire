@@ -6,6 +6,8 @@ vi.mock('react-i18next', () => ({
     t: (key, fallback) => (typeof fallback === 'string' ? fallback : key),
     i18n: { language: 'fr', changeLanguage: vi.fn() },
   }),
+  withTranslation: () => (Component) => Component,
+  Trans: ({ children }) => children,
   initReactI18next: { type: '3rdParty', init: vi.fn() },
 }));
 

@@ -73,7 +73,7 @@ describe('bookService', () => {
     it('calls /authors/', async () => {
       api.get.mockResolvedValue({ data: [{ id: 1, full_name: 'Victor Hugo' }] });
       const result = await bookService.getAuthors();
-      expect(api.get).toHaveBeenCalledWith('/authors/');
+      expect(api.get).toHaveBeenCalledWith('/authors/', { params: { page_size: 500 } });
     });
   });
 
