@@ -6,7 +6,7 @@
  * Pour corriger le texte, modifier uniquement ce fichier.
  */
 
-export const CGU_LAST_UPDATED = '2026-04-11';
+export const CGU_LAST_UPDATED = '2026-04-12';
 
 export const CGU_SECTIONS = [
   // ═══════════════════════════════════════════
@@ -324,7 +324,7 @@ export const CGU_SECTIONS = [
 
 <h3>5.3 Membres et Rôles</h3>
 
-<p>Le Propriétaire peut inviter des Utilisateurs à rejoindre l'Organisation avec un Rôle défini. Chaque Membre agit depuis son propre Compte individuel. Un même Utilisateur peut être Membre de plusieurs Organisations.</p>
+<p>Le Propriétaire peut inviter des Utilisateurs à rejoindre l'Organisation avec un Rôle défini (Administrateur, Éditeur, Commercial ou Membre). Chaque Membre agit depuis son propre Compte individuel. Un même Utilisateur peut être Membre de plusieurs Organisations simultanément ; dans ce cas, son espace vendeur agrège les commandes, offres et portefeuilles de toutes ses Organisations.</p>
 
 <h3>5.4 Responsabilités du Propriétaire</h3>
 
@@ -497,19 +497,51 @@ export const CGU_SECTIONS = [
 
 <h3>8.4 Passation de Commande</h3>
 
-<p>L'acheteur (18 ans minimum) sélectionne des Livres, confirme son adresse de livraison, consulte le récapitulatif, choisit son moyen de paiement et procède au règlement. La validation du paiement vaut acceptation ferme de la Commande.</p>
+<p>L'acheteur sélectionne des Livres, confirme son adresse de livraison, consulte le récapitulatif (incluant les frais de livraison et les éventuelles réductions), et valide sa Commande. La Commande est créée en statut « en attente de paiement ». L'acheteur peut, lors du processus de commande, choisir un livreur parmi ceux disponibles dans sa zone géographique.</p>
 
 <h3>8.5 Commandes multi-vendeurs</h3>
 
-<p>Une Commande impliquant plusieurs Vendeurs est fractionnée en sous-commandes traitées indépendamment. L'acheteur en est informé dans le récapitulatif.</p>
+<p>Lorsqu'une Commande contient des Livres provenant de Vendeurs différents (par exemple un livre d'une librairie et un livre d'une maison d'édition), elle est automatiquement découpée en sous-commandes indépendantes, chacune gérée par le Vendeur concerné. L'acheteur est informé de ce découpage dans le récapitulatif de commande. Chaque sous-commande suit son propre cycle de traitement et peut être livrée séparément.</p>
 
-<h3>8.6 Obligations du Vendeur</h3>
+<h3>8.6 Cycle de vie d'une Commande</h3>
 
-<p>Le Vendeur s'engage à traiter les Commandes dans les délais annoncés, préparer les Livres avec soin, informer de tout incident et respecter les prix affichés. La non-exécution répétée peut entraîner la suspension de l'Organisation.</p>
+<p>Après paiement, chaque sous-commande suit les étapes suivantes :</p>
 
-<h3>8.7 Livres numériques</h3>
+<ol>
+  <li><strong>Confirmation par le Vendeur.</strong> Le Vendeur confirme la prise en charge de la commande. En l'absence de confirmation dans les quarante-huit (48) heures suivant le paiement, un rappel automatique est envoyé au Vendeur.</li>
+  <li><strong>Préparation.</strong> Le Vendeur prépare le colis. L'acheteur est informé par email de l'avancement.</li>
+  <li><strong>Prêt pour livraison.</strong> Le colis est emballé et attend la prise en charge par le livreur. Si aucun livreur n'est assigné dans les vingt-quatre (24) heures, une alerte est envoyée au Vendeur et à l'administrateur de la Plateforme.</li>
+  <li><strong>Prise en charge et expédition.</strong> Le livreur récupère le colis chez le Vendeur et se met en route vers l'acheteur.</li>
+  <li><strong>Remise au client.</strong> Le livreur confirme la remise du colis. L'acheteur et le Vendeur sont notifiés.</li>
+</ol>
 
-<p>L'achat d'un Livre numérique confère un droit d'usage personnel, non exclusif, non cessible et non transférable. Le fichier est disponible immédiatement après paiement. L'acheteur s'interdit de contourner les mesures de protection (DRM).</p>
+<p><strong>Tentatives de livraison.</strong> Si le livreur ne parvient pas à remettre le colis (client absent, adresse introuvable, refus de réception), il enregistre une tentative échouée avec le motif. L'acheteur est informé par email à chaque tentative et invité à se rendre disponible. Après trois (3) tentatives échouées, l'administrateur Frollot est alerté pour décider de la suite à donner (nouvelle tentative, retour au Vendeur, annulation avec remboursement).</p>
+
+<p><strong>Annulation automatique.</strong> Toute Commande dont le paiement n'est pas finalisé dans les vingt-quatre (24) heures suivant sa création est automatiquement annulée. Le stock est restauré et l'acheteur en est informé par email. Si un coupon de réduction avait été utilisé, il est restitué.</p>
+
+<h3>8.7 Obligations du Vendeur</h3>
+
+<p>Le Vendeur (maison d'édition ou librairie) s'engage à :</p>
+
+<ul>
+  <li>Confirmer ou refuser toute nouvelle commande dans un délai de quarante-huit (48) heures suivant le paiement. Passé ce délai, un rappel automatique lui est envoyé.</li>
+  <li>Préparer les Livres avec soin et dans les délais annoncés.</li>
+  <li>Fournir des informations exactes sur la disponibilité et l'état des Livres proposés à la vente.</li>
+  <li>Informer l'acheteur en cas d'impossibilité de traiter la commande (rupture de stock, erreur de référencement). Dans ce cas, la sous-commande est annulée et l'acheteur est remboursé.</li>
+  <li>Respecter les prix affichés au moment de la validation de la Commande.</li>
+</ul>
+
+<p>Les montants issus des ventes sont crédités sur le portefeuille électronique du Vendeur au sein de la Plateforme, après déduction de la commission Frollot. Le Vendeur peut demander le retrait de ses fonds vers un compte Mobile Money selon les modalités décrites à la section 13.</p>
+
+<p>La non-exécution répétée des obligations ci-dessus peut entraîner un avertissement, une suspension temporaire ou la fermeture définitive du compte vendeur de l'Organisation concernée.</p>
+
+<h3>8.8 Livres numériques (ebooks)</h3>
+
+<p>L'achat d'un Livre numérique confère un droit d'accès personnel, non exclusif, non cessible et non transférable. Le contenu est accessible immédiatement après paiement, via le lecteur intégré à la Plateforme. L'accès au contenu est conditionné à l'authentification de l'acheteur ; il n'est pas possible de télécharger le fichier en dehors de la Plateforme dans la version actuelle.</p>
+
+<p>Les Commandes composées exclusivement de Livres numériques sont automatiquement marquées comme livrées dès la confirmation du paiement, sans intervention du Vendeur ni du livreur.</p>
+
+<p>L'acheteur s'interdit de reproduire, redistribuer, revendre ou communiquer le contenu numérique à des tiers, par quelque moyen que ce soit.</p>
 
 <h3>8.8 Droit de rétractation et retours</h3>
 
@@ -523,7 +555,41 @@ export const CGU_SECTIONS = [
 
 <h3>8.10 Coupons de réduction</h3>
 
-<p>Frollot peut émettre des coupons soumis à des conditions spécifiques. Les coupons ne sont ni échangeables, ni remboursables, ni cumulables sauf mention contraire.</p>
+<p>Frollot peut émettre des coupons soumis à des conditions spécifiques. Les coupons ne sont ni échangeables, ni remboursables, ni cumulables sauf mention contraire. En cas d'annulation d'une Commande ayant bénéficié d'un coupon, celui-ci est automatiquement restitué dans la limite de ses conditions de validité initiales.</p>
+
+<h3>8.11 Livraison</h3>
+
+<p><strong>Zones de livraison.</strong> La livraison est assurée par des livreurs indépendants partenaires de la Plateforme. Les zones couvertes dépendent de la disponibilité des livreurs dans la ville de destination. Lors de la commande, l'acheteur peut consulter les livreurs disponibles dans sa ville, leurs tarifs et leurs délais estimés.</p>
+
+<p><strong>Frais de livraison.</strong> Les frais sont calculés au moment de la commande en fonction de la zone de livraison et du livreur sélectionné. Ils sont affichés séparément du prix des Livres et sont à la charge de l'acheteur, sauf promotion contraire. La livraison peut être offerte au-delà d'un certain montant de commande, selon la configuration de la Plateforme.</p>
+
+<p><strong>Délais.</strong> Les délais de livraison sont donnés à titre indicatif et dépendent du temps de préparation par le Vendeur et de la disponibilité du livreur. Frollot ne saurait être tenu responsable des retards imputables aux Vendeurs, aux livreurs ou à des circonstances extérieures (intempéries, restrictions de circulation, jours fériés).</p>
+
+<p><strong>Transfert des risques.</strong> Le transfert de propriété et des risques s'opère au moment de la remise effective du colis à l'acheteur ou à la personne désignée à l'adresse de livraison. En cas de perte ou de dommage du colis entre la prise en charge par le livreur et la remise au destinataire, l'acheteur est invité à contacter le support Frollot.</p>
+
+<h3>8.12 Obligations des livreurs</h3>
+
+<p>Les livreurs partenaires s'engagent à :</p>
+
+<ul>
+  <li>Prendre en charge les colis dans un délai raisonnable après que le Vendeur les a marqués comme prêts.</li>
+  <li>Effectuer les livraisons avec diligence et soin, en respectant l'intégrité des colis.</li>
+  <li>Enregistrer fidèlement le résultat de chaque tentative de livraison, en indiquant le motif en cas d'échec (client absent, adresse introuvable, refus de réception, téléphone injoignable).</li>
+  <li>Ne pas conserver un colis plus de soixante-douze (72) heures sans effectuer de tentative de livraison. Passé ce délai, une alerte est envoyée au Vendeur et à l'administrateur Frollot.</li>
+  <li>Communiquer de manière professionnelle avec les acheteurs et les Vendeurs.</li>
+</ul>
+
+<p>Les frais de livraison sont crédités sur le portefeuille électronique du livreur au sein de la Plateforme lors de la confirmation du paiement de la Commande. Le livreur peut demander le retrait de ses fonds vers un compte Mobile Money selon les modalités en vigueur.</p>
+
+<p>Le non-respect répété des obligations ci-dessus peut entraîner la désactivation du profil livreur et la résiliation de l'accès aux services de livraison de la Plateforme.</p>
+
+<h3>8.13 Suivi de commande et notifications</h3>
+
+<p>L'acheteur est informé par email à chaque étape significative du traitement de sa commande : confirmation du paiement, confirmation par le vendeur, mise en préparation, colis prêt, prise en charge par le livreur, remise effective, ou annulation. Un historique complet des événements de la commande est accessible depuis l'espace « Mes commandes » de l'acheteur.</p>
+
+<p>Le Vendeur est informé par email lors de la création d'une nouvelle commande, de la confirmation du paiement, et de la remise du colis au client. Un rappel automatique lui est adressé si une commande payée n'est pas traitée dans les quarante-huit (48) heures.</p>
+
+<p>Le livreur est informé par email lorsqu'une livraison lui est assignée, avec les coordonnées du Vendeur (lieu de récupération) et de l'acheteur (lieu de livraison).</p>
 `
   },
 
@@ -783,6 +849,10 @@ export const CGU_SECTIONS = [
 <h3>14.8 Sécurité</h3>
 
 <p>Frollot met en œuvre des mesures techniques appropriées (chiffrement, 2FA, surveillance des accès). En cas de violation de données, Frollot notifie les autorités et les Utilisateurs concernés dans les délais légaux.</p>
+
+<h3>14.9 Cookies</h3>
+
+<p>La Plateforme utilise des cookies et technologies similaires pour assurer son fonctionnement, mémoriser les préférences des Utilisateurs et produire des statistiques de fréquentation. Pour plus de détails sur les types de cookies utilisés, leur finalité et les moyens de les gérer, l'Utilisateur est invité à consulter la <a href="/cookies">Politique relative aux cookies</a>.</p>
 `
   },
 

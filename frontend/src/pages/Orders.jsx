@@ -8,6 +8,7 @@ import { useReveal } from '../hooks/useReveal';
 import '../styles/Orders.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
+import { humanizeDescription } from '../utils/orderEventLabels';
 
 const EVENT_ICONS = {
   ORDER_CREATED: 'fas fa-plus-circle',
@@ -28,7 +29,7 @@ const OrderTimeline = ({ events }) => {
 
   const formatAgo = (dateStr) => {
     const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-    if (diff < 60) return 'À l\'instant';
+    if (diff < 60) return "À l'instant";
     if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)}h`;
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -53,7 +54,7 @@ const OrderTimeline = ({ events }) => {
             <div key={evt.id} className={`ord-timeline__item ${getItemClass(evt.event_type)}`}>
               <span className="ord-timeline__desc">
                 <i className={EVENT_ICONS[evt.event_type] || 'fas fa-circle'} style={{ marginRight: 4, fontSize: '0.65rem' }} />
-                {evt.description}
+                {humanizeDescription(evt)}
               </span>
               <div className="ord-timeline__meta">
                 {evt.actor_name} · {formatAgo(evt.created_at)}

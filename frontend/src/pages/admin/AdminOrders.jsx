@@ -4,6 +4,7 @@ import api from '../../services/api';
 import '../../styles/AdminOrders.css';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { humanizeDescription, humanizeActorRole } from '../../utils/orderEventLabels';
 
 const STATUS_OPTIONS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'PARTIAL', 'CANCELLED'];
 const STATUS_LABELS_MAP = {
@@ -415,9 +416,9 @@ const AdminOrders = () => {
                   <div style={{ maxHeight: 200, overflowY: 'auto', paddingLeft: '0.75rem', borderLeft: '2px solid #e2e8f0' }}>
                     {selectedOrder.events.map((evt) => (
                       <div key={evt.id} style={{ padding: '0.35rem 0 0.35rem 0.5rem', fontSize: '0.75rem', borderBottom: '1px solid #f8fafc' }}>
-                        <div style={{ fontWeight: 500, color: '#334155' }}>{evt.description}</div>
+                        <div style={{ fontWeight: 500, color: '#334155' }}>{humanizeDescription(evt)}</div>
                         <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                          {evt.actor_name} ({evt.actor_role}) · {new Date(evt.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          {evt.actor_name} ({humanizeActorRole(evt.actor_role)}) · {new Date(evt.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     ))}

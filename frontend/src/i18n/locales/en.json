@@ -2129,6 +2129,7 @@
       "status_preparing": "Preparing",
       "status_ready": "Ready",
       "status_shipped": "Shipped",
+      "status_attempted": "Delivery attempted",
       "status_delivered": "Delivered",
       "status_cancelled": "Cancelled"
     },

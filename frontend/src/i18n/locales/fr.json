@@ -2109,6 +2109,7 @@
       "status_preparing": "En préparation",
       "status_ready": "Prête",
       "status_shipped": "Expédiée",
+      "status_attempted": "Tentative échouée",
       "status_delivered": "Livrée",
       "status_cancelled": "Annulée"
     },

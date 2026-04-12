@@ -227,9 +227,10 @@ class SubOrderStatusUpdateView(APIView):
 
         # C3 : journal d'activité
         from apps.orders.utils import log_order_event
+        from .utils import get_transition_description
         evt = 'CANCELLATION' if new_status == 'CANCELLED' else 'STATUS_CHANGE'
-        log_order_event(sub_order.order, evt,
-                        f"SubOrder #{sub_order.id} : {old_status} → {new_status}",
+        desc = get_transition_description(old_status, new_status, actor_type)
+        log_order_event(sub_order.order, evt, desc,
                         actor=request.user, actor_role=actor_type,
                         sub_order=sub_order, from_status=old_status, to_status=new_status)
 
@@ -400,12 +401,15 @@ class DeliveryStatusUpdateView(APIView):
 
         # C3 : journal d'activité
         from apps.orders.utils import log_order_event
+        from .utils import get_transition_description
         evt = 'DELIVERY_ATTEMPTED' if new_status == 'ATTEMPTED' else 'STATUS_CHANGE'
+        desc = get_transition_description(old_status, new_status, actor_type)
+        if new_status == 'ATTEMPTED' and sub_order.last_attempt_reason:
+            desc += f" — {sub_order.last_attempt_reason}"
         meta = {}
         if new_status == 'ATTEMPTED':
             meta = {'attempt_count': sub_order.attempt_count, 'reason': sub_order.last_attempt_reason}
-        log_order_event(sub_order.order, evt,
-                        f"SubOrder #{sub_order.id} : {old_status} → {new_status}",
+        log_order_event(sub_order.order, evt, desc,
                         actor=request.user, actor_role=actor_type,
                         sub_order=sub_order, from_status=old_status, to_status=new_status, metadata=meta)
 

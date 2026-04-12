@@ -89,3 +89,35 @@ def validate_suborder_transition(current_status, new_status, actor_type):
         )
 
     return True, None
+
+
+# Descriptions lisibles pour le journal d'activité (C3)
+TRANSITION_DESCRIPTIONS = {
+    ('PENDING', 'CONFIRMED'): 'Le vendeur a confirmé la commande',
+    ('CONFIRMED', 'PREPARING'): 'Le vendeur prépare la commande',
+    ('PREPARING', 'READY'): 'La commande est prête, en attente du livreur',
+    ('READY', 'SHIPPED'): 'Le livreur a pris en charge le colis',
+    ('SHIPPED', 'DELIVERED'): 'Le colis a été remis au client',
+    ('SHIPPED', 'ATTEMPTED'): 'Tentative de livraison échouée',
+    ('ATTEMPTED', 'SHIPPED'): 'Nouvelle tentative de livraison en cours',
+    ('ATTEMPTED', 'DELIVERED'): 'Le colis a été remis au client après tentative(s)',
+    ('PENDING', 'CANCELLED'): 'Commande annulée',
+    ('CONFIRMED', 'CANCELLED'): 'Commande annulée par le vendeur',
+    ('PREPARING', 'CANCELLED'): 'Commande annulée pendant la préparation',
+    ('READY', 'CANCELLED'): "Commande annulée par l'administrateur",
+    ('ATTEMPTED', 'CANCELLED'): 'Commande annulée après tentatives échouées',
+}
+
+
+def get_transition_description(from_status, to_status, actor_type='system'):
+    """Retourne une description lisible pour le journal d'activité."""
+    desc = TRANSITION_DESCRIPTIONS.get((from_status, to_status))
+    if desc:
+        return desc
+    from_label = STATUS_LABELS.get(from_status, from_status)
+    to_label = STATUS_LABELS.get(to_status, to_status)
+    actor_labels = {
+        'vendor': 'le vendeur', 'delivery': 'le livreur',
+        'admin': "l'administrateur", 'client': 'le client', 'system': 'le système',
+    }
+    return f"Statut passé de « {from_label} » à « {to_label} » par {actor_labels.get(actor_type, actor_type)}"
