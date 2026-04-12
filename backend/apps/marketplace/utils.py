@@ -68,6 +68,10 @@ def validate_suborder_transition(current_status, new_status, actor_type):
             f"{hint}"
         )
 
+    # B4 : le système peut forcer DELIVERED depuis tout statut non-terminal (ebooks auto-delivered)
+    if actor_type == 'system' and new_status == 'DELIVERED':
+        return True, None
+
     if actor_type not in allowed_actors:
         actor_labels = {
             'vendor': 'le vendeur',

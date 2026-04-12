@@ -207,7 +207,7 @@ function SidebarRouter({ pathname }) {
   if (p.startsWith('/organizations') || p.startsWith('/professionals') || p.startsWith('/services') || p.startsWith('/inquiries')) return <ConnectSidebar pathname={p} />;
 
   // Achat
-  if (['/cart', '/checkout', '/order-success'].includes(p) || p.startsWith('/library/')) return <ShopSidebar pathname={p} />;
+  if (['/cart', '/checkout', '/order-success'].includes(p) || p.startsWith('/order-success/') || p.startsWith('/library/')) return <ShopSidebar pathname={p} />;
 
   // Auth
   if (['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'].includes(p)) return <AuthSidebar pathname={p} />;
@@ -258,7 +258,7 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
   const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/vendor');
-  const isFullWidthPage = ['/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/');
+  const isFullWidthPage = ['/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/') || location.pathname.startsWith('/order-success/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
   const isClubChatPage = location.pathname.match(/^\/clubs\/[^/]+$/) && !location.pathname.endsWith('/create');
   const FOOTER_PAGES = ['/'];
@@ -297,6 +297,7 @@ function AppContent() {
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/order-success/:orderId" element={<OrderSuccess />} />
                 <Route path="/submit-manuscript" element={<ProtectedRoute><SubmitManuscript /></ProtectedRoute>} />
                 
                 {/* Routes utilisateur */}

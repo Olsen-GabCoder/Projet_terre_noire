@@ -144,7 +144,7 @@ const Checkout = () => {
       clearCart();
       toast.success(`Commande #${response.id} creee avec succes !`);
 
-      navigate('/order-success', {
+      navigate(`/order-success/${response.id}`, {
         state: {
           orderId: response.id,
           orderData: response,

@@ -204,17 +204,24 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 {'error': 'Cette commande ne peut plus être payée'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        if hasattr(order, 'payment'):
+
+        # B5 : autoriser le retry si le paiement précédent a échoué
+        if Payment.objects.filter(order=order, status='SUCCESS').exists():
             return Response(
-                {'error': 'Cette commande a déjà un paiement'},
+                {'error': 'Cette commande a déjà été payée.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+        # Supprimer les paiements FAILED pour permettre le retry
+        Payment.objects.filter(order=order, status='FAILED').delete()
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payment = serializer.save(order=order)
-        
+
+        if payment.status == 'FAILED':
+            from apps.core.tasks import send_payment_failed_task
+            send_payment_failed_task.delay(order.id)
+
         if payment.status == 'SUCCESS':
             order.status = 'PAID'
             order.save()
@@ -258,8 +265,10 @@ class PaymentInitiateView(APIView):
         if order.status != 'PENDING':
             return Response({'error': 'Cette commande ne peut plus être payée.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if hasattr(order, 'payment'):
-            return Response({'error': 'Cette commande a déjà un paiement.'}, status=status.HTTP_400_BAD_REQUEST)
+        # B5 : autoriser le retry si le paiement précédent a échoué
+        if Payment.objects.filter(order=order, status='SUCCESS').exists():
+            return Response({'error': 'Cette commande a déjà été payée.'}, status=status.HTTP_400_BAD_REQUEST)
+        Payment.objects.filter(order=order, status='FAILED').delete()
 
         from .payment_gateway import get_provider, PaymentError
         try:
@@ -275,6 +284,10 @@ class PaymentInitiateView(APIView):
             status=result['status'],
             amount=order.total_amount,
         )
+
+        if result['status'] == 'FAILED':
+            from apps.core.tasks import send_payment_failed_task
+            send_payment_failed_task.delay(order.id)
 
         if result['status'] == 'SUCCESS':
             order.status = 'PAID'
@@ -355,3 +368,32 @@ class PaymentWebhookView(APIView):
             logger.info("Paiement %s confirmé via webhook %s", transaction_id, provider_name)
 
         return Response({'status': 'ok'})
+
+
+class EbookAccessCheckView(APIView):
+    """
+    B3 : GET /api/orders/access-check/<book_id>/
+    Vérifie si l'utilisateur a acheté un ebook (ou si le livre est gratuit).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, book_id):
+        from apps.books.models import Book
+
+        try:
+            book = Book.objects.get(pk=book_id)
+        except Book.DoesNotExist:
+            return Response({'has_access': False})
+
+        # Livre gratuit → accès libre
+        if book.price == 0:
+            return Response({'has_access': True})
+
+        # Vérifie si l'utilisateur a un OrderItem payé pour ce livre
+        has_access = OrderItem.objects.filter(
+            order__user=request.user,
+            book_id=book_id,
+            order__status__in=['PAID', 'SHIPPED', 'DELIVERED', 'PARTIAL'],
+        ).exists()
+
+        return Response({'has_access': has_access})

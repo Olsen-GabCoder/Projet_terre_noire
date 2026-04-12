@@ -119,6 +119,8 @@ class SubOrder(models.Model):
     delivery_notes = models.TextField(blank=True)
     ready_at = models.DateTimeField(null=True, blank=True, verbose_name="Prêt depuis")
     unassigned_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livreur envoyée")
+    reminder_sent = models.BooleanField(default=False, verbose_name="Rappel vendeur envoyé")
+    shipment_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livraison en retard envoyée")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

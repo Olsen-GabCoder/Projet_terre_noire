@@ -186,6 +186,7 @@ const BookReader = () => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [pdfDoc, setPdfDoc] = useState(null);
   const [numPages, setNumPages] = useState(0);
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -241,9 +242,28 @@ const BookReader = () => {
     return () => { cancelled = true; };
   }, []);
 
+  // ── B3 : vérifier l'accès avant de charger le PDF ──
+  useEffect(() => {
+    if (!book || !book.pdf_file) return;
+    // Livre gratuit → accès libre
+    if (parseFloat(book.price) === 0) return;
+    let cancelled = false;
+    const checkAccess = async () => {
+      try {
+        const { data } = await api.get(`/orders/access-check/${book.id}/`);
+        if (!cancelled && !data.has_access) setAccessDenied(true);
+      } catch {
+        // Si 401 (non connecté) → bloquer
+        if (!cancelled) setAccessDenied(true);
+      }
+    };
+    checkAccess();
+    return () => { cancelled = true; };
+  }, [book]);
+
   // ── Charger le PDF en mémoire ──
   useEffect(() => {
-    if (!book?.pdf_file || !book?.id) return;
+    if (!book?.pdf_file || !book?.id || accessDenied) return;
     let cancelled = false;
     const loadPdf = async () => {
       setLoadingPdf(true);
@@ -482,6 +502,28 @@ const BookReader = () => {
           <Link to="/catalog" className="br-cta">
             <IconArrowLeft className="br-cta__icon" />
             <span>{t('pages.bookReader.backToCatalog')}</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="br-error-page">
+        <div className="br-error-page__bg" aria-hidden="true" />
+        <div className="br-error-card">
+          <div className="br-error-card__icon-wrap">
+            <IconFilePdf className="br-error-card__icon" />
+          </div>
+          <h1 className="br-error-card__title">Achat requis</h1>
+          <OrnamentalDivider />
+          <p className="br-error-card__desc">
+            Vous devez acheter ce livre pour pouvoir le lire. Rendez-vous sur la fiche du livre pour l'ajouter à votre panier.
+          </p>
+          <Link to={`/books/${id}`} className="br-cta">
+            <IconArrowLeft className="br-cta__icon" />
+            <span>Acheter ce livre</span>
           </Link>
         </div>
       </div>

@@ -199,10 +199,25 @@ class SubOrderStatusUpdateView(APIView):
             sub_order.ready_at = timezone.now()
         if new_status == 'DELIVERED':
             sub_order.delivered_at = timezone.now()
-        sub_order.save()
 
-        # A2 : notifier le client sur les transitions visibles
-        if new_status in ('CONFIRMED', 'PREPARING', 'READY', 'SHIPPED'):
+        # Restaurer le stock si annulation vendeur
+        if new_status == 'CANCELLED':
+            from django.db import transaction
+            from django.db.models import F
+            from apps.orders.models import OrderItem
+            with transaction.atomic():
+                sub_order.save()
+                for item in OrderItem.objects.filter(sub_order=sub_order).select_related('listing', 'listing__book'):
+                    if item.listing and item.listing.book.format != 'EBOOK':
+                        item.listing.stock = F('stock') + item.quantity
+                        item.listing.save(update_fields=['stock'])
+                        logger.info("Stock restauré : listing #%s +%s (annulation vendeur SubOrder #%s)",
+                                    item.listing_id, item.quantity, sub_order.id)
+        else:
+            sub_order.save()
+
+        # Notifier le client sur les transitions visibles
+        if new_status in ('CONFIRMED', 'PREPARING', 'READY', 'SHIPPED', 'CANCELLED'):
             try:
                 from apps.core.tasks import send_suborder_update_task
                 send_suborder_update_task.delay(sub_order.id, new_status)

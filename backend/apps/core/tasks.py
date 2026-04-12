@@ -53,6 +53,23 @@ def send_order_paid_task(self, order_id):
                 send_vendor_payment_received(sub_order)
             except Exception:
                 logger.exception("Erreur email vendeur paiement SubOrder #%s", sub_order.id)
+
+        # B4 : auto-DELIVERED si tous les items sont des ebooks
+        all_ebook = all(item.book.format == 'EBOOK' for item in order.items.all())
+        if all_ebook:
+            from django.utils import timezone
+            for sub_order in order.sub_orders.exclude(status__in=['DELIVERED', 'CANCELLED']).all():
+                sub_order.status = 'DELIVERED'
+                sub_order.delivered_at = timezone.now()
+                sub_order.save(update_fields=['status', 'delivered_at', 'updated_at'])
+            order.status = 'DELIVERED'
+            order.save(update_fields=['status', 'updated_at'])
+            try:
+                from apps.core.email import send_order_delivered
+                send_order_delivered(order)
+            except Exception:
+                logger.exception("Erreur email livraison ebook Order #%s", order.id)
+            logger.info("Order #%s auto-DELIVERED (commande 100%% ebook)", order.id)
     except Exception as exc:
         self.retry(exc=exc)
 
@@ -585,4 +602,107 @@ def alert_unassigned_suborders(self):
             logger.exception("Erreur alerte sous-commande #%s sans livreur", sub_order.id)
 
     logger.info("alert_unassigned_suborders: %d alerte(s) envoyée(s).", alerted_count)
+    return {'alerted': alerted_count}
+
+
+@shared_task(bind=True, max_retries=1)
+def remind_unconfirmed_suborders(self):
+    """
+    B2 : rappelle les vendeurs pour les SubOrders PENDING > 48h dont l'Order est PAID.
+    Prévu pour Celery Beat une fois par jour à 10h UTC.
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    from apps.marketplace.models import SubOrder
+    from apps.core.email import send_vendor_reminder
+
+    cutoff = timezone.now() - timedelta(hours=48)
+    reminded_count = 0
+
+    suborders = (
+        SubOrder.objects
+        .filter(
+            status='PENDING',
+            created_at__lte=cutoff,
+            order__status='PAID',
+            reminder_sent=False,
+        )
+        .select_related('vendor', 'order__user')
+    )
+
+    for sub_order in suborders:
+        try:
+            send_vendor_reminder(sub_order)
+            sub_order.reminder_sent = True
+            sub_order.save(update_fields=['reminder_sent'])
+            reminded_count += 1
+        except Exception:
+            logger.exception("Erreur rappel vendeur SubOrder #%s", sub_order.id)
+
+    logger.info("remind_unconfirmed_suborders: %d rappel(s) envoyé(s).", reminded_count)
+    return {'reminded': reminded_count}
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_payment_failed_task(self, order_id):
+    """B5 : notifier le client que son paiement a échoué."""
+    try:
+        from apps.orders.models import Order
+        from apps.core.email import send_payment_failed
+        order = Order.objects.select_related('user').get(pk=order_id)
+        send_payment_failed(order)
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=1)
+def alert_stale_shipments(self):
+    """
+    B7 : alerte si une SubOrder est SHIPPED depuis plus de 72h sans DELIVERED.
+    Prévu pour Celery Beat une fois par jour à 11h UTC.
+    """
+    from datetime import timedelta
+    from django.utils import timezone
+    from django.conf import settings as django_settings
+    from apps.marketplace.models import SubOrder
+    from apps.organizations.models import OrganizationMembership
+    from apps.core.email import send_stale_shipment_alert
+
+    cutoff = timezone.now() - timedelta(hours=72)
+    alerted_count = 0
+
+    suborders = (
+        SubOrder.objects
+        .filter(
+            status='SHIPPED',
+            updated_at__lte=cutoff,
+            shipment_alert_sent=False,
+        )
+        .select_related('vendor', 'order__user', 'delivery_agent__user')
+    )
+
+    admin_email = getattr(django_settings, 'ADMIN_EMAIL', None)
+
+    for sub_order in suborders:
+        try:
+            vendor_emails = list(
+                OrganizationMembership.objects.filter(
+                    organization=sub_order.vendor,
+                    role__in=['PROPRIETAIRE', 'ADMINISTRATEUR'],
+                    is_active=True,
+                ).values_list('user__email', flat=True)
+            )
+            if admin_email and admin_email not in vendor_emails:
+                vendor_emails.append(admin_email)
+
+            if vendor_emails:
+                send_stale_shipment_alert(sub_order, vendor_emails)
+
+            sub_order.shipment_alert_sent = True
+            sub_order.save(update_fields=['shipment_alert_sent'])
+            alerted_count += 1
+        except Exception:
+            logger.exception("Erreur alerte livraison en retard SubOrder #%s", sub_order.id)
+
+    logger.info("alert_stale_shipments: %d alerte(s) envoyée(s).", alerted_count)
     return {'alerted': alerted_count}

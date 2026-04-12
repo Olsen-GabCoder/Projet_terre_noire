@@ -49,6 +49,19 @@
   Les articles suivants de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
   ont été expédiés par <strong>{{ vendor_name }}</strong> vers <strong>{{ shipping_city }}</strong>.
 </p>
+
+{% elif new_status == 'CANCELLED' %}
+<div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #991b1b; font-weight: bold; font-size: 14px;">
+    Le vendeur <strong>{{ vendor_name }}</strong> a annulé cette partie de votre commande.
+  </p>
+</div>
+
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">
+  Les articles suivants de votre commande <strong style="color: #1e3a5f;">#{{ order_id|stringformat:"06d" }}</strong>
+  ne pourront pas être honorés par <strong>{{ vendor_name }}</strong>.
+  Si vous avez déjà réglé cette commande, notre équipe vous contactera pour le remboursement.
+</p>
 {% endif %}
 
 <p style="margin: 0 0 8px; font-size: 15px; font-weight: bold; color: #1e3a5f;">Articles concernés</p>

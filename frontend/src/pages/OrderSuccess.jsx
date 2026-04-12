@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import orderService from '../services/orderService';
 import PageHero from '../components/PageHero';
@@ -9,18 +9,44 @@ const OrderSuccess = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderId, orderData } = location.state || {};
+  const params = useParams();
+
+  // B6 : priorité à location.state, fallback sur URL param, puis fetch API
+  const stateOrderId = location.state?.orderId;
+  const stateOrderData = location.state?.orderData;
+  const urlOrderId = params.orderId;
+  const resolvedOrderId = stateOrderId || urlOrderId;
+
+  const [orderData, setOrderData] = useState(stateOrderData || null);
   const [downloading, setDownloading] = useState(false);
+  const [loadingOrder, setLoadingOrder] = useState(!stateOrderData && !!resolvedOrderId);
 
   useEffect(() => {
-    if (!orderId) {
+    if (!resolvedOrderId) {
       navigate('/catalog');
+      return;
     }
-  }, [orderId, navigate]);
+    // Si pas de données en state, fetch depuis l'API
+    if (!stateOrderData && resolvedOrderId) {
+      const fetchOrder = async () => {
+        try {
+          const data = await orderService.getOrderById(resolvedOrderId);
+          setOrderData(data);
+        } catch {
+          navigate('/catalog');
+        } finally {
+          setLoadingOrder(false);
+        }
+      };
+      fetchOrder();
+    }
+  }, [resolvedOrderId, stateOrderData, navigate]);
 
-  if (!orderId) {
-    return null;
+  if (!resolvedOrderId || loadingOrder) {
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><div className="admin-spinner" /></div>;
   }
+
+  const orderId = resolvedOrderId;
 
   const handleDownloadInvoice = async () => {
     if (!orderId) return;

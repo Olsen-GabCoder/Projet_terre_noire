@@ -247,6 +247,66 @@ def send_vendor_payment_received(sub_order):
     return send_templated_email(subject, 'vendor_new_order', context, recipients)
 
 
+def send_vendor_reminder(sub_order):
+    """B2 : rappeler le vendeur qu'une sous-commande payée attend depuis 48h+."""
+    vendor = sub_order.vendor
+    if not vendor:
+        return False
+    recipients = _get_vendor_recipients(vendor)
+    if not recipients:
+        return False
+    order = sub_order.order
+    context = {
+        'vendor_name': vendor.name,
+        'order_id': f"{order.id:06d}",
+        'sub_order_id': sub_order.id,
+        'customer_name': order.user.get_full_name() or order.user.username if order.user else 'Client',
+        'shipping_city': order.shipping_city,
+        'created_at': sub_order.created_at.strftime('%d/%m/%Y à %Hh%M') if sub_order.created_at else '—',
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Rappel — Commande #{order.id:06d} en attente depuis 48h — Frollot"
+    return send_templated_email(subject, 'vendor_reminder', context, recipients)
+
+
+def send_payment_failed(order):
+    """B5 : notifier le client que son paiement a échoué."""
+    if not order.user or not order.user.email:
+        return False
+    context = {
+        'client_name': order.user.get_full_name() or order.user.username,
+        'order_id': f"{order.id:06d}",
+        'total_amount': float(order.total_amount),
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Paiement échoué — Commande #{order.id:06d} — Frollot"
+    return send_templated_email(subject, 'payment_failed', context, [order.user.email])
+
+
+def send_stale_shipment_alert(sub_order, to_emails):
+    """B7 : alerter sur une livraison en retard (SHIPPED > 72h)."""
+    order = sub_order.order
+    from apps.orders.models import OrderItem
+    items = [
+        {'title': item.book.title, 'quantity': item.quantity}
+        for item in OrderItem.objects.filter(sub_order=sub_order).select_related('book')
+    ]
+    agent_name = sub_order.delivery_agent.user.get_full_name() if sub_order.delivery_agent else '—'
+    context = {
+        'sub_order_id': sub_order.id,
+        'order_id': f"{order.id:06d}",
+        'vendor_name': sub_order.vendor.name if sub_order.vendor else '—',
+        'agent_name': agent_name,
+        'customer_name': order.user.get_full_name() if order.user else 'Client',
+        'shipping_city': order.shipping_city,
+        'items': items,
+        'shipped_since': sub_order.updated_at.strftime('%d/%m/%Y à %Hh%M') if sub_order.updated_at else '—',
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Alerte livraison en retard — Commande #{order.id:06d} — Frollot"
+    return send_templated_email(subject, 'stale_shipment_alert', context, to_emails)
+
+
 def send_vendor_delivery_completed(sub_order):
     """Notifier le vendeur qu'une sous-commande a été livrée au client."""
     vendor = sub_order.vendor
@@ -786,6 +846,7 @@ def send_suborder_update(sub_order, new_status):
         'PREPARING': 'en cours de préparation',
         'READY': 'prête, le livreur va la récupérer',
         'SHIPPED': 'expédiée',
+        'CANCELLED': 'annulée par le vendeur',
     }
     status_label = STATUS_LABELS.get(new_status, sub_order.get_status_display())
 

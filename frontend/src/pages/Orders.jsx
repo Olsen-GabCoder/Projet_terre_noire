@@ -231,10 +231,24 @@ const Orders = ({ embedded = false }) => {
                             </div>
                             <div className="ord-suborder__meta">
                               <span>{formatPrice(sub.subtotal)}</span>
+                              {sub.vendor_phone && (
+                                <span><a href={`tel:${sub.vendor_phone}`}><i className="fas fa-phone" /> {sub.vendor_phone}</a></span>
+                              )}
+                              {sub.vendor_email && (
+                                <span><a href={`mailto:${sub.vendor_email}`}><i className="fas fa-envelope" /> Contact</a></span>
+                              )}
+                              {sub.vendor_phone && (
+                                <span><a href={`https://wa.me/${sub.vendor_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour, concernant ma commande #${order.id}...`)}`} target="_blank" rel="noopener noreferrer"><i className="fab fa-whatsapp" /> WhatsApp</a></span>
+                              )}
+                            </div>
+                            <div className="ord-suborder__meta">
                               {sub.delivery_agent_name && (
                                 <span className="ord-suborder__agent">
                                   <i className="fas fa-motorcycle" /> {sub.delivery_agent_name}
                                 </span>
+                              )}
+                              {sub.delivery_agent_phone && (
+                                <span><a href={`tel:${sub.delivery_agent_phone}`}><i className="fas fa-phone" /> {sub.delivery_agent_phone}</a></span>
                               )}
                               {sub.delivered_at && (
                                 <span className="ord-suborder__delivered">

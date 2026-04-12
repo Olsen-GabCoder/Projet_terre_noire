@@ -119,7 +119,9 @@ const DeliveryAssignments = () => {
                         </span>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                        <span><i className="fas fa-store" style={{ width: 14, marginRight: 4 }} /> {sub.vendor_name || `Vendeur #${sub.vendor}`}</span>
+                        <span><i className="fas fa-store" style={{ width: 14, marginRight: 4 }} /> {sub.vendor_name || `Vendeur #${sub.vendor}`}
+                          {sub.vendor_phone && <> · <a href={`tel:${sub.vendor_phone}`} style={{ color: 'var(--color-primary)' }}>{sub.vendor_phone}</a></>}
+                        </span>
                         {sub.client_full_name && <span><i className="fas fa-user" style={{ width: 14, marginRight: 4 }} /> {sub.client_full_name}</span>}
                         {sub.shipping_address && <span><i className="fas fa-map-marker-alt" style={{ width: 14, marginRight: 4 }} /> {sub.shipping_address}, {sub.shipping_city}</span>}
                         {sub.client_phone && <span><i className="fas fa-phone" style={{ width: 14, marginRight: 4 }} /> <a href={`tel:${sub.client_phone}`} style={{ color: 'var(--color-primary)' }}>{sub.client_phone}</a></span>}
