@@ -58,6 +58,9 @@ urlpatterns = [
     path('api/coupons/', include('apps.coupons.urls')),
     path('api/config/', include('apps.core.urls')),
 
+    # API Notifications in-app
+    path('api/notifications/', include('apps.notifications.urls')),
+
     # API Organizations
     path('api/organizations/', include('apps.organizations.urls')),
 

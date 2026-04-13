@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import NotificationCenter from './NotificationCenter';
 import '../styles/Header.css';
 
 // Logo : placer le fichier logo_frollot.png dans public/images/
@@ -483,6 +484,7 @@ const Header = () => {
                   <span className="header-mobile-cart-badge">{getTotalItems()}</span>
                 )}
               </Link>
+              {isAuthenticated && <NotificationCenter mobile />}
             </div>
             <button 
               ref={burgerButtonRef}
@@ -580,6 +582,8 @@ const Header = () => {
                 <i className="fas fa-search"></i>
               </button>
 
+              {isAuthenticated && <NotificationCenter />}
+
               {isAuthenticated ? (
                 <div className="user-dropdown-container" ref={userDropdownRef}>
                   <button
@@ -644,6 +648,11 @@ const Header = () => {
                       <Link to="/dashboard/orders" className="dropdown-item" onClick={closeAllMenus}>
                         <div className="dropdown-icon"><i className="fas fa-box"></i></div>
                         <div className="dropdown-content"><span>{t('common.myOrders')}</span><small>{t('header.ordersSubtitle')}</small></div>
+                        <i className="fas fa-chevron-right"></i>
+                      </Link>
+                      <Link to="/notifications" className="dropdown-item" onClick={closeAllMenus}>
+                        <div className="dropdown-icon"><i className="fas fa-bell"></i></div>
+                        <div className="dropdown-content"><span>{t('notifications.title', 'Notifications')}</span><small>{t('notifications.subtitle', 'Vos alertes et mises à jour')}</small></div>
                         <i className="fas fa-chevron-right"></i>
                       </Link>
                       <Link to="/dashboard/settings" className="dropdown-item" onClick={closeAllMenus}>

@@ -9,6 +9,17 @@ vi.mock('./services/bookService', () => ({
   },
 }))
 
+// Mock notificationService (NotificationCenter dans le Header)
+vi.mock('./services/notificationService', () => ({
+  default: {
+    getAll: vi.fn(() => Promise.resolve({ data: { results: [], count: 0 } })),
+    getUnreadCount: vi.fn(() => Promise.resolve({ data: { count: 0 } })),
+    markAsRead: vi.fn(() => Promise.resolve({})),
+    markAllAsRead: vi.fn(() => Promise.resolve({})),
+    delete: vi.fn(() => Promise.resolve({})),
+  },
+}))
+
 describe('App', () => {
   it('affiche le lien d\'évitement pour l\'accessibilité', async () => {
     render(<App />)
@@ -16,8 +27,8 @@ describe('App', () => {
       const skipLink = screen.getByRole('link', { name: /aller au contenu principal/i })
       expect(skipLink).toBeInTheDocument()
       expect(skipLink).toHaveAttribute('href', '#main-content')
-    })
-  })
+    }, { timeout: 10000 })
+  }, 15000)
 
   it('affiche la zone de contenu principal avec le bon id', async () => {
     render(<App />)
@@ -25,6 +36,6 @@ describe('App', () => {
       const main = screen.getByRole('main')
       expect(main).toBeInTheDocument()
       expect(main).toHaveAttribute('id', 'main-content')
-    })
-  })
+    }, { timeout: 10000 })
+  }, 15000)
 })

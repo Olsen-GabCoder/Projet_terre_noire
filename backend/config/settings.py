@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'apps.newsletter',
     'apps.contact',
     'apps.wishlist',
+    'apps.notifications',
     'apps.coupons',
     'apps.core',
     'apps.organizations',

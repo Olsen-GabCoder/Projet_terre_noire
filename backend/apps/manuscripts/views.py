@@ -247,6 +247,12 @@ class ManuscriptStatusUpdateView(APIView):
                 send_manuscript_status_update(manuscript)
             except Exception:
                 pass
+            # P3.3 : notification in-app à l'auteur
+            if manuscript.submitter:
+                from apps.notifications.services import create_notification
+                create_notification(manuscript.submitter, 'MANUSCRIPT_STATUS',
+                                    f'Manuscrit « {manuscript.title} » : {manuscript.get_status_display()}',
+                                    link='/dashboard/my-manuscripts')
 
         return Response({
             'success': True,

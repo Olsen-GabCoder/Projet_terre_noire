@@ -234,6 +234,12 @@ class SubOrderStatusUpdateView(APIView):
                         actor=request.user, actor_role=actor_type,
                         sub_order=sub_order, from_status=old_status, to_status=new_status)
 
+        # P3.3 : notification in-app au client
+        if sub_order.order.user:
+            from apps.notifications.services import create_notification
+            create_notification(sub_order.order.user, 'SUBORDER_STATUS', desc,
+                                link='/dashboard/orders')
+
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',
             'sub_order': SubOrderSerializer(sub_order).data,
@@ -412,6 +418,17 @@ class DeliveryStatusUpdateView(APIView):
         log_order_event(sub_order.order, evt, desc,
                         actor=request.user, actor_role=actor_type,
                         sub_order=sub_order, from_status=old_status, to_status=new_status, metadata=meta)
+
+        # P3.3 : notification in-app au client
+        if sub_order.order.user:
+            from apps.notifications.services import create_notification
+            if new_status == 'DELIVERED':
+                create_notification(sub_order.order.user, 'ORDER_DELIVERED',
+                                    'Votre commande a été livrée !', link='/dashboard/orders')
+            elif new_status == 'ATTEMPTED':
+                create_notification(sub_order.order.user, 'DELIVERY_ATTEMPTED',
+                                    f'Tentative de livraison échouée — {sub_order.last_attempt_reason or ""}',
+                                    link='/dashboard/orders')
 
         return Response({
             'message': f'Statut mis à jour : {sub_order.get_status_display()}.',

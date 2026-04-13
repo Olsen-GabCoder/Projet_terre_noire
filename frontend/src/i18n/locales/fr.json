@@ -2691,5 +2691,27 @@
   "sidebar": {
     "featured": "En vedette",
     "youMayAlsoLike": "Vous aimerez aussi"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Vos alertes et mises à jour",
+    "all": "Toutes",
+    "unread": "Non lues",
+    "markAllAsRead": "Tout marquer comme lu",
+    "markAsRead": "Marquer comme lu",
+    "delete": "Supprimer",
+    "empty": "Aucune notification",
+    "emptyDesc": "Vous n'avez aucune notification pour le moment.",
+    "viewAll": "Voir toutes les notifications",
+    "types": {
+      "ORDER_CREATED": "Commande créée",
+      "ORDER_PAID": "Paiement confirmé",
+      "PAYMENT_FAILED": "Paiement échoué",
+      "SUBORDER_STATUS": "Commande mise à jour",
+      "ORDER_DELIVERED": "Commande livrée",
+      "DELIVERY_ATTEMPTED": "Tentative de livraison",
+      "ORG_INVITATION": "Invitation reçue",
+      "MANUSCRIPT_STATUS": "Manuscrit mis à jour"
+    }
   }
 }

@@ -75,6 +75,7 @@ const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage'));
 const AuthorDetail = lazy(() => import('./pages/AuthorDetail'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Orders = lazy(() => import('./pages/Orders'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 
 // Pages admin
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -258,7 +259,7 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
   const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/vendor');
-  const isFullWidthPage = ['/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/') || location.pathname.startsWith('/order-success/');
+  const isFullWidthPage = ['/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/submit-manuscript', '/wishlist', '/orders', '/notifications', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password', '/feed', '/lists', '/clubs', '/services', '/organizations', '/professionals', '/inquiries', '/verify-email', '/search'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/lists/') || location.pathname.startsWith('/clubs/') || location.pathname.startsWith('/services/') || location.pathname.startsWith('/organizations/') || location.pathname.startsWith('/professionals/') || location.pathname.startsWith('/inquiries/') || location.pathname.startsWith('/library/') || location.pathname.startsWith('/order-success/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
   const isClubChatPage = location.pathname.match(/^\/clubs\/[^/]+$/) && !location.pathname.endsWith('/create');
   const FOOTER_PAGES = ['/'];
@@ -308,6 +309,7 @@ function AppContent() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/profile" element={<ProfileRedirect />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
                 {/* Frollot Connect — Annuaire & Vitrines */}
                 <Route path="/organizations" element={<Organizations />} />

@@ -2711,5 +2711,27 @@
   "sidebar": {
     "featured": "Featured",
     "youMayAlsoLike": "You may also like"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Your alerts and updates",
+    "all": "All",
+    "unread": "Unread",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "delete": "Delete",
+    "empty": "No notifications",
+    "emptyDesc": "You have no notifications at the moment.",
+    "viewAll": "View all notifications",
+    "types": {
+      "ORDER_CREATED": "Order created",
+      "ORDER_PAID": "Payment confirmed",
+      "PAYMENT_FAILED": "Payment failed",
+      "SUBORDER_STATUS": "Order updated",
+      "ORDER_DELIVERED": "Order delivered",
+      "DELIVERY_ATTEMPTED": "Delivery attempted",
+      "ORG_INVITATION": "Invitation received",
+      "MANUSCRIPT_STATUS": "Manuscript updated"
+    }
   }
 }

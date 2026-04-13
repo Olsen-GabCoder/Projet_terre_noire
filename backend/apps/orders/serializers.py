@@ -253,6 +253,12 @@ class OrderCreateSerializer(serializers.Serializer):
         log_order_event(order, 'ORDER_CREATED', f"Commande #{order.id} créée ({len(order_items)} article(s))",
                         actor=user, actor_role='client', to_status='PENDING')
 
+        # P3.3 : notification in-app
+        from apps.notifications.services import create_notification
+        create_notification(user, 'ORDER_CREATED', f'Commande #{order.id} créée',
+                            message=f'{len(order_items)} article(s) pour {float(order.total_amount):,.0f} FCFA',
+                            link='/dashboard/orders')
+
         # U2 : notifier chaque vendeur de la nouvelle sous-commande
         # U4 : notifier le livreur s'il a été choisi au checkout
         sub_order_ids = list(

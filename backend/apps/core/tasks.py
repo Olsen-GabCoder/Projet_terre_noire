@@ -47,6 +47,11 @@ def send_order_paid_task(self, order_id):
         from apps.core.email import send_order_paid, send_vendor_payment_received
         order = Order.objects.select_related('user').prefetch_related('items__book').get(pk=order_id)
         send_order_paid(order)
+        # P3.3 : notification in-app paiement
+        from apps.notifications.services import create_notification
+        if order.user:
+            create_notification(order.user, 'ORDER_PAID', f'Paiement confirmé — Commande #{order.id}',
+                                link='/dashboard/orders')
         # U2 : notifier chaque vendeur que le paiement est reçu
         for sub_order in order.sub_orders.select_related('vendor', 'order__user').all():
             try:
@@ -250,6 +255,17 @@ def send_organization_invitation_task(self, invitation_id):
         from apps.core.email import send_organization_invitation
         invitation = Invitation.objects.select_related('organization', 'invited_by').get(pk=invitation_id)
         send_organization_invitation(invitation)
+        # P3.3 : notification in-app si le destinataire a un compte
+        from apps.notifications.services import create_notification
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            invited_user = User.objects.get(email=invitation.email, is_active=True)
+            create_notification(invited_user, 'ORG_INVITATION',
+                                f'Invitation à rejoindre {invitation.organization.name}',
+                                link='/dashboard/invitations')
+        except User.DoesNotExist:
+            pass  # L'invité n'a pas encore de compte
     except Exception as exc:
         self.retry(exc=exc)
 
@@ -665,6 +681,12 @@ def send_payment_failed_task(self, order_id):
         from apps.core.email import send_payment_failed
         order = Order.objects.select_related('user').get(pk=order_id)
         send_payment_failed(order)
+        # P3.3 : notification in-app
+        from apps.notifications.services import create_notification
+        if order.user:
+            create_notification(order.user, 'PAYMENT_FAILED', f'Paiement échoué — Commande #{order.id}',
+                                message='Vous pouvez réessayer depuis votre espace commandes.',
+                                link='/dashboard/orders')
     except Exception as exc:
         self.retry(exc=exc)
 
