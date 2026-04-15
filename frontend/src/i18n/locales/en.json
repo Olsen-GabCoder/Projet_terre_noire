@@ -2731,7 +2731,291 @@
       "ORDER_DELIVERED": "Order delivered",
       "DELIVERY_ATTEMPTED": "Delivery attempted",
       "ORG_INVITATION": "Invitation received",
-      "MANUSCRIPT_STATUS": "Manuscript updated"
+      "MANUSCRIPT_STATUS": "Manuscript updated",
+      "COUPON_RECEIVED": "Coupon received",
+      "COUPON_REVOKED": "Coupon revoked"
+    }
+  },
+  "coupons": {
+    "widget": {
+      "title": "Available coupons",
+      "apply": "Apply",
+      "applicable": "{{count}} coupon(s) available"
+    },
+    "templates": {
+      "title": "Coupon templates",
+      "create": "Create template",
+      "edit": "Edit",
+      "name": "Template name",
+      "discountType": "Discount type",
+      "discountValue": "Value",
+      "minOrder": "Minimum order (FCFA)",
+      "expiryDays": "Expiry (days)",
+      "description": "Email description",
+      "deleteConfirm": "Delete this template?",
+      "empty": "No coupon templates.",
+      "emptyDesc": "Create your first template to send coupons to your customers."
+    },
+    "send": {
+      "title": "Send a coupon",
+      "selectTemplate": "Choose a template",
+      "recipients": "Recipients",
+      "recipientsManual": "Manual entry",
+      "recipientsFromHistory": "My customers",
+      "addEmail": "Add",
+      "emailPlaceholder": "email@example.com",
+      "customMessage": "Custom message",
+      "customExpiry": "Custom expiry (days)",
+      "confirm": "Send",
+      "confirmTitle": "Confirm sending",
+      "confirmMessage": "You are about to send the coupon \"{{name}}\" to {{count}} recipient(s). Continue?",
+      "success": "{{count}} coupon(s) being sent",
+      "partialSuccess": "Partial send: {{count}} succeeded, {{errors}} error(s)",
+      "limit": "{{current}} / {{max}} recipients",
+      "noTemplate": "Select a template",
+      "noRecipients": "Add at least one recipient",
+      "throttled": "Send limit reached. Please try again in 1 hour.",
+      "section": {
+        "template": "Which template to send?",
+        "templateHelp": "Select the coupon you want to offer to your customers.",
+        "recipients": "Who to send to?",
+        "recipientsHelp": "Select your existing customers or add emails manually.",
+        "customize": "Customize the send",
+        "customizeHelp": "Add a personal message and adjust the duration if you wish."
+      },
+      "preview": {
+        "placeholder": "Select a template to see the preview",
+        "recipientsCount_zero": "No recipients",
+        "recipientsCount_one": "{{count}} recipient",
+        "recipientsCount_other": "{{count}} recipients",
+        "expiry": "Expiry: {{days}} days",
+        "customMessageYes": "Custom message: Yes",
+        "customMessageNo": "Custom message: No"
+      },
+      "confirmWarning": "This send is final. Recipients will immediately receive an email with their coupon.",
+      "confirmSend_one": "Send {{count}} coupon",
+      "confirmSend_other": "Send {{count}} coupons",
+      "andMore": "and {{count}} other(s)",
+      "maxRecipientsHelp": "Maximum 20 recipients per send. For more, do multiple sends.",
+      "customMessageHelp": "This message will be displayed at the top of the email received by the recipient.",
+      "customExpiryHelp": "Leave empty to use the template's default duration. The coupon will expire after this many days.",
+      "customMessagePlaceholder": "Hello, here's a little gift from us!",
+      "emptyTemplatesTitle": "No templates available",
+      "emptyTemplatesDesc": "Create or clone a template from the library before sending coupons.",
+      "emptyTemplatesCTA": "Create or clone a template",
+      "emptyCustomersTitle": "No customers yet",
+      "emptyCustomersDesc": "Your customers will appear here once they have placed an order."
+    },
+    "issued": {
+      "title": "Issued coupons",
+      "stats": {
+        "total": "Total issued",
+        "used": "Used",
+        "rate": "Activation rate",
+        "discount": "Discounts granted"
+      },
+      "revoke": "Revoke",
+      "revokeConfirm": "Revoke this coupon? The recipient will be notified.",
+      "retry": "Retry",
+      "retryConfirm": "Do you want to retry sending this coupon?",
+      "retrySuccess": "Retry triggered. Status will update shortly.",
+      "retryError": "Unable to retry.",
+      "empty": "No coupons issued.",
+      "emptyDesc": "Send your first coupon from the send page."
+    },
+    "received": {
+      "title": "My coupons",
+      "apply": "Use this coupon",
+      "empty": "No coupons received",
+      "emptyDesc": "You haven't received any coupons yet.",
+      "filter": {
+        "all": "All",
+        "active": "Active",
+        "used": "Used",
+        "expired": "Expired"
+      }
+    },
+    "admin": {
+      "title": "Coupon supervision",
+      "overview": "Overview",
+      "totalIssued": "Total issued",
+      "totalUsed": "Total used",
+      "totalDiscount": "Discount value",
+      "activationRate": "Activation rate",
+      "topOrgs": "Top organizations"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SENT": "Sent",
+      "USED": "Used",
+      "EXPIRED": "Expired",
+      "REVOKED": "Revoked",
+      "FAILED": "Failed"
+    },
+    "type": {
+      "PERCENT": "Percentage",
+      "FIXED": "Fixed amount",
+      "FREE_SHIPPING": "Free shipping"
+    },
+    "emitter": "Emitter",
+    "emitterOrg": "My organization",
+    "emitterProfile": "My provider profile",
+    "section": {
+      "title": "Coupon issuer"
+    },
+    "selector": {
+      "label": "Issue as:",
+      "org": "My organization",
+      "profile": "My provider profile"
+    },
+    "library": {
+      "title": "Frollot Library",
+      "subtitle": "30 ready-to-use templates, created by the Frollot team",
+      "filterAll": "All",
+      "useTemplate": "Use this template",
+      "cloneSuccess": "Template added to your templates!",
+      "vendorsUse_one": "{{count}} seller uses it",
+      "vendorsUse_other": "{{count}} sellers use it",
+      "empty": "No templates available in this category."
+    },
+    "category": {
+      "BIENVENUE": "Welcome",
+      "BIENVENUE_desc": "To greet new customers",
+      "FIDELITE": "Loyalty",
+      "FIDELITE_desc": "To reward your loyal customers",
+      "SAISONNIER": "Seasonal",
+      "SAISONNIER_desc": "Offers tied to a period or holiday",
+      "REACTIVATION": "Re-engagement",
+      "REACTIVATION_desc": "To re-engage inactive customers",
+      "ANNIVERSAIRE": "Birthday",
+      "ANNIVERSAIRE_desc": "Celebrate your customers' birthdays",
+      "FLASH": "Flash",
+      "FLASH_desc": "Very limited-time offers",
+      "PARRAINAGE": "Referral",
+      "PARRAINAGE_desc": "Reward referrers and referees",
+      "PROMO_PRODUIT": "Product promo",
+      "PROMO_PRODUIT_desc": "Highlight a title or collection",
+      "DESTOCKAGE": "Clearance",
+      "DESTOCKAGE_desc": "Clear your stock with a discount",
+      "AUTRE": "Other",
+      "AUTRE_desc": "Custom offer without category"
+    },
+    "form": {
+      "section": {
+        "identity": "Identity & marketing",
+        "appearance": "Appearance",
+        "discount": "Discount",
+        "conditions": "Conditions",
+        "validity": "Validity & quotas"
+      },
+      "commercialTitle": "Commercial title",
+      "commercialTitle_placeholder": "E.g.: Black Friday –30% on the full catalog",
+      "commercialTitle_help": "Title shown to the customer in the email and on the coupon",
+      "subtitle": "Tagline",
+      "subtitle_placeholder": "E.g.: Exclusive offer until Sunday",
+      "subtitle_help": "Short phrase that makes customers want to use the coupon",
+      "internalName": "Internal name",
+      "internalName_placeholder": "E.g.: BF2026_promo_30",
+      "internalName_help": "Only visible to you, used to find this template",
+      "category": "Category",
+      "marketingDescription": "Marketing description",
+      "marketingDescription_placeholder": "E.g.: Enjoy –30% on our entire collection for Black Friday...",
+      "marketingDescription_help": "Marketing text shown to the customer in the email",
+      "tags": "Tags",
+      "tags_placeholder": "Add a tag, press Enter",
+      "tags_help": "Keywords to find this template (e.g.: promo, summer, bookstore)",
+      "icon": "Icon",
+      "accentColor": "Accent color",
+      "maxDiscountAmount": "Discount cap (FCFA)",
+      "maxDiscountAmount_help": "Maximum discount amount even if the percentage would be higher",
+      "firstOrderOnly": "First order only",
+      "firstOrderOnly_help": "This coupon can only be used on the customer's first purchase",
+      "minCustomerAgeDays": "Minimum customer age (days)",
+      "minCustomerAgeDays_help": "Days since registration. Empty = no condition",
+      "validFrom": "Template validity start",
+      "validFrom_help": "Date from which this template can generate coupons. Empty = immediately",
+      "validUntil": "Template validity end",
+      "validUntil_help": "Date after which this template can no longer be used. Empty = no limit",
+      "totalQuota": "Total coupon quota",
+      "totalQuota_help": "Maximum number of coupons sendable from this template. Empty = unlimited",
+      "perCustomerLimit": "Per-customer limit",
+      "perCustomerLimit_help": "Maximum number of coupons a single customer can receive",
+      "preview": "Live preview"
+    },
+    "myTemplates": {
+      "title": "My templates",
+      "clonedFrom": "Cloned from",
+      "inactive": "Inactive",
+      "togglePublished": "Enable / Disable",
+      "emptyTitle": "No personal templates",
+      "emptyDesc": "You haven't created any templates yet. Browse the Frollot library to get started quickly.",
+      "emptyCTA": "Browse the Frollot library"
+    },
+    "preview": {
+      "title": "Template preview",
+      "section": {
+        "identity": "Identity",
+        "conditions": "Commercial conditions",
+        "validity": "Validity & quotas",
+        "metadata": "Metadata"
+      },
+      "field": {
+        "internalName": "Internal name",
+        "tags": "Tags",
+        "accentColor": "Accent color",
+        "minOrder": "Minimum order",
+        "maxDiscount": "Discount cap",
+        "firstOrderOnly": "First order only",
+        "minCustomerAge": "Minimum customer age",
+        "expiryDays": "Default validity",
+        "validFrom": "Valid from",
+        "validUntil": "Valid until",
+        "quotaUsage": "{{used}} / {{total}} used",
+        "perCustomerLimit": "Per customer limit",
+        "status": "Status",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "createdAt": "Created on",
+        "updatedAt": "Updated on",
+        "clonedFrom": "Cloned from: {{name}}"
+      },
+      "notSet": "Not set",
+      "unlimited": "Unlimited",
+      "close": "Close",
+      "edit": "Edit"
+    },
+    "quota": {
+      "exhausted": "Quota exhausted",
+      "remaining_one": "{{count}} coupon left",
+      "remaining_other": "{{count}} coupons left"
+    },
+    "firstOrderBadge": "1st order",
+    "emitterSelector": {
+      "dualContext": {
+        "org": "My organization",
+        "profile": "My service profile"
+      },
+      "orgLabel": "Issue as:",
+      "orgHelp": "Select the organization issuing this coupon.",
+      "activeBanner": "You are issuing as {{name}} ({{type}}).",
+      "changeLink": "Change",
+      "orgType": {
+        "MAISON_EDITION": "Publisher",
+        "LIBRAIRIE": "Bookstore",
+        "BIBLIOTHEQUE": "Library",
+        "PRESTATAIRE": "Service provider",
+        "AUTRE": "Organization"
+      },
+      "noContext": {
+        "title": "No issuing context",
+        "desc": "You must be owner, admin or sales of an organization, or an independent service provider, to issue coupons."
+      }
+    }
+  },
+  "services": {
+    "quoteRespond": {
+      "couponCode": "Coupon code (optional)",
+      "couponCodePlaceholder": "Enter a coupon code"
     }
   }
 }

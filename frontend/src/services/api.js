@@ -132,8 +132,97 @@ export const configAPI = {
 };
 
 // --- API COUPONS ---
+
+function _emitterParams(emitterType, organizationId) {
+  const params = {};
+  if (emitterType) params.emitter_type = emitterType;
+  if (organizationId) params.organization_id = organizationId;
+  return params;
+}
+
 export const couponAPI = {
-  validate: (code) => api.post('/coupons/validate/', { code }),
+  // Contexte émetteur (source de vérité unique)
+  getEmitterContext: () => api.get('/coupons/emitter-context/'),
+
+  // Validation & applicable (côté client, pas d'emitter context)
+  validate: (code, cartItems, serviceQuoteId) => {
+    const body = { code };
+    if (cartItems) body.cart_items = cartItems;
+    if (serviceQuoteId) body.service_quote_id = serviceQuoteId;
+    return api.post('/coupons/validate/', body);
+  },
+  getApplicable: (cartItemIds, serviceQuoteId) => {
+    const params = {};
+    if (cartItemIds && cartItemIds.length > 0) params.cart_item_ids = cartItemIds.join(',');
+    if (serviceQuoteId) params.service_quote_id = serviceQuoteId;
+    return api.get('/coupons/applicable/', { params });
+  },
+  getMyReceived: (params) => api.get('/coupons/my-received/', { params }),
+
+  // Templates CRUD (émetteur)
+  getTemplates: (emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.get('/coupons/templates/', { params });
+  },
+  createTemplate: (data, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.post('/coupons/templates/', data, { params });
+  },
+  updateTemplate: (id, data, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.patch(`/coupons/templates/${id}/`, data, { params });
+  },
+  deleteTemplate: (id, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.delete(`/coupons/templates/${id}/`, { params });
+  },
+  // Bibliothèque système & clonage
+  getSystemLibrary: (extraParams, emitterType, organizationId) => {
+    const params = { ...extraParams, ..._emitterParams(emitterType, organizationId) };
+    return api.get('/coupons/templates/system/', { params });
+  },
+  cloneSystemTemplate: (systemTemplateId, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.post('/coupons/templates/clone/', { system_template_id: systemTemplateId }, { params });
+  },
+
+  // Envoi
+  send: (data, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.post('/coupons/send/', data, { params });
+  },
+
+  // Historiques émis
+  getMyIssued: (extraParams, emitterType, organizationId) => {
+    const params = { ...extraParams, ..._emitterParams(emitterType, organizationId) };
+    return api.get('/coupons/my-issued/', { params });
+  },
+
+  // Révocation
+  revoke: (id, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.post(`/coupons/${id}/revoke/`, {}, { params });
+  },
+
+  // Retry (FAILED → PENDING)
+  retry: (id, emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.post(`/coupons/${id}/retry/`, {}, { params });
+  },
+
+  // Clients
+  getVendorCustomers: (emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.get('/coupons/vendor-customers/', { params });
+  },
+  getServiceCustomers: (emitterType, organizationId) => {
+    const params = _emitterParams(emitterType, organizationId);
+    return api.get('/coupons/service-customers/', { params });
+  },
+
+  // Admin plateforme (pas d'emitter context)
+  adminOverview: () => api.get('/coupons/admin/overview/'),
+  adminList: (params) => api.get('/coupons/admin/list/', { params }),
 };
 
 // --- API WISHLIST ---
