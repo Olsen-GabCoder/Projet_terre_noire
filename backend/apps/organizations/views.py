@@ -214,6 +214,12 @@ class InvitationResponseView(APIView):
             Invitation, token=serializer.validated_data['token'], status='PENDING',
         )
 
+        if invitation.email.lower() != request.user.email.lower():
+            return Response(
+                {'error': "Cette invitation n'est pas destinée à votre compte."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         if invitation.is_expired:
             invitation.status = 'EXPIRED'
             invitation.save()

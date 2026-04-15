@@ -167,9 +167,13 @@ class PlatformReviewSerializer(serializers.ModelSerializer):
                   'content', 'rating', 'likes_count', 'created_at']
 
     def get_author_name(self, obj):
+        if not obj.author:
+            return "Utilisateur supprimé"
         return obj.author.get_full_name() or obj.author.username
 
     def get_author_image(self, obj):
+        if not obj.author:
+            return None
         if obj.author.profile_image:
             request = self.context.get('request')
             if request:

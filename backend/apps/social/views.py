@@ -504,6 +504,11 @@ class BookClubViewSet(viewsets.ModelViewSet):
     def messages(self, request, slug=None):
         """GET : messages du club. POST : envoyer un message (texte, voix, image, fichier)."""
         club = self.get_object()
+        if not club.memberships.filter(user=request.user, is_active=True).exists():
+            return Response(
+                {'error': "Vous devez être membre du club pour accéder aux messages."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if request.method == 'GET':
             qs = BookClubMessage.objects.filter(club=club).select_related('author')
             # Support polling : ?after=<id> retourne uniquement les nouveaux messages
@@ -516,12 +521,6 @@ class BookClubViewSet(viewsets.ModelViewSet):
             page = paginator.paginate_queryset(qs, request)
             serializer = BookClubMessageSerializer(page, many=True, context={'request': request})
             return paginator.get_paginated_response(serializer.data)
-        # POST — seuls les membres peuvent poster
-        if not club.memberships.filter(user=request.user).exists():
-            return Response(
-                {'detail': 'Vous devez être membre pour poster.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
         serializer = BookClubMessageSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save(club=club, author=request.user)
@@ -619,6 +618,11 @@ class BookClubViewSet(viewsets.ModelViewSet):
     def shared_media(self, request, slug=None):
         """Liste des médias partagés dans le club (images, fichiers, voix)."""
         club = self.get_object()
+        if not club.memberships.filter(user=request.user, is_active=True).exists():
+            return Response(
+                {'error': "Vous devez être membre du club pour accéder aux médias."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         qs = BookClubMessage.objects.filter(
             club=club, message_type__in=['IMAGE', 'FILE', 'VOICE'],
         ).exclude(attachment='').select_related('author').order_by('-created_at')[:50]

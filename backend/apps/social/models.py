@@ -182,7 +182,8 @@ class Post(models.Model):
         ]
 
     def __str__(self):
-        return f"Post by {self.author.username} ({self.post_type})"
+        username = self.author.username if self.author else "[compte supprimé]"
+        return f"Post by {username} ({self.post_type})"
 
 
 class PostLike(models.Model):
@@ -221,7 +222,8 @@ class PostComment(models.Model):
         verbose_name_plural = "Commentaires de publications"
 
     def __str__(self):
-        return f"Comment by {self.user.username} on Post #{self.post_id}"
+        username = self.user.username if self.user else "[compte supprimé]"
+        return f"Comment by {username} on Post #{self.post_id}"
 
 
 # ── Clubs de lecture ──
@@ -398,4 +400,5 @@ class BookClubMessage(models.Model):
         verbose_name_plural = "Messages de club"
 
     def __str__(self):
-        return f"{self.author.username}: {self.content[:50]}"
+        username = self.author.username if self.author else "[compte supprimé]"
+        return f"{username}: {self.content[:50]}"
