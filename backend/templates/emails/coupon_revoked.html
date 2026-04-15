@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour,</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">
+  Le coupon <strong style="color: #ef4444;">{{ code }}</strong> émis par <strong>{{ org_name }}</strong> a été annulé et n'est plus utilisable.
+</p>
+<p style="margin: 0 0 20px; color: #666; font-size: 13px;">
+  Si vous pensez qu'il s'agit d'une erreur, contactez directement {{ org_name }}.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/catalog" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Continuer mes achats</a>
+  </td></tr>
+</table>
+<p style="margin: 0; color: #333333; font-size: 13px;">A bientot sur Frollot !</p>
+{% endblock %}

@@ -1,0 +1,164 @@
+.emitter-selector {
+  margin-bottom: 1.25rem;
+}
+
+/* ── Dual context pills ── */
+.emitter-selector__dual {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--color-bg-section-alt);
+  border: 1px solid var(--color-border-card);
+  margin-bottom: 0.75rem;
+}
+
+.emitter-selector__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-card);
+  background: var(--color-bg-card);
+  color: var(--color-text-muted-ui);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.emitter-selector__pill:hover {
+  background: var(--color-bg-section-alt);
+}
+
+.emitter-selector__pill--active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.emitter-selector__pill--active:hover {
+  background: var(--color-primary);
+}
+
+/* ── Org selector ── */
+.emitter-selector__org {
+  margin-bottom: 0.75rem;
+}
+
+.emitter-selector__org-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted-ui);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.emitter-selector__select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-card);
+  background: var(--color-bg-card);
+  color: var(--color-text-heading);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* ── Pill grid (6+ orgs) ── */
+.emitter-selector__pill-grid {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.emitter-selector__org-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  border: 2px solid var(--color-border-card);
+  background: var(--color-bg-card);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.emitter-selector__org-pill:hover {
+  background: var(--color-bg-section-alt);
+}
+
+.emitter-selector__org-pill--active {
+  border-color: var(--org-color, var(--color-primary));
+  background: rgba(91, 94, 234, 0.04);
+}
+
+.emitter-selector__org-initial {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.emitter-selector__org-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.emitter-selector__org-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-heading);
+  line-height: 1.2;
+}
+
+.emitter-selector__org-type {
+  font-size: 0.68rem;
+  color: var(--color-text-muted-ui);
+}
+
+/* ── Active banner ── */
+.emitter-selector__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  background: var(--color-bg-section-alt);
+  border: 1px solid var(--color-border-card);
+  font-size: 0.78rem;
+  color: var(--color-text-muted-ui);
+}
+
+.emitter-selector__banner i {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .emitter-selector__pill-grid {
+    flex-direction: column;
+  }
+
+  .emitter-selector__org-pill {
+    width: 100%;
+  }
+
+  .emitter-selector__select {
+    width: 100%;
+  }
+}

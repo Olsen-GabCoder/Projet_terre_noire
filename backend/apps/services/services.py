@@ -12,12 +12,16 @@ from .models import (
 )
 
 
-def accept_quote(quote):
+def accept_quote(quote, coupon_code=None):
     """
     Accepte un devis : met à jour le statut du devis et de la demande,
     crée une commande de service avec commission plateforme.
+    Si coupon_code fourni, applique la réduction.
     Retourne la commande créée. Atomique.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     with transaction.atomic():
         quote.status = 'ACCEPTED'
         quote.save(update_fields=['status'])
@@ -36,15 +40,46 @@ def accept_quote(quote):
         # Calculer la deadline
         deadline = timezone.now() + timedelta(days=quote.turnaround_days)
 
+        # P3.5 : coupon prestataire
+        discount_amount = Decimal('0')
+        applied_coupon = None
+        if coupon_code:
+            coupon_code = coupon_code.strip().upper()
+            try:
+                from apps.coupons.models import Coupon
+                from apps.coupons.services import calc_discount
+                applied_coupon = Coupon.objects.select_for_update().get(code=coupon_code)
+                if applied_coupon.is_valid_for(
+                    request_obj.client,
+                    scoped_subtotal=quote.price,
+                    provider_profile_id=request_obj.provider_profile_id,
+                ):
+                    discount_amount = calc_discount(
+                        applied_coupon.discount_type,
+                        applied_coupon.discount_value,
+                        quote.price,
+                    )
+                else:
+                    applied_coupon = None
+                    logger.info("Coupon %s non valide pour le devis #%s", coupon_code, quote.id)
+            except Exception:
+                applied_coupon = None
+                logger.warning("Coupon %s introuvable ou erreur pour devis #%s", coupon_code, quote.id)
+
         order = ServiceOrder.objects.create(
             request=request_obj,
             quote=quote,
             client=request_obj.client,
             provider=request_obj.provider_profile,
             amount=quote.price,
+            discount_amount=discount_amount,
+            coupon=applied_coupon,
             platform_fee=platform_fee,
             deadline=deadline,
         )
+
+        if applied_coupon:
+            applied_coupon.apply(user=request_obj.client, order=None)
 
     return order
 

@@ -14,6 +14,8 @@ class Notification(models.Model):
         ('DELIVERY_ATTEMPTED', 'Tentative de livraison'),
         ('ORG_INVITATION', 'Invitation organisation'),
         ('MANUSCRIPT_STATUS', 'Statut manuscrit'),
+        ('COUPON_RECEIVED', 'Coupon reçu'),
+        ('COUPON_REVOKED', 'Coupon révoqué'),
     ]
 
     recipient = models.ForeignKey(

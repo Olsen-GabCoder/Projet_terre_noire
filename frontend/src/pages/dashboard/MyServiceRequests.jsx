@@ -29,6 +29,8 @@ const MyServiceRequests = () => {
   const [submitting, setSubmitting] = useState(false);
   const [revisionModal, setRevisionModal] = useState(null); // { orderId, reason }
   const [downloading, setDownloading] = useState(null);
+  const [couponInputId, setCouponInputId] = useState(null);
+  const [couponCode, setCouponCode] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -47,7 +49,11 @@ const MyServiceRequests = () => {
 
   const handleQuoteRespond = async (quoteId, accept) => {
     try {
-      await servicesService.respondToQuote(quoteId, { accept });
+      const payload = { accept };
+      if (accept && couponCode.trim()) payload.coupon_code = couponCode.trim();
+      await servicesService.respondToQuote(quoteId, payload);
+      setCouponInputId(null);
+      setCouponCode('');
       toast.success(accept ? 'Devis accepté ! Commande créée.' : 'Devis refusé.');
       // Reload
       const [reqRes, ordRes] = await Promise.all([
@@ -169,13 +175,35 @@ const MyServiceRequests = () => {
                       <td><span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700, background: cfg.bg, color: cfg.color }}>{cfg.label}</span></td>
                       <td>
                         {req.status === 'QUOTED' && req.quotes_count > 0 && (
-                          <div style={{ display: 'flex', gap: '0.35rem' }}>
-                            <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleQuoteRespond(req.pending_quote_id, true)} disabled={!req.pending_quote_id}>
-                              Accepter
-                            </button>
-                            <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }} onClick={() => handleQuoteRespond(req.pending_quote_id, false)} disabled={!req.pending_quote_id}>
-                              Refuser
-                            </button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                            {couponInputId === req.pending_quote_id ? (
+                              <>
+                                <input
+                                  type="text"
+                                  value={couponCode}
+                                  onChange={(e) => setCouponCode(e.target.value)}
+                                  placeholder={t('services.quoteRespond.couponCodePlaceholder')}
+                                  style={{ padding: '0.3rem 0.5rem', borderRadius: 5, border: '1px solid var(--color-border-card)', fontSize: '0.78rem', width: 180 }}
+                                />
+                                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                  <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleQuoteRespond(req.pending_quote_id, true)} disabled={!req.pending_quote_id}>
+                                    Accepter
+                                  </button>
+                                  <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }} onClick={() => { setCouponInputId(null); setCouponCode(''); }}>
+                                    Annuler
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                <button className="as-cta" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => setCouponInputId(req.pending_quote_id)} disabled={!req.pending_quote_id}>
+                                  Accepter
+                                </button>
+                                <button className="dashboard-btn" style={{ fontSize: '0.7rem', padding: '0.35rem 0.65rem' }} onClick={() => handleQuoteRespond(req.pending_quote_id, false)} disabled={!req.pending_quote_id}>
+                                  Refuser
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>

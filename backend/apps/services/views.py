@@ -264,7 +264,8 @@ class ServiceQuoteRespondView(APIView):
         serializer.is_valid(raise_exception=True)
 
         if serializer.validated_data['accept']:
-            order = accept_quote(quote)
+            coupon_code = serializer.validated_data.get('coupon_code', '').strip()
+            order = accept_quote(quote, coupon_code=coupon_code or None)
             return Response({
                 'message': 'Devis accepté. Commande de service créée.',
                 'order': ServiceOrderSerializer(order).data,
@@ -334,8 +335,16 @@ class ServiceOrderStatusUpdateView(APIView):
         if new_status == 'COMPLETED':
             complete_service_order(order)
         else:
+            # P3.5 : restaurer le coupon si annulation
+            if new_status == 'CANCELLED' and order.coupon_id:
+                order.coupon.restore()
+                order.discount_amount = 0
+                order.coupon = None
             order.status = new_status
-            order.save(update_fields=['status', 'updated_at'])
+            update_fields = ['status', 'updated_at']
+            if new_status == 'CANCELLED':
+                update_fields += ['discount_amount', 'coupon']
+            order.save(update_fields=update_fields)
 
         # Notifier les deux parties par email
         try:

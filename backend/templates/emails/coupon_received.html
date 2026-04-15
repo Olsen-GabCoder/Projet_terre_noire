@@ -1,0 +1,38 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour,</p>
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">
+  <strong style="color: #1e3a5f;">{{ created_by_name }}</strong> de <strong>{{ org_name }}</strong> vous offre un coupon de réduction !
+</p>
+
+{% if custom_message %}
+<div style="background: #f8f9fa; border-left: 3px solid #5b5eea; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+  <p style="margin: 0; color: #555; font-size: 13px; font-style: italic;">{{ custom_message }}</p>
+</div>
+{% endif %}
+
+<div style="background: linear-gradient(135deg, #5b5eea, #8b5cf6); border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
+  <p style="margin: 0 0 8px; color: rgba(255,255,255,0.85); font-size: 13px;">Votre code promo</p>
+  <p style="margin: 0 0 12px; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: 2px;">{{ code }}</p>
+  <p style="margin: 0; color: #ffffff; font-size: 18px; font-weight: 600;">{{ discount_label }}</p>
+</div>
+
+{% if template_description %}
+<p style="margin: 0 0 12px; color: #555; font-size: 13px;">{{ template_description }}</p>
+{% endif %}
+
+{% if min_order_amount and min_order_amount > 0 %}
+<p style="margin: 0 0 8px; color: #666; font-size: 12px;">Montant minimum de commande : <strong>{{ min_order_amount }} FCFA</strong></p>
+{% endif %}
+{% if valid_until %}
+<p style="margin: 0 0 16px; color: #666; font-size: 12px;">Valable jusqu'au <strong>{{ valid_until }}</strong></p>
+{% endif %}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #5b5eea; border-radius: 6px;">
+    <a href="{{ frontend_url }}/catalog" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Utiliser mon coupon</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0; color: #333333; font-size: 13px;">A bientot sur Frollot !</p>
+{% endblock %}

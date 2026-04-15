@@ -138,6 +138,11 @@ const VendorDashboard = lazy(() => import('./pages/vendor/VendorDashboard'));
 const VendorListings = lazy(() => import('./pages/vendor/VendorListings'));
 const VendorOrders = lazy(() => import('./pages/vendor/VendorOrders'));
 const VendorWallet = lazy(() => import('./pages/vendor/VendorWallet'));
+const CouponTemplates = lazy(() => import('./pages/dashboard/CouponTemplates'));
+const CouponSend = lazy(() => import('./pages/dashboard/CouponSend'));
+const CouponIssued = lazy(() => import('./pages/dashboard/CouponIssued'));
+const MyCoupons = lazy(() => import('./pages/MyCoupons'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 
 // Pages services professionnels
 const Services = lazy(() => import('./pages/Services'));
@@ -356,6 +361,10 @@ function AppContent() {
                   <Route path="security" element={<SecuritySettings />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="invitations" element={<MyInvitations />} />
+                  <Route path="coupons" element={<MyCoupons />} />
+                  <Route path="coupons/templates" element={<CouponTemplates />} />
+                  <Route path="coupons/send" element={<CouponSend />} />
+                  <Route path="coupons/issued" element={<CouponIssued />} />
                   <Route path="projects" element={<EditorialProjects />} />
                   <Route path="projects/:id" element={<EditorialProjectDetail />} />
 
@@ -400,6 +409,9 @@ function AppContent() {
                   <Route path="listings" element={<VendorListings />} />
                   <Route path="orders" element={<VendorOrders />} />
                   <Route path="wallet" element={<VendorWallet />} />
+                  <Route path="coupons/templates" element={<Navigate to="/dashboard/coupons/templates" replace />} />
+                  <Route path="coupons/send" element={<Navigate to="/dashboard/coupons/send" replace />} />
+                  <Route path="coupons/issued" element={<Navigate to="/dashboard/coupons/issued" replace />} />
                 </Route>
 
                 {/* Routes Admin — protégées, layout sidebar */}
@@ -410,6 +422,7 @@ function AppContent() {
                   <Route path="manuscripts" element={<AdminManuscripts />} />
                   <Route path="authors" element={<AdminAuthors />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
                 </Route>
                 
                 {/* Routes informatives */}

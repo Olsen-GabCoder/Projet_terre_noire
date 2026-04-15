@@ -257,6 +257,17 @@ class ServiceOrder(models.Model):
         max_digits=10, decimal_places=2, default=Decimal('0'),
         verbose_name="Commission plateforme (FCFA)",
     )
+    # P3.5 — Coupon prestataire
+    discount_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0'),
+        validators=[MinValueValidator(Decimal('0'))],
+        verbose_name="Réduction coupon (FCFA)",
+    )
+    coupon = models.ForeignKey(
+        'coupons.Coupon', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='service_orders',
+        verbose_name="Coupon appliqué",
+    )
     deliverable_file = models.FileField(
         upload_to='services/deliverables/', null=True, blank=True,
         verbose_name="Fichier livrable",

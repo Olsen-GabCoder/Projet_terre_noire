@@ -151,22 +151,37 @@ class OrderCreateSerializer(serializers.Serializer):
             shipping_cost = Decimal('0') if subtotal >= shipping_free_threshold else shipping_cost_default
         discount_amount = Decimal('0')
         coupon_code = validated_data.get('coupon_code', '').strip().upper()
+        applied_coupon = None
+        coupon_org_id = None
 
         if coupon_code:
             try:
-                coupon = Coupon.objects.select_for_update().get(code=coupon_code)
-                if coupon.is_active:
-                    now = timezone.now()
-                    if (not coupon.valid_from or now >= coupon.valid_from) and (not coupon.valid_until or now <= coupon.valid_until):
-                        if coupon.max_uses is None or coupon.usage_count < coupon.max_uses:
-                            if coupon.discount_percent is not None:
-                                discount_amount = subtotal * (coupon.discount_percent / 100)
-                            elif coupon.discount_amount:
-                                discount_amount = min(coupon.discount_amount, subtotal)
-                            coupon.usage_count += 1
-                            coupon.save()
+                applied_coupon = Coupon.objects.select_for_update().get(code=coupon_code)
+
+                if applied_coupon.provider_profile_id:
+                    # Coupon prestataire services : non applicable aux livres
+                    applied_coupon = None
+                elif applied_coupon.organization_id:
+                    # Coupon vendeur : scoper aux items de ce vendeur
+                    coupon_org_id = applied_coupon.organization_id
+                    scoped_subtotal = sum(
+                        item['price'] * item['quantity']
+                        for item in order_items
+                        if item.get('vendor') and item['vendor'].id == coupon_org_id
+                    )
+                    if scoped_subtotal > 0 and applied_coupon.is_valid_for(user, scoped_subtotal=scoped_subtotal):
+                        discount_amount = self._calc_discount(applied_coupon, scoped_subtotal)
+                    else:
+                        applied_coupon = None
+                        coupon_org_id = None
+                else:
+                    # Coupon plateforme : réduction sur subtotal global
+                    if applied_coupon.is_valid_for(user, scoped_subtotal=subtotal):
+                        discount_amount = self._calc_discount(applied_coupon, subtotal)
+                    else:
+                        applied_coupon = None
             except Coupon.DoesNotExist:
-                pass
+                applied_coupon = None
 
         total_amount = max(Decimal('0'), subtotal - discount_amount + shipping_cost)
 
@@ -183,7 +198,7 @@ class OrderCreateSerializer(serializers.Serializer):
             subtotal=subtotal,
             shipping_cost=shipping_cost,
             discount_amount=discount_amount,
-            coupon_code=coupon_code or None,
+            coupon_code=coupon_code if applied_coupon else None,
             total_amount=total_amount,
             shipping_address=validated_data['shipping_address'],
             shipping_phone=validated_data['shipping_phone'],
@@ -238,6 +253,15 @@ class OrderCreateSerializer(serializers.Serializer):
                         oi.id, oi.book_id,
                     )
 
+        # P3.5 : appliquer le coupon et assigner la réduction au bon SubOrder
+        if applied_coupon:
+            applied_coupon.apply(user=user, order=order)
+            if coupon_org_id:
+                # Coupon vendeur : discount sur le SubOrder du vendeur émetteur
+                SubOrder.objects.filter(
+                    order=order, vendor_id=coupon_org_id,
+                ).update(discount_amount=discount_amount, coupon=applied_coupon)
+
         # Envoi emails (async, après commit de la transaction)
         from django.db import transaction as db_transaction
         from apps.core.tasks import (
@@ -275,6 +299,10 @@ class OrderCreateSerializer(serializers.Serializer):
                 )
 
         return order
+
+    def _calc_discount(self, coupon, applicable_subtotal):
+        from apps.coupons.services import calc_discount
+        return calc_discount(coupon.discount_type, coupon.discount_value, applicable_subtotal)
 
 
 class OrderUserSerializer(serializers.Serializer):

@@ -42,7 +42,7 @@ class Order(models.Model):
         indexes = [
             models.Index(fields=['user', '-created_at']),
             models.Index(fields=['status']),
-            models.Index(fields=['user', 'client_request_id']),
+            models.Index(fields=['user', 'client_request_id'], name='orders_orde_user_id_crid_idx'),
         ]
 
     def __str__(self):

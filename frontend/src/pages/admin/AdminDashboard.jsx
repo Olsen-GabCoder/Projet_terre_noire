@@ -312,6 +312,9 @@ const AdminDashboard = () => {
             <Link to="/admin-dashboard/users" className="admin-dash-shortcut">
               <i className="fas fa-users-cog" /> Gérer les utilisateurs
             </Link>
+            <Link to="/admin-dashboard/coupons" className="admin-dash-shortcut">
+              <i className="fas fa-ticket-alt" /> Supervision coupons
+            </Link>
           </div>
         </div>
       </section>

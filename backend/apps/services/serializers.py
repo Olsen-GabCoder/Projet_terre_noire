@@ -204,6 +204,7 @@ class ServiceQuoteCreateSerializer(serializers.ModelSerializer):
 
 class ServiceQuoteRespondSerializer(serializers.Serializer):
     accept = serializers.BooleanField()
+    coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
 
 
 # ── ServiceOrder ──
@@ -223,7 +224,7 @@ class ServiceOrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'request', 'request_title', 'quote', 'client', 'client_name',
             'provider', 'provider_name', 'status', 'status_display',
-            'amount', 'platform_fee', 'has_deliverable', 'deliverable_filename',
+            'amount', 'discount_amount', 'coupon', 'platform_fee', 'has_deliverable', 'deliverable_filename',
             'deliverable_size', 'revision_count', 'last_revision_reason',
             'max_revision_rounds', 'delivered_at', 'deadline', 'completed_at', 'created_at', 'updated_at',
         ]

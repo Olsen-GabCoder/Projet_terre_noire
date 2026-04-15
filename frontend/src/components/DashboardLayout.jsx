@@ -170,6 +170,9 @@ const DashboardLayout = () => {
             <i className="fas fa-envelope-open-text" /> {t('dashboard.invitations', 'Invitations')}
             <Badge count={counts.invitations} accent />
           </NavLink>
+          <NavLink to="/dashboard/coupons" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
+            <i className="fas fa-ticket-alt" /> {t('coupons.received.title', 'Mes coupons')}
+          </NavLink>
         </nav>
 
         {/* ═══════════ ESPACE AUTEUR ═══════════ */}
@@ -300,6 +303,22 @@ const DashboardLayout = () => {
             </NavLink>
             <NavLink to="/vendor/wallet" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
               <i className="fas fa-wallet" /> {t('dashboard.wallet', 'Portefeuille')}
+            </NavLink>
+          </div>
+        )}
+
+        {/* ═══════════ COUPONS ÉMETTEUR ═══════════ */}
+        {(isVendor || isProfessional) && (
+          <div className="dashboard__orgs-section">
+            <h3 className="dashboard__orgs-title">{t('coupons.section.title', 'Coupons émetteur')}</h3>
+            <NavLink to="/dashboard/coupons/templates" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
+              <i className="fas fa-clone" /> {t('coupons.templates.title', 'Templates coupons')}
+            </NavLink>
+            <NavLink to="/dashboard/coupons/send" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
+              <i className="fas fa-paper-plane" /> {t('coupons.send.title', 'Envoyer un coupon')}
+            </NavLink>
+            <NavLink to="/dashboard/coupons/issued" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
+              <i className="fas fa-history" /> {t('coupons.issued.title', 'Coupons émis')}
             </NavLink>
           </div>
         )}

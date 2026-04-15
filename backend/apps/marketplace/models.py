@@ -122,6 +122,18 @@ class SubOrder(models.Model):
     reminder_sent = models.BooleanField(default=False, verbose_name="Rappel vendeur envoyé")
     shipment_alert_sent = models.BooleanField(default=False, verbose_name="Alerte livraison en retard envoyée")
 
+    # P3.5 — Coupon vendeur scopé
+    discount_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Réduction coupon (FCFA)",
+    )
+    coupon = models.ForeignKey(
+        'coupons.Coupon', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='sub_orders',
+        verbose_name="Coupon appliqué",
+    )
+
     # C1 — Suivi des tentatives de livraison
     attempt_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de tentatives")
     last_attempt_at = models.DateTimeField(null=True, blank=True, verbose_name="Dernière tentative")

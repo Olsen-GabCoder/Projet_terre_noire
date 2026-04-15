@@ -351,6 +351,7 @@ REST_FRAMEWORK = {
         'anon_burst': '10/minute',
         'anon_sustained': '30/hour',
         'login': '5/minute',
+        'coupon_send': '5/hour',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -365,6 +366,7 @@ if TESTING:
         'anon_burst': '9999/minute',
         'anon_sustained': '9999/hour',
         'login': '9999/minute',
+        'coupon_send': '9999/hour',
     }
 
 # Documentation API OpenAPI / Swagger

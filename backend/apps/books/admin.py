@@ -3,6 +3,7 @@ from .models import Category, Author, Book, BookReview, ReviewLike
 
 
 @admin.register(Category)
+
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'created_at']
     prepopulated_fields = {'slug': ('name',)}
@@ -58,3 +59,4 @@ class BookReviewAdmin(admin.ModelAdmin):
 class ReviewLikeAdmin(admin.ModelAdmin):
     list_display = ['user', 'review', 'created_at']
     list_filter = ['created_at']
+

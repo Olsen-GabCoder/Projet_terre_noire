@@ -9,6 +9,7 @@ import { useReveal } from '../hooks/useReveal';
 import '../styles/Cart.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
+import CouponWidget from '../components/CouponWidget';
 
 const Cart = () => {
   const { t } = useTranslation();
@@ -38,6 +39,15 @@ const Cart = () => {
   const fmt = (p) =>
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(p) + ' FCFA';
 
+  // Auto-apply pending coupon from MyCoupons page
+  useState(() => {
+    const pending = localStorage.getItem('pending_coupon_code');
+    if (pending && !appliedCoupon) {
+      setCouponCode(pending);
+      localStorage.removeItem('pending_coupon_code');
+    }
+  });
+
   const subtotal = cartItems.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
   const allEbooks = cartItems.every(i => i.format === 'EBOOK');
   const discountPercent = appliedCoupon?.discountPercent ?? 0;
@@ -61,8 +71,9 @@ const Cart = () => {
       if (data.valid) {
         applyCouponToContext({
           code: code,
-          discountPercent: data.discount_percent ?? 0,
-          discountAmount: data.discount_amount ?? 0,
+          discountPercent: data.discount_type === 'PERCENT' ? (data.discount_value ?? data.discount_percent ?? 0) : 0,
+          discountAmount: data.discount_type === 'FIXED' ? (data.discount_value ?? data.discount_amount ?? 0) : 0,
+          freeShipping: data.discount_type === 'FREE_SHIPPING',
         });
         setCouponMsg({ ok: true, text: data.message });
       } else {
@@ -228,6 +239,9 @@ const Cart = () => {
           <div className="crt-summary">
             <div className="crt-sum-card">
               <h2>{t('cart.summary')}</h2>
+
+              {/* Widget coupons applicables */}
+              <CouponWidget />
 
               {/* Coupon */}
               <div className="crt-coupon">
