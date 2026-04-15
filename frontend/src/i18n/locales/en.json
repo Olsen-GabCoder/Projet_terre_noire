@@ -955,6 +955,11 @@
       "cancelOrder": "Cancel order",
       "pagination": "Pagination"
     },
+    "checkout": {
+      "errorTimeout": "Your order is taking longer than expected. Please check 'My Orders' before retrying to avoid duplicates.",
+      "errorCheckOrders": "Check my orders",
+      "errorGeneric": "An error occurred while creating the order."
+    },
     "orgDetail": {
       "tabAbout": "About",
       "tabCatalog": "Catalog",

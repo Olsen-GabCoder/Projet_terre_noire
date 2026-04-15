@@ -536,3 +536,83 @@ class PaymentCreationTest(OrderTestMixin, APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+# ──────────────────────────────────────────────────────────────
+# Idempotence (client_request_id)
+# ──────────────────────────────────────────────────────────────
+
+class OrderIdempotenceTest(OrderTestMixin, APITestCase):
+    """Tests for POST /api/orders/ idempotency via client_request_id."""
+
+    def setUp(self):
+        self._create_base_data()
+
+    def test_same_client_request_id_returns_existing_order(self):
+        """Two POST with the same client_request_id return the same order."""
+        import uuid
+        crid = str(uuid.uuid4())
+        self.client.force_authenticate(user=self.user)
+        payload = self._valid_order_payload()
+        payload['client_request_id'] = crid
+
+        r1 = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED, r1.data)
+
+        r2 = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r2.status_code, status.HTTP_200_OK, r2.data)
+        self.assertEqual(r1.data['id'], r2.data['id'])
+        self.assertEqual(Order.objects.filter(user=self.user).count(), 1)
+
+    def test_without_client_request_id_creates_new_order_each_time(self):
+        """Two POST without client_request_id create two distinct orders."""
+        self.client.force_authenticate(user=self.user)
+        payload = self._valid_order_payload()
+
+        r1 = self.client.post('/api/orders/', payload, format='json')
+        r2 = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+        self.assertNotEqual(r1.data['id'], r2.data['id'])
+        self.assertEqual(Order.objects.filter(user=self.user).count(), 2)
+
+    def test_different_client_request_ids_create_distinct_orders(self):
+        """Two POST with different client_request_ids create two orders."""
+        import uuid
+        self.client.force_authenticate(user=self.user)
+        payload1 = self._valid_order_payload()
+        payload1['client_request_id'] = str(uuid.uuid4())
+        payload2 = self._valid_order_payload()
+        payload2['client_request_id'] = str(uuid.uuid4())
+
+        r1 = self.client.post('/api/orders/', payload1, format='json')
+        r2 = self.client.post('/api/orders/', payload2, format='json')
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+        self.assertNotEqual(r1.data['id'], r2.data['id'])
+
+    def test_invalid_client_request_id_ignored_order_created(self):
+        """Invalid UUID in client_request_id is silently ignored; order is created normally."""
+        self.client.force_authenticate(user=self.user)
+        payload = self._valid_order_payload()
+        payload['client_request_id'] = 'not-a-valid-uuid'
+        r = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertIn('id', r.data)
+
+    def test_same_crid_different_users_create_distinct_orders(self):
+        """Same client_request_id from two different users creates two orders."""
+        import uuid
+        crid = str(uuid.uuid4())
+        payload = self._valid_order_payload()
+        payload['client_request_id'] = crid
+
+        self.client.force_authenticate(user=self.user)
+        r1 = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+
+        self.client.force_authenticate(user=self.other_user)
+        r2 = self.client.post('/api/orders/', payload, format='json')
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+
+        self.assertNotEqual(r1.data['id'], r2.data['id'])

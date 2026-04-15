@@ -30,6 +30,10 @@ class Order(models.Model):
     delivery_agent_name = models.CharField(max_length=200, blank=True, default='')
     delivery_agent_phone = models.CharField(max_length=20, blank=True, default='')
 
+    # Idempotence client : UUID généré côté frontend pour éviter les doublons
+    # en cas de timeout ou de double-clic. Nullable pour rétrocompatibilité.
+    client_request_id = models.UUIDField(null=True, blank=True, db_index=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,6 +42,7 @@ class Order(models.Model):
         indexes = [
             models.Index(fields=['user', '-created_at']),
             models.Index(fields=['status']),
+            models.Index(fields=['user', 'client_request_id']),
         ]
 
     def __str__(self):

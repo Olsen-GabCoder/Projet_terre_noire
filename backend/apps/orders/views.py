@@ -141,9 +141,43 @@ class OrderViewSet(viewsets.ModelViewSet):
         return response
 
     def create(self, request, *args, **kwargs):
+        import uuid as uuid_module
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Idempotence : si client_request_id déjà connu pour cet utilisateur
+        # dans les 5 dernières minutes, retourner la commande existante (HTTP 200)
+        # au lieu d'en créer une nouvelle — évite les doublons en cas de timeout.
+        client_request_id = None
+        raw_crid = request.data.get('client_request_id')
+        if raw_crid:
+            try:
+                client_request_id = uuid_module.UUID(str(raw_crid))
+            except (ValueError, AttributeError):
+                pass  # UUID invalide — ignoré silencieusement
+
+        if client_request_id is not None:
+            cutoff = timezone.now() - timedelta(seconds=300)
+            existing = Order.objects.filter(
+                user=request.user,
+                client_request_id=client_request_id,
+                created_at__gte=cutoff,
+            ).first()
+            if existing:
+                logger.info(
+                    "Idempotence : commande #%s retournée pour client_request_id=%s",
+                    existing.id, client_request_id,
+                )
+                response_serializer = OrderListSerializer(existing, context={'request': request})
+                return Response(response_serializer.data, status=status.HTTP_200_OK)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
+
+        if client_request_id is not None:
+            Order.objects.filter(pk=order.pk).update(client_request_id=client_request_id)
+            order.client_request_id = client_request_id
 
         response_serializer = OrderListSerializer(order, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -191,19 +225,28 @@ class OrderViewSet(viewsets.ModelViewSet):
                     item.listing.stock = F('stock') + item.quantity
                     item.listing.save(update_fields=['stock'])
 
-            # A5 : restaurer le coupon
+            # A5 / P3.5 : restaurer le coupon
             if order.coupon_code:
                 from apps.coupons.models import Coupon
-                Coupon.objects.filter(code=order.coupon_code).update(
-                    usage_count=F('usage_count') - 1
-                )
-                logger.info("Coupon '%s' restauré (annulation commande #%s)", order.coupon_code, order.id)
+                try:
+                    coupon = Coupon.objects.get(code=order.coupon_code, status='USED')
+                    coupon.restore()
+                    logger.info("Coupon '%s' restauré (annulation commande #%s)", order.coupon_code, order.id)
+                except Coupon.DoesNotExist:
+                    # Legacy : fallback F() pour les anciens coupons sans statut
+                    Coupon.objects.filter(code=order.coupon_code).update(
+                        usage_count=F('usage_count') - 1
+                    )
 
             order.status = 'CANCELLED'
             order.save(update_fields=['status', 'updated_at'])
 
             # P4 : annuler les SubOrders enfants non livrées
             from apps.marketplace.models import SubOrder
+            # Remettre à zéro les discount_amount des SubOrders avec coupon
+            SubOrder.objects.filter(order=order, coupon__isnull=False).update(
+                discount_amount=0, coupon=None,
+            )
             SubOrder.objects.filter(order=order).exclude(
                 status__in=['DELIVERED', 'CANCELLED'],
             ).update(status='CANCELLED')

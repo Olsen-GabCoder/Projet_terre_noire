@@ -955,6 +955,11 @@
       "cancelOrder": "Annuler la commande",
       "pagination": "Pagination"
     },
+    "checkout": {
+      "errorTimeout": "La commande met plus de temps que prévu. Vérifiez 'Mes commandes' avant de réessayer pour éviter un doublon.",
+      "errorCheckOrders": "Vérifier mes commandes",
+      "errorGeneric": "Une erreur est survenue lors de la création de la commande."
+    },
     "orgDetail": {
       "tabAbout": "À propos",
       "tabCatalog": "Catalogue",

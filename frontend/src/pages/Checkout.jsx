@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useDeliveryConfig } from '../context/DeliveryConfigContext';
@@ -11,6 +11,17 @@ import toast from 'react-hot-toast';
 import { useReveal } from '../hooks/useReveal';
 import '../styles/Checkout.css';
 import PageHero from '../components/PageHero';
+
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback pour navigateurs anciens
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+};
 
 const Checkout = () => {
   const { t } = useTranslation();
@@ -29,6 +40,11 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [error, setError] = useState('');
+  const [isTimeoutError, setIsTimeoutError] = useState(false);
+
+  // UUID unique par tentative de commande — régénéré si le panier change
+  const [clientRequestId, setClientRequestId] = useState(() => generateUUID());
+  const isFirstCartRender = useRef(true);
 
   // Livreurs disponibles
   const [availableRates, setAvailableRates] = useState([]);
@@ -55,6 +71,17 @@ const Checkout = () => {
       });
     }
   }, [isAuthenticated, cartItems, user, navigate, orderCompleted]);
+
+  // Régénérer le client_request_id si le panier, le coupon ou le livreur change
+  useEffect(() => {
+    if (isFirstCartRender.current) {
+      isFirstCartRender.current = false;
+      return;
+    }
+    setClientRequestId(generateUUID());
+    setIsTimeoutError(false);
+    setError('');
+  }, [cartItems, appliedCoupon, selectedRate]);
 
   // Rechercher les livreurs quand la ville change (avec debounce)
   const searchRates = useCallback(async (city) => {
@@ -122,7 +149,9 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsTimeoutError(false);
     setIsProcessing(true);
+    let isTimeout = false;
 
     try {
       const orderData = {
@@ -136,13 +165,14 @@ const Checkout = () => {
         shipping_city: formData.shipping_city,
         ...(appliedCoupon?.code && { coupon_code: appliedCoupon.code }),
         ...(selectedRate && { delivery_rate_id: selectedRate.id }),
+        client_request_id: clientRequestId,
       };
 
       const response = await orderService.createOrder(orderData);
 
       setOrderCompleted(true);
       clearCart();
-      toast.success(`Commande #${response.id} creee avec succes !`);
+      toast.success(`Commande #${response.id} créée avec succès !`);
 
       navigate(`/order-success/${response.id}`, {
         state: {
@@ -151,14 +181,28 @@ const Checkout = () => {
         },
       });
     } catch (err) {
-      console.error('Erreur lors de la creation de la commande:', err);
-      setError(
-        err.response?.data?.detail ||
-          err.response?.data?.error ||
-          'Une erreur est survenue lors de la creation de la commande'
-      );
+      console.error('Erreur lors de la création de la commande:', err);
+      if (err.code === 'ECONNABORTED') {
+        isTimeout = true;
+        setIsTimeoutError(true);
+        setError(t(
+          'pages.checkout.errorTimeout',
+          "La commande met plus de temps que prévu. Vérifiez 'Mes commandes' avant de réessayer pour éviter un doublon."
+        ));
+        // Ne pas réactiver le bouton avant 30 secondes
+        setTimeout(() => setIsProcessing(false), 30000);
+      } else if (err.response?.data?.error || err.response?.data?.detail) {
+        setError(err.response.data.error || err.response.data.detail);
+      } else {
+        setError(t(
+          'pages.checkout.errorGeneric',
+          'Une erreur est survenue lors de la création de la commande.'
+        ));
+      }
     } finally {
-      setIsProcessing(false);
+      if (!isTimeout) {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -299,6 +343,12 @@ const Checkout = () => {
               <div className="chk-error" role="alert" aria-live="polite">
                 <i className="fas fa-exclamation-circle"></i>
                 <span>{error}</span>
+                {isTimeoutError && (
+                  <Link to="/orders" className="chk-error__link">
+                    <i className="fas fa-list-ul" />
+                    {' '}{t('pages.checkout.errorCheckOrders', 'Vérifier mes commandes')}
+                  </Link>
+                )}
               </div>
             )}
           </div>
