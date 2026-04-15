@@ -165,7 +165,7 @@ class ServiceQuoteCreateSerializer(serializers.ModelSerializer):
         logger = logging.getLogger(__name__)
         try:
             from apps.core.invoice import generate_service_quote_pdf
-            from apps.core.email import send_templated_email
+            from apps.core.email import send_async, send_templated_email
             from django.conf import settings
 
             pdf_buffer = generate_service_quote_pdf(quote)
@@ -176,7 +176,8 @@ class ServiceQuoteCreateSerializer(serializers.ModelSerializer):
             provider_name = request_obj.provider_profile.user.get_full_name()
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
 
-            send_templated_email(
+            send_async(
+                send_templated_email,
                 subject=f"Devis reçu — {request_obj.title}",
                 template_name='service_quote',
                 context={
@@ -195,7 +196,7 @@ class ServiceQuoteCreateSerializer(serializers.ModelSerializer):
                 to_emails=[client.email],
                 attachments=[(filename, pdf_content, 'application/pdf')],
             )
-            logger.info(f"Devis #{quote.id} — email envoyé à {client.email}")
+            logger.info(f"Devis #{quote.id} — email mis en file d'attente pour {client.email}")
         except Exception as e:
             logger.error(f"Erreur envoi email devis #{quote.id}: {e}", exc_info=True)
 

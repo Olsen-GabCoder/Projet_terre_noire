@@ -243,8 +243,8 @@ class ManuscriptStatusUpdateView(APIView):
         # Notifier l'auteur du changement de statut
         if old_status != new_status:
             try:
-                from apps.core.email import send_manuscript_status_update
-                send_manuscript_status_update(manuscript)
+                from apps.core.email import send_async, send_manuscript_status_update
+                send_async(send_manuscript_status_update, manuscript)
             except Exception:
                 pass
             # P3.3 : notification in-app à l'auteur

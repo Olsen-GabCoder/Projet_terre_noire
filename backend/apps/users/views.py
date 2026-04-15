@@ -939,8 +939,9 @@ class DeleteAccountView(APIView):
 
         # ── Email de confirmation (envoyé à l'ancien email) ──
         try:
-            from apps.core.email import send_templated_email
-            send_templated_email(
+            from apps.core.email import send_async, send_templated_email
+            send_async(
+                send_templated_email,
                 subject="Votre compte Frollot a été supprimé",
                 template_name='account_deletion',
                 context={

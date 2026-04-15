@@ -192,7 +192,7 @@ def _notify_cancelled_orgs(manuscript_id, org_ids):
     """
     from apps.manuscripts.models import Manuscript
     from apps.organizations.models import Organization
-    from apps.core.email import send_templated_email
+    from apps.core.email import send_async, send_templated_email
 
     try:
         manuscript = Manuscript.objects.get(pk=manuscript_id)
@@ -209,7 +209,8 @@ def _notify_cancelled_orgs(manuscript_id, org_ids):
                     'FRONTEND_URL', ''
                 ),
             }
-            send_templated_email(
+            send_async(
+                send_templated_email,
                 subject=f"Devis non retenu pour « {manuscript.title} » — Frollot",
                 template_name='manuscript_quote_cancelled',
                 context=context,
