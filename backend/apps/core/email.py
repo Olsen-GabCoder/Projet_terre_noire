@@ -5,6 +5,7 @@ Centralise l'envoi des notifications (commandes, newsletter, contact, etc.).
 import base64
 import logging
 import mimetypes
+import threading
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -12,6 +13,44 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 logger = logging.getLogger(__name__)
+
+
+def send_async(func, *args, **kwargs):
+    """
+    Exécute une fonction d'envoi email en arrière-plan via un thread daemon.
+
+    Usage :
+        send_async(send_order_confirmation, order)
+        send_async(send_coupon_received, coupon, user)
+
+    À utiliser pour : les emails transactionnels post-action (confirmation de
+    commande, notification de statut, coupon reçu, etc.) où l'utilisateur
+    n'attend pas de confirmation immédiate. Le thread étant daemon, il ne
+    retarde pas l'arrêt du processus serveur.
+
+    NE PAS utiliser pour :
+        - Vérification d'email à l'inscription : l'utilisateur attend le lien
+          pour accéder à son compte.
+        - Reset de mot de passe : l'utilisateur attend le lien pour agir.
+        - OAuth callback : flux synchrone critique où l'échec doit être visible.
+    Ces emails doivent rester synchrones pour garantir la livraison immédiate
+    et permettre de remonter l'erreur à l'utilisateur.
+
+    Retourne le Thread démarré (utile pour les tests via .join()).
+    En cas d'exception dans le thread, l'erreur est loggée via logger.exception
+    sans crash du thread ni de la requête principale.
+    """
+    def _run():
+        try:
+            func(*args, **kwargs)
+        except Exception:
+            logger.exception(
+                "send_async: exception dans le thread email pour %s", func.__name__
+            )
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    return thread
 
 
 def _get_logo_base64():
@@ -916,3 +955,48 @@ def send_unassigned_suborder_alert(sub_order, to_emails):
 
     subject = f"Sous-commande #SO-{sub_order.id:05d} en attente de livreur depuis plus de 24h — Frollot"
     return send_templated_email(subject, 'unassigned_delivery_alert', context, to_emails)
+
+
+# ── P3.5 Coupons ──
+
+def send_coupon_email(coupon, recipient_email, custom_message=''):
+    """Envoie un email de coupon au destinataire."""
+    from apps.coupons.services import get_emitter_name
+    org_name = get_emitter_name(coupon)
+    if coupon.discount_type == 'PERCENT':
+        discount_label = f"{int(coupon.discount_value)}% de réduction"
+    elif coupon.discount_type == 'FIXED':
+        discount_label = f"{int(coupon.discount_value)} FCFA de réduction"
+    else:
+        discount_label = "Livraison offerte"
+
+    context = {
+        'code': coupon.code,
+        'discount_label': discount_label,
+        'discount_type': coupon.discount_type,
+        'discount_value': coupon.discount_value,
+        'org_name': org_name,
+        'valid_until': coupon.valid_until.strftime('%d/%m/%Y') if coupon.valid_until else None,
+        'custom_message': custom_message,
+        'min_order_amount': int(coupon.min_order_amount) if coupon.min_order_amount else 0,
+        'created_by_name': (coupon.created_by.get_full_name() or coupon.created_by.username) if coupon.created_by else org_name,
+        'frontend_url': settings.FRONTEND_URL,
+        'template_description': coupon.template.marketing_description if coupon.template else '',
+    }
+    subject = f"Un coupon de {org_name} vous attend — {discount_label} — Frollot"
+    return send_templated_email(subject, 'coupon_received', context, [recipient_email])
+
+
+def send_coupon_revoked_email(coupon):
+    """Envoie un email informant que le coupon a été révoqué."""
+    if not coupon.recipient_email:
+        return False
+    from apps.coupons.services import get_emitter_name
+    org_name = get_emitter_name(coupon)
+    context = {
+        'code': coupon.code,
+        'org_name': org_name,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Coupon {coupon.code} annulé — Frollot"
+    return send_templated_email(subject, 'coupon_revoked', context, [coupon.recipient_email])

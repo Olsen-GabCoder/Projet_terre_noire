@@ -114,7 +114,7 @@ describe('api module structure', () => {
 
   it('api instance has correct timeout', () => {
     const createCall = axios.create.mock.calls[0][0];
-    expect(createCall.timeout).toBe(15000);
+    expect(createCall.timeout).toBe(30000);
   });
 
   it('api instance has JSON content type header', () => {
