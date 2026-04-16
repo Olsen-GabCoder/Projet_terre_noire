@@ -506,7 +506,6 @@ class CouponRetryView(APIView):
         coupon.status = 'PENDING'
         coupon.save(update_fields=['status', 'updated_at'])
 
-        # TODO: passer en send_async une fois disponible (signal agent-infra)
         from .tasks import send_single_coupon_task
         send_single_coupon_task.delay(coupon.id)
 

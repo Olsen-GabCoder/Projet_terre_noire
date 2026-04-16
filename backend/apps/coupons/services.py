@@ -68,10 +68,17 @@ def send_single_coupon(coupon_id):
     try:
         from apps.core.email import send_coupon_email
         send_coupon_email(coupon, coupon.recipient_email, coupon.custom_message)
-        coupon.status = 'SENT'
+    except Exception as e:
+        logger.exception("Échec envoi coupon #%s à %s : %s", coupon.id, coupon.recipient_email, e)
+        coupon.status = 'FAILED'
         coupon.save(update_fields=['status', 'updated_at'])
+        return False
 
-        if coupon.recipient_id:
+    coupon.status = 'SENT'
+    coupon.save(update_fields=['status', 'updated_at'])
+
+    if coupon.recipient_id:
+        try:
             from apps.notifications.services import create_notification
             emitter = get_emitter_name(coupon)
             create_notification(
@@ -80,14 +87,11 @@ def send_single_coupon(coupon_id):
                 message=f'Code {coupon.code} — {_discount_label(coupon)}',
                 link='/dashboard/coupons',
             )
+        except Exception:
+            logger.exception("Échec notification COUPON_RECEIVED pour coupon %s", coupon.code)
 
-        logger.info("Coupon %s envoyé à %s", coupon.code, coupon.recipient_email)
-        return True
-    except Exception:
-        logger.exception("Échec envoi coupon %s à %s", coupon.code, coupon.recipient_email)
-        coupon.status = 'FAILED'
-        coupon.save(update_fields=['status', 'updated_at'])
-        return False
+    logger.info("Coupon %s envoyé à %s", coupon.code, coupon.recipient_email)
+    return True
 
 
 def create_coupons_for_send(template, recipient_emails, created_by, custom_message='', custom_expiry_days=None):

@@ -984,7 +984,7 @@ def send_coupon_email(coupon, recipient_email, custom_message=''):
         'template_description': coupon.template.marketing_description if coupon.template else '',
     }
     subject = f"Un coupon de {org_name} vous attend — {discount_label} — Frollot"
-    return send_templated_email(subject, 'coupon_received', context, [recipient_email])
+    return send_templated_email(subject, 'coupon_received', context, [recipient_email], fail_silently=False)
 
 
 def send_coupon_revoked_email(coupon):
@@ -999,4 +999,4 @@ def send_coupon_revoked_email(coupon):
         'frontend_url': settings.FRONTEND_URL,
     }
     subject = f"Coupon {coupon.code} annulé — Frollot"
-    return send_templated_email(subject, 'coupon_revoked', context, [coupon.recipient_email])
+    return send_templated_email(subject, 'coupon_revoked', context, [coupon.recipient_email], fail_silently=False)
