@@ -342,7 +342,7 @@ class PostViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Vous ne pouvez supprimer que vos propres publications.")
         instance.delete()
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post', 'delete'])
     def like(self, request, pk=None):
         """Toggle like sur un post."""
         post = self.get_object()
@@ -452,16 +452,24 @@ class BookClubViewSet(viewsets.ModelViewSet):
             club=club, user=self.request.user, role='ADMIN'
         )
 
+    def _can_manage_club(self, club, user):
+        """Vérifie si l'utilisateur peut gérer le club (créateur, ou admin si créateur supprimé)."""
+        if club.creator == user:
+            return True
+        if club.creator is None:
+            return club.memberships.filter(user=user, role='ADMIN', is_active=True).exists()
+        return False
+
     def perform_update(self, serializer):
-        if serializer.instance.creator != self.request.user:
+        if not self._can_manage_club(serializer.instance, self.request.user):
             from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Seul le créateur peut modifier ce club.")
+            raise PermissionDenied("Seul le créateur (ou un admin si le créateur a supprimé son compte) peut modifier ce club.")
         serializer.save()
 
     def perform_destroy(self, instance):
-        if instance.creator != self.request.user:
+        if not self._can_manage_club(instance, self.request.user):
             from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Seul le créateur peut supprimer ce club.")
+            raise PermissionDenied("Seul le créateur (ou un admin si le créateur a supprimé son compte) peut supprimer ce club.")
         instance.delete()
 
     @action(detail=True, methods=['post'])

@@ -28,7 +28,7 @@ const ReadingListDetail = () => {
 
   const handleRemoveBook = async (bookId) => {
     try {
-      await socialService.removeBookFromList(list.id, bookId);
+      await socialService.removeBookFromList(list.slug, bookId);
       setList({
         ...list,
         items: list.items.filter((i) => i.book?.id !== bookId),

@@ -39,10 +39,10 @@ const ReadingLists = () => {
     setCreating(false);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (slug) => {
     if (!window.confirm(t('pages.readingLists.confirmDelete'))) return;
     try {
-      await socialService.deleteList(id);
+      await socialService.deleteList(slug);
       fetchLists();
     } catch { /* */ }
   };
@@ -107,7 +107,7 @@ const ReadingLists = () => {
                     </p>
                     {list.description && <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>{list.description}</p>}
                   </Link>
-                  <button className="dashboard-btn" style={{ marginTop: '0.75rem', fontSize: '0.75rem' }} onClick={() => handleDelete(list.id)}>
+                  <button className="dashboard-btn" style={{ marginTop: '0.75rem', fontSize: '0.75rem' }} onClick={() => handleDelete(list.slug)}>
                     <i className="fas fa-trash" /> {t('common.delete')}
                   </button>
                 </div>

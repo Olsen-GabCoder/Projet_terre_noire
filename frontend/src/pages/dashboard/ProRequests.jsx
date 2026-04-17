@@ -186,9 +186,9 @@ const ProRequests = () => {
 
                     <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
                       {/* Download quote PDF if already quoted */}
-                      {req.quotes_count > 0 && (
-                        <button className="dashboard-btn" onClick={() => handleDownloadPdf(req.quotes?.[0]?.id || req.id)} disabled={downloadingPdf === req.id} style={{ fontSize: '0.78rem', padding: '0.4rem 0.8rem' }}>
-                          <i className={downloadingPdf === req.id ? 'fas fa-spinner fa-spin' : 'fas fa-file-pdf'} aria-hidden="true" /> PDF
+                      {req.pending_quote_id && (
+                        <button className="dashboard-btn" onClick={() => handleDownloadPdf(req.pending_quote_id)} disabled={downloadingPdf === req.pending_quote_id} style={{ fontSize: '0.78rem', padding: '0.4rem 0.8rem' }}>
+                          <i className={downloadingPdf === req.pending_quote_id ? 'fas fa-spinner fa-spin' : 'fas fa-file-pdf'} aria-hidden="true" /> PDF
                         </button>
                       )}
                       <button className="dashboard-btn" onClick={() => setExpandedId(isExpanded ? null : req.id)} style={{ fontSize: '0.78rem', padding: '0.4rem 0.8rem' }}>

@@ -16,9 +16,9 @@ const socialService = {
   getList: (id) => api.get(`/social/lists/${id}/`),
   createList: (data) => api.post('/social/lists/', data),
   updateList: (id, data) => api.patch(`/social/lists/${id}/`, data),
-  deleteList: (id) => api.delete(`/social/lists/${id}/`),
-  addBookToList: (listId, data) => api.post(`/social/lists/${listId}/add_book/`, data),
-  removeBookFromList: (listId, bookId) => api.delete(`/social/lists/${listId}/remove_book/${bookId}/`),
+  deleteList: (slug) => api.delete(`/social/lists/${slug}/`),
+  addBookToList: (slug, data) => api.post(`/social/lists/${slug}/add_book/`, data),
+  removeBookFromList: (slug, bookId) => api.delete(`/social/lists/${slug}/remove_book/${bookId}/`),
 
   // ── Posts (fil d'actualite) ──
   getFeed: (params) => api.get('/social/posts/', { params }),
