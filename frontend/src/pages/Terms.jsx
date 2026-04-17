@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { CGU_SECTIONS, CGU_LAST_UPDATED } from '../data/cgu-content';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
@@ -132,7 +133,7 @@ const Terms = () => {
             <h2>
               <span className="terms-section__number">{section.number}.</span> {section.title}
             </h2>
-            <div className="terms-section__body" dangerouslySetInnerHTML={{ __html: section.content }} />
+            <div className="terms-section__body" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content) }} />
           </section>
         ))}
       </article>
