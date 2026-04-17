@@ -306,6 +306,16 @@ class ServiceOrderDetailView(generics.RetrieveAPIView):
     )
 
 
+ALLOWED_SERVICE_ORDER_TRANSITIONS = {
+    'PENDING': ['IN_PROGRESS', 'CANCELLED'],
+    'IN_PROGRESS': ['REVIEW', 'CANCELLED', 'REVISION'],
+    'REVISION': ['IN_PROGRESS', 'CANCELLED'],
+    'REVIEW': ['COMPLETED', 'REVISION', 'CANCELLED'],
+    'COMPLETED': [],   # état final
+    'CANCELLED': [],   # état final
+}
+
+
 class ServiceOrderStatusUpdateView(APIView):
     """Met à jour le statut d'une commande de service."""
     permission_classes = [permissions.IsAuthenticated]
@@ -324,6 +334,14 @@ class ServiceOrderStatusUpdateView(APIView):
         serializer = ServiceOrderStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_status = serializer.validated_data['status']
+
+        # Validation de la machine à états
+        allowed = ALLOWED_SERVICE_ORDER_TRANSITIONS.get(order.status, [])
+        if new_status not in allowed:
+            return Response(
+                {'message': f'Transition {order.status} → {new_status} non autorisée.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Seul le client ou un admin peut valider la livraison
         if new_status == 'COMPLETED' and order.client != request.user and not request.user.is_platform_admin:
@@ -344,6 +362,9 @@ class ServiceOrderStatusUpdateView(APIView):
             update_fields = ['status', 'updated_at']
             if new_status == 'CANCELLED':
                 update_fields += ['discount_amount', 'coupon']
+                # Remettre la ServiceRequest en état réutilisable
+                order.request.status = 'SUBMITTED'
+                order.request.save(update_fields=['status', 'updated_at'])
             order.save(update_fields=update_fields)
 
         # Notifier les deux parties par email
@@ -820,11 +841,14 @@ class PrintRequestStatusUpdateView(APIView):
         serializer = PrintRequestStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         print_req.status = serializer.validated_data['status']
+        update_fields = ['status', 'updated_at']
         if 'unit_price' in serializer.validated_data:
             print_req.unit_price = serializer.validated_data['unit_price']
+            update_fields.append('unit_price')
         if 'total_price' in serializer.validated_data:
             print_req.total_price = serializer.validated_data['total_price']
-        print_req.save()
+            update_fields.append('total_price')
+        print_req.save(update_fields=update_fields)
         return Response({
             'message': f'Statut mis à jour : {print_req.get_status_display()}.',
             'print_request': PrintRequestSerializer(print_req).data,
@@ -956,7 +980,8 @@ class ServiceProviderReviewCreateView(APIView):
             context={'request': request, 'provider': order.provider},
         )
         serializer.is_valid(raise_exception=True)
-        review = serializer.save()
+        # Force service_order to the validated order to prevent injection
+        review = serializer.save(service_order=order)
         return Response(
             {'message': 'Avis publié.', 'review': ServiceProviderReviewSerializer(review).data},
             status=status.HTTP_201_CREATED,
@@ -1050,6 +1075,8 @@ class QuoteCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        from django.db import transaction as db_transaction
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -1064,52 +1091,53 @@ class QuoteCreateView(generics.CreateAPIView):
             except QuoteTemplate.DoesNotExist:
                 pass
 
-        # Créer le devis
-        quote = Quote.objects.create(
-            title=data['title'],
-            template_id=template_id,
-            manuscript_id=data.get('manuscript_id'),
-            service_request_id=data.get('service_request_id'),
-            provider_organization_id=data.get('organization_id'),
-            created_by=request.user,
-            client_id=data.get('client_id'),
-            client_name=data.get('client_name', ''),
-            client_email=data.get('client_email', ''),
-            publishing_model=publishing_model,
-            royalty_terms=data.get('royalty_terms', []),
-            print_run=data.get('print_run'),
-            retail_price=data.get('retail_price'),
-            parent_quote_id=data.get('parent_quote_id'),
-            discount_type=data.get('discount_type', 'PERCENT'),
-            discount_value=data.get('discount_value', 0),
-            tax_rate=data.get('tax_rate', 0),
-            delivery_days=data.get('delivery_days', 30),
-            validity_days=data.get('validity_days', 30),
-            revision_rounds=data.get('revision_rounds', 1),
-            notes=data.get('notes', ''),
-            payment_schedule=data.get('payment_schedule', []),
-        )
-
-        # Créer les lots et leurs items
-        for lot_data in data['lots']:
-            lot = QuoteLot.objects.create(
-                quote=quote,
-                name=lot_data['name'],
-                order=lot_data.get('order', 0),
+        with db_transaction.atomic():
+            # Créer le devis
+            quote = Quote.objects.create(
+                title=data['title'],
+                template_id=template_id,
+                manuscript_id=data.get('manuscript_id'),
+                service_request_id=data.get('service_request_id'),
+                provider_organization_id=data.get('organization_id'),
+                created_by=request.user,
+                client_id=data.get('client_id'),
+                client_name=data.get('client_name', ''),
+                client_email=data.get('client_email', ''),
+                publishing_model=publishing_model,
+                royalty_terms=data.get('royalty_terms', []),
+                print_run=data.get('print_run'),
+                retail_price=data.get('retail_price'),
+                parent_quote_id=data.get('parent_quote_id'),
+                discount_type=data.get('discount_type', 'PERCENT'),
+                discount_value=data.get('discount_value', 0),
+                tax_rate=data.get('tax_rate', 0),
+                delivery_days=data.get('delivery_days', 30),
+                validity_days=data.get('validity_days', 30),
+                revision_rounds=data.get('revision_rounds', 1),
+                notes=data.get('notes', ''),
+                payment_schedule=data.get('payment_schedule', []),
             )
-            for item_data in lot_data['items']:
-                QuoteItem.objects.create(
-                    lot=lot,
-                    designation=item_data['designation'],
-                    description=item_data.get('description', ''),
-                    unit=item_data.get('unit', 'FORFAIT'),
-                    quantity=item_data.get('quantity', 1),
-                    unit_price=item_data.get('unit_price', 0),
-                    order=item_data.get('order', 0),
-                )
 
-        # Recalculer les totaux
-        quote.recalculate()
+            # Créer les lots et leurs items
+            for lot_data in data['lots']:
+                lot = QuoteLot.objects.create(
+                    quote=quote,
+                    name=lot_data['name'],
+                    order=lot_data.get('order', 0),
+                )
+                for item_data in lot_data['items']:
+                    QuoteItem.objects.create(
+                        lot=lot,
+                        designation=item_data['designation'],
+                        description=item_data.get('description', ''),
+                        unit=item_data.get('unit', 'FORFAIT'),
+                        quantity=item_data.get('quantity', 1),
+                        unit_price=item_data.get('unit_price', 0),
+                        order=item_data.get('order', 0),
+                    )
+
+            # Recalculer les totaux
+            quote.recalculate()
 
         # Retourner le devis complet
         detail = QuoteDetailSerializer(quote).data

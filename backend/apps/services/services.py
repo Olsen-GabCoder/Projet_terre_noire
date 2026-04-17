@@ -94,8 +94,9 @@ def complete_service_order(order):
         order.completed_at = timezone.now()
         order.save(update_fields=['status', 'completed_at', 'updated_at'])
 
-        # Montant net pour le professionnel
-        pro_amount = order.amount - order.platform_fee
+        # Montant net pour le professionnel (après déduction du coupon + commission)
+        net_amount = order.amount - (order.discount_amount or 0)
+        pro_amount = net_amount - order.platform_fee
 
         # Créer ou récupérer le portefeuille
         wallet, _ = ProfessionalWallet.objects.get_or_create(

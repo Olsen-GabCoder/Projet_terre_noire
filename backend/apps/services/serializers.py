@@ -160,7 +160,8 @@ class ServiceQuoteCreateSerializer(serializers.ModelSerializer):
         request_obj.status = 'QUOTED'
         request_obj.save(update_fields=['status', 'updated_at'])
 
-        # Générer le PDF du devis et envoyer un email au client
+        # Générer le PDF du devis (synchrone — nécessaire pour l'attachement email)
+        # puis envoyer l'email au client (asynchrone via send_async)
         import logging
         logger = logging.getLogger(__name__)
         try:
@@ -426,7 +427,7 @@ class ServiceProviderReviewSerializer(serializers.ModelSerializer):
 class ServiceProviderReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceProviderReview
-        fields = ['rating', 'comment', 'service_order']
+        fields = ['rating', 'comment']
 
     def validate(self, attrs):
         user = self.context['request'].user
