@@ -1,5 +1,4 @@
 """Advanced delivery tests: transitions, attempted, max attempts alert, rate validation."""
-import unittest
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -79,15 +78,10 @@ class DeliveryTransitionTests(MarketplaceTestBase):
 
 
 class DeliveryRateValidationTests(MarketplaceTestBase):
-    """Tests for delivery rate edge cases."""
+    """Tests for delivery rate validation."""
 
-    @unittest.expectedFailure
-    def test_delivery_rate_negative_price_accepted(self):
-        """BUG CONNU P2: Creating a rate with negative price should return 400
-        but currently succeeds because MyDeliveryRatesView.post() uses raw
-        request.data without serializer validation. The model has
-        MinValueValidator(0) but it's not enforced on direct create().
-        """
+    def test_delivery_rate_negative_price_rejected(self):
+        """Negative price is rejected with 400 (fixed: now uses DeliveryRateSerializer)."""
         self._auth(self.delivery_user)
         resp = self.client.post('/api/marketplace/delivery/rates/', {
             'zone_name': 'Zone Negative',

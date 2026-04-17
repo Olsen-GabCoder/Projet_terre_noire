@@ -353,7 +353,13 @@ class DeliveryStatusUpdateView(APIView):
         if new_status == 'ATTEMPTED':
             sub_order.attempt_count += 1
             sub_order.last_attempt_at = timezone.now()
-            sub_order.last_attempt_reason = request.data.get('attempt_reason', '')
+            attempt_reason = request.data.get('attempt_reason', '')
+            if len(attempt_reason) > 200:
+                return Response(
+                    {'message': 'La raison ne peut pas dépasser 200 caractères.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            sub_order.last_attempt_reason = attempt_reason
         sub_order.save()
 
         # Email au client
@@ -525,21 +531,13 @@ class MyDeliveryRatesView(APIView):
         } for r in rates])
 
     def post(self, request):
-        from .delivery_models import DeliveryRate
+        from .serializers import DeliveryRateSerializer
         profile = self._get_profile(request)
         if not profile:
             return Response({'message': 'Profil livreur introuvable.'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data
-        rate = DeliveryRate.objects.create(
-            agent=profile,
-            zone_name=data.get('zone_name', ''),
-            country=data.get('country', 'GA'),
-            cities=data.get('cities', []),
-            price=data.get('price', 0),
-            currency=data.get('currency', 'XAF'),
-            estimated_days_min=data.get('estimated_days_min', 1),
-            estimated_days_max=data.get('estimated_days_max', 3),
-        )
+        serializer = DeliveryRateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        rate = serializer.save(agent=profile)
         return Response({'message': 'Tarif créé.', 'id': rate.id}, status=status.HTTP_201_CREATED)
 
 
@@ -549,12 +547,12 @@ class DeliveryRateDetailView(APIView):
 
     def patch(self, request, pk):
         from .delivery_models import DeliveryRate
+        from .serializers import DeliveryRateSerializer
         profile = UserProfile.objects.filter(user=request.user, profile_type='LIVREUR', is_active=True).first()
         rate = get_object_or_404(DeliveryRate, pk=pk, agent=profile)
-        for field in ['zone_name', 'country', 'cities', 'price', 'currency', 'estimated_days_min', 'estimated_days_max', 'is_active']:
-            if field in request.data:
-                setattr(rate, field, request.data[field])
-        rate.save()
+        serializer = DeliveryRateSerializer(rate, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response({'message': 'Tarif mis à jour.'})
 
     def delete(self, request, pk):
@@ -623,6 +621,7 @@ class WithdrawView(APIView):
 
     def post(self, request):
         from decimal import Decimal
+        from django.db import transaction
         from django.utils import timezone as tz
         from .withdrawal_models import WithdrawalRequest, MIN_WITHDRAWAL_AMOUNT
 
@@ -631,7 +630,7 @@ class WithdrawView(APIView):
         provider = request.data.get('provider', '')  # MOBICASH | AIRTEL
         phone = request.data.get('phone_number', '').strip()
 
-        # Validations
+        # Validations (avant la transaction atomique)
         if wallet_type not in ('VENDOR', 'DELIVERY', 'PROFESSIONAL'):
             return Response({'message': 'Type de wallet invalide.'}, status=status.HTTP_400_BAD_REQUEST)
         if provider not in ('MOBICASH', 'AIRTEL'):
@@ -641,73 +640,77 @@ class WithdrawView(APIView):
         if amount < MIN_WITHDRAWAL_AMOUNT:
             return Response({'message': f'Montant minimum : {MIN_WITHDRAWAL_AMOUNT} FCFA.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Verifier le solde
+        # Verifier le wallet existe (hors transaction pour un 404 rapide)
         wallet = self._get_wallet(request.user, wallet_type)
         if not wallet:
             return Response({'message': 'Wallet introuvable.'}, status=status.HTTP_404_NOT_FOUND)
-        if wallet.balance < amount:
-            return Response({'message': f'Solde insuffisant ({wallet.balance} FCFA disponible).'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Verifier pas de retrait en cours
-        pending = WithdrawalRequest.objects.filter(
-            user=request.user, wallet_type=wallet_type, status__in=('PENDING', 'PROCESSING'),
-        ).exists()
-        if pending:
-            return Response({'message': 'Vous avez deja un retrait en cours pour ce wallet.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Creer la demande
-        withdrawal = WithdrawalRequest.objects.create(
-            user=request.user,
-            wallet_type=wallet_type,
-            amount=amount,
-            provider=provider,
-            phone_number=phone,
-        )
-
-        # Executer le retrait (simulation pour l'instant)
+        # Section atomique avec verrou pessimiste sur le wallet
         try:
-            from apps.orders.payment_gateway import get_provider
-            pay_provider = get_provider(provider)
-            result = pay_provider.disburse(
-                phone_number=phone,
-                amount=float(amount),
-                currency='XAF',
-                reference=f'WDR-{withdrawal.id:06d}',
-            )
+            with transaction.atomic():
+                # Verrouiller le wallet pour éviter les retraits concurrents
+                locked_wallet = type(wallet).objects.select_for_update().get(pk=wallet.pk)
 
-            if result.get('status') == 'SUCCESS':
-                withdrawal.status = 'COMPLETED'
-                withdrawal.transaction_id = result.get('transaction_id', '')
-                withdrawal.processed_at = tz.now()
-                withdrawal.save()
+                if locked_wallet.balance < amount:
+                    return Response({'message': f'Solde insuffisant ({locked_wallet.balance} FCFA disponible).'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Debiter le wallet
-                wallet.balance -= amount
-                wallet.total_withdrawn += amount
-                wallet.save()
+                # Verifier pas de retrait en cours
+                pending = WithdrawalRequest.objects.filter(
+                    user=request.user, wallet_type=wallet_type, status__in=('PENDING', 'PROCESSING'),
+                ).exists()
+                if pending:
+                    return Response({'message': 'Vous avez deja un retrait en cours pour ce wallet.'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Enregistrer la transaction
-                self._record_transaction(wallet, wallet_type, amount, withdrawal)
+                # Creer la demande
+                withdrawal = WithdrawalRequest.objects.create(
+                    user=request.user,
+                    wallet_type=wallet_type,
+                    amount=amount,
+                    provider=provider,
+                    phone_number=phone,
+                )
 
-                return Response({
-                    'message': f'Retrait de {amount} FCFA effectue avec succes.',
-                    'withdrawal_id': withdrawal.id,
-                    'transaction_id': result.get('transaction_id'),
-                    'status': 'COMPLETED',
-                })
-            else:
-                withdrawal.status = 'FAILED'
-                withdrawal.failure_reason = result.get('message', 'Erreur inconnue')
-                withdrawal.save()
-                return Response({
-                    'message': 'Le retrait a echoue. Reessayez plus tard.',
-                    'status': 'FAILED',
-                }, status=status.HTTP_502_BAD_GATEWAY)
+                # Executer le retrait (simulation pour l'instant)
+                from apps.orders.payment_gateway import get_provider
+                pay_provider = get_provider(provider)
+                result = pay_provider.disburse(
+                    phone_number=phone,
+                    amount=float(amount),
+                    currency='XAF',
+                    reference=f'WDR-{withdrawal.id:06d}',
+                )
+
+                if result.get('status') == 'SUCCESS':
+                    withdrawal.status = 'COMPLETED'
+                    withdrawal.transaction_id = result.get('transaction_id', '')
+                    withdrawal.processed_at = tz.now()
+                    withdrawal.save()
+
+                    # Debiter le wallet
+                    locked_wallet.balance -= amount
+                    locked_wallet.total_withdrawn += amount
+                    locked_wallet.save()
+
+                    # Enregistrer la transaction
+                    self._record_transaction(locked_wallet, wallet_type, amount, withdrawal)
+
+                    return Response({
+                        'message': f'Retrait de {amount} FCFA effectue avec succes.',
+                        'withdrawal_id': withdrawal.id,
+                        'transaction_id': result.get('transaction_id'),
+                        'status': 'COMPLETED',
+                    })
+                else:
+                    withdrawal.status = 'FAILED'
+                    withdrawal.failure_reason = result.get('message', 'Erreur inconnue')
+                    withdrawal.save()
+                    return Response({
+                        'message': 'Le retrait a echoue. Reessayez plus tard.',
+                        'status': 'FAILED',
+                    }, status=status.HTTP_502_BAD_GATEWAY)
 
         except Exception as e:
-            withdrawal.status = 'FAILED'
-            withdrawal.failure_reason = str(e)
-            withdrawal.save()
+            logger.exception("Erreur retrait wallet %s user #%s", wallet_type, request.user.id)
             return Response({
                 'message': 'Erreur lors du retrait. Reessayez plus tard.',
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

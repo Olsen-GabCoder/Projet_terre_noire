@@ -193,3 +193,30 @@ class AssignDeliverySerializer(serializers.Serializer):
         if not UserProfile.objects.filter(id=value, profile_type='LIVREUR', is_active=True).exists():
             raise serializers.ValidationError("Profil livreur introuvable ou inactif.")
         return value
+
+
+# ── Tarifs de livraison ──
+
+class DeliveryRateSerializer(serializers.ModelSerializer):
+    """Validation des tarifs de livraison (création et mise à jour)."""
+    class Meta:
+        from .delivery_models import DeliveryRate
+        model = DeliveryRate
+        fields = [
+            'zone_name', 'country', 'cities', 'price', 'currency',
+            'estimated_days_min', 'estimated_days_max', 'is_active',
+        ]
+
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Le prix ne peut pas être négatif.")
+        return value
+
+    def validate(self, data):
+        d_min = data.get('estimated_days_min')
+        d_max = data.get('estimated_days_max')
+        if d_min is not None and d_max is not None and d_min > d_max:
+            raise serializers.ValidationError(
+                "Le délai minimum ne peut pas dépasser le maximum."
+            )
+        return data
