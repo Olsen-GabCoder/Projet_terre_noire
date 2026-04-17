@@ -13,6 +13,30 @@ from django.http import HttpResponse
 
 from .models import Order, OrderItem, Payment
 from apps.core.invoice import generate_order_invoice_pdf
+
+
+def _process_successful_payment(order):
+    """
+    Traitement commun après un paiement réussi.
+    Appelé par PaymentViewSet, PaymentInitiateView, et PaymentWebhookView.
+    """
+    order.status = 'PAID'
+    order.save(update_fields=['status', 'updated_at'])
+
+    try:
+        from apps.marketplace.services import split_payment
+        split_payment(order)
+    except Exception:
+        pass
+
+    from apps.books.signals import update_sales_on_payment
+    update_sales_on_payment(order)
+
+    try:
+        from apps.core.tasks import send_order_paid_task
+        send_order_paid_task.delay(order.id)
+    except Exception:
+        pass
 from apps.users.throttles import OrderCreateThrottle
 from .serializers import (
     OrderCreateSerializer,
@@ -344,20 +368,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
             send_payment_failed_task.delay(order.id)
 
         if payment.status == 'SUCCESS':
-            order.status = 'PAID'
-            order.save()
-            # Split payment — créditer les portefeuilles vendeurs
-            try:
-                from apps.marketplace.services import split_payment
-                split_payment(order)
-            except Exception:
-                pass
-            # Mettre à jour les ventes et le statut best-seller
-            from apps.books.signals import update_sales_on_payment
-            update_sales_on_payment(order)
-            # Envoi email de confirmation de paiement
-            from apps.core.tasks import send_order_paid_task
-            send_order_paid_task.delay(order.id)
+            _process_successful_payment(order)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -411,17 +422,7 @@ class PaymentInitiateView(APIView):
             send_payment_failed_task.delay(order.id)
 
         if result['status'] == 'SUCCESS':
-            order.status = 'PAID'
-            order.save()
-            try:
-                from apps.marketplace.services import split_payment
-                split_payment(order)
-            except Exception:
-                pass
-            from apps.books.signals import update_sales_on_payment
-            update_sales_on_payment(order)
-            from apps.core.tasks import send_order_paid_task
-            send_order_paid_task.delay(order.id)
+            _process_successful_payment(order)
 
         return Response({
             'payment_id': payment.id,
@@ -475,17 +476,7 @@ class PaymentWebhookView(APIView):
 
         if new_status == 'SUCCESS':
             order = payment.order
-            order.status = 'PAID'
-            order.save()
-            try:
-                from apps.marketplace.services import split_payment
-                split_payment(order)
-            except Exception:
-                pass
-            from apps.books.signals import update_sales_on_payment
-            update_sales_on_payment(order)
-            from apps.core.tasks import send_order_paid_task
-            send_order_paid_task.delay(order.id)
+            _process_successful_payment(order)
             logger.info("Paiement %s confirmé via webhook %s", transaction_id, provider_name)
 
         return Response({'status': 'ok'})

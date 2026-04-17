@@ -380,27 +380,40 @@ class OrganizationBookDetailView(APIView):
             from apps.marketplace.models import BookListing
             listing = BookListing.objects.filter(book=book, vendor=org).first()
             if listing:
-                if 'stock' in request.data:
-                    listing.stock = int(request.data['stock'])
-                if 'condition' in request.data:
-                    listing.condition = request.data['condition']
-                if 'listing_price' in request.data:
-                    listing.price = request.data['listing_price']
-                listing.save()
+                try:
+                    if 'stock' in request.data:
+                        listing.stock = int(request.data.get('stock', 0))
+                    if 'condition' in request.data:
+                        listing.condition = request.data.get('condition', 'NEW')
+                    if 'listing_price' in request.data:
+                        listing.price = request.data.get('listing_price', 0)
+                    listing.save()
+                except (ValueError, TypeError) as e:
+                    return Response(
+                        {'message': f'Valeur invalide pour un champ du listing : {e}'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         elif org.org_type == 'BIBLIOTHEQUE':
             from apps.library.models import LibraryCatalogItem
             item = LibraryCatalogItem.objects.filter(book=book, library=org).first()
             if item:
-                if 'total_copies' in request.data:
-                    item.total_copies = int(request.data['total_copies'])
-                if 'available_copies' in request.data:
-                    item.available_copies = int(request.data['available_copies'])
-                if 'allows_digital_loan' in request.data:
-                    item.allows_digital_loan = request.data['allows_digital_loan'].lower() == 'true'
-                if 'max_loan_days' in request.data:
-                    item.max_loan_days = int(request.data['max_loan_days'])
-                item.save()
+                try:
+                    if 'total_copies' in request.data:
+                        item.total_copies = int(request.data.get('total_copies', 0))
+                    if 'available_copies' in request.data:
+                        item.available_copies = int(request.data.get('available_copies', 0))
+                    if 'allows_digital_loan' in request.data:
+                        val = request.data.get('allows_digital_loan', False)
+                        item.allows_digital_loan = str(val).lower() in ('true', '1')
+                    if 'max_loan_days' in request.data:
+                        item.max_loan_days = int(request.data.get('max_loan_days', 21))
+                    item.save()
+                except (ValueError, TypeError) as e:
+                    return Response(
+                        {'message': f'Valeur invalide pour un champ du catalogue : {e}'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         return Response({
             'message': f'Livre « {book.title} » mis à jour.',
