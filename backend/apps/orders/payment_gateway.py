@@ -77,7 +77,7 @@ class MobicashProvider(BasePaymentProvider):
     - MOBICASH_API_KEY
     - MOBICASH_API_SECRET
     - MOBICASH_API_URL (sandbox/production)
-    - MOBICASH_WEBHOOK_SECRET
+    - MOBICASH_WEBHOOK_SECRET (ou PAYMENT_WEBHOOK_SECRET en fallback)
     """
 
     name = 'MOBICASH'
@@ -87,7 +87,10 @@ class MobicashProvider(BasePaymentProvider):
         self.api_key = getattr(settings, 'MOBICASH_API_KEY', '')
         self.api_secret = getattr(settings, 'MOBICASH_API_SECRET', '')
         self.api_url = getattr(settings, 'MOBICASH_API_URL', '')
-        self.webhook_secret = getattr(settings, 'MOBICASH_WEBHOOK_SECRET', '')
+        self.webhook_secret = (
+            getattr(settings, 'MOBICASH_WEBHOOK_SECRET', '')
+            or getattr(settings, 'PAYMENT_WEBHOOK_SECRET', '')
+        )
 
     def initiate(self, order, phone_number):
         if not self.api_url:
@@ -129,10 +132,17 @@ class MobicashProvider(BasePaymentProvider):
 
     def validate_webhook(self, payload, signature):
         if not self.webhook_secret:
-            return True  # Pas de vérification en mode simulation
+            logger.warning(
+                "Mobicash validate_webhook called without webhook secret "
+                "configured. Rejecting for safety."
+            )
+            return False
+        if not signature:
+            return False
+        body = payload.encode('utf-8') if isinstance(payload, str) else payload
         expected = hmac.new(
-            self.webhook_secret.encode(),
-            payload.encode() if isinstance(payload, str) else payload,
+            self.webhook_secret.encode('utf-8'),
+            body,
             hashlib.sha256,
         ).hexdigest()
         return hmac.compare_digest(expected, signature)
@@ -179,7 +189,10 @@ class AirtelMoneyProvider(BasePaymentProvider):
         self.client_id = getattr(settings, 'AIRTEL_CLIENT_ID', '')
         self.client_secret = getattr(settings, 'AIRTEL_CLIENT_SECRET', '')
         self.api_url = getattr(settings, 'AIRTEL_API_URL', '')
-        self.webhook_secret = getattr(settings, 'AIRTEL_WEBHOOK_SECRET', '')
+        self.webhook_secret = (
+            getattr(settings, 'AIRTEL_WEBHOOK_SECRET', '')
+            or getattr(settings, 'PAYMENT_WEBHOOK_SECRET', '')
+        )
 
     def initiate(self, order, phone_number):
         if not self.api_url:
@@ -225,10 +238,17 @@ class AirtelMoneyProvider(BasePaymentProvider):
 
     def validate_webhook(self, payload, signature):
         if not self.webhook_secret:
-            return True
+            logger.warning(
+                "Airtel validate_webhook called without webhook secret "
+                "configured. Rejecting for safety."
+            )
+            return False
+        if not signature:
+            return False
+        body = payload.encode('utf-8') if isinstance(payload, str) else payload
         expected = hmac.new(
-            self.webhook_secret.encode(),
-            payload.encode() if isinstance(payload, str) else payload,
+            self.webhook_secret.encode('utf-8'),
+            body,
             hashlib.sha256,
         ).hexdigest()
         return hmac.compare_digest(expected, signature)

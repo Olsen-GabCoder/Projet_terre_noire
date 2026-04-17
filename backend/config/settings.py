@@ -324,6 +324,10 @@ AIRTEL_CLIENT_SECRET = os.getenv('AIRTEL_CLIENT_SECRET', '')
 AIRTEL_API_URL = os.getenv('AIRTEL_API_URL', '')  # vide = simulation
 AIRTEL_WEBHOOK_SECRET = os.getenv('AIRTEL_WEBHOOK_SECRET', '')
 
+# Shared webhook secret (fallback when provider-specific secrets are not set).
+# When empty, all webhooks are REJECTED for safety (safe-by-default in simulation).
+PAYMENT_WEBHOOK_SECRET = os.getenv('PAYMENT_WEBHOOK_SECRET', '')
+
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 
 # Default primary key field type
