@@ -520,7 +520,11 @@ class ManuscriptModelTests(ManuscriptTestBase):
         self.assertEqual(m.status, 'PENDING')
 
     def test_ordering_is_latest_first(self):
-        Manuscript.objects.create(
+        from django.utils import timezone
+        from datetime import timedelta
+        now = timezone.now()
+
+        m1 = Manuscript.objects.create(
             title='Premier',
             author_name='A',
             email='a@a.com',
@@ -542,5 +546,9 @@ class ManuscriptModelTests(ManuscriptTestBase):
             terms_accepted=True,
             file='manuscripts/m2.pdf',
         )
+        # Force distinct submitted_at values (auto_now_add ignores values at create time)
+        Manuscript.objects.filter(pk=m1.pk).update(submitted_at=now - timedelta(seconds=10))
+        Manuscript.objects.filter(pk=m2.pk).update(submitted_at=now)
+
         manuscripts = list(Manuscript.objects.all())
         self.assertEqual(manuscripts[0].pk, m2.pk)
