@@ -368,6 +368,17 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(user=request.user, post=post)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['delete'], url_path='comments/(?P<comment_id>[0-9]+)')
+    def delete_comment(self, request, pk=None, comment_id=None):
+        """Supprimer un commentaire (auteur du commentaire ou du post)."""
+        post = self.get_object()
+        comment = get_object_or_404(PostComment, pk=comment_id, post=post)
+        if comment.user != request.user and post.author != request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seul l'auteur du commentaire ou du post peut le supprimer.")
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'], url_path='user/(?P<user_id>[0-9]+)')
     def user_posts(self, request, user_id=None):
         """Posts d'un utilisateur spécifique."""

@@ -105,6 +105,7 @@ class ReadingListCreateSerializer(serializers.ModelSerializer):
 
 class PostCommentSerializer(serializers.ModelSerializer):
     user = SimpleUserSerializer(read_only=True)
+    content = serializers.CharField(max_length=2000)
 
     class Meta:
         model = PostComment
@@ -127,16 +128,19 @@ class PostSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'author', 'created_at', 'updated_at']
 
     def get_likes_count(self, obj):
-        return obj.likes.count()
+        # Uses prefetch cache (prefetch_related('likes') on queryset)
+        return len(obj.likes.all())
 
     def get_comments_count(self, obj):
-        return obj.comments.count()
+        # Uses prefetch cache (prefetch_related('comments') on queryset)
+        return len(obj.comments.all())
 
     def get_user_has_liked(self, obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
-        return False
+        if not request or not request.user.is_authenticated:
+            return False
+        # Iterate prefetched cache instead of issuing a filter query per post
+        return any(like.user_id == request.user.id for like in obj.likes.all())
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
@@ -144,6 +148,13 @@ class PostCreateSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['id', 'content', 'image', 'book', 'post_type', 'rating']
         read_only_fields = ['id']
+
+    def validate_content(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le contenu ne peut pas être vide.")
+        if len(value) > 5000:
+            raise serializers.ValidationError("Le contenu ne peut pas dépasser 5000 caractères.")
+        return value
 
     def validate(self, data):
         if data.get('post_type') == 'PLATFORM_REVIEW':
