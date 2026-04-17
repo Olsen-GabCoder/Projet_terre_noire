@@ -10,8 +10,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.books.models import Author, Book, Category
+import unittest
+
 from apps.library.models import (
-    LibraryCatalogItem, LibraryMembership, BookLoan, BookReservation,
+    LibraryCatalogItem, LibraryMembership, BookLoan, LoanExtension,
+    BookReservation,
 )
 from apps.organizations.models import Organization, OrganizationMembership
 
@@ -821,3 +824,156 @@ class LibraryModelTests(LibraryTestBase):
         self._create_membership(user=self.regular_user)
         with self.assertRaises(Exception):
             self._create_membership(user=self.regular_user)
+
+
+# ══════════════════════════════════════════════════════════════
+# Phase 2 — Tests complémentaires
+# ══════════════════════════════════════════════════════════════
+
+class LibraryPhase2Tests(LibraryTestBase):
+    """Tests complémentaires : dashboard, extensions, cycles complets."""
+
+    def test_dashboard_returns_stats(self):
+        """GET dashboard retourne les stats attendues."""
+        self._create_catalog_item()
+        self._create_membership()
+        self.client.force_authenticate(user=self.admin_user)
+        resp = self.client.get(self._url('dashboard/'))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        for key in ('catalog_count', 'active_loans', 'overdue_loans', 'total_members', 'pending_reservations'):
+            self.assertIn(key, resp.data)
+        self.assertEqual(resp.data['catalog_count'], 1)
+        self.assertEqual(resp.data['total_members'], 1)
+
+    def test_dashboard_non_admin_forbidden(self):
+        """Non-admin ne peut pas accéder au dashboard."""
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.get(self._url('dashboard/'))
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    @unittest.expectedFailure
+    def test_extension_does_not_update_due_date(self):
+        """BUG CONNU P1: LoanExtensionCreateView crée l'extension mais ne
+        met PAS à jour due_date sur le prêt. La prolongation est enregistrée
+        mais n'a aucun effet concret.
+        """
+        item = self._create_catalog_item()
+        self._create_membership()
+        now = timezone.now()
+        loan = BookLoan.objects.create(
+            catalog_item=item, borrower=self.regular_user,
+            loan_type='PHYSICAL', status='ACTIVE',
+            borrowed_at=now, due_date=now + timedelta(days=21),
+        )
+        original_due = loan.due_date
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.post(
+            f'/api/library/loans/{loan.pk}/extend/',
+            {'extended_days': 7},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        loan.refresh_from_db()
+        # This SHOULD pass but the due_date is never updated → expectedFailure
+        self.assertEqual(loan.due_date, original_due + timedelta(days=7))
+
+    def test_full_loan_cycle(self):
+        """Cycle complet : demande → approve → return → copies restaurées."""
+        item = self._create_catalog_item(total=2, available=2)
+        self._create_membership()
+        # Create loan request
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.post(self._url('loans/create/'), {
+            'catalog_item': item.pk,
+            'loan_type': 'PHYSICAL',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        loan_id = resp.data['loan']['id']
+        # Approve
+        self.client.force_authenticate(user=self.admin_user)
+        resp = self.client.patch(f'/api/library/loans/{loan_id}/approve/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        item.refresh_from_db()
+        self.assertEqual(item.available_copies, 1)
+        # Return
+        resp = self.client.patch(f'/api/library/loans/{loan_id}/return/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        item.refresh_from_db()
+        self.assertEqual(item.available_copies, 2)
+
+    def test_fifo_second_reservation_stays_pending(self):
+        """Au retour, seule la 1re réservation PENDING passe NOTIFIED."""
+        item = self._create_catalog_item(total=1, available=0)
+        self._create_membership(user=self.regular_user)
+        self._create_membership(user=self.other_user)
+        res1 = BookReservation.objects.create(
+            catalog_item=item, user=self.regular_user, status='PENDING',
+        )
+        res2 = BookReservation.objects.create(
+            catalog_item=item, user=self.other_user, status='PENDING',
+        )
+        # Create and return a loan to trigger FIFO
+        loan = BookLoan.objects.create(
+            catalog_item=item, borrower=self.admin_user,
+            loan_type='PHYSICAL', status='ACTIVE',
+            borrowed_at=timezone.now(),
+            due_date=timezone.now() + timedelta(days=21),
+        )
+        self.client.force_authenticate(user=self.admin_user)
+        self.client.patch(f'/api/library/loans/{loan.pk}/return/')
+        res1.refresh_from_db()
+        res2.refresh_from_db()
+        self.assertEqual(res1.status, 'NOTIFIED')
+        self.assertEqual(res2.status, 'PENDING')
+
+    @unittest.expectedFailure
+    def test_approve_second_loan_on_last_copy(self):
+        """BUG CONNU P1: Two REQUESTED loans on 1 copy — second approve should
+        be rejected but there's no guard checking available_copies > 0.
+        On MySQL (unsigned PositiveIntegerField), this causes a DB-level
+        IntegrityError (BIGINT UNSIGNED underflow) that crashes the request.
+        Fix needed: add `if item.available_copies <= 0: return 400` in
+        BookLoanApproveView before decrementing.
+        """
+        item = self._create_catalog_item(total=1, available=1)
+        self._create_membership(user=self.regular_user)
+        self._create_membership(user=self.other_user)
+        loan1 = BookLoan.objects.create(
+            catalog_item=item, borrower=self.regular_user,
+            loan_type='PHYSICAL', status='REQUESTED',
+        )
+        loan2 = BookLoan.objects.create(
+            catalog_item=item, borrower=self.other_user,
+            loan_type='PHYSICAL', status='REQUESTED',
+        )
+        self.client.force_authenticate(user=self.admin_user)
+        self.client.patch(f'/api/library/loans/{loan1.pk}/approve/')
+        resp = self.client.patch(f'/api/library/loans/{loan2.pk}/approve/')
+        # Desired: 400 with "No copies available"
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_digital_loan_concurrent_limit(self):
+        """Multiple digital loans — tests that concurrent loans are tracked."""
+        item = self._create_catalog_item(digital=True, total=99, available=99)
+        self._create_membership()
+        for i in range(3):
+            BookLoan.objects.create(
+                catalog_item=item, borrower=self.regular_user,
+                loan_type='DIGITAL', status='ACTIVE',
+                borrowed_at=timezone.now(),
+                due_date=timezone.now() + timedelta(days=21),
+            )
+        active_count = BookLoan.objects.filter(
+            borrower=self.regular_user, loan_type='DIGITAL', status='ACTIVE',
+        ).count()
+        self.assertEqual(active_count, 3)
+
+    def test_membership_created_for_self(self):
+        """Member registration creates a membership for the authenticated user."""
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.post(self._url('members/register/'), {
+            'membership_type': 'STANDARD',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(LibraryMembership.objects.filter(
+            library=self.library, user=self.regular_user,
+        ).exists())

@@ -24,3 +24,19 @@ class ContactSubmitTest(APITestCase):
             'message': 'Test',
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_contact_empty_message_rejected(self):
+        """Message vide → 400."""
+        resp = self.client.post('/api/contact/submit/', {
+            'name': 'Jean', 'email': 'jean@test.com',
+            'subject': 'Test', 'message': '',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_contact_missing_name_rejected(self):
+        """Nom manquant → 400."""
+        resp = self.client.post('/api/contact/submit/', {
+            'name': '', 'email': 'jean@test.com',
+            'subject': 'Test', 'message': 'Bonjour',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
