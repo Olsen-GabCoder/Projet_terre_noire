@@ -307,6 +307,22 @@ CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_SOFT_TIME_LIMIT = 120  # 2 minutes — warning
 CELERY_TASK_TIME_LIMIT = 300  # 5 minutes — hard kill
 
+# Celery Beat — tâches périodiques
+try:
+    from celery.schedules import crontab
+    CELERY_BEAT_SCHEDULE = {
+        'mark-overdue-loans': {
+            'task': 'apps.library.tasks.mark_overdue_loans',
+            'schedule': crontab(hour=4, minute=0),
+        },
+        'expire-notified-reservations': {
+            'task': 'apps.library.tasks.expire_notified_reservations',
+            'schedule': crontab(hour=4, minute=30),
+        },
+    }
+except ImportError:
+    CELERY_BEAT_SCHEDULE = {}
+
 # ── Règles métier éditorial ──
 # Ratio max entre le montant d'un devis et le CA théorique (tirage x prix).
 # Un devis dont le total dépasse ce ratio × CA est bloqué comme incohérent.

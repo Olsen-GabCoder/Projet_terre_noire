@@ -851,12 +851,8 @@ class LibraryPhase2Tests(LibraryTestBase):
         resp = self.client.get(self._url('dashboard/'))
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-    @unittest.expectedFailure
-    def test_extension_does_not_update_due_date(self):
-        """BUG CONNU P1: LoanExtensionCreateView crée l'extension mais ne
-        met PAS à jour due_date sur le prêt. La prolongation est enregistrée
-        mais n'a aucun effet concret.
-        """
+    def test_extension_updates_due_date(self):
+        """Prolongation auto-approuvée met à jour due_date sur le prêt."""
         item = self._create_catalog_item()
         self._create_membership()
         now = timezone.now()
@@ -873,7 +869,7 @@ class LibraryPhase2Tests(LibraryTestBase):
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         loan.refresh_from_db()
-        # This SHOULD pass but the due_date is never updated → expectedFailure
+        # due_date is now updated by auto-approved extension
         self.assertEqual(loan.due_date, original_due + timedelta(days=7))
 
     def test_full_loan_cycle(self):
@@ -925,15 +921,8 @@ class LibraryPhase2Tests(LibraryTestBase):
         self.assertEqual(res1.status, 'NOTIFIED')
         self.assertEqual(res2.status, 'PENDING')
 
-    @unittest.expectedFailure
     def test_approve_second_loan_on_last_copy(self):
-        """BUG CONNU P1: Two REQUESTED loans on 1 copy — second approve should
-        be rejected but there's no guard checking available_copies > 0.
-        On MySQL (unsigned PositiveIntegerField), this causes a DB-level
-        IntegrityError (BIGINT UNSIGNED underflow) that crashes the request.
-        Fix needed: add `if item.available_copies <= 0: return 400` in
-        BookLoanApproveView before decrementing.
-        """
+        """Second approve on last copy returns 409 (no copies available)."""
         item = self._create_catalog_item(total=1, available=1)
         self._create_membership(user=self.regular_user)
         self._create_membership(user=self.other_user)
@@ -948,8 +937,9 @@ class LibraryPhase2Tests(LibraryTestBase):
         self.client.force_authenticate(user=self.admin_user)
         self.client.patch(f'/api/library/loans/{loan1.pk}/approve/')
         resp = self.client.patch(f'/api/library/loans/{loan2.pk}/approve/')
-        # Desired: 400 with "No copies available"
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        loan2.refresh_from_db()
+        self.assertEqual(loan2.status, 'REQUESTED')  # reverted
 
     def test_digital_loan_concurrent_limit(self):
         """Multiple digital loans — tests that concurrent loans are tracked."""

@@ -95,6 +95,18 @@ class LibraryMembershipCreateSerializer(serializers.ModelSerializer):
         from django.contrib.auth import get_user_model
         User = get_user_model()
         user_id = attrs.pop('user', None)
+        if user_id and user_id != request.user.id:
+            # Only library admins can create memberships for other users
+            from apps.organizations.models import OrganizationMembership
+            library = self.context.get('library')
+            is_admin = library and OrganizationMembership.objects.filter(
+                user=request.user,
+                organization=library,
+                role__in=['PROPRIETAIRE', 'ADMINISTRATEUR'],
+                is_active=True,
+            ).exists()
+            if not is_admin:
+                user_id = None  # Force self-registration
         if user_id:
             try:
                 attrs['user'] = User.objects.get(pk=user_id)

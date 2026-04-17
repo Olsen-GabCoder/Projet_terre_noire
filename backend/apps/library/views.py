@@ -236,9 +236,21 @@ class BookLoanApproveView(APIView):
 
         # Décrémenter les exemplaires pour les prêts physiques
         if loan.loan_type == 'PHYSICAL':
-            LibraryCatalogItem.objects.filter(pk=loan.catalog_item_id).update(
-                available_copies=F('available_copies') - 1,
-            )
+            from django.db import transaction
+            with transaction.atomic():
+                item = LibraryCatalogItem.objects.select_for_update().get(pk=loan.catalog_item_id)
+                if item.available_copies <= 0:
+                    # Rollback: revert loan to REQUESTED
+                    loan.status = 'REQUESTED'
+                    loan.borrowed_at = None
+                    loan.due_date = None
+                    loan.save(update_fields=['status', 'borrowed_at', 'due_date'])
+                    return Response(
+                        {'message': 'Aucun exemplaire disponible.'},
+                        status=status.HTTP_409_CONFLICT,
+                    )
+                item.available_copies -= 1
+                item.save(update_fields=['available_copies'])
 
         return Response({
             'message': 'Prêt approuvé.',
@@ -319,10 +331,17 @@ class LoanExtensionCreateView(APIView):
         extension = LoanExtension.objects.create(
             loan=loan,
             extended_days=serializer.validated_data['extended_days'],
+            approved=True,
+            approved_at=timezone.now(),
         )
+
+        # Mettre à jour le due_date du prêt
+        loan.due_date += timedelta(days=extension.extended_days)
+        loan.save(update_fields=['due_date'])
+
         return Response(
             {
-                'message': 'Demande de prolongation enregistrée.',
+                'message': 'Prolongation accordée.',
                 'extension': LoanExtensionSerializer(extension).data,
             },
             status=status.HTTP_201_CREATED,

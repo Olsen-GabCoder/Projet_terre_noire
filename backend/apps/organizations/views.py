@@ -228,11 +228,16 @@ class InvitationResponseView(APIView):
         if serializer.validated_data['accept']:
             invitation.status = 'ACCEPTED'
             invitation.save()
-            OrganizationMembership.objects.get_or_create(
+            membership, created = OrganizationMembership.objects.get_or_create(
                 organization=invitation.organization,
                 user=request.user,
                 defaults={'role': invitation.role},
             )
+            # Réactiver une membership inactive (user avait quitté l'org)
+            if not created and not membership.is_active:
+                membership.is_active = True
+                membership.role = invitation.role
+                membership.save(update_fields=['is_active', 'role'])
             return Response({'message': f'Vous avez rejoint {invitation.organization.name}.'})
         else:
             invitation.status = 'DECLINED'
