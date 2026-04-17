@@ -66,13 +66,10 @@ def user_can_access_manuscript(user, manuscript):
                 accepted_genres__contains=[manuscript.genre],
             ).exists()
 
-            # Aussi accepter les orgs sans filtre de genre
+            # Aussi accepter les orgs sans filtre de genre (liste vide = accepte tout)
             no_filter = Organization.objects.filter(
                 id__in=user_org_ids,
                 accepted_genres=[],
-            ).exists() or Organization.objects.filter(
-                id__in=user_org_ids,
-                accepted_genres__isnull=True,
             ).exists()
 
             if matching or no_filter:
@@ -219,6 +216,16 @@ class ManuscriptStatusUpdateView(APIView):
             is_authorized = user_has_org_permission(
                 user, manuscript.target_organization, 'org.manage_manuscripts'
             )
+        # Marché ouvert : éditeurs/admins d'orgs MAISON_EDITION peuvent agir
+        if not is_authorized and manuscript.is_open_market and not manuscript.target_organization:
+            from apps.organizations.models import OrganizationMembership
+            is_authorized = OrganizationMembership.objects.filter(
+                user=user,
+                is_active=True,
+                role__in=['PROPRIETAIRE', 'ADMINISTRATEUR', 'EDITEUR'],
+                organization__org_type='MAISON_EDITION',
+                organization__is_active=True,
+            ).exists()
         if not is_authorized:
             return Response(
                 {'error': 'Non autorisé.'},

@@ -738,13 +738,9 @@ class OrganizationReviewListCreateView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         review = serializer.save()
-
-        # Mettre à jour les stats dénormalisées
-        from django.db.models import Avg
-        stats = org.reviews.aggregate(avg=Avg('rating'))
-        org.avg_rating = stats['avg'] or 0
-        org.review_count = org.reviews.count()
-        org.save(update_fields=['avg_rating', 'review_count'])
+        # Note: avg_rating and review_count are updated by the post_save
+        # signal on OrganizationReview (signals.py). No manual recalc needed.
+        org.refresh_from_db(fields=['avg_rating', 'review_count'])
 
         return Response(
             OrganizationReviewSerializer(review).data,
@@ -949,11 +945,12 @@ class InquiryRespondView(APIView):
         inquiry = get_object_or_404(Inquiry, pk=pk)
         user = request.user
 
-        # Vérifier que l'utilisateur est bien la cible
+        # Vérifier que l'utilisateur est admin/propriétaire de l'org ciblée
         is_target = False
         if inquiry.target_org:
             is_target = OrganizationMembership.objects.filter(
                 user=user, organization=inquiry.target_org, is_active=True,
+                role__in=['PROPRIETAIRE', 'ADMINISTRATEUR'],
             ).exists()
         elif inquiry.target_profile:
             is_target = inquiry.target_profile.user == user

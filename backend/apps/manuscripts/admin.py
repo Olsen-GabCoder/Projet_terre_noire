@@ -18,7 +18,7 @@ class ManuscriptAdmin(admin.ModelAdmin):
     list_filter = ['status', 'genre', 'language', 'is_open_market', 'submitted_at']
     search_fields = ['title', 'author_name', 'email', 'pen_name']
     readonly_fields = ['submitted_at', 'reviewed_at', 'reviewed_by']
-    list_editable = ['status']
+    list_editable = []  # Status must be changed via API (transition_status validation)
     date_hierarchy = 'submitted_at'
     raw_id_fields = ['submitter', 'target_organization', 'reviewed_by']
     fieldsets = (
