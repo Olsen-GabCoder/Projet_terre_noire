@@ -457,7 +457,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
         if club.creator == user:
             return True
         if club.creator is None:
-            return club.memberships.filter(user=user, role='ADMIN', is_active=True).exists()
+            return club.memberships.filter(user=user, role='ADMIN').exists()
         return False
 
     def perform_update(self, serializer):
@@ -512,7 +512,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
     def messages(self, request, slug=None):
         """GET : messages du club. POST : envoyer un message (texte, voix, image, fichier)."""
         club = self.get_object()
-        if not club.memberships.filter(user=request.user, is_active=True).exists():
+        if not club.memberships.filter(user=request.user).exists():
             return Response(
                 {'error': "Vous devez être membre du club pour accéder aux messages."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -626,7 +626,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
     def shared_media(self, request, slug=None):
         """Liste des médias partagés dans le club (images, fichiers, voix)."""
         club = self.get_object()
-        if not club.memberships.filter(user=request.user, is_active=True).exists():
+        if not club.memberships.filter(user=request.user).exists():
             return Response(
                 {'error': "Vous devez être membre du club pour accéder aux médias."},
                 status=status.HTTP_403_FORBIDDEN,

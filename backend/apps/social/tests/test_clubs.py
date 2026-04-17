@@ -1,6 +1,4 @@
 """Tests for book clubs: create, join, leave, messages, media, permissions."""
-import unittest
-
 from rest_framework import status
 
 from apps.social.models import BookClub, BookClubMembership, BookClubMessage
@@ -43,29 +41,16 @@ class BookClubTests(SocialTestBase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertFalse(BookClubMembership.objects.filter(club=club, user=self.user_b).exists())
 
-    @unittest.expectedFailure
     def test_club_messages_require_membership_for_read(self):
-        """SECURITY: non-member cannot read club messages (verifies fix cb3ecf1).
-
-        BUG KNOWN: BookClubViewSet.messages() filters with is_active=True on
-        BookClubMembership, but that model has no is_active field. This causes
-        a FieldError (500) instead of returning 403. The membership check is
-        correct in intent but references a non-existent field.
-        Fix needed: remove is_active=True from the filter in views.py lines 507, 621.
-        """
+        """SECURITY: non-member cannot read club messages."""
         club = self._create_club(creator=self.user_a)
         BookClubMessage.objects.create(club=club, author=self.user_a, content='Secret msg')
         self._auth(self.user_c)  # not a member
         resp = self.client.get(f'/api/social/clubs/{club.slug}/messages/')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-    @unittest.expectedFailure
     def test_club_messages_member_can_read(self):
-        """Member can read club messages.
-
-        BUG KNOWN: Same is_active FieldError as above — the view crashes
-        before it can check membership. See test_club_messages_require_membership_for_read.
-        """
+        """Member can read club messages."""
         club = self._create_club(creator=self.user_a)
         BookClubMembership.objects.create(club=club, user=self.user_b, role='MEMBER')
         BookClubMessage.objects.create(club=club, author=self.user_a, content='Hello members')
@@ -73,26 +58,15 @@ class BookClubTests(SocialTestBase):
         resp = self.client.get(f'/api/social/clubs/{club.slug}/messages/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    @unittest.expectedFailure
     def test_club_shared_media_require_membership(self):
-        """SECURITY: non-member cannot access shared media (verifies fix cb3ecf1).
-
-        BUG KNOWN: Same is_active FieldError as messages endpoint.
-        See test_club_messages_require_membership_for_read.
-        """
+        """SECURITY: non-member cannot access shared media."""
         club = self._create_club(creator=self.user_a)
         self._auth(self.user_c)  # not a member
         resp = self.client.get(f'/api/social/clubs/{club.slug}/media/')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-    @unittest.expectedFailure
     def test_orphan_club_admin_can_manage(self):
-        """Club with creator=None: an ADMIN member can update (verifies fix e7b8709).
-
-        BUG KNOWN: _can_manage_club() at line 460 filters with is_active=True
-        on BookClubMembership, but that model has no is_active field.
-        Same root cause as the messages/media bug.
-        """
+        """Club with creator=None: an ADMIN member can update."""
         club = self._create_club(creator=self.user_a)
         BookClubMembership.objects.create(club=club, user=self.user_b, role='ADMIN')
         # Simulate account deletion: set creator to None
