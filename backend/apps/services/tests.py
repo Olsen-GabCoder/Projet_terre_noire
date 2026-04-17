@@ -16,7 +16,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.users.models import UserProfile
-from .models import ServiceListing, ServiceRequest, ServiceQuote
+from .models import (
+    ServiceListing, ServiceRequest, ServiceQuote,
+    ServiceOrder, ServiceProviderReview,
+    ProfessionalWallet, ProfessionalWalletTransaction,
+)
 
 User = get_user_model()
 
@@ -620,3 +624,326 @@ class MyServiceListingsTest(ServiceTestMixin, APITestCase):
         """Unauthenticated request returns 401."""
         response = self.client.get(f'{BASE_URL}/listings/mine/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+# ══════════════════════════════════════════════════════════════
+# Accept Quote + Wallet
+# ══════════════════════════════════════════════════════════════
+
+class AcceptQuoteTest(ServiceTestMixin, APITestCase):
+    """Tests for quote acceptance and service order creation."""
+
+    def setUp(self):
+        self._create_base_data()
+        self.service_request = self._create_service_request()
+        self.quote = ServiceQuote.objects.create(
+            request=self.service_request,
+            price=Decimal('50000'),
+            turnaround_days=14,
+            message='Mon devis',
+            status='PENDING',
+            revision_rounds=2,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_accept_quote_creates_service_order(self, mock_task):
+        """Accepting a quote creates a ServiceOrder with correct amounts."""
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/service-quotes/{self.quote.id}/respond/',
+            {'accept': True},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.status, 'ACCEPTED')
+        order = ServiceOrder.objects.get(quote=self.quote)
+        self.assertEqual(order.amount, Decimal('50000'))
+        self.assertEqual(order.client, self.client_user)
+        self.assertEqual(order.provider, self.provider_profile)
+        self.assertGreater(order.platform_fee, 0)
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_complete_order_credits_wallet(self, mock_task):
+        """Completing a service order credits the provider's wallet."""
+        from .services import accept_quote, complete_service_order
+        order = accept_quote(self.quote)
+        complete_service_order(order)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'COMPLETED')
+        wallet = ProfessionalWallet.objects.get(professional=self.provider_profile)
+        expected = order.amount - order.platform_fee
+        self.assertEqual(wallet.balance, expected)
+        self.assertTrue(ProfessionalWalletTransaction.objects.filter(
+            wallet=wallet, transaction_type='CREDIT_SERVICE',
+        ).exists())
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_cancel_order_updates_status(self, mock_task):
+        """Cancelling a service order sets status to CANCELLED."""
+        from .services import accept_quote
+        order = accept_quote(self.quote)
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{order.id}/status/',
+            {'status': 'CANCELLED'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'CANCELLED')
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_reject_quote_sets_rejected(self, mock_task):
+        """Rejecting a quote sets status to REJECTED."""
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/service-quotes/{self.quote.id}/respond/',
+            {'accept': False},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.status, 'REJECTED')
+
+
+# ══════════════════════════════════════════════════════════════
+# Service Order — Status Transitions
+# ══════════════════════════════════════════════════════════════
+
+class ServiceOrderStatusTest(ServiceTestMixin, APITestCase):
+    """Tests for service order status transitions."""
+
+    def setUp(self):
+        self._create_base_data()
+        self.service_request = self._create_service_request()
+        self.quote = ServiceQuote.objects.create(
+            request=self.service_request,
+            price=Decimal('30000'),
+            turnaround_days=7,
+            status='ACCEPTED',
+            revision_rounds=2,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+        self.order = ServiceOrder.objects.create(
+            request=self.service_request, quote=self.quote,
+            client=self.client_user, provider=self.provider_profile,
+            amount=Decimal('30000'), platform_fee=Decimal('4500'),
+            deadline=timezone.now() + timezone.timedelta(days=7),
+        )
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_transition_pending_to_in_progress(self, mock_task):
+        self.client.force_authenticate(user=self.provider_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{self.order.id}/status/',
+            {'status': 'IN_PROGRESS'}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'IN_PROGRESS')
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_only_client_can_complete(self, mock_task):
+        """Provider cannot mark COMPLETED — only client or admin can."""
+        self.order.status = 'REVIEW'
+        self.order.save(update_fields=['status'])
+        self.client.force_authenticate(user=self.provider_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{self.order.id}/status/',
+            {'status': 'COMPLETED'}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_client_can_complete(self, mock_task):
+        """Client can mark COMPLETED."""
+        self.order.status = 'REVIEW'
+        self.order.save(update_fields=['status'])
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{self.order.id}/status/',
+            {'status': 'COMPLETED'}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'COMPLETED')
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_cancellation_by_provider(self, mock_task):
+        self.order.status = 'IN_PROGRESS'
+        self.order.save(update_fields=['status'])
+        self.client.force_authenticate(user=self.provider_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{self.order.id}/status/',
+            {'status': 'CANCELLED'}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'CANCELLED')
+
+
+# ══════════════════════════════════════════════════════════════
+# Service Order — Revision
+# ══════════════════════════════════════════════════════════════
+
+class RevisionTest(ServiceTestMixin, APITestCase):
+    """Tests for revision requests."""
+
+    def setUp(self):
+        self._create_base_data()
+        self.service_request = self._create_service_request()
+        self.quote = ServiceQuote.objects.create(
+            request=self.service_request,
+            price=Decimal('20000'),
+            turnaround_days=7,
+            status='ACCEPTED',
+            revision_rounds=2,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+        self.order = ServiceOrder.objects.create(
+            request=self.service_request, quote=self.quote,
+            client=self.client_user, provider=self.provider_profile,
+            amount=Decimal('20000'), platform_fee=Decimal('3000'),
+            deadline=timezone.now() + timezone.timedelta(days=7),
+            status='REVIEW',
+        )
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_revision_increments_counter(self, mock_task):
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.post(
+            f'{BASE_URL}/orders/{self.order.id}/request-revision/',
+            {'reason': 'Il manque la correction du chapitre 5.'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.revision_count, 1)
+        self.assertEqual(self.order.status, 'REVISION')
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_revision_blocked_when_exhausted(self, mock_task):
+        self.order.revision_count = 2  # max = revision_rounds = 2
+        self.order.save(update_fields=['revision_count'])
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.post(
+            f'{BASE_URL}/orders/{self.order.id}/request-revision/',
+            {'reason': 'Encore une revision svp merci beaucoup.'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('maximum', resp.data.get('message', ''))
+
+
+# ══════════════════════════════════════════════════════════════
+# ServiceProviderReview
+# ══════════════════════════════════════════════════════════════
+
+class ProviderReviewTest(ServiceTestMixin, APITestCase):
+    """Tests for provider reviews."""
+
+    def setUp(self):
+        self._create_base_data()
+        self.service_request = self._create_service_request()
+        self.quote = ServiceQuote.objects.create(
+            request=self.service_request,
+            price=Decimal('15000'),
+            turnaround_days=5,
+            status='ACCEPTED',
+            revision_rounds=1,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+        self.order = ServiceOrder.objects.create(
+            request=self.service_request, quote=self.quote,
+            client=self.client_user, provider=self.provider_profile,
+            amount=Decimal('15000'), platform_fee=Decimal('2250'),
+            deadline=timezone.now() + timezone.timedelta(days=5),
+            status='COMPLETED', completed_at=timezone.now(),
+        )
+
+    def test_create_review_after_completion(self):
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.post(f'{BASE_URL}/reviews/create/', {
+            'service_order': self.order.id,
+            'rating': 5,
+            'comment': 'Excellent travail !',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(ServiceProviderReview.objects.filter(
+            user=self.client_user, provider=self.provider_profile,
+        ).exists())
+
+    def test_duplicate_review_rejected(self):
+        ServiceProviderReview.objects.create(
+            user=self.client_user, provider=self.provider_profile,
+            service_order=self.order, rating=4, comment='Bien',
+        )
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.post(f'{BASE_URL}/reviews/create/', {
+            'service_order': self.order.id,
+            'rating': 3,
+            'comment': 'Deuxieme avis',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_review_requires_completed_order(self):
+        """Review on a non-COMPLETED order is rejected."""
+        self.order.status = 'IN_PROGRESS'
+        self.order.save(update_fields=['status'])
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.post(f'{BASE_URL}/reviews/create/', {
+            'service_order': self.order.id,
+            'rating': 4,
+        })
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+# ══════════════════════════════════════════════════════════════
+# Accept Quote — Edge cases
+# ══════════════════════════════════════════════════════════════
+
+class AcceptQuoteEdgeCaseTest(ServiceTestMixin, APITestCase):
+    """Edge-case tests for quote acceptance."""
+
+    def setUp(self):
+        self._create_base_data()
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_accept_already_accepted_quote_rejected(self, mock_task):
+        """Accepting an already-accepted quote returns 400."""
+        req = self._create_service_request()
+        quote = ServiceQuote.objects.create(
+            request=req, price=Decimal('10000'), turnaround_days=5,
+            status='ACCEPTED', revision_rounds=1,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/service-quotes/{quote.id}/respond/',
+            {'accept': True}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('apps.core.tasks.send_service_order_status_task.delay')
+    def test_complete_order_via_api_credits_wallet(self, mock_task):
+        """Full flow: accept quote via service, then complete via API → wallet credited."""
+        from .services import accept_quote
+        req = self._create_service_request()
+        quote = ServiceQuote.objects.create(
+            request=req, price=Decimal('40000'), turnaround_days=10,
+            status='PENDING', revision_rounds=1,
+            valid_until=timezone.now() + timezone.timedelta(days=30),
+        )
+        order = accept_quote(quote)
+        order.status = 'REVIEW'
+        order.save(update_fields=['status'])
+        self.client.force_authenticate(user=self.client_user)
+        resp = self.client.patch(
+            f'{BASE_URL}/orders/{order.id}/status/',
+            {'status': 'COMPLETED'}, format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        wallet = ProfessionalWallet.objects.get(professional=self.provider_profile)
+        self.assertEqual(wallet.balance, order.amount - order.platform_fee)
