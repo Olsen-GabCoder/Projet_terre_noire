@@ -74,7 +74,6 @@ const BookDetail = () => {
         setRelatedBooks(Array.isArray(relatedData) ? relatedData : []);
       } catch (err) {
         setError(t('bookDetail.notFound'));
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -246,8 +245,8 @@ const BookDetail = () => {
         await bookService.likeReview(id, review.id);
       }
       await fetchReviews(reviewsPagination.page);
-    } catch (e) {
-      console.error('Erreur like:', e);
+    } catch {
+      // Silenced: like toggle is best-effort, UI refreshes on next fetch
     }
   };
 

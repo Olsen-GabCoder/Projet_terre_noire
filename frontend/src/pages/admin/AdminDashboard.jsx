@@ -47,7 +47,6 @@ const AdminDashboard = () => {
         const res = await api.get('/admin/dashboard/');
         setData(res.data);
       } catch (err) {
-        console.error('Erreur chargement dashboard:', err);
         setError('Impossible de charger les statistiques.');
       } finally {
         setLoading(false);

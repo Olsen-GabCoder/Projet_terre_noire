@@ -10,7 +10,6 @@ const bookService = {
       const response = await api.get('/books/', { params });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des livres:', error);
       throw error;
     }
   },
@@ -21,7 +20,6 @@ const bookService = {
       const response = await api.get(`/books/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération du livre ${id}:`, error);
       throw error;
     }
   },
@@ -32,7 +30,6 @@ const bookService = {
       const response = await api.get(`/books/${id}/related/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération des livres similaires:`, error);
       return [];
     }
   },
@@ -43,7 +40,6 @@ const bookService = {
       const response = await api.get('/books/featured/');
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des livres featured:', error);
       throw error;
     }
   },
@@ -54,7 +50,6 @@ const bookService = {
       const response = await api.get('/books/new-releases/');
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des nouveautés:', error);
       throw error;
     }
   },
@@ -65,7 +60,6 @@ const bookService = {
       const response = await api.get(`/books/by-format/${format}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération des livres ${format}:`, error);
       throw error;
     }
   },
@@ -76,7 +70,6 @@ const bookService = {
       const response = await api.get(`/books/${bookId}/reviews/`, { params });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des avis:', error);
       return { count: 0, next: null, previous: null, results: [] };
     }
   },
@@ -131,7 +124,6 @@ const bookService = {
       const response = await api.get(`/books/${bookId}/listings/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération des offres vendeurs:`, error);
       return [];
     }
   },
@@ -142,7 +134,6 @@ const bookService = {
       const response = await api.get('/books/statistics/');
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des statistiques:', error);
       throw error;
     }
   },
@@ -155,7 +146,6 @@ const bookService = {
       const response = await api.get('/categories/');
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des catégories:', error);
       throw error;
     }
   },
@@ -166,7 +156,6 @@ const bookService = {
       const response = await api.get(`/categories/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération de la catégorie ${id}:`, error);
       throw error;
     }
   },
@@ -177,7 +166,6 @@ const bookService = {
       const response = await api.get(`/categories/${categoryId}/books/`, { params });
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération des livres de la catégorie ${categoryId}:`, error);
       throw error;
     }
   },
@@ -190,7 +178,6 @@ const bookService = {
       const response = await api.get('/authors/', { params: { page_size: 500 } });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des auteurs:', error);
       throw error;
     }
   },
@@ -201,7 +188,6 @@ const bookService = {
       const response = await api.get('/authors/featured/', { params: { limit } });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des auteurs en vedette:', error);
       throw error;
     }
   },
@@ -212,7 +198,6 @@ const bookService = {
       const response = await api.get(`/authors/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération de l'auteur ${id}:`, error);
       throw error;
     }
   },
@@ -223,7 +208,6 @@ const bookService = {
       const response = await api.post('/authors/', data);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la création de l\'auteur:', error);
       throw error;
     }
   },
@@ -234,7 +218,6 @@ const bookService = {
       const response = await api.get(`/authors/${authorId}/books/`, { params });
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération des livres de l'auteur ${authorId}:`, error);
       throw error;
     }
   },
@@ -249,7 +232,6 @@ const bookService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la recherche:', error);
       throw error;
     }
   },
@@ -262,7 +244,6 @@ const bookService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Erreur autocomplete:', error);
       return { books: [], authors: [] };
     }
   },

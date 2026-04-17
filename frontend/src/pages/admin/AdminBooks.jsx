@@ -46,8 +46,8 @@ const AdminBooks = () => {
       setLoading(true);
       const res = await api.get('/books/');
       setBooks(res.data.results || res.data);
-    } catch (err) {
-      console.error('Erreur chargement livres:', err);
+    } catch {
+      // Silenced: books list will remain empty, loading state handles UX
     } finally {
       setLoading(false);
     }
@@ -58,8 +58,8 @@ const AdminBooks = () => {
       setLoadingAuthors(true);
       const res = await api.get('/authors/');
       setAuthors(res.data.results || res.data);
-    } catch (err) {
-      console.error('Erreur chargement auteurs:', err);
+    } catch {
+      // Silenced: authors dropdown will remain empty
     } finally {
       setLoadingAuthors(false);
     }
@@ -71,7 +71,6 @@ const AdminBooks = () => {
       const res = await api.get('/categories/', { params: { page_size: 100 } });
       setCategories(res.data.results || res.data || []);
     } catch (err) {
-      console.error('Erreur chargement catégories:', err);
       setCategories([]);
     } finally {
       setLoadingCategories(false);
@@ -149,7 +148,6 @@ const AdminBooks = () => {
       fetchBooks();
       resetForm();
     } catch (err) {
-      console.error('Erreur sauvegarde livre:', err);
       const data = err.response?.data;
       let message = err.message;
       if (data) {
@@ -189,7 +187,6 @@ const AdminBooks = () => {
       await api.delete(`/books/${id}/`);
       fetchBooks();
     } catch (err) {
-      console.error('Erreur suppression:', err);
       toast.error('Erreur lors de la suppression');
     }
   };

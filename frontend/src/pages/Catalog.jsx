@@ -89,8 +89,8 @@ const Catalog = () => {
           const list = Array.isArray(orgData.value.data) ? orgData.value.data : orgData.value.data?.results || [];
           setPublishers(list.filter(o => o.org_type === 'MAISON_EDITION'));
         }
-      } catch (err) {
-        console.error('Erreur chargement filtres:', err);
+      } catch {
+        // Silenced: filter dropdowns will remain empty
       }
     };
     loadFiltersData();

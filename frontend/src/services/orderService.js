@@ -10,7 +10,7 @@ const orderService = {
       const response = await api.post('/orders/', orderData);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la création de la commande:', error);
+
       throw error;
     }
   },
@@ -21,7 +21,7 @@ const orderService = {
       const response = await api.get('/orders/', { params });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des commandes:', error);
+
       throw error;
     }
   },
@@ -32,7 +32,7 @@ const orderService = {
       const response = await api.get(`/orders/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération de la commande ${id}:`, error);
+
       throw error;
     }
   },
@@ -43,7 +43,7 @@ const orderService = {
       const response = await api.post(`/orders/${id}/cancel/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de l'annulation de la commande ${id}:`, error);
+
       throw error;
     }
   },
@@ -72,7 +72,7 @@ const orderService = {
       const response = await api.post('/payments/', paymentData);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la création du paiement:', error);
+
       throw error;
     }
   },
@@ -83,7 +83,7 @@ const orderService = {
       const response = await api.get(`/payments/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Erreur lors de la récupération du paiement ${id}:`, error);
+
       throw error;
     }
   },

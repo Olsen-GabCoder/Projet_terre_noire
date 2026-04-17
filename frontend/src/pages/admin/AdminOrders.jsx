@@ -44,8 +44,8 @@ const AdminOrders = () => {
       if (filters.vendor) params.vendor = filters.vendor;
       const res = await api.get('/orders/', { params });
       setOrders(res.data.results || res.data || []);
-    } catch (err) {
-      console.error('Erreur chargement commandes:', err);
+    } catch {
+      // Silenced: orders list will remain empty, loading state handles UX
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,6 @@ const AdminOrders = () => {
         prev && prev.id === orderId ? { ...prev, ...updatedOrder } : prev
       );
     } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
       toast.error('Erreur lors de la mise à jour');
     }
   };

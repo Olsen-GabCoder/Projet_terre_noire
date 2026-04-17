@@ -53,8 +53,8 @@ const OrderSuccess = () => {
     setDownloading(true);
     try {
       await orderService.downloadInvoice(orderId);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // Silenced: invoice download is best-effort, order already confirmed
     } finally {
       setDownloading(false);
     }

@@ -30,7 +30,6 @@ const AuthorDetail = () => {
         setBooks(Array.isArray(booksData) ? booksData : booksData.results || []);
       } catch (err) {
         setError(t('pages.authorDetail.notFound'));
-        console.error(err);
       } finally {
         setLoading(false);
       }

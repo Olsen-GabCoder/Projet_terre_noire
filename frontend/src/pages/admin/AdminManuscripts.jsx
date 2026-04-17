@@ -24,7 +24,6 @@ const AdminManuscripts = () => {
       const response = await api.get('/manuscripts/');
       setManuscripts(response.data.results || response.data);
     } catch (err) {
-      console.error('Erreur chargement manuscrits:', err);
       setError('Impossible de charger la liste des manuscrits');
     } finally {
       setLoading(false);
@@ -37,7 +36,6 @@ const AdminManuscripts = () => {
       fetchManuscripts();
       setSelectedManuscript(null);
     } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
       toast.error('Erreur lors de la mise à jour du statut');
     }
   };
@@ -49,7 +47,6 @@ const AdminManuscripts = () => {
       fetchManuscripts();
       setSelectedManuscript(null);
     } catch (err) {
-      console.error('Erreur suppression manuscrit:', err);
       toast.error('Erreur lors de la suppression');
     }
   };

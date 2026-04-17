@@ -20,7 +20,6 @@ const BookClubs = () => {
         const data = res.data;
         setClubs(Array.isArray(data) ? data : data?.results || []);
       } catch (err) {
-        console.error('Error loading clubs:', err);
         setError(t('pages.bookClubs.errorLoad'));
       }
       setLoading(false);

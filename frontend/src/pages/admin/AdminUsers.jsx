@@ -24,7 +24,6 @@ const AdminUsers = () => {
       const data = response.data;
       setUsers(Array.isArray(data) ? data : (data.results || []));
     } catch (err) {
-      console.error('Erreur chargement utilisateurs:', err);
       setError('Impossible de charger la liste des utilisateurs');
     } finally {
       setLoading(false);
@@ -40,7 +39,6 @@ const AdminUsers = () => {
       fetchUsers();
       setSelectedUser(null);
     } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
       toast.error('Erreur lors de la mise à jour du statut');
     }
   };

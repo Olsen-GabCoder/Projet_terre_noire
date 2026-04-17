@@ -83,7 +83,6 @@ const Login = () => {
         }
       }
     } catch (err) {
-      console.error("Erreur Login Page:", err);
       setError(t('login.errorServer'));
     } finally {
       setIsLoading(false);

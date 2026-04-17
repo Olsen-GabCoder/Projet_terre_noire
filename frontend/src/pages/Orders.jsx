@@ -107,7 +107,6 @@ const Orders = ({ embedded = false }) => {
       } else {
         setError(t('pages.orders.errorLoad', 'Erreur lors du chargement de vos commandes.'));
       }
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -118,7 +117,6 @@ const Orders = ({ embedded = false }) => {
     try {
       await orderService.downloadInvoice(orderId);
     } catch (err) {
-      console.error(err);
       setError(t('pages.orders.errorInvoice', 'Erreur lors du téléchargement de la facture.'));
     } finally {
       setDownloadingId(null);
@@ -135,7 +133,6 @@ const Orders = ({ embedded = false }) => {
         )
       );
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.error || t('pages.orders.errorCancel', "Impossible d'annuler la commande."));
     } finally {
       setCancellingId(null);

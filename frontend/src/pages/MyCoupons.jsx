@@ -20,7 +20,6 @@ const MyCoupons = () => {
       .then(({ data }) => setCoupons(data.results || data || []))
       .catch((err) => {
         setCoupons([]);
-        console.error('Failed to fetch coupons:', err);
       })
       .finally(() => setLoading(false));
   }, [filter]);

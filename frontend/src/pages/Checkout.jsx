@@ -181,7 +181,6 @@ const Checkout = () => {
         },
       });
     } catch (err) {
-      console.error('Erreur lors de la création de la commande:', err);
       if (err.code === 'ECONNABORTED') {
         isTimeout = true;
         setIsTimeoutError(true);

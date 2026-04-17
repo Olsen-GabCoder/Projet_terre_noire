@@ -30,7 +30,6 @@ const AdminAuthors = () => {
       const response = await api.get('/authors/');
       setAuthors(response.data.results || response.data);
     } catch (err) {
-      console.error('Erreur chargement auteurs:', err);
       setError('Impossible de charger la liste des auteurs');
     } finally {
       setLoading(false);
@@ -81,7 +80,6 @@ const AdminAuthors = () => {
       fetchAuthors();
       resetForm();
     } catch (err) {
-      console.error('Erreur sauvegarde auteur:', err);
       const errorMsg = err.response?.data?.detail ||
         err.response?.data?.message ||
         'Erreur lors de la sauvegarde';
@@ -106,7 +104,6 @@ const AdminAuthors = () => {
       await api.delete(`/authors/${id}/`);
       fetchAuthors();
     } catch (err) {
-      console.error('Erreur suppression:', err);
       toast.error('Erreur lors de la suppression');
     }
   };

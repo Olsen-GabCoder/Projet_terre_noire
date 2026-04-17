@@ -137,7 +137,6 @@ const Register = () => {
         }
       }
     } catch (err) {
-      console.error('Erreur inscription:', err);
       setError(t('register.errorServer'));
     } finally {
       setIsLoading(false);
