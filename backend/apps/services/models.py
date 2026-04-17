@@ -923,7 +923,12 @@ class Quote(models.Model):
         super().save(*args, **kwargs)
 
     def recalculate(self):
-        """Recalculer tous les montants à partir des lignes."""
+        """Recalculer tous les montants à partir des lignes.
+
+        Note: called once after quote creation (QuoteCreateView). The triple
+        loop on lots → items is acceptable here since quotes rarely exceed
+        ~10 lots × ~10 items. Not called during serialization.
+        """
         from decimal import Decimal, ROUND_HALF_UP
 
         # Recalculer les sous-totaux de chaque lot

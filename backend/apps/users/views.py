@@ -1,4 +1,5 @@
 from rest_framework import generics, status, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -162,7 +163,7 @@ class UserListView(generics.ListAPIView):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserListSerializer
     permission_classes = [permissions.IsAdminUser]
-    pagination_class = None  # Ou utilisez PageNumberPagination selon vos besoins
+    pagination_class = PageNumberPagination
 
 
 class UserDetailAdminView(generics.RetrieveUpdateDestroyAPIView):

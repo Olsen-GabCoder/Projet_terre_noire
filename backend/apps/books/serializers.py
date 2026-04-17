@@ -568,7 +568,7 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
 
     def get_bestsellers_count(self, obj):
         # Utilise le prefetch cache
-        return sum(1 for b in obj.books.all() if b.is_bestseller)
+        return obj.books.filter(is_bestseller=True).count()
 
     def get_display_photo(self, obj):
         photo = obj.display_photo
@@ -628,7 +628,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
     def get_bestsellers_count(self, obj):
         """Retourne le nombre de best-sellers dans cette catégorie (utilise le prefetch cache)"""
-        return sum(1 for b in obj.books.all() if b.is_bestseller)
+        return obj.books.filter(is_bestseller=True).count()
 
     def get_average_price(self, obj):
         """Retourne le prix moyen des livres de la catégorie (utilise le prefetch cache)"""

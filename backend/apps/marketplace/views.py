@@ -259,6 +259,7 @@ class DeliveryAgentListView(generics.ListAPIView):
         ).select_related('user')
         if city:
             agents = agents.filter(metadata__coverage_zones__contains=city)
+        agents = agents[:100]  # Cap to prevent unbounded response
         data = [
             {
                 'id': a.id,

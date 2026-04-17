@@ -73,7 +73,7 @@ def _get_logo_base64():
     return None
 
 
-def send_templated_email(subject, template_name, context, to_emails, attachments=None, fail_silently=True):
+def send_templated_email(subject, template_name, context, to_emails, attachments=None, fail_silently=False):
     """
     Envoie un email à partir d'un template HTML.
     Génère aussi une version texte pour les clients qui ne supportent pas le HTML.

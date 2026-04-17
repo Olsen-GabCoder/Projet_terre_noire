@@ -170,6 +170,20 @@ class Organization(models.Model):
                 slug = f"{base}-{counter}"
                 counter += 1
             self.slug = slug
+        # Guard: prevent changing org_type from BIBLIOTHEQUE if library data exists
+        if self.pk:
+            try:
+                old = Organization.objects.only('org_type').get(pk=self.pk)
+                if old.org_type == 'BIBLIOTHEQUE' and self.org_type != 'BIBLIOTHEQUE':
+                    from apps.library.models import LibraryCatalogItem
+                    if LibraryCatalogItem.objects.filter(library=self).exists():
+                        from django.core.exceptions import ValidationError
+                        raise ValidationError(
+                            "Impossible de changer le type : cette organisation a un catalogue "
+                            "de bibliothèque actif."
+                        )
+            except Organization.DoesNotExist:
+                pass
         super().save(*args, **kwargs)
 
     def __str__(self):
