@@ -612,12 +612,7 @@ const Home = () => {
         <div className="home-hero-orb home-hero-orb--2" />
         <div className="home-hero-grid-bg" />
         <img src="/images/hero-books.svg" alt="" className="home-hero-illustration" aria-hidden="true" />
-        {bestsellers.length > 0 && (
-          <div className="home-hero-showcase" aria-hidden="true">
-            <img src={bestsellers[0].cover_image || '/images/default-book-cover.svg'} alt="" className="home-hero-showcase__cover" />
-            {bestsellers[1]?.cover_image && <img src={bestsellers[1].cover_image} alt="" className="home-hero-showcase__cover home-hero-showcase__cover--back" />}
-          </div>
-        )}
+
 
         <div className={`home-hero-inner ${heroReady ? 'is-ready' : ''}`}>
           {isAuthenticated ? (
