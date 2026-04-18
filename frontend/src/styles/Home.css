@@ -1582,6 +1582,7 @@
   height: 60px;
   background: linear-gradient(to bottom, var(--color-bg-page), var(--color-bg-section-alt));
   pointer-events: none;
+  z-index: 0;
 }
 
 /* Section alt → blanche : fondu sortant */
@@ -1594,6 +1595,15 @@
   height: 60px;
   background: linear-gradient(to bottom, var(--color-bg-section-alt), var(--color-bg-page));
   pointer-events: none;
+  z-index: 0;
+}
+
+/* Contenu au-dessus des dégradés */
+.home-section--alt > .home-section__inner,
+.home-section--alt > .home-section__header,
+.home-section--alt > .home-carousel {
+  position: relative;
+  z-index: 1;
 }
 
 .home-section--alt {
@@ -1895,8 +1905,9 @@
   background: var(--card-glass-bg);
   backdrop-filter: blur(var(--card-glass-blur));
   -webkit-backdrop-filter: blur(var(--card-glass-blur));
-  border: 1px solid var(--card-glass-border);
+  border: 1px solid var(--color-gray-200);
   border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
   flex: 0 0 160px;
   scroll-snap-align: start;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
@@ -2034,8 +2045,9 @@ h3.home-author-card__name {
   background: var(--card-glass-bg);
   backdrop-filter: blur(var(--card-glass-blur));
   -webkit-backdrop-filter: blur(var(--card-glass-blur));
-  border: 1px solid var(--card-glass-border);
+  border: 1px solid var(--color-gray-200);
   border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -2185,8 +2197,9 @@ h3.home-author-card__name {
   background: var(--card-glass-bg);
   backdrop-filter: blur(var(--card-glass-blur));
   -webkit-backdrop-filter: blur(var(--card-glass-blur));
-  border: 1px solid var(--card-glass-border);
+  border: 1px solid var(--color-gray-200);
   border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
   text-decoration: none;
   color: inherit;
   position: relative;
