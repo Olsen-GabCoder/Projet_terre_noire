@@ -245,6 +245,7 @@ const Home = () => {
   const [tagAnim, setTagAnim] = useState('slide-up');
   const [heroReady, setHeroReady] = useState(false);
   const [heroSearch, setHeroSearch] = useState('');
+  const [activeBookTab, setActiveBookTab] = useState('bestsellers');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [suggestions, setSuggestions] = useState({ books: [], authors: [] });
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -334,7 +335,7 @@ const Home = () => {
   const tagCount = Array.isArray(taglines) ? taglines.length : 0;
 
   // Animations variées — jamais la même deux fois de suite
-  const ANIMS = ['slide-up', 'slide-down', 'slide-right', 'scale-in', 'blur-in', 'flip', 'typewriter'];
+  const ANIMS = ['slide-up', 'scale-in', 'blur-in'];
   const lastAnimRef = useRef('');
 
   const pickAnim = useCallback(() => {
@@ -407,8 +408,8 @@ const Home = () => {
       {/* ── SIDEBAR — portail fixe dans body ── */}
       {createPortal(
         <>
-          {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-          <aside className={`home-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
+          {sidebarOpen && <div className="sidebar-overlay" role="presentation" onClick={() => setSidebarOpen(false)} />}
+          <aside className={`home-sidebar ${sidebarOpen ? 'is-open' : ''}`} role="dialog" aria-modal={sidebarOpen ? 'true' : undefined} aria-label="Navigation">
             <div className="sidebar-mobile-header">
               <span className="sidebar-mobile-title"><i className="fas fa-book-open" /> Frollot</span>
               <button className="sidebar-mobile-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer">
@@ -609,9 +610,14 @@ const Home = () => {
       <section className="home-hero">
         <div className="home-hero-orb home-hero-orb--1" />
         <div className="home-hero-orb home-hero-orb--2" />
-        <div className="home-hero-orb home-hero-orb--3" />
         <div className="home-hero-grid-bg" />
         <img src="/images/hero-books.svg" alt="" className="home-hero-illustration" aria-hidden="true" />
+        {bestsellers.length > 0 && (
+          <div className="home-hero-showcase" aria-hidden="true">
+            <img src={bestsellers[0].cover_image || '/images/default-book-cover.svg'} alt="" className="home-hero-showcase__cover" />
+            {bestsellers[1]?.cover_image && <img src={bestsellers[1].cover_image} alt="" className="home-hero-showcase__cover home-hero-showcase__cover--back" />}
+          </div>
+        )}
 
         <div className={`home-hero-inner ${heroReady ? 'is-ready' : ''}`}>
           {isAuthenticated ? (
@@ -751,95 +757,198 @@ const Home = () => {
         </div>
       </section>
 
-          {/* Incontournables */}
-          {loading && bestsellers.length === 0 ? (
-            <section className="home-section">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label">{t('home.selection')}</span>
-                  <h2 className="home-section__title">{t('home.essentials')}</h2>
-                </div>
-              </div>
-              <div className="home-carousel">
-                <div className="home-carousel__track">
-                  {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
-                </div>
-              </div>
-            </section>
-          ) : bestsellers.length > 0 && (
-            <RevealSection className="home-section">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label">{t('home.selection')}</span>
-                  <h2 className="home-section__title">{t('home.essentials')}</h2>
-                </div>
-                <Link to="/catalog" className="home-section__link">{t('common.seeAll')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
-              </div>
-              <HomeCarousel>
-                {bestsellers.map(book => <BookCard key={book.id} book={book} />)}
-              </HomeCarousel>
-            </RevealSection>
-          )}
+          {/* ── Trust badges ── */}
+          <section className="trust-bar" aria-label={t('home.trustBarLabel', 'Nos engagements')}>
+            <ul className="trust-bar__list" role="list">
+              <li className="trust-bar__item">
+                <span className="trust-bar__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </span>
+                <span className="trust-bar__label">{t('home.trustDelivery', 'Livraison rapide au Gabon')}</span>
+                <span className="trust-bar__sublabel">{t('home.trustDeliverySub', 'Livré en 24-72h à Libreville')}</span>
+              </li>
+              <li className="trust-bar__item">
+                <span className="trust-bar__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <span className="trust-bar__label">{t('home.trustPayment', 'Paiement sécurisé')}</span>
+                <span className="trust-bar__sublabel">{t('home.trustPaymentSub', 'Mobile Money & carte bancaire')}</span>
+              </li>
+              <li className="trust-bar__item">
+                <span className="trust-bar__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                </span>
+                <span className="trust-bar__label">{t('home.trustReturns', 'Retours 14 jours')}</span>
+                <span className="trust-bar__sublabel">{t('home.trustReturnsSub', 'Sans justification, simple et rapide')}</span>
+              </li>
+              <li className="trust-bar__item">
+                <span className="trust-bar__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <span className="trust-bar__label">{t('home.trustSupport', 'Service client réactif')}</span>
+                <span className="trust-bar__sublabel">{t('home.trustSupportSub', 'Réponse en moins de 24h')}</span>
+              </li>
+            </ul>
+          </section>
 
-          {/* Recommandé pour vous (connecté uniquement) */}
-          {isAuthenticated && recommendations.length > 0 && (
-            <RevealSection className="home-section home-section--alt home-section--reco">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label"><i className="fas fa-sparkles" /> {t('home.forYou')}</span>
-                  <h2 className="home-section__title">{t('home.recommendedForYou')}</h2>
-                </div>
-                <Link to="/catalog" className="home-section__link">{t('common.explore')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
-              </div>
-              <HomeCarousel>
-                {recommendations.map(book => <BookCard key={book.id} book={book} />)}
-              </HomeCarousel>
-            </RevealSection>
-          )}
+          {/* ── Livres — carrousels fusionnés en tabs ── */}
+          {(() => {
+            const tabs = [
+              { key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers },
+              ...(isAuthenticated && recommendations.length > 0
+                ? [{ key: 'recommendations', label: t('home.forYou', 'Pour vous'), books: recommendations }]
+                : []),
+              { key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases },
+            ];
+            const activeBooks = tabs.find(tb => tb.key === activeBookTab)?.books || bestsellers;
+            const hasAny = bestsellers.length > 0 || newReleases.length > 0;
 
-          {/* Nouveautés */}
-          {loading && newReleases.length === 0 ? (
-            <section className="home-section home-section--alt">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label">{t('home.newReleases')}</span>
-                  <h2 className="home-section__title">{t('home.recentlyAdded')}</h2>
-                </div>
-              </div>
-              <div className="home-carousel">
-                <div className="home-carousel__track">
-                  {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
-                </div>
-              </div>
-            </section>
-          ) : newReleases.length > 0 && (
-            <RevealSection className="home-section home-section--alt">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label">{t('home.newReleases')}</span>
-                  <h2 className="home-section__title">{t('home.recentlyAdded')}</h2>
-                </div>
-                <Link to="/catalog" className="home-section__link">{t('home.allCatalog')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
-              </div>
-              <HomeCarousel>
-                {newReleases.map(book => <BookCard key={book.id} book={book} />)}
-              </HomeCarousel>
-            </RevealSection>
-          )}
+            if (loading && !hasAny) {
+              return (
+                <section className="home-section">
+                  <div className="home-section__header">
+                    <div>
+                      <span className="home-section__label">{t('home.selection')}</span>
+                      <h2 className="home-section__title">{t('home.essentials')}</h2>
+                    </div>
+                  </div>
+                  <div className="home-carousel">
+                    <div className="home-carousel__track">
+                      {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
+                    </div>
+                  </div>
+                </section>
+              );
+            }
 
-          {/* Disponible en librairie */}
+            if (!hasAny) return null;
+
+            return (
+              <RevealSection className="home-section">
+                <div className="home-section__header">
+                  <div>
+                    <span className="home-section__label">{t('home.selection')}</span>
+                    <h2 className="home-section__title">{t('home.essentials')}</h2>
+                  </div>
+                  <Link to="/catalog" className="home-section__link">{t('common.seeAll')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+                </div>
+                {tabs.length > 1 && (
+                  <div className="home-tabs" role="tablist">
+                    {tabs.map(tb => (
+                      <button
+                        key={tb.key}
+                        role="tab"
+                        aria-selected={activeBookTab === tb.key}
+                        className={`home-tab${activeBookTab === tb.key ? ' home-tab--active' : ''}`}
+                        onClick={() => setActiveBookTab(tb.key)}
+                      >
+                        {tb.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <HomeCarousel key={activeBookTab}>
+                  {activeBooks.map(book => <BookCard key={book.id} book={book} />)}
+                </HomeCarousel>
+              </RevealSection>
+            );
+          })()}
+
+          {/* ── Coup de cœur éditorial ── */}
+          {bestsellers.length > 0 && (() => {
+            const pick = bestsellers[0];
+            const pickAuthor = typeof pick.author === 'object' ? pick.author?.full_name : pick.author;
+            return (
+              <RevealSection className="home-editorial">
+                <div className="home-editorial__inner">
+                  <div className="home-editorial__visual">
+                    <div className="home-editorial__bloom" />
+                    <img
+                      src={pick.cover_image || '/images/default-book-cover.svg'}
+                      alt={pick.title}
+                      className="home-editorial__cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div className="home-editorial__content">
+                    <span className="home-editorial__overtitle">
+                      <i className="fas fa-heart" aria-hidden="true" />
+                      {t('home.editorialOvertitle', 'Coup de cœur de la semaine')}
+                    </span>
+                    <h2 className="home-editorial__title">{pick.title}</h2>
+                    <p className="home-editorial__author">{pickAuthor}</p>
+                    <p className="home-editorial__pitch">
+                      {pick.description
+                        ? (pick.description.length > 200 ? pick.description.slice(0, 200) + '…' : pick.description)
+                        : t('home.editorialFallback', 'Un récit qui traverse les frontières et les époques. Une plume singulière, un regard neuf sur le monde francophone. À découvrir absolument.')}
+                    </p>
+                    <Link to={`/books/${pick.id}`} className="home-editorial__cta">
+                      {t('home.editorialCta', 'Découvrir ce livre')} <i className="fas fa-arrow-right" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+              </RevealSection>
+            );
+          })()}
+
+          {/* Disponible en librairie — Grille épurée */}
           {marketplace.length > 0 && (
-            <RevealSection className="home-section">
-              <div className="home-section__header">
-                <div>
-                  <span className="home-section__label"><i className="fas fa-store" style={{ marginRight: '.35rem' }} />{t('home.marketplace', 'Marketplace')}</span>
-                  <h2 className="home-section__title">{t('home.availableInBookstores', 'Disponible en librairie')}</h2>
+            <RevealSection className="home-section home-section--alt home-section--breathe">
+              <div className="home-section__inner">
+                <div className="home-section__header">
+                  <div>
+                    <span className="home-section__label"><i className="fas fa-store" style={{ marginRight: '.35rem' }} />{t('home.marketplace', 'Marketplace')}</span>
+                    <h2 className="home-section__title">{t('home.availableInBookstores', 'Disponible en librairie')}</h2>
+                  </div>
+                  <Link to="/catalog?has_listings=true" className="home-section__link">{t('common.seeAll', 'Voir tout')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
                 </div>
-                <Link to="/catalog?has_listings=true" className="home-section__link">{t('common.seeAll', 'Voir tout')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+                <div className="mp-gallery">
+                  {marketplace.slice(0, 8).map(book => {
+                    const author = typeof book.author === 'object' ? book.author?.full_name : book.author;
+                    return (
+                      <Link key={book.id} to={`/books/${book.id}`} className="mp-card">
+                        <div className="mp-card__cover-wrap">
+                          <img
+                            src={book.cover_image || '/images/default-book-cover.svg'}
+                            alt={book.title}
+                            className="mp-card__cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          {book.rating > 0 && (
+                            <span className="mp-card__rating">
+                              <i className="fas fa-star" aria-hidden="true" /> {parseFloat(book.rating).toFixed(1)}
+                            </span>
+                          )}
+                          {book.listings_count > 0 && (
+                            <span className="mp-card__vendors">
+                              <i className="fas fa-store" aria-hidden="true" /> {book.listings_count} {t('home.vendor', { count: book.listings_count, defaultValue: 'vendeur{{s}}' }).replace('{{s}}', book.listings_count > 1 ? 's' : '')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mp-card__body">
+                          <h3 className="mp-card__title">{book.title}</h3>
+                          <p className="mp-card__author">{author}</p>
+                          {book.listings?.length > 0 && (
+                            <span className="mp-card__publisher">
+                              <i className="fas fa-store" aria-hidden="true" />
+                              {book.listings[0].vendor_name}
+                              {book.listings.length > 1 && <em> +{book.listings.length - 1}</em>}
+                            </span>
+                          )}
+                          {book.description && (
+                            <p className="mp-card__desc">{book.description.length > 80 ? book.description.slice(0, 80) + '…' : book.description}</p>
+                          )}
+                          {book.price && (
+                            <span className="mp-card__price">{parseFloat(book.price).toLocaleString('fr-FR')} FCFA</span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <HomeCarousel>
-                {marketplace.map(book => <BookCard key={book.id} book={book} />)}
-              </HomeCarousel>
             </RevealSection>
           )}
 
@@ -882,7 +991,8 @@ const Home = () => {
 
           {/* Organisations */}
           {organizations.length > 0 && (
-            <RevealSection className="home-section home-section--alt">
+            <RevealSection className="home-section home-section--alt home-section--tight">
+              <div className="home-section__inner">
               <div className="home-section__header">
                 <div>
                   <span className="home-section__label">{t('home.ecosystem')}</span>
@@ -911,11 +1021,13 @@ const Home = () => {
                   );
                 })}
               </div>
+              </div>
             </RevealSection>
           )}
 
           {/* Services */}
-          <RevealSection className="home-section">
+          <RevealSection className="home-section home-section--tight">
+            <div className="home-section__inner">
             <div className="home-section__header">
               <div>
                 <span className="home-section__label">{t('nav.services')}</span>
@@ -933,6 +1045,7 @@ const Home = () => {
                   <p>{s.desc}</p>
                 </Link>
               ))}
+            </div>
             </div>
           </RevealSection>
 

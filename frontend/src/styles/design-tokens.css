@@ -82,15 +82,22 @@
   --container-max: 1200px;
   --content-max-width: 960px;
   --header-height: 68px;
-  --sidebar-width: 260px;
+  --sidebar-width: 320px;
   --app-side-w: 320px;
 
-  /* ── Rythme vertical (inspiré OpenClaw : 1 valeur, partout) ── */
-  --section-gap: 4rem;
+  /* ── Rythme vertical — 3 paliers sémantiques ── */
+  --space-sm: 3rem;
+  --space-md: 5rem;
+  --space-lg: 7rem;
+  --section-spacing-y: var(--space-md);
   --section-header-gap: 1.25rem;
   --page-padding-top: 6rem;
   --page-padding-bottom: 3rem;
-  --page-padding-x: 1.5rem;
+  --page-padding-x: 2rem;
+
+  /* ── Gaps grilles — 2 paliers ── */
+  --gap-sm: 1rem;
+  --gap-md: 1.5rem;
 
   /* ── Cartes — système unifié ── */
   --card-radius: 14px;
