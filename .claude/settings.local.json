@@ -23,7 +23,9 @@
       "Bash(python -c ':*)",
       "Bash(grep -r \"storefront\\\\|directory\\\\|professionals\" backend/apps/*/urls.py --include=\"*.py\")",
       "Bash(grep -r \"class.*Storefront\\\\|class.*Directory\\\\|class.*InquiryView\\\\|class.*ProfessionalView\" backend/apps/*/views.py --include=\"*.py\")",
-      "Bash(grep -n \"useHomeData\" /c/maison_dedition/frontend/src/hooks/*.js)"
+      "Bash(grep -n \"useHomeData\" /c/maison_dedition/frontend/src/hooks/*.js)",
+      "Bash(find /c/maison_dedition/frontend/src -name i18n* -o -name *.json -path */locales/*)",
+      "Bash(/c/maison_dedition/venv/Scripts/python.exe manage.py test apps --verbosity=1 --keepdb)"
     ]
   }
 }
