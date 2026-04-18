@@ -94,6 +94,9 @@ const OrgDashboard = lazy(() => import('./pages/dashboard/OrgDashboard'));
 const EditorialProjects = lazy(() => import('./pages/dashboard/EditorialProjects'));
 const EditorialProjectDetail = lazy(() => import('./pages/dashboard/EditorialProjectDetail'));
 const MyLoans = lazy(() => import('./pages/dashboard/MyLoans'));
+const ServiceOrderDetail = lazy(() => import('./pages/dashboard/ServiceOrderDetail'));
+const DeliveryAssignmentDetail = lazy(() => import('./pages/dashboard/DeliveryAssignmentDetail'));
+const UserSocialProfile = lazy(() => import('./pages/UserSocialProfile'));
 const MyReservations = lazy(() => import('./pages/dashboard/MyReservations'));
 const LibraryAdmin = lazy(() => import('./pages/dashboard/LibraryAdmin'));
 const MyManuscripts = lazy(() => import('./pages/dashboard/MyManuscripts'));
@@ -395,6 +398,7 @@ function AppContent() {
                   <Route path="services" element={<ProDashboard />} />
                   <Route path="services/requests" element={<ProRequests />} />
                   <Route path="services/orders" element={<ProOrders />} />
+                  <Route path="services/orders/:id" element={<ServiceOrderDetail />} />
                   <Route path="services/listings" element={<ProListings />} />
                   <Route path="services/wallet" element={<ProWallet />} />
                   <Route path="services/quotes" element={<Quotes />} />
@@ -404,6 +408,7 @@ function AppContent() {
                   {/* Espace Livreur */}
                   <Route path="delivery" element={<DeliveryDashboard />} />
                   <Route path="delivery/assignments" element={<DeliveryAssignments />} />
+                  <Route path="delivery/assignments/:id" element={<DeliveryAssignmentDetail />} />
                   <Route path="delivery/wallet" element={<DeliveryWalletPage />} />
                   <Route path="delivery/profile" element={<DeliveryProfile />} />
                   <Route path="delivery/rates" element={<DeliveryRatesPage />} />
@@ -434,6 +439,7 @@ function AppContent() {
                 {/* Routes informatives */}
                 <Route path="/authors" element={<Authors />} />
                 <Route path="/authors/:id" element={<AuthorDetail />} />
+                <Route path="/profile/:id" element={<UserSocialProfile />} />
                 <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />

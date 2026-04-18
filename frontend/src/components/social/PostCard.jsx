@@ -158,6 +158,7 @@ const PostCard = ({ post }) => {
           </form>
         </div>
       )}
+      {/* TODO Phase 7: add Report button — requires backend Report model + moderation workflow */}
     </article>
   );
 };

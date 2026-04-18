@@ -402,3 +402,18 @@ class BookClubMessage(models.Model):
     def __str__(self):
         username = self.author.username if self.author else "[compte supprimé]"
         return f"{username}: {self.content[:50]}"
+
+
+# TODO Phase 7: Report model for post/comment/message moderation
+# class Report(models.Model):
+#     reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#     object_id = models.PositiveIntegerField()
+#     reason = models.CharField(max_length=50, choices=[
+#         ('SPAM', 'Spam'), ('HARASSMENT', 'Harcèlement'),
+#         ('INAPPROPRIATE', 'Contenu inapproprié'), ('OTHER', 'Autre'),
+#     ])
+#     status = models.CharField(max_length=20, choices=[
+#         ('PENDING', 'En attente'), ('REVIEWED', 'Examiné'), ('DISMISSED', 'Rejeté'),
+#     ], default='PENDING')
+#     created_at = models.DateTimeField(auto_now_add=True)
