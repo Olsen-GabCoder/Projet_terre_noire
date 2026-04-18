@@ -8,14 +8,16 @@ Architecture :
 4. Le provider envoie un webhook → POST /api/payments/webhook/{provider}/
 5. Le backend met à jour le Payment et la commande
 
-En attendant l'intégration réelle des SDK, ce module simule le flux
-et expose les points d'entrée prêts à brancher.
+Mode simulation : quand l'API_URL du provider est vide, les méthodes
+_simulate_* retournent des réponses synthétiques sans appel réseau.
+Quand les credentials sont configurés, les vrais appels HTTP sont activés.
 """
 import hashlib
 import hmac
 import logging
 import uuid
 
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,7 @@ class MobicashProvider(BasePaymentProvider):
     - MOBICASH_MERCHANT_ID
     - MOBICASH_API_KEY
     - MOBICASH_API_SECRET
-    - MOBICASH_API_URL (sandbox/production)
+    - MOBICASH_API_URL (sandbox/production — vide = mode simulation)
     - MOBICASH_WEBHOOK_SECRET (ou PAYMENT_WEBHOOK_SECRET en fallback)
     """
 
@@ -95,28 +97,44 @@ class MobicashProvider(BasePaymentProvider):
     def initiate(self, order, phone_number):
         if not self.api_url:
             logger.warning("Mobicash non configuré — simulation activée")
-            return self._simulate(order, phone_number)
+            return self._simulate_payment(order, phone_number)
 
-        # TODO: Appel réel à l'API Mobicash
-        # import requests
-        # response = requests.post(f'{self.api_url}/payment/init', json={
-        #     'merchant_id': self.merchant_id,
-        #     'amount': str(order.total_amount),
-        #     'currency': 'XAF',
-        #     'phone': phone_number,
-        #     'reference': f'FRL-{order.id:06d}',
-        #     'callback_url': f'{settings.BACKEND_URL}/api/payments/webhook/mobicash/',
-        # }, headers={'Authorization': f'Bearer {self.api_key}'})
-        # data = response.json()
-        # return {
-        #     'transaction_id': data['transaction_id'],
-        #     'status': 'PENDING',
-        #     'provider_ref': data['reference'],
-        #     'message': 'Confirmez le paiement sur votre téléphone.',
-        # }
-        return self._simulate(order, phone_number)
+        payload = {
+            'merchant_id': self.merchant_id,
+            'amount': float(order.total_amount),
+            'currency': 'XAF',
+            'phone_number': phone_number,
+            'reference': f'FRL-{order.id:06d}',
+            'callback_url': f'{settings.BACKEND_URL}/api/orders/webhook/mobicash/',
+            'description': f'Commande Frollot #{order.id}',
+        }
+        headers = {
+            'Authorization': f'Bearer {self.api_secret}',
+            'Content-Type': 'application/json',
+        }
+        try:
+            resp = requests.post(
+                f'{self.api_url}/api/v1/payment/initiate',
+                json=payload, headers=headers, timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                'transaction_id': data.get('transaction_id', ''),
+                'status': 'PENDING',
+                'provider_ref': data.get('reference', f'FRL-{order.id:06d}'),
+                'message': data.get('message', 'Confirmez le paiement sur votre téléphone.'),
+            }
+        except requests.RequestException as e:
+            logger.error("Mobicash initiate failed: %s", e)
+            return {'status': 'FAILED', 'transaction_id': '', 'message': str(e)}
 
-    def _simulate(self, order, phone_number):
+    def _simulate_payment(self, order, phone_number):
+        """
+        Simulation mode — used when MOBICASH_API_URL is empty (development/testing).
+        Returns a synthetic PENDING response without any network call.
+        Will be bypassed automatically when API credentials are configured.
+        """
         return {
             'transaction_id': f'MOB-{uuid.uuid4().hex[:12].upper()}',
             'status': 'PENDING',
@@ -127,10 +145,32 @@ class MobicashProvider(BasePaymentProvider):
     def verify(self, transaction_id):
         if not self.api_url:
             return 'SUCCESS'  # Simulation
-        # TODO: GET {api_url}/payment/status/{transaction_id}
-        return 'PENDING'
+
+        try:
+            headers = {'Authorization': f'Bearer {self.api_secret}'}
+            resp = requests.get(
+                f'{self.api_url}/api/v1/payment/status/{transaction_id}',
+                headers=headers, timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            status_map = {'completed': 'SUCCESS', 'pending': 'PENDING', 'failed': 'FAILED'}
+            return status_map.get(data.get('status'), 'PENDING')
+        except requests.RequestException as e:
+            logger.error("Mobicash verify failed: %s", e)
+            return 'PENDING'
 
     def validate_webhook(self, payload, signature):
+        """
+        Validate incoming webhook from Mobicash.
+
+        Production setup:
+        1. Set MOBICASH_WEBHOOK_SECRET (or PAYMENT_WEBHOOK_SECRET) in .env
+        2. Mobicash sends X-Webhook-Signature header with HMAC-SHA256 of the raw body
+        3. This method compares the expected HMAC with the received signature
+
+        Without a secret configured, ALL webhooks are rejected (safe-by-default).
+        """
         if not self.webhook_secret:
             logger.warning(
                 "Mobicash validate_webhook called without webhook secret "
@@ -156,18 +196,49 @@ class MobicashProvider(BasePaymentProvider):
         }
 
     def disburse(self, phone_number, amount, currency, reference):
+        """
+        Disburse funds to a mobile money number (wallet withdrawal).
+        Simulation mode when MOBICASH_API_URL is empty.
+        """
         if not self.api_url:
-            logger.warning("Mobicash non configure — simulation retrait")
+            logger.warning("Mobicash non configuré — simulation retrait")
+            return self._simulate_disburse(phone_number, amount, currency)
+
+        payload = {
+            'merchant_id': self.merchant_id,
+            'phone_number': phone_number,
+            'amount': float(amount),
+            'currency': currency,
+            'reference': reference,
+        }
+        headers = {
+            'Authorization': f'Bearer {self.api_secret}',
+            'Content-Type': 'application/json',
+        }
+        try:
+            resp = requests.post(
+                f'{self.api_url}/api/v1/disbursement',
+                json=payload, headers=headers, timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
             return {
-                'transaction_id': f'DMOB-{uuid.uuid4().hex[:12].upper()}',
-                'status': 'SUCCESS',
-                'message': f'[SIMULATION] {amount} {currency} envoye au {phone_number}.',
+                'transaction_id': data.get('transaction_id', ''),
+                'status': 'SUCCESS' if data.get('status') == 'completed' else 'PENDING',
+                'message': data.get('message', 'Décaissement initié.'),
             }
-        # TODO: Appel reel a l'API Mobicash disbursement
+        except requests.RequestException as e:
+            logger.error("Mobicash disburse failed: %s", e)
+            return {'transaction_id': '', 'status': 'FAILED', 'message': str(e)}
+
+    def _simulate_disburse(self, phone_number, amount, currency):
+        """
+        Simulation mode for disbursement — no network call.
+        """
         return {
             'transaction_id': f'DMOB-{uuid.uuid4().hex[:12].upper()}',
             'status': 'SUCCESS',
-            'message': f'[SIMULATION] {amount} {currency} envoye au {phone_number}.',
+            'message': f'[SIMULATION] {amount} {currency} envoyé au {phone_number}.',
         }
 
 
@@ -179,7 +250,7 @@ class AirtelMoneyProvider(BasePaymentProvider):
     Variables d'environnement requises :
     - AIRTEL_CLIENT_ID
     - AIRTEL_CLIENT_SECRET
-    - AIRTEL_API_URL (sandbox/production)
+    - AIRTEL_API_URL (sandbox/production — vide = mode simulation)
     - AIRTEL_WEBHOOK_SECRET
     """
 
@@ -194,35 +265,69 @@ class AirtelMoneyProvider(BasePaymentProvider):
             or getattr(settings, 'PAYMENT_WEBHOOK_SECRET', '')
         )
 
+    def _get_token(self):
+        """Obtain OAuth2 access token via client_credentials grant."""
+        resp = requests.post(
+            f'{self.api_url}/auth/oauth2/token',
+            json={
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'grant_type': 'client_credentials',
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        return resp.json()['access_token']
+
     def initiate(self, order, phone_number):
         if not self.api_url:
             logger.warning("Airtel Money non configuré — simulation activée")
-            return self._simulate(order, phone_number)
+            return self._simulate_payment(order, phone_number)
 
-        # TODO: Appel réel à l'API Airtel Money
-        # 1. Obtenir un access_token via POST /auth/oauth2/token
-        # 2. Initier le paiement via POST /merchant/v2/payments/
-        # import requests
-        # token_res = requests.post(f'{self.api_url}/auth/oauth2/token', json={
-        #     'client_id': self.client_id, 'client_secret': self.client_secret,
-        #     'grant_type': 'client_credentials',
-        # })
-        # access_token = token_res.json()['access_token']
-        # pay_res = requests.post(f'{self.api_url}/merchant/v2/payments/', json={
-        #     'reference': f'FRL-{order.id:06d}',
-        #     'subscriber': {'country': 'GA', 'currency': 'XAF', 'msisdn': phone_number},
-        #     'transaction': {'amount': str(order.total_amount), 'country': 'GA', 'currency': 'XAF'},
-        # }, headers={'Authorization': f'Bearer {access_token}', 'X-Country': 'GA', 'X-Currency': 'XAF'})
-        # data = pay_res.json()['data']['transaction']
-        # return {
-        #     'transaction_id': data['id'],
-        #     'status': 'PENDING',
-        #     'provider_ref': data['id'],
-        #     'message': 'Confirmez le paiement sur votre téléphone.',
-        # }
-        return self._simulate(order, phone_number)
+        try:
+            token = self._get_token()
+            payload = {
+                'reference': f'FRL-{order.id:06d}',
+                'subscriber': {
+                    'country': 'GA',
+                    'currency': 'XAF',
+                    'msisdn': phone_number,
+                },
+                'transaction': {
+                    'amount': float(order.total_amount),
+                    'country': 'GA',
+                    'currency': 'XAF',
+                    'id': f'FRL-{order.id:06d}',
+                },
+            }
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'X-Country': 'GA',
+                'X-Currency': 'XAF',
+                'Content-Type': 'application/json',
+            }
+            resp = requests.post(
+                f'{self.api_url}/merchant/v2/payments/',
+                json=payload, headers=headers, timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json().get('data', {}).get('transaction', {})
+            return {
+                'transaction_id': data.get('id', ''),
+                'status': 'PENDING',
+                'provider_ref': data.get('id', ''),
+                'message': 'Confirmez le paiement sur votre téléphone.',
+            }
+        except requests.RequestException as e:
+            logger.error("Airtel initiate failed: %s", e)
+            return {'status': 'FAILED', 'transaction_id': '', 'message': str(e)}
 
-    def _simulate(self, order, phone_number):
+    def _simulate_payment(self, order, phone_number):
+        """
+        Simulation mode — used when AIRTEL_API_URL is empty (development/testing).
+        Returns a synthetic PENDING response without any network call.
+        Will be bypassed automatically when API credentials are configured.
+        """
         return {
             'transaction_id': f'AIR-{uuid.uuid4().hex[:12].upper()}',
             'status': 'PENDING',
@@ -233,10 +338,37 @@ class AirtelMoneyProvider(BasePaymentProvider):
     def verify(self, transaction_id):
         if not self.api_url:
             return 'SUCCESS'
-        # TODO: GET /standard/v2/payments/{transaction_id}
-        return 'PENDING'
+
+        try:
+            token = self._get_token()
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'X-Country': 'GA',
+                'X-Currency': 'XAF',
+            }
+            resp = requests.get(
+                f'{self.api_url}/standard/v2/payments/{transaction_id}',
+                headers=headers, timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json().get('data', {}).get('transaction', {})
+            status_map = {'TS': 'SUCCESS', 'TF': 'FAILED', 'TA': 'PENDING'}
+            return status_map.get(data.get('status'), 'PENDING')
+        except requests.RequestException as e:
+            logger.error("Airtel verify failed: %s", e)
+            return 'PENDING'
 
     def validate_webhook(self, payload, signature):
+        """
+        Validate incoming webhook from Airtel Money.
+
+        Production setup:
+        1. Set AIRTEL_WEBHOOK_SECRET (or PAYMENT_WEBHOOK_SECRET) in .env
+        2. Airtel sends X-Webhook-Signature header with HMAC-SHA256 of the raw body
+        3. This method compares the expected HMAC with the received signature
+
+        Without a secret configured, ALL webhooks are rejected (safe-by-default).
+        """
         if not self.webhook_secret:
             logger.warning(
                 "Airtel validate_webhook called without webhook secret "
@@ -264,19 +396,55 @@ class AirtelMoneyProvider(BasePaymentProvider):
         }
 
     def disburse(self, phone_number, amount, currency, reference):
+        """
+        Disburse funds via Airtel Money (wallet withdrawal).
+        Simulation mode when AIRTEL_API_URL is empty.
+        """
         if not self.api_url:
-            logger.warning("Airtel Money non configure — simulation retrait")
-            return {
-                'transaction_id': f'DAIR-{uuid.uuid4().hex[:12].upper()}',
-                'status': 'SUCCESS',
-                'message': f'[SIMULATION] {amount} {currency} envoye au {phone_number}.',
+            logger.warning("Airtel Money non configuré — simulation retrait")
+            return self._simulate_disburse(phone_number, amount, currency)
+
+        try:
+            token = self._get_token()
+            payload = {
+                'payee': {
+                    'msisdn': phone_number,
+                },
+                'reference': reference,
+                'transaction': {
+                    'amount': float(amount),
+                    'id': reference,
+                },
             }
-        # TODO: Appel reel a l'API Airtel Money disbursement
-        # POST /standard/v2/disbursements/
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'X-Country': 'GA',
+                'X-Currency': currency,
+                'Content-Type': 'application/json',
+            }
+            resp = requests.post(
+                f'{self.api_url}/standard/v2/disbursements/',
+                json=payload, headers=headers, timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json().get('data', {}).get('transaction', {})
+            return {
+                'transaction_id': data.get('id', ''),
+                'status': 'SUCCESS' if data.get('status') == 'TS' else 'PENDING',
+                'message': 'Décaissement initié.',
+            }
+        except requests.RequestException as e:
+            logger.error("Airtel disburse failed: %s", e)
+            return {'transaction_id': '', 'status': 'FAILED', 'message': str(e)}
+
+    def _simulate_disburse(self, phone_number, amount, currency):
+        """
+        Simulation mode for disbursement — no network call.
+        """
         return {
             'transaction_id': f'DAIR-{uuid.uuid4().hex[:12].upper()}',
             'status': 'SUCCESS',
-            'message': f'[SIMULATION] {amount} {currency} envoye au {phone_number}.',
+            'message': f'[SIMULATION] {amount} {currency} envoyé au {phone_number}.',
         }
 
 

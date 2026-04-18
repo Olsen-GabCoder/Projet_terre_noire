@@ -7,8 +7,9 @@ router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'payments', PaymentViewSet, basename='payment')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('orders/access-check/<int:book_id>/', EbookAccessCheckView.as_view(), name='ebook-access-check'),
+    # Explicit payment routes BEFORE router to avoid pk="initiate" conflict
     path('payments/initiate/', PaymentInitiateView.as_view(), name='payment-initiate'),
     path('payments/webhook/<str:provider_name>/', PaymentWebhookView.as_view(), name='payment-webhook'),
+    path('orders/access-check/<int:book_id>/', EbookAccessCheckView.as_view(), name='ebook-access-check'),
+    path('', include(router.urls)),
 ]
