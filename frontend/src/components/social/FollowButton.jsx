@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import socialService from '../../services/socialService';
 import { useAuth } from '../../context/AuthContext';
 
 const FollowButton = ({ type, id, initialFollowed = false, onToggle }) => {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [followed, setFollowed] = useState(initialFollowed);
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,7 @@ const FollowButton = ({ type, id, initialFollowed = false, onToggle }) => {
       disabled={loading}
     >
       <i className={followed ? 'fas fa-user-check' : 'fas fa-user-plus'} />
-      {followed ? ' Suivi' : ' Suivre'}
+      {followed ? ` ${t('social.following', 'Suivi')}` : ` ${t('social.follow', 'Suivre')}`}
     </button>
   );
 };

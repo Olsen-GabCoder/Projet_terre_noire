@@ -44,8 +44,8 @@ const ProDashboard = () => {
   return (
     <div className="author-space">
       <div className="author-space__header">
-        <h1 className="author-space__title">Espace professionnel</h1>
-        <p className="author-space__subtitle">Gérez vos services, demandes et revenus.</p>
+        <h1 className="author-space__title">{t('proDashboard.title', 'Espace professionnel')}</h1>
+        <p className="author-space__subtitle">{t('proDashboard.subtitle', 'Gérez vos services, demandes et revenus.')}</p>
       </div>
 
       <div className="as-stats">
@@ -53,16 +53,16 @@ const ProDashboard = () => {
           <div className="as-stat__icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}><i className="fas fa-inbox" /></div>
           <div className="as-stat__body">
             <div className="as-stat__value">{pendingRequests.length}</div>
-            <div className="as-stat__label">Demandes en attente</div>
+            <div className="as-stat__label">{t('proDashboard.pendingRequests', 'Demandes en attente')}</div>
           </div>
-          {pendingRequests.length > 0 && <span className="as-stat__badge as-stat__badge--warn">{pendingRequests.length} à traiter</span>}
+          {pendingRequests.length > 0 && <span className="as-stat__badge as-stat__badge--warn">{t('proDashboard.toProcess', '{{count}} à traiter', { count: pendingRequests.length })}</span>}
         </Link>
 
         <Link to="/dashboard/services/orders" className="as-stat">
           <div className="as-stat__icon" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}><i className="fas fa-tasks" /></div>
           <div className="as-stat__body">
             <div className="as-stat__value">{activeOrders.length}</div>
-            <div className="as-stat__label">Commandes en cours</div>
+            <div className="as-stat__label">{t('proDashboard.activeOrders', 'Commandes en cours')}</div>
           </div>
         </Link>
 
@@ -70,7 +70,7 @@ const ProDashboard = () => {
           <div className="as-stat__icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}><i className="fas fa-check-circle" /></div>
           <div className="as-stat__body">
             <div className="as-stat__value">{completedOrders.length}</div>
-            <div className="as-stat__label">Terminées</div>
+            <div className="as-stat__label">{t('proDashboard.completed', 'Terminées')}</div>
           </div>
         </Link>
 
@@ -78,16 +78,16 @@ const ProDashboard = () => {
           <div className="as-stat__icon" style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)' }}><i className="fas fa-wallet" /></div>
           <div className="as-stat__body">
             <div className="as-stat__value">{wallet ? `${fmtPrice(wallet.balance)} F` : '—'}</div>
-            <div className="as-stat__label">Solde</div>
+            <div className="as-stat__label">{t('proDashboard.balance', 'Solde')}</div>
           </div>
-          {wallet && parseFloat(wallet.total_earned) > 0 && <span className="as-stat__badge">{fmtPrice(wallet.total_earned)} F gagnés</span>}
+          {wallet && parseFloat(wallet.total_earned) > 0 && <span className="as-stat__badge">{t('proDashboard.earned', '{{amount}} F gagnés', { amount: fmtPrice(wallet.total_earned) })}</span>}
         </Link>
 
         <Link to="/dashboard/services/listings" className="as-stat">
           <div className="as-stat__icon" style={{ background: 'linear-gradient(135deg, var(--color-secondary), #7c3aed)' }}><i className="fas fa-tags" /></div>
           <div className="as-stat__body">
             <div className="as-stat__value">{listings.length}</div>
-            <div className="as-stat__label">Offres publiées</div>
+            <div className="as-stat__label">{t('proDashboard.listings', 'Offres publiées')}</div>
           </div>
         </Link>
       </div>
@@ -95,30 +95,30 @@ const ProDashboard = () => {
       {pendingRequests.length > 0 && (
         <div className="as-alert">
           <i className="fas fa-bell" />
-          <span>{pendingRequests.length} demande{pendingRequests.length > 1 ? 's' : ''} en attente de devis. <Link to="/dashboard/services/requests">Répondre →</Link></span>
+          <span>{t('proDashboard.pendingAlert', '{{count}} demande(s) en attente de devis.', { count: pendingRequests.length })} <Link to="/dashboard/services/requests">{t('proDashboard.respond', 'Répondre →')}</Link></span>
         </div>
       )}
 
       <div className="as-shortcuts">
         <Link to="/dashboard/services/requests" className="as-shortcut">
           <div className="as-shortcut__icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}><i className="fas fa-inbox" /></div>
-          <span className="as-shortcut__label">Demandes reçues</span>
-          <span className="as-shortcut__desc">Répondre avec un devis</span>
+          <span className="as-shortcut__label">{t('proDashboard.receivedRequests', 'Demandes reçues')}</span>
+          <span className="as-shortcut__desc">{t('proDashboard.respondDesc', 'Répondre avec un devis')}</span>
         </Link>
         <Link to="/dashboard/services/orders" className="as-shortcut">
           <div className="as-shortcut__icon" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}><i className="fas fa-tasks" /></div>
-          <span className="as-shortcut__label">Mes commandes</span>
-          <span className="as-shortcut__desc">Livrer et suivre</span>
+          <span className="as-shortcut__label">{t('proDashboard.myOrders', 'Mes commandes')}</span>
+          <span className="as-shortcut__desc">{t('proDashboard.deliverDesc', 'Livrer et suivre')}</span>
         </Link>
         <Link to="/dashboard/services/listings" className="as-shortcut">
           <div className="as-shortcut__icon" style={{ background: 'linear-gradient(135deg, var(--color-secondary), #7c3aed)' }}><i className="fas fa-plus" /></div>
-          <span className="as-shortcut__label">Gérer mes offres</span>
-          <span className="as-shortcut__desc">Créer ou modifier</span>
+          <span className="as-shortcut__label">{t('proDashboard.manageListings', 'Gérer mes offres')}</span>
+          <span className="as-shortcut__desc">{t('proDashboard.createEdit', 'Créer ou modifier')}</span>
         </Link>
         <Link to="/services" className="as-shortcut">
           <div className="as-shortcut__icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}><i className="fas fa-store" /></div>
-          <span className="as-shortcut__label">Marketplace</span>
-          <span className="as-shortcut__desc">Voir toutes les offres</span>
+          <span className="as-shortcut__label">{t('proDashboard.marketplace', 'Marketplace')}</span>
+          <span className="as-shortcut__desc">{t('proDashboard.viewAll', 'Voir toutes les offres')}</span>
         </Link>
       </div>
     </div>

@@ -52,11 +52,11 @@ const DeliveryAssignments = () => {
     try {
       await marketplaceService.updateDeliveryStatus(subOrderId, { status: newStatus, ...extra });
       const msgs = {
-        SHIPPED: 'Colis pris en charge ! Le client a été notifié.',
-        DELIVERED: 'Livraison confirmée ! Le client et le vendeur ont été notifiés.',
-        ATTEMPTED: 'Tentative échouée enregistrée. Le client a été prévenu.',
+        SHIPPED: t('deliveryAssignments.shippedMsg', 'Colis pris en charge !'),
+        DELIVERED: t('deliveryAssignments.deliveredMsg', 'Livraison confirmée !'),
+        ATTEMPTED: t('deliveryAssignments.attemptedMsg', 'Tentative échouée enregistrée.'),
       };
-      toast.success(msgs[newStatus] || 'Statut mis à jour.');
+      toast.success(msgs[newStatus] || t('deliveryAssignments.statusUpdated', 'Statut mis à jour.'));
       fetchAssignments();
     } catch (err) {
       const msg = err.response?.data?.message || handleApiError(err);
@@ -150,7 +150,7 @@ const DeliveryAssignments = () => {
                             )}
                             {sub.vendor_email && (
                               <a href={`mailto:${sub.vendor_email}`} className="ord-contact ord-contact--email">
-                                <i className="fas fa-envelope" /> Email
+                                <i className="fas fa-envelope" /> {t('common.email', 'Email')}
                               </a>
                             )}
                           </div>
@@ -198,7 +198,7 @@ const DeliveryAssignments = () => {
                           disabled={updating === sub.id}
                           style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
                         >
-                          <i className="fas fa-exclamation-triangle" /> Tentative échouée
+                          <i className="fas fa-exclamation-triangle" /> {t('deliveryAssignments.failedAttempt', 'Tentative échouée')}
                         </button>
                       )}
                       {sub.status === 'ATTEMPTED' && sub.attempt_count > 0 && (
@@ -220,21 +220,21 @@ const DeliveryAssignments = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setAttemptModal(null)}>
           <div style={{ background: 'var(--color-bg-card, #fff)', borderRadius: 12, padding: '1.5rem', maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--color-text-heading)' }}>
-              <i className="fas fa-exclamation-triangle" style={{ color: '#d97706', marginRight: 6 }} /> Tentative de livraison échouée
+              <i className="fas fa-exclamation-triangle" style={{ color: '#d97706', marginRight: 6 }} /> {t('deliveryAssignments.failedAttemptTitle', 'Tentative de livraison échouée')}
             </h3>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-body)' }}>Raison</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-body)' }}>{t('deliveryAssignments.reason', 'Raison')}</label>
             <select
               value={attemptReason}
               onChange={(e) => setAttemptReason(e.target.value)}
               style={{ width: '100%', padding: '0.5rem', borderRadius: 8, border: '1px solid var(--color-gray-300, #d1d5db)', marginBottom: '1rem', fontSize: '0.85rem' }}
             >
-              <option value="">— Choisir la raison —</option>
+              <option value="">{t('deliveryAssignments.chooseReason', '— Choisir la raison —')}</option>
               {ATTEMPT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button onClick={() => setAttemptModal(null)} className="dashboard-btn" style={{ fontSize: '0.8rem' }}>Annuler</button>
+              <button onClick={() => setAttemptModal(null)} className="dashboard-btn" style={{ fontSize: '0.8rem' }}>{t('common.cancel', 'Annuler')}</button>
               <button onClick={submitAttempt} disabled={!attemptReason} className="as-cta" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', opacity: attemptReason ? 1 : 0.5 }}>
-                Confirmer
+                {t('common.confirm', 'Confirmer')}
               </button>
             </div>
           </div>

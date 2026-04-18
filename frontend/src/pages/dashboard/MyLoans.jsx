@@ -50,12 +50,12 @@ const MyLoans = () => {
   };
 
   if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Chargement...</div>;
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('common.loading', 'Chargement...')}</div>;
   }
 
   return (
     <div style={{ padding: '1.5rem' }}>
-      <h1 style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>Mes prêts</h1>
+      <h1 style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>{t('myLoans.title', 'Mes prêts')}</h1>
 
       {error && (
         <div style={{
@@ -70,7 +70,7 @@ const MyLoans = () => {
       )}
 
       {loans.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>Vous n'avez aucun prêt en cours.</p>
+        <p style={{ color: '#6b7280' }}>{t('myLoans.empty', "Vous n'avez aucun prêt en cours.")}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {loans.map((loan) => (
@@ -96,7 +96,7 @@ const MyLoans = () => {
                     fontWeight: 600,
                     ...getStatusStyle(loan.status, loan.is_overdue),
                   }}>
-                    {loan.is_overdue ? 'En retard' : loan.status_display}
+                    {loan.is_overdue ? t('myLoans.overdue', 'En retard') : loan.status_display}
                   </span>
                   <span style={{
                     padding: '0.2rem 0.75rem',
@@ -113,17 +113,17 @@ const MyLoans = () => {
               <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', fontSize: '0.9rem', color: '#6b7280', flexWrap: 'wrap' }}>
                 {loan.borrowed_at && (
                   <span>
-                    <i className="fas fa-calendar" /> Emprunté le {new Date(loan.borrowed_at).toLocaleDateString('fr-FR')}
+                    <i className="fas fa-calendar" /> {t('myLoans.borrowedOn', 'Emprunté le')} {new Date(loan.borrowed_at).toLocaleDateString('fr-FR')}
                   </span>
                 )}
                 {loan.due_date && (
                   <span style={loan.is_overdue ? { color: '#dc2626', fontWeight: 600 } : {}}>
-                    <i className="fas fa-clock" /> Retour prévu {new Date(loan.due_date).toLocaleDateString('fr-FR')}
+                    <i className="fas fa-clock" /> {t('myLoans.dueOn', 'Retour prévu')} {new Date(loan.due_date).toLocaleDateString('fr-FR')}
                   </span>
                 )}
                 {loan.returned_at && (
                   <span>
-                    <i className="fas fa-check" /> Retourné le {new Date(loan.returned_at).toLocaleDateString('fr-FR')}
+                    <i className="fas fa-check" /> {t('myLoans.returnedOn', 'Retourné le')} {new Date(loan.returned_at).toLocaleDateString('fr-FR')}
                   </span>
                 )}
               </div>
@@ -146,7 +146,7 @@ const MyLoans = () => {
                           borderRadius: '4px',
                         }}
                       />
-                      <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>jours</span>
+                      <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>{t('myLoans.days', 'jours')}</span>
                       <button
                         onClick={() => handleExtend(loan.id)}
                         style={{
@@ -159,7 +159,7 @@ const MyLoans = () => {
                           fontSize: '0.85rem',
                         }}
                       >
-                        Confirmer
+                        {t('common.confirm', 'Confirmer')}
                       </button>
                       <button
                         onClick={() => setExtending(null)}
@@ -172,7 +172,7 @@ const MyLoans = () => {
                           fontSize: '0.85rem',
                         }}
                       >
-                        Annuler
+                        {t('common.cancel', 'Annuler')}
                       </button>
                     </div>
                   ) : (
@@ -188,7 +188,7 @@ const MyLoans = () => {
                         fontSize: '0.85rem',
                       }}
                     >
-                      <i className="fas fa-clock" /> Demander une prolongation
+                      <i className="fas fa-clock" /> {t('myLoans.requestExtension', 'Demander une prolongation')}
                     </button>
                   )}
                 </div>

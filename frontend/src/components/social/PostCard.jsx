@@ -119,11 +119,11 @@ const PostCard = ({ post }) => {
 
       {/* Actions */}
       <div className="pcard__actions">
-        <button className={`pcard__action ${liked ? 'pcard__action--liked' : ''}`} onClick={handleLike}>
+        <button className={`pcard__action ${liked ? 'pcard__action--liked' : ''}`} onClick={handleLike} aria-label={t('social.like', "J'aime")}>
           <i className={liked ? 'fas fa-heart' : 'far fa-heart'} />
           <span>{likesCount}</span>
         </button>
-        <button className="pcard__action" onClick={loadComments}>
+        <button className="pcard__action" onClick={loadComments} aria-label={t('social.comments', 'Commentaires')}>
           <i className="far fa-comment" />
           <span>{post.comments_count || 0}</span>
           {loadingComments && <i className="fas fa-spinner fa-spin" style={{ marginLeft: 4, fontSize: '0.7rem' }} />}
@@ -154,7 +154,7 @@ const PostCard = ({ post }) => {
           ))}
           <form onSubmit={handleComment} className="pcard__comment-form">
             <input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder={t('pages.feed.writeComment', 'Écrire un commentaire...')} />
-            <button type="submit" disabled={!commentText.trim()}><i className="fas fa-paper-plane" /></button>
+            <button type="submit" disabled={!commentText.trim()} aria-label={t('social.sendComment', 'Envoyer')}><i className="fas fa-paper-plane" /></button>
           </form>
         </div>
       )}
