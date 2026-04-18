@@ -18,6 +18,7 @@ const LibraryPage = () => {
   const [search, setSearch] = useState('');
   const [registering, setRegistering] = useState(false);
   const [borrowing, setBorrowing] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     fetchLibrary();
@@ -73,9 +74,11 @@ const LibraryPage = () => {
     }
   };
 
-  const handleBorrow = async (catalogItemId, loanType = 'PHYSICAL') => {
+  const handleBorrow = async (catalogItemId) => {
     try {
       setBorrowing(catalogItemId);
+      const item = catalog.find(i => i.id === catalogItemId);
+      const loanType = item?.allows_digital_loan ? 'DIGITAL' : 'PHYSICAL';
       await libraryService.loans.create(library.id, {
         catalog_item: catalogItemId,
         loan_type: loanType,
@@ -90,9 +93,13 @@ const LibraryPage = () => {
     }
   };
 
-  const filteredCatalog = catalog.filter((item) =>
-    !search || item.book_title?.toLowerCase().includes(search.toLowerCase())
-  );
+  const categories = [...new Set(catalog.map(item => item.book_category).filter(Boolean))];
+
+  const filteredCatalog = catalog.filter((item) => {
+    if (search && !item.book_title?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (selectedCategory && item.book_category !== selectedCategory) return false;
+    return true;
+  });
 
   if (loading) {
     return (
@@ -183,15 +190,16 @@ const LibraryPage = () => {
 
       {error && <div className="social-error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
-      {/* Recherche */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      {/* Recherche + filtre catégorie */}
+      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder={t('pages.library.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
-            width: '100%',
+            flex: '1',
+            minWidth: '200px',
             maxWidth: '400px',
             padding: '0.6rem 1rem',
             border: '1px solid #d1d5db',
@@ -199,6 +207,24 @@ const LibraryPage = () => {
             fontSize: '0.95rem',
           }}
         />
+        {categories.length > 1 && (
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              padding: '0.6rem 1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '0.95rem',
+              backgroundColor: 'white',
+            }}
+          >
+            <option value="">{t('pages.library.allCategories', 'Toutes les catégories')}</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Catalogue */}

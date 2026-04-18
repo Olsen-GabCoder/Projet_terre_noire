@@ -89,6 +89,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 // Pages dashboard
 const DashboardLayout = lazy(() => import('./components/DashboardLayout'));
 const DashboardOverview = lazy(() => import('./pages/dashboard/DashboardOverview'));
+const MyOrganizations = lazy(() => import('./pages/dashboard/MyOrganizations'));
 const OrgDashboard = lazy(() => import('./pages/dashboard/OrgDashboard'));
 const EditorialProjects = lazy(() => import('./pages/dashboard/EditorialProjects'));
 const EditorialProjectDetail = lazy(() => import('./pages/dashboard/EditorialProjectDetail'));
@@ -369,6 +370,7 @@ function AppContent() {
                   <Route path="projects/:id" element={<EditorialProjectDetail />} />
 
                   {/* Organisations */}
+                  <Route path="organizations" element={<MyOrganizations />} />
                   <Route path="organizations/:id" element={<OrgDashboard />} />
                   <Route path="organizations/:id/manuscripts" element={<OrgManuscripts />} />
                   <Route path="organizations/:id/books" element={<OrgBooks />} />

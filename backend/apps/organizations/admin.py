@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Organization, OrganizationMembership, Invitation
+from .models import Organization, OrganizationMembership, Invitation, OrganizationReview, Inquiry
 
 
 class OrganizationMembershipInline(admin.TabularInline):
@@ -36,3 +36,21 @@ class InvitationAdmin(admin.ModelAdmin):
     search_fields = ['email', 'organization__name']
     readonly_fields = ['token', 'created_at']
     raw_id_fields = ['organization', 'invited_by']
+
+
+@admin.register(OrganizationReview)
+class OrganizationReviewAdmin(admin.ModelAdmin):
+    list_display = ['user', 'organization', 'rating', 'created_at']
+    list_filter = ['rating']
+    search_fields = ['user__username', 'organization__name']
+    readonly_fields = ['created_at', 'updated_at']
+    raw_id_fields = ['user', 'organization']
+
+
+@admin.register(Inquiry)
+class InquiryAdmin(admin.ModelAdmin):
+    list_display = ['sender', 'target_org', 'subject', 'status', 'created_at']
+    list_filter = ['status']
+    search_fields = ['sender__username', 'subject']
+    readonly_fields = ['created_at', 'responded_at']
+    raw_id_fields = ['sender', 'target_org', 'target_profile', 'responded_by']

@@ -52,6 +52,15 @@ const servicesService = {
     window.URL.revokeObjectURL(url);
   },
 
+  // Devis éditoriaux (DQE)
+  getQuoteTemplates: () => api.get('/services/quotes/templates/'),
+  getQuoteTemplate: (id) => api.get(`/services/quotes/templates/${id}/`),
+  getQuotes: (params) => api.get('/services/quotes/', { params }),
+  getQuote: (id) => api.get(`/services/quotes/${id}/`),
+  createDQE: (data) => api.post('/services/quotes/create/', data),
+  sendDQE: (id) => api.post(`/services/quotes/${id}/send/`),
+  respondDQE: (id, data) => api.post(`/services/quotes/${id}/respond/`, data),
+
   // Editorial Projects
   getProjects: (params) => api.get('/services/projects/', { params }),
   createProject: (data) => api.post('/services/projects/create/', data),

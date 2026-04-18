@@ -2,7 +2,10 @@ from django.contrib import admin
 from .models import (
     BookListing, SubOrder, CommissionConfig,
     VendorWallet, WalletTransaction, DeliveryWallet,
+    DeliveryWalletTransaction,
 )
+from .delivery_models import DeliveryRate
+from .withdrawal_models import WithdrawalRequest
 
 
 @admin.register(BookListing)
@@ -44,3 +47,28 @@ class WalletTransactionAdmin(admin.ModelAdmin):
 class DeliveryWalletAdmin(admin.ModelAdmin):
     list_display = ['agent', 'balance', 'total_earned', 'total_withdrawn']
     raw_id_fields = ['agent']
+
+
+@admin.register(DeliveryWalletTransaction)
+class DeliveryWalletTransactionAdmin(admin.ModelAdmin):
+    list_display = ['wallet', 'transaction_type', 'amount', 'created_at']
+    list_filter = ['transaction_type']
+    readonly_fields = ['created_at']
+    raw_id_fields = ['wallet', 'sub_order']
+
+
+@admin.register(DeliveryRate)
+class DeliveryRateAdmin(admin.ModelAdmin):
+    list_display = ['agent', 'zone_name', 'country', 'price', 'currency', 'is_active']
+    list_filter = ['country', 'is_active']
+    search_fields = ['zone_name']
+    raw_id_fields = ['agent']
+
+
+@admin.register(WithdrawalRequest)
+class WithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display = ['user', 'wallet_type', 'amount', 'provider', 'status', 'created_at']
+    list_filter = ['status', 'provider', 'wallet_type']
+    search_fields = ['user__username', 'phone_number']
+    readonly_fields = ['created_at', 'processed_at']
+    raw_id_fields = ['user']

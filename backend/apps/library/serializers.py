@@ -16,6 +16,7 @@ class LibraryCatalogItemSerializer(serializers.ModelSerializer):
     book_author = serializers.SerializerMethodField()
     book_cover_image = serializers.ImageField(source='book.cover_image', read_only=True)
     book_format = serializers.CharField(source='book.format', read_only=True)
+    book_category = serializers.CharField(source='book.category.name', read_only=True, default=None)
     library_name = serializers.CharField(source='library.name', read_only=True)
     in_stock = serializers.SerializerMethodField()
 
@@ -23,7 +24,7 @@ class LibraryCatalogItemSerializer(serializers.ModelSerializer):
         model = LibraryCatalogItem
         fields = [
             'id', 'book', 'book_title', 'book_author', 'book_cover_image',
-            'book_format', 'library', 'library_name', 'total_copies',
+            'book_format', 'book_category', 'library', 'library_name', 'total_copies',
             'available_copies', 'allows_digital_loan', 'max_loan_days',
             'is_active', 'in_stock', 'created_at', 'updated_at',
         ]
