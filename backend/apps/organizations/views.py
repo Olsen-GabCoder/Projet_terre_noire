@@ -66,7 +66,15 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         # update / destroy : admin de l'org
         return [permissions.IsAuthenticated(), IsOrganizationAdmin()]
 
+    MAX_ORGS_PER_USER = 5
+
     def create(self, request, *args, **kwargs):
+        user_org_count = Organization.objects.filter(owner=request.user).count()
+        if user_org_count >= self.MAX_ORGS_PER_USER:
+            return Response(
+                {'message': f"Vous avez atteint la limite de {self.MAX_ORGS_PER_USER} organisations."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         org = serializer.save()

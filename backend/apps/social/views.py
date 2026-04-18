@@ -272,6 +272,20 @@ class ReadingListViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Livre non trouvé dans la liste.'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'detail': 'Livre retiré de la liste.'})
 
+    @action(detail=True, methods=['patch'], url_path='reorder')
+    def reorder(self, request, slug=None):
+        reading_list = self.get_object()
+        if reading_list.user != request.user:
+            return Response({'detail': 'Non autorisé.'}, status=status.HTTP_403_FORBIDDEN)
+        items_order = request.data.get('items', [])
+        if not isinstance(items_order, list):
+            return Response({'detail': 'items doit être une liste.'}, status=status.HTTP_400_BAD_REQUEST)
+        for item_data in items_order:
+            ReadingListItem.objects.filter(
+                pk=item_data.get('id'), reading_list=reading_list
+            ).update(position=item_data.get('position', 0))
+        return Response({'detail': 'Ordre mis à jour.'})
+
 
 # ══════════════════════════════════════════════════════════════════════
 # POST VIEWS
@@ -464,7 +478,14 @@ class BookClubViewSet(viewsets.ModelViewSet):
         return BookClubListSerializer
 
     def get_queryset(self):
-        return BookClub.objects.select_related('creator', 'book', 'current_book').prefetch_related('memberships')
+        qs = BookClub.objects.select_related('creator', 'book', 'current_book').prefetch_related('memberships')
+        if self.request.query_params.get('public') == 'true':
+            qs = qs.filter(is_public=True)
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(Q(name__icontains=search) | Q(description__icontains=search))
+        return qs.order_by('-created_at')
 
     def perform_create(self, serializer):
         club = serializer.save(creator=self.request.user)

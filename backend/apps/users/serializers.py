@@ -329,6 +329,19 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'receive_newsletter',
         ]
 
+    def validate_profile_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError(
+                    "Format d'image non supporté. Utilisez JPEG, PNG, WebP ou GIF."
+                )
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError(
+                    "L'image ne peut pas dépasser 5 Mo."
+                )
+        return value
+
     def validate_phone_number(self, value):
         """
         Vérifie que le nouveau numéro n'est pas déjà utilisé

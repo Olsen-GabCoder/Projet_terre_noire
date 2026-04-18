@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import socialService from '../../services/socialService';
+import { useAuth } from '../../context/AuthContext';
 
 const PostCard = ({ post }) => {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
 
   const TYPE_ICONS = {
     RECOMMENDATION: { icon: 'fas fa-thumbs-up', label: t('pages.feed.recommendation', 'Recommandation'), color: 'var(--color-success)' },
@@ -118,21 +120,23 @@ const PostCard = ({ post }) => {
       )}
 
       {/* Actions */}
-      <div className="pcard__actions">
-        <button className={`pcard__action ${liked ? 'pcard__action--liked' : ''}`} onClick={handleLike} aria-label={t('social.like', "J'aime")}>
-          <i className={liked ? 'fas fa-heart' : 'far fa-heart'} />
-          <span>{likesCount}</span>
-        </button>
-        <button className="pcard__action" onClick={loadComments} aria-label={t('social.comments', 'Commentaires')}>
-          <i className="far fa-comment" />
-          <span>{post.comments_count || 0}</span>
-          {loadingComments && <i className="fas fa-spinner fa-spin" style={{ marginLeft: 4, fontSize: '0.7rem' }} />}
-        </button>
-        <button className="pcard__action" onClick={() => { navigator.clipboard.writeText(window.location.origin + `/feed#post-${post.id}`); }}>
-          <i className="fas fa-share" />
-          <span>{t('pages.feed.share', 'Partager')}</span>
-        </button>
-      </div>
+      {isAuthenticated && (
+        <div className="pcard__actions">
+          <button className={`pcard__action ${liked ? 'pcard__action--liked' : ''}`} onClick={handleLike} aria-label={t('social.like', "J'aime")}>
+            <i className={liked ? 'fas fa-heart' : 'far fa-heart'} />
+            <span>{likesCount}</span>
+          </button>
+          <button className="pcard__action" onClick={loadComments} aria-label={t('social.comments', 'Commentaires')}>
+            <i className="far fa-comment" />
+            <span>{post.comments_count || 0}</span>
+            {loadingComments && <i className="fas fa-spinner fa-spin" style={{ marginLeft: 4, fontSize: '0.7rem' }} />}
+          </button>
+          <button className="pcard__action" onClick={() => { navigator.clipboard.writeText(window.location.origin + `/feed#post-${post.id}`); }}>
+            <i className="fas fa-share" />
+            <span>{t('pages.feed.share', 'Partager')}</span>
+          </button>
+        </div>
+      )}
 
       {/* Comments */}
       {showComments && (
