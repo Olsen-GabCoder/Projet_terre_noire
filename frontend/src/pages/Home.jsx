@@ -791,57 +791,81 @@ const Home = () => {
             </ul>
           </section>
 
-          {/* ── Livres — carrousels fusionnés en tabs ── */}
-          {(() => {
-            // Tabs fixes (toujours affichés) + tabs conditionnels
-            const tabs = [
-              { key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers },
-              ...(isAuthenticated && recommendations.length > 0
-                ? [{ key: 'recommendations', label: t('home.forYou', 'Pour vous'), books: recommendations }]
-                : []),
-              { key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases },
-            ];
-            const currentTab = tabs.find(tb => tb.key === activeBookTab) || tabs[0];
-            const activeBooks = currentTab?.books || [];
-            const isTabLoading = (activeBookTab === 'bestsellers' && loading) ||
-                                 (activeBookTab === 'newReleases' && loading);
+          {/* Incontournables */}
+          {loading && bestsellers.length === 0 ? (
+            <section className="home-section">
+              <div className="home-section__header">
+                <div>
+                  <span className="home-section__label">{t('home.selection')}</span>
+                  <h2 className="home-section__title">{t('home.essentials')}</h2>
+                </div>
+              </div>
+              <div className="home-carousel">
+                <div className="home-carousel__track">
+                  {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
+                </div>
+              </div>
+            </section>
+          ) : bestsellers.length > 0 && (
+            <RevealSection className="home-section">
+              <div className="home-section__header">
+                <div>
+                  <span className="home-section__label">{t('home.selection')}</span>
+                  <h2 className="home-section__title">{t('home.essentials')}</h2>
+                </div>
+                <Link to="/catalog" className="home-section__link">{t('common.seeAll')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+              </div>
+              <HomeCarousel>
+                {bestsellers.map(book => <BookCard key={book.id} book={book} />)}
+              </HomeCarousel>
+            </RevealSection>
+          )}
 
-            return (
-              <RevealSection className="home-section">
-                <div className="home-section__header">
-                  <div>
-                    <span className="home-section__label">{t('home.selection')}</span>
-                    <h2 className="home-section__title">{t('home.essentials')}</h2>
-                  </div>
-                  <Link to="/catalog" className="home-section__link">{t('common.seeAll')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+          {/* Recommandé pour vous (connecté uniquement) */}
+          {isAuthenticated && recommendations.length > 0 && (
+            <RevealSection className="home-section home-section--alt home-section--reco">
+              <div className="home-section__header">
+                <div>
+                  <span className="home-section__label"><i className="fas fa-sparkles" /> {t('home.forYou')}</span>
+                  <h2 className="home-section__title">{t('home.recommendedForYou')}</h2>
                 </div>
-                <div className="home-tabs" role="tablist">
-                  {tabs.map(tb => (
-                    <button
-                      key={tb.key}
-                      role="tab"
-                      aria-selected={activeBookTab === tb.key}
-                      className={`home-tab${activeBookTab === tb.key ? ' home-tab--active' : ''}`}
-                      onClick={() => setActiveBookTab(tb.key)}
-                    >
-                      {tb.label}
-                    </button>
-                  ))}
+                <Link to="/catalog" className="home-section__link">{t('common.explore')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+              </div>
+              <HomeCarousel>
+                {recommendations.map(book => <BookCard key={book.id} book={book} />)}
+              </HomeCarousel>
+            </RevealSection>
+          )}
+
+          {/* Nouveautés */}
+          {loading && newReleases.length === 0 ? (
+            <section className="home-section home-section--alt">
+              <div className="home-section__header">
+                <div>
+                  <span className="home-section__label">{t('home.newReleases')}</span>
+                  <h2 className="home-section__title">{t('home.recentlyAdded')}</h2>
                 </div>
-                {isTabLoading && activeBooks.length === 0 ? (
-                  <div className="home-carousel">
-                    <div className="home-carousel__track">
-                      {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
-                    </div>
-                  </div>
-                ) : (
-                  <HomeCarousel key={activeBookTab}>
-                    {activeBooks.map(book => <BookCard key={book.id} book={book} />)}
-                  </HomeCarousel>
-                )}
-              </RevealSection>
-            );
-          })()}
+              </div>
+              <div className="home-carousel">
+                <div className="home-carousel__track">
+                  {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
+                </div>
+              </div>
+            </section>
+          ) : newReleases.length > 0 && (
+            <RevealSection className="home-section home-section--alt">
+              <div className="home-section__header">
+                <div>
+                  <span className="home-section__label">{t('home.newReleases')}</span>
+                  <h2 className="home-section__title">{t('home.recentlyAdded')}</h2>
+                </div>
+                <Link to="/catalog" className="home-section__link">{t('home.allCatalog')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
+              </div>
+              <HomeCarousel>
+                {newReleases.map(book => <BookCard key={book.id} book={book} />)}
+              </HomeCarousel>
+            </RevealSection>
+          )}
 
           {/* ── Coup de cœur éditorial ── */}
           {bestsellers.length > 0 && (() => {
