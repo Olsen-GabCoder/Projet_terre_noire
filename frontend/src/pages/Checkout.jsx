@@ -42,6 +42,13 @@ const Checkout = () => {
   const [error, setError] = useState('');
   const [isTimeoutError, setIsTimeoutError] = useState(false);
 
+  // ── Payment state ──
+  const [paymentProvider, setPaymentProvider] = useState('MOBICASH');
+  const [paymentPhone, setPaymentPhone] = useState('');
+  const [paymentPending, setPaymentPending] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState(null);
+  const [pollingPayment, setPollingPayment] = useState(false);
+
   // UUID unique par tentative de commande — régénéré si le panier change
   const [clientRequestId, setClientRequestId] = useState(() => generateUUID());
   const isFirstCartRender = useRef(true);
@@ -169,17 +176,49 @@ const Checkout = () => {
       };
 
       const response = await orderService.createOrder(orderData);
+      const orderId = response.id;
+      setCreatedOrderId(orderId);
 
-      setOrderCompleted(true);
-      clearCart();
-      toast.success(`Commande #${response.id} créée avec succès !`);
+      // ── Initiate payment ──
+      if (paymentProvider === 'CASH') {
+        setOrderCompleted(true);
+        clearCart();
+        toast.success(t('pages.checkout.orderCreated', `Commande #${orderId} créée !`));
+        navigate(`/order-success/${orderId}`, { state: { orderId, orderData: response } });
+        return;
+      }
 
-      navigate(`/order-success/${response.id}`, {
-        state: {
-          orderId: response.id,
-          orderData: response,
-        },
-      });
+      if (!paymentPhone.trim()) {
+        setError(t('checkout.phoneRequired', 'Numéro de téléphone requis pour le paiement mobile.'));
+        setIsProcessing(false);
+        return;
+      }
+
+      try {
+        const payResult = await orderService.initiatePayment({
+          orderId,
+          provider: paymentProvider,
+          phoneNumber: paymentPhone.trim(),
+        });
+
+        if (payResult.status === 'PENDING') {
+          setPaymentPending(true);
+          toast.success(t('checkout.pendingMessage', 'Confirmez le paiement sur votre téléphone.'));
+        } else if (payResult.status === 'SUCCESS') {
+          setOrderCompleted(true);
+          clearCart();
+          navigate(`/order-success/${orderId}`, { state: { orderId, orderData: response } });
+        } else {
+          setError(payResult.message || t('checkout.paymentFailed', 'Le paiement a échoué.'));
+        }
+      } catch (payErr) {
+        // Order created but payment failed — still redirect to order-success
+        const payMsg = payErr.response?.data?.error || payErr.response?.data?.message || '';
+        toast.error(payMsg || t('checkout.paymentFailed', 'Erreur lors du paiement.'));
+        setOrderCompleted(true);
+        clearCart();
+        navigate(`/order-success/${orderId}`, { state: { orderId, orderData: response } });
+      }
     } catch (err) {
       if (err.code === 'ECONNABORTED') {
         isTimeout = true;
@@ -338,6 +377,70 @@ const Checkout = () => {
               </div>
             )}
 
+            {/* ── Section paiement ── */}
+            <div className="chk-section" style={{ marginTop: '1.5rem' }}>
+              <span className="chk-section__tag">{t('checkout.paymentMethod', 'Paiement')}</span>
+              <h2>{t('checkout.paymentMethod', 'Méthode de paiement')}</h2>
+
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                {[
+                  { key: 'MOBICASH', label: 'Mobicash', icon: 'fas fa-mobile-alt', prefix: '074/076/066' },
+                  { key: 'AIRTEL', label: 'Airtel Money', icon: 'fas fa-mobile-alt', prefix: '077/074' },
+                  { key: 'CASH', label: t('checkout.cash', 'Espèces'), icon: 'fas fa-money-bill-wave', prefix: '' },
+                ].map((p) => (
+                  <label
+                    key={p.key}
+                    style={{
+                      flex: '1',
+                      minWidth: '140px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${paymentProvider === p.key ? 'var(--color-primary)' : 'var(--color-gray-300, #d1d5db)'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      background: paymentProvider === p.key ? 'rgba(var(--color-primary-rgb), 0.05)' : 'transparent',
+                      transition: 'border-color 0.2s',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_provider"
+                      value={p.key}
+                      checked={paymentProvider === p.key}
+                      onChange={() => setPaymentProvider(p.key)}
+                      style={{ display: 'none' }}
+                    />
+                    <i className={p.icon} style={{ fontSize: '1.2rem', color: paymentProvider === p.key ? 'var(--color-primary)' : 'var(--color-text-muted-ui)' }} />
+                    <div>
+                      <strong style={{ fontSize: '0.9rem' }}>{p.label}</strong>
+                      {p.prefix && <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted-ui)' }}>{p.prefix}</div>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {paymentProvider !== 'CASH' && (
+                <div className="chk-form-group">
+                  <label htmlFor="payment_phone">
+                    {t('checkout.phoneNumber', 'Numéro de paiement')} <span className="required">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="payment_phone"
+                    value={paymentPhone}
+                    onChange={(e) => setPaymentPhone(e.target.value)}
+                    placeholder={paymentProvider === 'MOBICASH' ? '074 XX XX XX' : '077 XX XX XX'}
+                    required={paymentProvider !== 'CASH'}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted-ui)', marginTop: '0.25rem', display: 'block' }}>
+                    {t('checkout.phoneHint', 'Le numéro qui recevra la demande de paiement USSD.')}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {error && (
               <div className="chk-error" role="alert" aria-live="polite">
                 <i className="fas fa-exclamation-circle"></i>
@@ -445,12 +548,11 @@ const Checkout = () => {
             </button>
 
             <div className="chk-payment-info">
-              <p className="chk-payment-title"><i className="fas fa-credit-card" /> Paiement apres confirmation</p>
+              <p className="chk-payment-title"><i className="fas fa-shield-alt" /> {t('checkout.secureNote', 'Paiement sécurisé via Mobile Money')}</p>
               <div className="chk-payment-methods">
-                <span><i className="fas fa-mobile-alt" /> Mobicash</span>
-                <span><i className="fas fa-mobile-alt" /> Airtel Money</span>
-                <span><i className="fas fa-money-bill-wave" /> Especes</span>
-                <span><i className="fab fa-cc-visa" /> Cartes Visa</span>
+                <span style={{ fontWeight: paymentProvider === 'MOBICASH' ? 700 : 400 }}><i className="fas fa-mobile-alt" /> Mobicash</span>
+                <span style={{ fontWeight: paymentProvider === 'AIRTEL' ? 700 : 400 }}><i className="fas fa-mobile-alt" /> Airtel Money</span>
+                <span style={{ fontWeight: paymentProvider === 'CASH' ? 700 : 400 }}><i className="fas fa-money-bill-wave" /> {t('checkout.cash', 'Espèces')}</span>
               </div>
             </div>
 
@@ -468,6 +570,83 @@ const Checkout = () => {
         </div>
         </div>
       </form>
+
+      {/* ── Payment pending overlay ── */}
+      {paymentPending && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000,
+        }}>
+          <div style={{
+            background: 'var(--color-bg-card, #fff)', borderRadius: 16, padding: '2rem',
+            maxWidth: 420, width: '90%', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+              <i className="fas fa-mobile-alt" style={{ color: 'var(--color-primary)' }} />
+            </div>
+            <h2 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>
+              {t('checkout.pendingTitle', 'En attente de confirmation')}
+            </h2>
+            <p style={{ color: 'var(--color-text-muted-ui)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+              {t('checkout.pendingMessage', 'Validez le paiement sur votre téléphone.')}
+            </p>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: '1.5rem', color: 'var(--color-primary)' }} />
+            </div>
+            <button
+              onClick={async () => {
+                if (!createdOrderId || pollingPayment) return;
+                setPollingPayment(true);
+                try {
+                  const order = await orderService.getOrderById(createdOrderId);
+                  if (['PAID', 'DELIVERED', 'SHIPPED'].includes(order.status)) {
+                    setPaymentPending(false);
+                    setOrderCompleted(true);
+                    clearCart();
+                    toast.success(t('checkout.paymentConfirmed', 'Paiement confirmé !'));
+                    navigate(`/order-success/${createdOrderId}`, { state: { orderId: createdOrderId, orderData: order } });
+                  } else {
+                    toast(t('checkout.stillPending', 'Paiement toujours en attente...'));
+                  }
+                } catch {
+                  toast.error(t('checkout.checkError', 'Impossible de vérifier le statut.'));
+                } finally {
+                  setPollingPayment(false);
+                }
+              }}
+              disabled={pollingPayment}
+              style={{
+                padding: '0.6rem 1.5rem', backgroundColor: 'var(--color-primary)', color: 'white',
+                border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: '0.9rem',
+                opacity: pollingPayment ? 0.6 : 1,
+              }}
+            >
+              {pollingPayment
+                ? <><i className="fas fa-spinner fa-spin" /> {t('common.loading', 'Vérification...')}</>
+                : <><i className="fas fa-sync" /> {t('checkout.checkStatus', 'Vérifier le statut')}</>
+              }
+            </button>
+            <div style={{ marginTop: '1rem' }}>
+              <button
+                onClick={() => {
+                  setPaymentPending(false);
+                  setOrderCompleted(true);
+                  clearCart();
+                  navigate(`/order-success/${createdOrderId}`);
+                }}
+                style={{
+                  background: 'none', border: 'none', color: 'var(--color-text-muted-ui)',
+                  cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline',
+                }}
+              >
+                {t('checkout.skipWait', 'Continuer sans attendre')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="chk-footer-fade" />
     </div>
   );

@@ -77,6 +77,16 @@ const orderService = {
     }
   },
 
+  // Initier un paiement Mobile Money
+  initiatePayment: async ({ orderId, provider, phoneNumber }) => {
+    const response = await api.post('/payments/initiate/', {
+      order_id: orderId,
+      provider,
+      phone_number: phoneNumber,
+    });
+    return response.data;
+  },
+
   // Récupérer un paiement par ID
   getPaymentById: async (id) => {
     try {

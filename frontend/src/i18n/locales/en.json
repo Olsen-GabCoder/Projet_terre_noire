@@ -3255,5 +3255,21 @@
     "like": "Like",
     "comments": "Comments",
     "sendComment": "Send"
+  },
+  "checkout": {
+    "paymentMethod": "Payment method",
+    "cash": "Cash",
+    "phoneNumber": "Payment phone number",
+    "phoneHint": "The number that will receive the USSD payment request.",
+    "phoneRequired": "Phone number required for mobile payment.",
+    "secureNote": "Secure payment via Mobile Money",
+    "pendingTitle": "Awaiting confirmation",
+    "pendingMessage": "Confirm the payment on your phone.",
+    "checkStatus": "Check status",
+    "stillPending": "Payment still pending...",
+    "checkError": "Unable to check status.",
+    "paymentConfirmed": "Payment confirmed!",
+    "paymentFailed": "Payment failed.",
+    "skipWait": "Continue without waiting"
   }
 }

@@ -3235,5 +3235,21 @@
     "like": "J'aime",
     "comments": "Commentaires",
     "sendComment": "Envoyer"
+  },
+  "checkout": {
+    "paymentMethod": "Méthode de paiement",
+    "cash": "Espèces",
+    "phoneNumber": "Numéro de paiement",
+    "phoneHint": "Le numéro qui recevra la demande de paiement USSD.",
+    "phoneRequired": "Numéro de téléphone requis pour le paiement mobile.",
+    "secureNote": "Paiement sécurisé via Mobile Money",
+    "pendingTitle": "En attente de confirmation",
+    "pendingMessage": "Validez le paiement sur votre téléphone.",
+    "checkStatus": "Vérifier le statut",
+    "stillPending": "Paiement toujours en attente...",
+    "checkError": "Impossible de vérifier le statut.",
+    "paymentConfirmed": "Paiement confirmé !",
+    "paymentFailed": "Le paiement a échoué.",
+    "skipWait": "Continuer sans attendre"
   }
 }
