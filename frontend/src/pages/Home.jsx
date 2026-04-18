@@ -794,13 +794,18 @@ const Home = () => {
           {/* ── Livres — carrousels fusionnés en tabs ── */}
           {(() => {
             const tabs = [
-              { key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers },
+              ...(bestsellers.length > 0
+                ? [{ key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers }]
+                : []),
               ...(isAuthenticated && recommendations.length > 0
                 ? [{ key: 'recommendations', label: t('home.forYou', 'Pour vous'), books: recommendations }]
                 : []),
-              { key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases },
+              ...(newReleases.length > 0
+                ? [{ key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases }]
+                : []),
             ];
-            const activeBooks = tabs.find(tb => tb.key === activeBookTab)?.books || bestsellers;
+            const currentTab = tabs.find(tb => tb.key === activeBookTab) || tabs[0];
+            const activeBooks = currentTab?.books || [];
             const hasAny = bestsellers.length > 0 || newReleases.length > 0;
 
             if (loading && !hasAny) {
