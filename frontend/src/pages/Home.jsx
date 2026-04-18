@@ -793,40 +793,18 @@ const Home = () => {
 
           {/* ── Livres — carrousels fusionnés en tabs ── */}
           {(() => {
+            // Tabs fixes (toujours affichés) + tabs conditionnels
             const tabs = [
-              ...(bestsellers.length > 0
-                ? [{ key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers }]
-                : []),
+              { key: 'bestsellers', label: t('home.essentials', 'Incontournables'), books: bestsellers },
               ...(isAuthenticated && recommendations.length > 0
                 ? [{ key: 'recommendations', label: t('home.forYou', 'Pour vous'), books: recommendations }]
                 : []),
-              ...(newReleases.length > 0
-                ? [{ key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases }]
-                : []),
+              { key: 'newReleases', label: t('home.newReleases', 'Nouveautés'), books: newReleases },
             ];
             const currentTab = tabs.find(tb => tb.key === activeBookTab) || tabs[0];
             const activeBooks = currentTab?.books || [];
-            const hasAny = bestsellers.length > 0 || newReleases.length > 0;
-
-            if (loading && !hasAny) {
-              return (
-                <section className="home-section">
-                  <div className="home-section__header">
-                    <div>
-                      <span className="home-section__label">{t('home.selection')}</span>
-                      <h2 className="home-section__title">{t('home.essentials')}</h2>
-                    </div>
-                  </div>
-                  <div className="home-carousel">
-                    <div className="home-carousel__track">
-                      {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
-                    </div>
-                  </div>
-                </section>
-              );
-            }
-
-            if (!hasAny) return null;
+            const isTabLoading = (activeBookTab === 'bestsellers' && loading) ||
+                                 (activeBookTab === 'newReleases' && loading);
 
             return (
               <RevealSection className="home-section">
@@ -837,24 +815,30 @@ const Home = () => {
                   </div>
                   <Link to="/catalog" className="home-section__link">{t('common.seeAll')} <i className="fas fa-arrow-right" aria-hidden="true" /></Link>
                 </div>
-                {tabs.length > 1 && (
-                  <div className="home-tabs" role="tablist">
-                    {tabs.map(tb => (
-                      <button
-                        key={tb.key}
-                        role="tab"
-                        aria-selected={activeBookTab === tb.key}
-                        className={`home-tab${activeBookTab === tb.key ? ' home-tab--active' : ''}`}
-                        onClick={() => setActiveBookTab(tb.key)}
-                      >
-                        {tb.label}
-                      </button>
-                    ))}
+                <div className="home-tabs" role="tablist">
+                  {tabs.map(tb => (
+                    <button
+                      key={tb.key}
+                      role="tab"
+                      aria-selected={activeBookTab === tb.key}
+                      className={`home-tab${activeBookTab === tb.key ? ' home-tab--active' : ''}`}
+                      onClick={() => setActiveBookTab(tb.key)}
+                    >
+                      {tb.label}
+                    </button>
+                  ))}
+                </div>
+                {isTabLoading && activeBooks.length === 0 ? (
+                  <div className="home-carousel">
+                    <div className="home-carousel__track">
+                      {Array.from({ length: 8 }, (_, i) => <BookCardSkeleton key={i} />)}
+                    </div>
                   </div>
+                ) : (
+                  <HomeCarousel key={activeBookTab}>
+                    {activeBooks.map(book => <BookCard key={book.id} book={book} />)}
+                  </HomeCarousel>
                 )}
-                <HomeCarousel key={activeBookTab}>
-                  {activeBooks.map(book => <BookCard key={book.id} book={book} />)}
-                </HomeCarousel>
               </RevealSection>
             );
           })()}
