@@ -373,6 +373,8 @@ class InquiryDetailSerializer(serializers.ModelSerializer):
 
 
 class InquiryCreateSerializer(serializers.ModelSerializer):
+    message = serializers.CharField(max_length=5000)
+
     class Meta:
         model = Inquiry
         fields = ['target_org', 'target_profile', 'subject', 'message', 'attachment']

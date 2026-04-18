@@ -11,6 +11,8 @@ class Organization(models.Model):
     Organisation sur Frollot : maison d'édition, librairie, bibliothèque ou imprimerie.
     Chaque organisation possède son propre espace, son équipe et son catalogue.
     """
+    # NB : pas de type PRESTATAIRE — les prestataires de services (correcteurs,
+    # illustrateurs, etc.) sont modélisés via UserProfile.profile_type, pas via une org.
     ORG_TYPE_CHOICES = [
         ('MAISON_EDITION', "Maison d'édition"),
         ('LIBRAIRIE', 'Librairie'),

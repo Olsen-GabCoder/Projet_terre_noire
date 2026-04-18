@@ -43,54 +43,64 @@ class StandardPagination(PageNumberPagination):
 # FOLLOW VIEWS
 # ══════════════════════════════════════════════════════════════════════
 
-class FollowUserToggleView(APIView):
-    """POST {user_id} — suivre / ne plus suivre un utilisateur."""
+class BaseFollowToggleView(APIView):
+    """Base générique pour follow/unfollow — sous-classes définissent le modèle cible."""
     permission_classes = [IsAuthenticated]
+    follow_model = None       # ex: UserFollow
+    target_model = None       # ex: User
+    id_param = None           # ex: 'user_id'
+    follower_field = None     # ex: 'follower'
+    target_field = None       # ex: 'following'
+    count_filter_field = None # ex: 'following'
+
+    def post(self, request):
+        target_id = request.data.get(self.id_param)
+        if not target_id:
+            return Response({'detail': f'{self.id_param} requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        target = get_object_or_404(self.target_model, pk=target_id)
+        obj, created = self.follow_model.objects.get_or_create(
+            **{self.follower_field: request.user, self.target_field: target}
+        )
+        if not created:
+            obj.delete()
+        followers_count = self.follow_model.objects.filter(**{self.count_filter_field: target}).count()
+        return Response({'followed': created, 'followers_count': followers_count})
+
+
+class FollowUserToggleView(BaseFollowToggleView):
+    """POST {user_id} — suivre / ne plus suivre un utilisateur."""
+    follow_model = UserFollow
+    target_model = User
+    id_param = 'user_id'
+    follower_field = 'follower'
+    target_field = 'following'
+    count_filter_field = 'following'
 
     def post(self, request):
         user_id = request.data.get('user_id')
-        if not user_id:
-            return Response({'detail': 'user_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
-        if int(user_id) == request.user.id:
+        if user_id and int(user_id) == request.user.id:
             return Response({'detail': 'Impossible de se suivre soi-même.'}, status=status.HTTP_400_BAD_REQUEST)
-        target = get_object_or_404(User, pk=user_id)
-        obj, created = UserFollow.objects.get_or_create(follower=request.user, following=target)
-        if not created:
-            obj.delete()
-        followers_count = UserFollow.objects.filter(following=target).count()
-        return Response({'followed': created, 'followers_count': followers_count})
+        return super().post(request)
 
 
-class FollowAuthorToggleView(APIView):
+class FollowAuthorToggleView(BaseFollowToggleView):
     """POST {author_id} — suivre / ne plus suivre un auteur."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        author_id = request.data.get('author_id')
-        if not author_id:
-            return Response({'detail': 'author_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
-        target = get_object_or_404(Author, pk=author_id)
-        obj, created = AuthorFollow.objects.get_or_create(follower=request.user, author=target)
-        if not created:
-            obj.delete()
-        followers_count = AuthorFollow.objects.filter(author=target).count()
-        return Response({'followed': created, 'followers_count': followers_count})
+    follow_model = AuthorFollow
+    target_model = Author
+    id_param = 'author_id'
+    follower_field = 'follower'
+    target_field = 'author'
+    count_filter_field = 'author'
 
 
-class FollowOrganizationToggleView(APIView):
+class FollowOrganizationToggleView(BaseFollowToggleView):
     """POST {organization_id} — suivre / ne plus suivre une organisation."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        organization_id = request.data.get('organization_id')
-        if not organization_id:
-            return Response({'detail': 'organization_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
-        target = get_object_or_404(Organization, pk=organization_id)
-        obj, created = OrganizationFollow.objects.get_or_create(follower=request.user, organization=target)
-        if not created:
-            obj.delete()
-        followers_count = OrganizationFollow.objects.filter(organization=target).count()
-        return Response({'followed': created, 'followers_count': followers_count})
+    follow_model = OrganizationFollow
+    target_model = Organization
+    id_param = 'organization_id'
+    follower_field = 'follower'
+    target_field = 'organization'
+    count_filter_field = 'organization'
 
 
 class FollowStatusView(APIView):

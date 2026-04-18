@@ -25,6 +25,15 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+class DeliveryAgentMixin:
+    """Mixin DRY pour les vues livreur : lookup du profil LIVREUR."""
+
+    def _get_delivery_profile(self, request):
+        return UserProfile.objects.filter(
+            user=request.user, profile_type='LIVREUR', is_active=True,
+        ).first()
+
+
 def _get_user_vendor(user):
     """Retourne la première organisation vendeur de l'utilisateur (pour les créations)."""
     membership = OrganizationMembership.objects.filter(
@@ -308,15 +317,13 @@ class AssignDeliveryView(APIView):
         })
 
 
-class MyDeliveryAssignmentsView(generics.ListAPIView):
+class MyDeliveryAssignmentsView(DeliveryAgentMixin, generics.ListAPIView):
     """Sous-commandes assignées au livreur connecté."""
     serializer_class = SubOrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
     def get_queryset(self):
-        livreur_profile = UserProfile.objects.filter(
-            user=self.request.user, profile_type='LIVREUR', is_active=True,
-        ).first()
+        livreur_profile = self._get_delivery_profile(self.request)
         if not livreur_profile:
             return SubOrder.objects.none()
         return SubOrder.objects.filter(
@@ -324,15 +331,13 @@ class MyDeliveryAssignmentsView(generics.ListAPIView):
         ).select_related('order__user', 'vendor').order_by('-created_at')
 
 
-class DeliveryStatusUpdateView(APIView):
+class DeliveryStatusUpdateView(DeliveryAgentMixin, APIView):
     """Livreur confirme la livraison."""
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
     def patch(self, request, pk):
         sub_order = get_object_or_404(SubOrder, pk=pk)
-        livreur_profile = UserProfile.objects.filter(
-            user=request.user, profile_type='LIVREUR', is_active=True,
-        ).first()
+        livreur_profile = self._get_delivery_profile(request)
         if sub_order.delivery_agent != livreur_profile and not request.user.is_platform_admin:
             return Response({'message': 'Non autorisé.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -470,38 +475,34 @@ class WalletTransactionListView(generics.ListAPIView):
             return WalletTransaction.objects.none()
         return WalletTransaction.objects.filter(
             wallet__vendor__in=vendor_orgs,
-        ).order_by('-created_at')
+        ).order_by('-created_at')[:50]
 
 
-class DeliveryWalletView(APIView):
+class DeliveryWalletView(DeliveryAgentMixin, APIView):
     """Portefeuille du livreur connecté."""
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
     def get(self, request):
-        profile = UserProfile.objects.filter(
-            user=request.user, profile_type='LIVREUR', is_active=True,
-        ).first()
+        profile = self._get_delivery_profile(request)
         if not profile:
             return Response({'message': 'Profil livreur introuvable.'}, status=404)
         wallet, _ = DeliveryWallet.objects.get_or_create(agent=profile)
         return Response(DeliveryWalletSerializer(wallet).data)
 
 
-class DeliveryWalletTransactionListView(generics.ListAPIView):
+class DeliveryWalletTransactionListView(DeliveryAgentMixin, generics.ListAPIView):
     """Historique des transactions du livreur connecté."""
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
     def get(self, request):
         from .models import DeliveryWalletTransaction
         from .serializers import DeliveryWalletTransactionSerializer
-        profile = UserProfile.objects.filter(
-            user=request.user, profile_type='LIVREUR', is_active=True,
-        ).first()
+        profile = self._get_delivery_profile(request)
         if not profile:
             return Response([])
         txs = DeliveryWalletTransaction.objects.filter(
             wallet__agent=profile,
-        ).order_by('-created_at')
+        ).order_by('-created_at')[:50]
         return Response(DeliveryWalletTransactionSerializer(txs, many=True).data)
 
 
@@ -509,16 +510,13 @@ class DeliveryWalletTransactionListView(generics.ListAPIView):
 # Tarifs de livraison (livreurs)
 # ══════════════════════════════════════════════════════════════
 
-class MyDeliveryRatesView(APIView):
+class MyDeliveryRatesView(DeliveryAgentMixin, APIView):
     """CRUD des tarifs du livreur connecté."""
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
-    def _get_profile(self, request):
-        return UserProfile.objects.filter(user=request.user, profile_type='LIVREUR', is_active=True).first()
-
     def get(self, request):
         from .delivery_models import DeliveryRate
-        profile = self._get_profile(request)
+        profile = self._get_delivery_profile(request)
         if not profile:
             return Response([])
         rates = DeliveryRate.objects.filter(agent=profile).order_by('country', 'zone_name')
@@ -533,7 +531,7 @@ class MyDeliveryRatesView(APIView):
 
     def post(self, request):
         from .serializers import DeliveryRateSerializer
-        profile = self._get_profile(request)
+        profile = self._get_delivery_profile(request)
         if not profile:
             return Response({'message': 'Profil livreur introuvable.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = DeliveryRateSerializer(data=request.data)
@@ -542,14 +540,14 @@ class MyDeliveryRatesView(APIView):
         return Response({'message': 'Tarif créé.', 'id': rate.id}, status=status.HTTP_201_CREATED)
 
 
-class DeliveryRateDetailView(APIView):
+class DeliveryRateDetailView(DeliveryAgentMixin, APIView):
     """Modifier/supprimer un tarif du livreur connecté."""
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
 
     def patch(self, request, pk):
         from .delivery_models import DeliveryRate
         from .serializers import DeliveryRateSerializer
-        profile = UserProfile.objects.filter(user=request.user, profile_type='LIVREUR', is_active=True).first()
+        profile = self._get_delivery_profile(request)
         rate = get_object_or_404(DeliveryRate, pk=pk, agent=profile)
         serializer = DeliveryRateSerializer(rate, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -558,7 +556,7 @@ class DeliveryRateDetailView(APIView):
 
     def delete(self, request, pk):
         from .delivery_models import DeliveryRate
-        profile = UserProfile.objects.filter(user=request.user, profile_type='LIVREUR', is_active=True).first()
+        profile = self._get_delivery_profile(request)
         rate = get_object_or_404(DeliveryRate, pk=pk, agent=profile)
         rate.delete()
         return Response({'message': 'Tarif supprimé.'})

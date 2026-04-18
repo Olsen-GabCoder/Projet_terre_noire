@@ -29,8 +29,8 @@ def _process_successful_payment(order):
     except Exception:
         pass
 
-    from apps.books.signals import update_sales_on_payment
-    update_sales_on_payment(order)
+    from apps.books.signals import update_sales_after_payment
+    update_sales_after_payment(order)
 
     try:
         from apps.core.tasks import send_order_paid_task

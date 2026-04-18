@@ -938,7 +938,7 @@ class ProfessionalWalletTransactionListView(generics.ListAPIView):
             return ProfessionalWalletTransaction.objects.none()
         return ProfessionalWalletTransaction.objects.filter(
             wallet__professional=profile,
-        ).order_by('-created_at')
+        ).order_by('-created_at')[:50]
 
 
 # ── Avis Prestataires ──

@@ -30,7 +30,7 @@ def update_book_rating_on_review(sender, instance, **kwargs):
     _update_book_rating(instance.book)
 
 
-def update_sales_on_payment(order):
+def update_sales_after_payment(order):
     """
     Appelé quand une commande est payée.
     Met à jour total_sales et is_bestseller pour chaque livre de la commande.
