@@ -4,8 +4,15 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+class StandardPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 from apps.organizations.models import Organization, OrganizationMembership
 
@@ -36,6 +43,7 @@ class LibraryCatalogListView(generics.ListAPIView):
     """Catalogue d'une bibliothèque (public)."""
     serializer_class = LibraryCatalogItemSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         library = _get_library_or_404(self.kwargs['org_id'])
@@ -102,6 +110,7 @@ class LibraryMemberListView(generics.ListAPIView):
     """Liste des adhérents d'une bibliothèque (admin)."""
     serializer_class = LibraryMembershipSerializer
     permission_classes = [permissions.IsAuthenticated, IsLibraryAdmin]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         library = _get_library_or_404(self.kwargs['org_id'])
@@ -148,6 +157,7 @@ class MyLibraryMembershipsView(generics.ListAPIView):
     """Mes adhésions aux bibliothèques."""
     serializer_class = LibraryMembershipSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         return LibraryMembership.objects.filter(
@@ -187,6 +197,7 @@ class BookLoanListView(generics.ListAPIView):
     """Prêts d'une bibliothèque. Admin : tous. Membre : les siens."""
     serializer_class = BookLoanSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         library = _get_library_or_404(self.kwargs['org_id'])
@@ -328,6 +339,7 @@ class MyLoansView(generics.ListAPIView):
     """Tous mes prêts (toutes bibliothèques)."""
     serializer_class = BookLoanSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         return BookLoan.objects.filter(
@@ -399,6 +411,7 @@ class MyReservationsView(generics.ListAPIView):
     """Mes réservations (toutes bibliothèques)."""
     serializer_class = BookReservationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         return BookReservation.objects.filter(

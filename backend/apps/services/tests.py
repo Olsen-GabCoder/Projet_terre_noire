@@ -147,7 +147,7 @@ class ServiceListingPublicTest(ServiceTestMixin, APITestCase):
         """Public endpoint returns only active listings."""
         response = self.client.get(f'{BASE_URL}/listings/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        slugs = [item['slug'] for item in response.data]
+        slugs = [item['slug'] for item in response.data['results']]
         self.assertIn(self.listing.slug, slugs)
         self.assertIn(self.listing2.slug, slugs)
         self.assertNotIn(self.inactive_listing.slug, slugs)
@@ -156,14 +156,14 @@ class ServiceListingPublicTest(ServiceTestMixin, APITestCase):
         """Filtering by service_type returns only matching listings."""
         response = self.client.get(f'{BASE_URL}/listings/', {'service_type': 'CORRECTION'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for item in response.data:
+        for item in response.data['results']:
             self.assertEqual(item['service_type'], 'CORRECTION')
 
     def test_filter_by_service_type_no_results(self):
         """Non-existent service_type returns empty list."""
         response = self.client.get(f'{BASE_URL}/listings/', {'service_type': 'NONEXISTENT'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_detail_by_slug(self):
         """Public detail retrieves listing by slug."""
@@ -369,7 +369,7 @@ class ServiceRequestListTest(ServiceTestMixin, APITestCase):
         self.client.force_authenticate(user=self.client_user)
         response = self.client.get(f'{BASE_URL}/requests/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = [r['id'] for r in response.data]
+        ids = [r['id'] for r in response.data['results']]
         self.assertIn(self.request1.id, ids)
         self.assertNotIn(self.request2.id, ids)
 
@@ -378,7 +378,7 @@ class ServiceRequestListTest(ServiceTestMixin, APITestCase):
         self.client.force_authenticate(user=self.provider_user)
         response = self.client.get(f'{BASE_URL}/requests/', {'role': 'provider'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = [r['id'] for r in response.data]
+        ids = [r['id'] for r in response.data['results']]
         self.assertIn(self.request1.id, ids)
         self.assertNotIn(self.request2.id, ids)
 
@@ -387,7 +387,7 @@ class ServiceRequestListTest(ServiceTestMixin, APITestCase):
         self.client.force_authenticate(user=self.provider_user2)
         response = self.client.get(f'{BASE_URL}/requests/', {'role': 'provider'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = [r['id'] for r in response.data]
+        ids = [r['id'] for r in response.data['results']]
         self.assertIn(self.request2.id, ids)
         self.assertNotIn(self.request1.id, ids)
 
@@ -396,7 +396,7 @@ class ServiceRequestListTest(ServiceTestMixin, APITestCase):
         self.client.force_authenticate(user=self.client_user)
         response = self.client.get(f'{BASE_URL}/requests/', {'role': 'provider'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_unauthenticated_cannot_list_requests(self):
         """Unauthenticated user is rejected."""
@@ -607,7 +607,7 @@ class MyServiceListingsTest(ServiceTestMixin, APITestCase):
         self.client.force_authenticate(user=self.provider_user)
         response = self.client.get(f'{BASE_URL}/listings/mine/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = [item['id'] for item in response.data]
+        ids = [item['id'] for item in response.data['results']]
         self.assertIn(self.listing.id, ids)
         # inactive_listing also belongs to provider_user
         self.assertIn(self.inactive_listing.id, ids)

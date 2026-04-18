@@ -3,8 +3,15 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+class StandardPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 from apps.organizations.models import Organization, OrganizationMembership
 from apps.users.models import UserProfile
@@ -60,6 +67,7 @@ class BookListingListView(generics.ListAPIView):
     """Toutes les offres actives (public, filtrable)."""
     serializer_class = BookListingSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         qs = BookListing.objects.filter(is_active=True).select_related('book', 'vendor')
@@ -143,6 +151,7 @@ class VendorListingsView(generics.ListAPIView):
     """Offres d'un vendeur spécifique (public)."""
     serializer_class = BookListingSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         return BookListing.objects.filter(
@@ -154,6 +163,7 @@ class MyListingsView(generics.ListAPIView):
     """Offres de toutes les organisations vendeuses de l'utilisateur."""
     serializer_class = BookListingSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         vendor_orgs = _get_user_vendor_orgs(self.request.user)
@@ -168,6 +178,7 @@ class VendorSubOrderListView(generics.ListAPIView):
     """Sous-commandes de toutes les organisations vendeuses de l'utilisateur."""
     serializer_class = SubOrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsVendorMember]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         vendor_orgs = _get_user_vendor_orgs(self.request.user)
@@ -321,6 +332,7 @@ class MyDeliveryAssignmentsView(DeliveryAgentMixin, generics.ListAPIView):
     """Sous-commandes assignées au livreur connecté."""
     serializer_class = SubOrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsDeliveryAgent]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         livreur_profile = self._get_delivery_profile(self.request)

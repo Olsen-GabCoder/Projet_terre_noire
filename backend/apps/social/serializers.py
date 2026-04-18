@@ -156,6 +156,15 @@ class PostCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Le contenu ne peut pas dépasser 5000 caractères.")
         return value
 
+    def validate_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format d'image non supporté.")
+            if hasattr(value, 'size') and value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 10 Mo.")
+        return value
+
     def validate(self, data):
         if data.get('post_type') == 'PLATFORM_REVIEW':
             rating = data.get('rating')
@@ -245,6 +254,15 @@ class BookClubCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    def validate_cover_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format d'image non supporté.")
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 5 Mo.")
+        return value
+
 
 class BookClubMemberSerializer(serializers.ModelSerializer):
     user = SimpleUserSerializer(read_only=True)
@@ -267,6 +285,12 @@ class BookClubMessageSerializer(serializers.ModelSerializer):
             'attachment_name', 'voice_duration', 'created_at',
         ]
         read_only_fields = ['id', 'club', 'author', 'created_at']
+
+    def validate_attachment(self, value):
+        if value:
+            if hasattr(value, 'size') and value.size > 20 * 1024 * 1024:
+                raise serializers.ValidationError("Le fichier ne peut pas dépasser 20 Mo.")
+        return value
 
     def get_attachment_url(self, obj):
         if obj.attachment:

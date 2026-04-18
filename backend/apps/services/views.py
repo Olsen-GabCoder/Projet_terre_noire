@@ -1,10 +1,17 @@
 from django.db import models
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+class StandardPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 from apps.organizations.models import Organization, OrganizationMembership
 from apps.users.models import UserProfile
@@ -61,6 +68,7 @@ class ServiceListingListView(generics.ListAPIView):
     """Toutes les offres de services actives (public, filtrable)."""
     serializer_class = ServiceListingSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         qs = ServiceListing.objects.filter(is_active=True).select_related(
@@ -133,6 +141,7 @@ class ServiceListingDetailView(generics.RetrieveUpdateDestroyAPIView):
 class MyServiceListingsView(generics.ListAPIView):
     """Mes offres de service (prestataire connecté, tous profils pro)."""
     serializer_class = ServiceListingSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated, IsServiceProvider]
 
     def get_queryset(self):
@@ -175,6 +184,7 @@ class ServiceRequestListView(generics.ListAPIView):
     Par défaut → demandes envoyées par le client connecté.
     """
     serializer_class = ServiceRequestSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -283,6 +293,7 @@ class ServiceQuoteRespondView(APIView):
 class ServiceOrderListView(generics.ListAPIView):
     """Liste des commandes de service de l'utilisateur connecté."""
     serializer_class = ServiceOrderSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -540,6 +551,7 @@ class ServiceOrderRequestRevisionView(APIView):
 class EditorialProjectListView(generics.ListAPIView):
     """Liste des projets éditoriaux de la maison d'édition de l'utilisateur."""
     serializer_class = EditorialProjectSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated, IsPublisherMember]
 
     def get_queryset(self):
@@ -729,6 +741,7 @@ class PublishProjectAsBookView(APIView):
 class PrinterListView(generics.ListAPIView):
     """Liste des imprimeries (public)."""
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get(self, request):
         printers = Organization.objects.filter(
@@ -775,6 +788,7 @@ class PrintRequestCreateView(generics.CreateAPIView):
 class PrintRequestListView(generics.ListAPIView):
     """Liste des demandes d'impression de l'utilisateur."""
     serializer_class = PrintRequestSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -930,6 +944,7 @@ class ProfessionalWalletView(APIView):
 class ProfessionalWalletTransactionListView(generics.ListAPIView):
     """Historique des transactions du professionnel."""
     serializer_class = ProfessionalWalletTransactionSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.IsAuthenticated, IsServiceProvider]
 
     def get_queryset(self):
@@ -946,6 +961,7 @@ class ProfessionalWalletTransactionListView(generics.ListAPIView):
 class ServiceProviderReviewListView(generics.ListAPIView):
     """Liste des avis sur un prestataire."""
     permission_classes = [permissions.AllowAny]
+    pagination_class = StandardPagination
 
     def get(self, request):
         from .models import ServiceProviderReview
@@ -996,6 +1012,7 @@ class ServiceProviderReviewCreateView(APIView):
 class QuoteTemplateListView(generics.ListAPIView):
     """Liste des modèles de devis disponibles."""
     serializer_class = QuoteTemplateListSerializer
+    pagination_class = StandardPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -1021,6 +1038,7 @@ class PublicQuoteTemplateListView(generics.ListAPIView):
     Sans authentification. N'expose jamais les notes internes.
     """
     serializer_class = QuoteTemplatePublicSerializer
+    pagination_class = StandardPagination
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
@@ -1035,6 +1053,7 @@ class PublicQuoteTemplateListView(generics.ListAPIView):
 class QuoteListView(generics.ListAPIView):
     """Liste des devis émis ou reçus par l'utilisateur."""
     serializer_class = QuoteListSerializer
+    pagination_class = StandardPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

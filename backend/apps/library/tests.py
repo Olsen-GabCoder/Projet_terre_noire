@@ -125,8 +125,8 @@ class LibraryCatalogTests(LibraryTestBase):
         """Le catalogue est accessible publiquement."""
         response = self.client.get(self._url('catalog/'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['book_title'], self.book.title)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['book_title'], self.book.title)
 
     def test_list_catalog_only_active_items(self):
         """Seuls les elements actifs apparaissent."""
@@ -134,19 +134,19 @@ class LibraryCatalogTests(LibraryTestBase):
         self.catalog_item.save()
         response = self.client.get(self._url('catalog/'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_catalog_search_by_title(self):
         """Filtrage du catalogue par titre."""
         response = self.client.get(self._url('catalog/'), {'search': 'Soleils'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_catalog_search_no_results(self):
         """Recherche sans resultat."""
         response = self.client.get(self._url('catalog/'), {'search': 'Inexistant'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_catalog_detail_public(self):
         """Le detail d'un element du catalogue est accessible publiquement."""
@@ -264,7 +264,7 @@ class LibraryMembershipTests(LibraryTestBase):
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/library/my-memberships/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_my_memberships_excludes_others(self):
         """my-memberships ne retourne pas les adhesions des autres."""
@@ -272,7 +272,7 @@ class LibraryMembershipTests(LibraryTestBase):
         self._create_membership(user=self.other_user)
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/library/my-memberships/')
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_my_memberships_unauthenticated(self):
         """my-memberships requiert authentification."""
@@ -292,7 +292,7 @@ class LibraryMembershipTests(LibraryTestBase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.get(self._url('members/'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 1)
+        self.assertGreaterEqual(len(response.data['results']), 1)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -390,7 +390,7 @@ class BookLoanTests(LibraryTestBase):
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(self._url('loans/'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_list_loans_admin_sees_all(self):
         """L'admin voit tous les prets."""
@@ -403,7 +403,7 @@ class BookLoanTests(LibraryTestBase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.get(self._url('loans/'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 1)
+        self.assertGreaterEqual(len(response.data['results']), 1)
 
     def test_my_loans_endpoint(self):
         """Endpoint my-loans retourne les prets de l'utilisateur."""
@@ -416,7 +416,7 @@ class BookLoanTests(LibraryTestBase):
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/library/my-loans/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     # ── Approbation de pret ──
 
@@ -728,7 +728,7 @@ class BookReservationTests(LibraryTestBase):
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/library/my-reservations/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_my_reservations_excludes_others(self):
         """my-reservations ne retourne pas les reservations des autres."""
@@ -739,7 +739,7 @@ class BookReservationTests(LibraryTestBase):
         )
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/library/my-reservations/')
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_my_reservations_unauthenticated(self):
         """my-reservations requiert authentification."""

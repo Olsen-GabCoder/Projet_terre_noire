@@ -19,19 +19,32 @@ def _process_successful_payment(order):
     """
     Traitement commun après un paiement réussi.
     Appelé par PaymentViewSet, PaymentInitiateView, et PaymentWebhookView.
+
+    Idempotent : si la commande est déjà PAID/SHIPPED/DELIVERED, ne fait rien.
+    Atomique : verrouille la commande pour éviter le double-traitement
+    en cas de webhooks concurrents.
     """
-    order.status = 'PAID'
-    order.save(update_fields=['status', 'updated_at'])
+    from django.db import transaction
 
-    try:
-        from apps.marketplace.services import split_payment
-        split_payment(order)
-    except Exception:
-        pass
+    with transaction.atomic():
+        # Verrouiller la commande pour éviter le double-traitement
+        order = Order.objects.select_for_update().get(pk=order.pk)
+        if order.status in ('PAID', 'DELIVERED', 'SHIPPED', 'PARTIAL'):
+            return  # Déjà traitée — ignore le doublon silencieusement
 
-    from apps.books.signals import update_sales_after_payment
-    update_sales_after_payment(order)
+        order.status = 'PAID'
+        order.save(update_fields=['status', 'updated_at'])
 
+        try:
+            from apps.marketplace.services import split_payment
+            split_payment(order)
+        except Exception:
+            pass
+
+        from apps.books.signals import update_sales_after_payment
+        update_sales_after_payment(order)
+
+    # Email hors transaction (non bloquant)
     try:
         from apps.core.tasks import send_order_paid_task
         send_order_paid_task.delay(order.id)

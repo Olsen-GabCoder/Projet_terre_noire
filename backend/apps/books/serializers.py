@@ -447,6 +447,32 @@ class BookDetailSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("La référence doit contenir au moins 3 caractères.")
         return value.upper()
 
+    def validate_cover_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format non supporté. Utilisez JPEG, PNG ou WebP.")
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 5 Mo.")
+        return value
+
+    def validate_back_cover_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format non supporté. Utilisez JPEG, PNG ou WebP.")
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 5 Mo.")
+        return value
+
+    def validate_pdf_file(self, value):
+        if value:
+            if hasattr(value, 'content_type') and value.content_type != 'application/pdf':
+                raise serializers.ValidationError("Seuls les fichiers PDF sont acceptés.")
+            if hasattr(value, 'size') and value.size > 50 * 1024 * 1024:
+                raise serializers.ValidationError("Le fichier ne peut pas dépasser 50 Mo.")
+        return value
+
 
 class BookCreateUpdateSerializer(serializers.ModelSerializer):
     """
@@ -516,6 +542,32 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+    def validate_cover_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format non supporté. Utilisez JPEG, PNG ou WebP.")
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 5 Mo.")
+        return value
+
+    def validate_back_cover_image(self, value):
+        if value:
+            allowed = ['image/jpeg', 'image/png', 'image/webp']
+            if hasattr(value, 'content_type') and value.content_type not in allowed:
+                raise serializers.ValidationError("Format non supporté. Utilisez JPEG, PNG ou WebP.")
+            if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("L'image ne peut pas dépasser 5 Mo.")
+        return value
+
+    def validate_pdf_file(self, value):
+        if value:
+            if hasattr(value, 'content_type') and value.content_type != 'application/pdf':
+                raise serializers.ValidationError("Seuls les fichiers PDF sont acceptés.")
+            if hasattr(value, 'size') and value.size > 50 * 1024 * 1024:
+                raise serializers.ValidationError("Le fichier ne peut pas dépasser 50 Mo.")
+        return value
 
 
 class AuthorDetailSerializer(serializers.ModelSerializer):
