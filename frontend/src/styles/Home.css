@@ -1531,11 +1531,18 @@
   padding-bottom: var(--space-lg);
 }
 
-/* Conteneur unifié pour les grilles (pas les carrousels) */
+/* Conteneur unifié pour les grilles */
 .home-section__inner {
   max-width: var(--container-max, 1200px);
   margin: 0 auto;
   width: 100%;
+}
+
+/* Carrousels : aligner le départ sur le conteneur centré */
+.home-section > .home-carousel {
+  max-width: var(--container-max, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .home-section__header {
@@ -1544,6 +1551,9 @@
   justify-content: space-between;
   margin-bottom: 1.25rem;
   gap: 1rem;
+  max-width: var(--container-max, 1200px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .home-section__label {
