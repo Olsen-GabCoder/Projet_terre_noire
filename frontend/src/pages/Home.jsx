@@ -1009,7 +1009,7 @@ const Home = () => {
             </div>
             <div className="home-services-grid">
               {SERVICES_SHOWCASE.map(s => (
-                <Link key={s.type} to={`/services?type=${s.type}`} className="home-service-card">
+                <Link key={s.type} to={`/services?type=${s.type}`} className="home-service-card" style={{ '--_svc-color': s.color }}>
                   <div className="home-service-card__icon" style={{ background: s.color }}>
                     <i className={s.icon} aria-hidden="true" />
                   </div>
