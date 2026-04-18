@@ -46,7 +46,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ['status', 'created_at']
     search_fields = ['id', 'user__email', 'shipping_address', 'shipping_city', 'shipping_phone']
     readonly_fields = ['created_at', 'updated_at']
-    list_editable = ['status']
+    list_editable = []
     inlines = [OrderItemInline, PaymentInline]
     date_hierarchy = 'created_at'
 

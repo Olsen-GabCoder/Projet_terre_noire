@@ -456,7 +456,7 @@ const SubmitManuscript = () => {
         {previewOrg && (
           <div className="ms-preview__overlay" onClick={() => setPreviewOrg(null)}>
             <div className="ms-preview__modal" onClick={(e) => e.stopPropagation()}>
-              <button className="ms-preview__close" onClick={() => setPreviewOrg(null)}><i className="fas fa-times" /></button>
+              <button className="ms-preview__close" onClick={() => setPreviewOrg(null)} aria-label={t('common.close')}><i className="fas fa-times" /></button>
               {previewOrg.cover_image && (
                 <div className="ms-preview__cover" style={{ backgroundImage: `url(${previewOrg.cover_image})` }} />
               )}

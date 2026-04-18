@@ -431,7 +431,17 @@
     "securePayment": "Paiement sécurisé",
     "fastDelivery": "Livraison rapide",
     "deliveryTime": "2-5 jours au Gabon",
-    "paymentMethods": "Mobicash, Airtel, Espèces, Visa"
+    "paymentMethods": "Mobicash, Airtel, Espèces, Visa",
+    "paymentLabel": "Paiement",
+    "secureDesc": "Transactions protégées",
+    "ebook": "Ebook",
+    "paper": "Papier",
+    "conditionNew": "Neuf",
+    "conditionUsed": "Occasion",
+    "conditionUsedGood": "Occasion — Bon état",
+    "freeEbook": "Gratuit (ebook)",
+    "atCheckout": "Au checkout",
+    "deliveryNotice": "Les frais de livraison seront calculés selon le livreur que vous choisirez au checkout."
   },
   "search": {
     "pageTitle": "Recherche",
@@ -3250,6 +3260,12 @@
     "checkError": "Impossible de vérifier le statut.",
     "paymentConfirmed": "Paiement confirmé !",
     "paymentFailed": "Le paiement a échoué.",
-    "skipWait": "Continuer sans attendre"
+    "skipWait": "Continuer sans attendre",
+    "shippingTag": "Livraison",
+    "chooseDriver": "Choisir un livreur",
+    "searchingDrivers": "Recherche des livreurs disponibles...",
+    "noDrivers": "Aucun livreur disponible pour {{city}}. Les frais de livraison par défaut seront appliqués.",
+    "qty": "Qté",
+    "itemCount": "article{{s}}"
   }
 }

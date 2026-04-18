@@ -166,7 +166,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             client_name = order.user.get_full_name() if order.user else '—'
             client_email = order.user.email if order.user else '—'
             items_summary = '; '.join(f"{i.book.title} x{i.quantity}" for i in order.items.all())
-            sub_count = order.sub_orders.count()
+            sub_count = len(order.sub_orders.all())
             writer.writerow([
                 order.id, order.get_status_display(), client_name, client_email,
                 order.created_at.strftime('%Y-%m-%d'), float(order.total_amount),

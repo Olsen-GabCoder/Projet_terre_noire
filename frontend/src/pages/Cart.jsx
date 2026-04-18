@@ -126,11 +126,11 @@ const Cart = () => {
             </div>
             <div className="crt-empty__features">
               {[
-                { ico: 'fas fa-truck', t: 'Livraison rapide', d: '2-5 jours au Gabon' },
-                { ico: 'fas fa-mobile-alt', t: 'Paiement', d: 'Mobicash, Airtel, Espèces, Visa' },
-                { ico: 'fas fa-lock', t: 'Paiement sécurisé', d: 'Transactions protégées' },
-              ].map((f) => (
-                <div className="crt-feat" key={f.t}>
+                { ico: 'fas fa-truck', t: t('cart.fastDelivery'), d: t('cart.deliveryTime') },
+                { ico: 'fas fa-mobile-alt', t: t('cart.paymentLabel', 'Paiement'), d: t('cart.paymentMethods') },
+                { ico: 'fas fa-lock', t: t('cart.securePayment'), d: t('cart.secureDesc', 'Transactions protégées') },
+              ].map((f, idx) => (
+                <div className="crt-feat" key={idx}>
                   <div className="crt-feat__ico"><i className={f.ico} /></div>
                   <strong>{f.t}</strong>
                   <span>{f.d}</span>
@@ -188,7 +188,7 @@ const Cart = () => {
                     <button
                       onClick={() => removeFromCart(item.id, item.listing_id)}
                       className="crt-card__rm"
-                      aria-label="Retirer"
+                      aria-label={t('cart.remove')}
                     >
                       <i className="fas fa-times" />
                     </button>
@@ -199,7 +199,7 @@ const Cart = () => {
                   <div className="crt-card__meta">
                     {item.format && (
                       <span className="crt-card__format">
-                        {item.format === 'EBOOK' ? 'Ebook' : 'Papier'}
+                        {item.format === 'EBOOK' ? t('cart.ebook', 'Ebook') : t('cart.paper', 'Papier')}
                       </span>
                     )}
                     {item.vendor_name && (
@@ -209,7 +209,7 @@ const Cart = () => {
                     )}
                     {item.condition && (
                       <span className={`crt-card__condition crt-card__condition--${item.condition === 'NEW' ? 'new' : 'used'}`}>
-                        {item.condition === 'NEW' ? 'Neuf' : item.condition === 'USED_GOOD' ? 'Occasion — Bon état' : 'Occasion'}
+                        {item.condition === 'NEW' ? t('cart.conditionNew', 'Neuf') : item.condition === 'USED_GOOD' ? t('cart.conditionUsedGood', 'Occasion — Bon état') : t('cart.conditionUsed', 'Occasion')}
                       </span>
                     )}
                   </div>
@@ -276,7 +276,7 @@ const Cart = () => {
                 {discountAmt > 0 && (
                   <div className="crt-row crt-row--discount">
                     <span>
-                      Réduction {appliedCoupon?.code && `(${appliedCoupon.code})`}
+                      {t('cart.discount')} {appliedCoupon?.code && `(${appliedCoupon.code})`}
                       {discountPercent > 0 ? ` (${discountPercent}%)` : ''}
                       <button type="button" onClick={removeCoupon} className="crt-coupon-remove" aria-label={t('cart.removeCoupon')}>×</button>
                     </span>
@@ -286,18 +286,18 @@ const Cart = () => {
                 <div className="crt-row">
                   <span>{t('cart.shipping', 'Livraison')}</span>
                   {allEbooks ? (
-                    <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Gratuit (ebook)</span>
+                    <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>{t('cart.freeEbook', 'Gratuit (ebook)')}</span>
                   ) : (
                     <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted-ui)' }}>
                       <i className="fas fa-truck" style={{ marginRight: '0.25rem' }} />
-                      Au checkout
+                      {t('cart.atCheckout', 'Au checkout')}
                     </span>
                   )}
                 </div>
                 {!allEbooks && (
                   <div className="crt-delivery-notice">
                     <i className="fas fa-info-circle" />
-                    <span>Les frais de livraison seront calcules selon le livreur que vous choisirez au checkout.</span>
+                    <span>{t('cart.deliveryNotice', 'Les frais de livraison seront calculés selon le livreur que vous choisirez au checkout.')}</span>
                   </div>
                 )}
                 <div className="crt-row crt-row--total">
@@ -308,7 +308,7 @@ const Cart = () => {
 
               {/* Notes */}
               <div className="crt-notes">
-                <label>Notes (optionnel)</label>
+                <label>{t('cart.notesLabel')}</label>
                 <textarea
                   rows="3"
                   placeholder="Instructions spéciales..."
@@ -321,7 +321,7 @@ const Cart = () => {
               {/* Actions */}
               <div className="crt-actions">
                 <button onClick={checkout} disabled={checking} className="crt-btn crt-btn--primary crt-btn--full">
-                  {checking ? 'Traitement...' : <>{t('cart.checkout')} <span>{fmt(total)}</span></>}
+                  {checking ? t('cart.processing') : <>{t('cart.checkout')} <span>{fmt(total)}</span></>}
                 </button>
                 <button onClick={() => navigate('/catalog')} className="crt-btn crt-btn--outline crt-btn--full">
                   {t('cart.continueShopping')}
@@ -331,12 +331,12 @@ const Cart = () => {
               {/* Garanties */}
               <div className="crt-guarantees">
                 {[
-                  { ico: 'fas fa-lock', t: 'Paiement sécurisé' },
-                  { ico: 'fas fa-mobile-alt', t: 'Mobicash, Airtel, Espèces, Visa' },
-                  { ico: 'fas fa-truck', t: 'Livraison rapide' },
-                ].map((g) => (
-                  <div className="crt-guar" key={g.t}>
-                    <i className={g.ico} /> {g.t}
+                  { ico: 'fas fa-lock', label: t('cart.securePayment') },
+                  { ico: 'fas fa-mobile-alt', label: t('cart.paymentMethods') },
+                  { ico: 'fas fa-truck', label: t('cart.fastDelivery') },
+                ].map((g, idx) => (
+                  <div className="crt-guar" key={idx}>
+                    <i className={g.ico} /> {g.label}
                   </div>
                 ))}
               </div>

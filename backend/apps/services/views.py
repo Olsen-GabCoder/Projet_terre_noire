@@ -317,6 +317,17 @@ class ServiceOrderDetailView(generics.RetrieveAPIView):
     )
 
 
+ALLOWED_SERVICE_REQUEST_TRANSITIONS = {
+    'DRAFT': ['SUBMITTED', 'CANCELLED'],
+    'SUBMITTED': ['QUOTED', 'CANCELLED'],
+    'QUOTED': ['ACCEPTED', 'CANCELLED'],
+    'ACCEPTED': ['SUBMITTED'],   # rollback on order cancellation
+    'IN_PROGRESS': [],
+    'COMPLETED': [],
+    'CANCELLED': [],
+}
+
+
 ALLOWED_SERVICE_ORDER_TRANSITIONS = {
     'PENDING': ['IN_PROGRESS', 'CANCELLED'],
     'IN_PROGRESS': ['REVIEW', 'CANCELLED', 'REVISION'],
@@ -373,9 +384,11 @@ class ServiceOrderStatusUpdateView(APIView):
             update_fields = ['status', 'updated_at']
             if new_status == 'CANCELLED':
                 update_fields += ['discount_amount', 'coupon']
-                # Remettre la ServiceRequest en état réutilisable
-                order.request.status = 'SUBMITTED'
-                order.request.save(update_fields=['status', 'updated_at'])
+                # Remettre la ServiceRequest en état réutilisable (FSM-validated)
+                req_allowed = ALLOWED_SERVICE_REQUEST_TRANSITIONS.get(order.request.status, [])
+                if 'SUBMITTED' in req_allowed:
+                    order.request.status = 'SUBMITTED'
+                    order.request.save(update_fields=['status', 'updated_at'])
             order.save(update_fields=update_fields)
 
         # Notifier les deux parties par email

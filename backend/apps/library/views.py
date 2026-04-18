@@ -30,6 +30,16 @@ from .serializers import (
 )
 
 
+ALLOWED_LOAN_TRANSITIONS = {
+    'REQUESTED': ['ACTIVE', 'REJECTED'],
+    'ACTIVE': ['RETURNED', 'OVERDUE'],
+    'OVERDUE': ['RETURNED'],
+    'RETURNED': [],   # état final
+    'REJECTED': [],   # état final
+    'CANCELLED': [],  # état final
+}
+
+
 def _get_library_or_404(org_id):
     """Retourne l'organisation BIBLIOTHEQUE ou 404."""
     return get_object_or_404(Organization, pk=org_id, org_type='BIBLIOTHEQUE')
@@ -233,9 +243,9 @@ class BookLoanApproveView(APIView):
             ).exists():
                 return Response({'message': 'Non autorisé.'}, status=status.HTTP_403_FORBIDDEN)
 
-        if loan.status != 'REQUESTED':
+        if 'ACTIVE' not in ALLOWED_LOAN_TRANSITIONS.get(loan.status, []):
             return Response(
-                {'message': 'Seuls les prêts demandés peuvent être approuvés.'},
+                {'message': f'Transition {loan.status} → ACTIVE non autorisée.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -302,9 +312,9 @@ class BookLoanReturnView(APIView):
             ).exists():
                 return Response({'message': 'Non autorisé.'}, status=status.HTTP_403_FORBIDDEN)
 
-        if loan.status not in ('ACTIVE', 'OVERDUE'):
+        if 'RETURNED' not in ALLOWED_LOAN_TRANSITIONS.get(loan.status, []):
             return Response(
-                {'message': 'Ce prêt ne peut pas être retourné.'},
+                {'message': f'Transition {loan.status} → RETURNED non autorisée.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

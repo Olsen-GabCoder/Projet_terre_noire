@@ -431,7 +431,17 @@
     "securePayment": "Secure payment",
     "fastDelivery": "Fast delivery",
     "deliveryTime": "2-5 days in Gabon",
-    "paymentMethods": "Mobicash, Airtel, Cash, Visa"
+    "paymentMethods": "Mobicash, Airtel, Cash, Visa",
+    "paymentLabel": "Payment",
+    "secureDesc": "Protected transactions",
+    "ebook": "Ebook",
+    "paper": "Paperback",
+    "conditionNew": "New",
+    "conditionUsed": "Used",
+    "conditionUsedGood": "Used — Good condition",
+    "freeEbook": "Free (ebook)",
+    "atCheckout": "At checkout",
+    "deliveryNotice": "Shipping fees will be calculated based on the driver you select at checkout."
   },
   "search": {
     "pageTitle": "Search",
@@ -3270,6 +3280,12 @@
     "checkError": "Unable to check status.",
     "paymentConfirmed": "Payment confirmed!",
     "paymentFailed": "Payment failed.",
-    "skipWait": "Continue without waiting"
+    "skipWait": "Continue without waiting",
+    "shippingTag": "Shipping",
+    "chooseDriver": "Choose a driver",
+    "searchingDrivers": "Searching for available drivers...",
+    "noDrivers": "No driver available for {{city}}. Default shipping fees will apply.",
+    "qty": "Qty",
+    "itemCount": "item{{s}}"
   }
 }

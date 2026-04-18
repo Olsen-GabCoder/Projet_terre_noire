@@ -269,7 +269,7 @@ const Checkout = () => {
         <div className="chk-layout">
         <div className="chk-main">
           <div className="chk-section">
-            <span className="chk-section__tag">Livraison</span>
+            <span className="chk-section__tag">{t('checkout.shippingTag', 'Livraison')}</span>
             <h2>{t('pages.checkout.shippingInfo', 'Informations de livraison')}</h2>
 
             <div className="chk-form-group">
@@ -326,12 +326,12 @@ const Checkout = () => {
             {!allEbooks && formData.shipping_city.trim().length >= 2 && (
               <div className="chk-delivery-section">
                 <h3 className="chk-delivery-title">
-                  <i className="fas fa-truck" /> Choisir un livreur
+                  <i className="fas fa-truck" /> {t('checkout.chooseDriver', 'Choisir un livreur')}
                 </h3>
 
                 {searchingRates ? (
                   <div className="chk-delivery-loading">
-                    <i className="fas fa-spinner fa-spin" /> Recherche des livreurs disponibles...
+                    <i className="fas fa-spinner fa-spin" /> {t('checkout.searchingDrivers', 'Recherche des livreurs disponibles...')}
                   </div>
                 ) : availableRates.length > 0 ? (
                   <div className="chk-delivery-rates">
@@ -371,7 +371,7 @@ const Checkout = () => {
                 ) : citySearched ? (
                   <div className="chk-delivery-empty">
                     <i className="fas fa-info-circle" />
-                    <span>Aucun livreur disponible pour <strong>{citySearched}</strong>. Les frais de livraison par defaut seront appliques.</span>
+                    <span>{t('checkout.noDrivers', 'Aucun livreur disponible pour {{city}}. Les frais de livraison par défaut seront appliqués.', { city: citySearched })}</span>
                   </div>
                 ) : null}
               </div>
@@ -458,7 +458,7 @@ const Checkout = () => {
 
         <div className="chk-sidebar">
           <div className="chk-summary">
-            <span className="chk-summary__tag">Recapitulatif</span>
+            <span className="chk-summary__tag">{t('cart.summary')}</span>
             <h2>{t('pages.checkout.yourOrder', 'Votre commande')}</h2>
 
             <div className="chk-summary-items">
@@ -488,10 +488,10 @@ const Checkout = () => {
                         <div className="chk-item-info">
                           <h4>{item.title}</h4>
                           <p>{item.author?.full_name}</p>
-                          <span className="chk-item-qty">Qte: {item.quantity}</span>
+                          <span className="chk-item-qty">{t('checkout.qty', 'Qté')}: {item.quantity}</span>
                           {item.condition && (
                             <span className="chk-item-condition">
-                              {item.condition === 'NEW' ? 'Neuf' : 'Occasion'}
+                              {item.condition === 'NEW' ? t('cart.conditionNew', 'Neuf') : t('cart.conditionUsed', 'Occasion')}
                             </span>
                           )}
                         </div>
@@ -507,22 +507,22 @@ const Checkout = () => {
 
             <div className="chk-totals">
               <div className="chk-total-row">
-                <span>Sous-total ({getTotalItems()} article{getTotalItems() > 1 ? 's' : ''})</span>
+                <span>{t('cart.subtotal')} ({getTotalItems()} {t('checkout.itemCount', 'article{{s}}', { s: getTotalItems() > 1 ? 's' : '' })})</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
               {discountAmt > 0 && (
                 <div className="chk-total-row" style={{ color: 'var(--color-success)' }}>
-                  <span>Reduction {appliedCoupon?.code && `(${appliedCoupon.code})`}</span>
+                  <span>{t('cart.discount')} {appliedCoupon?.code && `(${appliedCoupon.code})`}</span>
                   <span>-{formatPrice(discountAmt)}</span>
                 </div>
               )}
               <div className="chk-total-row">
                 <span>
-                  Livraison
+                  {t('cart.shipping')}
                   {selectedRate && <em style={{ fontSize: '0.75rem', color: 'var(--color-text-muted-ui)', marginLeft: '0.35rem' }}>({selectedRate.agent_name})</em>}
-                  {!selectedRate && shipping === 0 && <em style={{ color: 'var(--color-success)', marginLeft: '0.35rem' }}>Gratuit</em>}
+                  {!selectedRate && shipping === 0 && <em style={{ color: 'var(--color-success)', marginLeft: '0.35rem' }}>{t('cart.free')}</em>}
                 </span>
-                <span>{shipping === 0 ? 'Gratuit' : formatPrice(shipping)}</span>
+                <span>{shipping === 0 ? t('cart.free') : formatPrice(shipping)}</span>
               </div>
               <div className="chk-total-row chk-total-row--final">
                 <span>Total</span>

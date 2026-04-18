@@ -172,7 +172,7 @@ export default function BookClubDetail() {
 
       {/* ══ SIDEBAR ══ */}
       <aside className={`cc-side ${sidebarOpen?'cc-side--open':''}`}>
-        <button className="cc-side__close" onClick={()=>setSidebarOpen(false)}><i className="fas fa-times"/></button>
+        <button className="cc-side__close" onClick={()=>setSidebarOpen(false)} aria-label={t('common.close')}><i className="fas fa-times"/></button>
 
         <div className="cc-side__profile">
           <div className="cc-side__avatar">
@@ -314,7 +314,7 @@ export default function BookClubDetail() {
         <div className="cc-side__footer">
           {user&&!isMember&&<button className="cc-btn cc-btn--join" onClick={join}><i className="fas fa-sign-in-alt"/> Rejoindre</button>}
           {user&&isMember&&club.creator?.id!==user.id&&<button className="cc-btn cc-btn--leave" onClick={leave}><i className="fas fa-sign-out-alt"/> Quitter le club</button>}
-          {isAdmin&&<button className="cc-btn cc-btn--danger" onClick={()=>setShowDeleteConfirm(true)}><i className="fas fa-trash"/> Supprimer le club</button>}
+          {isAdmin&&<button className="cc-btn cc-btn--danger" onClick={()=>setShowDeleteConfirm(true)} aria-label={t('common.delete')}><i className="fas fa-trash"/> Supprimer le club</button>}
           <Link to="/clubs" className="cc-side__back"><i className="fas fa-arrow-left"/> Tous les clubs</Link>
         </div>
 
