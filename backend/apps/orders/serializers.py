@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, Payment
+from .models import Order, OrderItem, Payment, Refund
 from apps.books.serializers import BookListSerializer
 from apps.books.models import Book
 from apps.coupons.models import Coupon
@@ -396,3 +396,43 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ['id', 'transaction_id', 'provider', 'status', 'amount', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class RefundSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Refund
+        fields = ['id', 'order', 'user', 'amount', 'reason', 'description',
+                  'status', 'admin_note', 'processed_at', 'created_at']
+        read_only_fields = ['id', 'user', 'status', 'admin_note', 'processed_at', 'created_at']
+
+
+class RefundCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Refund
+        fields = ['order', 'amount', 'reason', 'description']
+
+    def validate_order(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError("Cette commande ne vous appartient pas.")
+        if value.status not in ('PAID', 'DELIVERED'):
+            raise serializers.ValidationError("Seules les commandes payées/livrées peuvent être remboursées.")
+        if value.refunds.filter(status__in=('REQUESTED', 'APPROVED')).exists():
+            raise serializers.ValidationError("Un remboursement est déjà en cours pour cette commande.")
+        return value
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Le montant doit être positif.")
+        return value
+
+    def validate(self, data):
+        if data['amount'] > data['order'].total_amount:
+            raise serializers.ValidationError(
+                {'amount': "Le montant ne peut pas dépasser le total de la commande."}
+            )
+        return data
+
+
+class RefundAdminSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    admin_note = serializers.CharField(required=False, allow_blank=True, max_length=500, default='')

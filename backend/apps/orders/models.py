@@ -12,6 +12,7 @@ class Order(models.Model):
         ('DELIVERED', 'Livré'),
         ('PARTIAL', 'Partiellement livré'),
         ('CANCELLED', 'Annulé'),
+        ('REFUNDED', 'Remboursé'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
@@ -140,3 +141,37 @@ class OrderEvent(models.Model):
 
     def __str__(self):
         return f"[{self.event_type}] Order #{self.order_id} — {self.description}"
+
+
+class Refund(models.Model):
+    """Demande de remboursement sur une commande."""
+    STATUS_CHOICES = [
+        ('REQUESTED', 'Demandé'),
+        ('APPROVED', 'Approuvé'),
+        ('REJECTED', 'Rejeté'),
+        ('PROCESSED', 'Traité'),
+    ]
+    REASON_CHOICES = [
+        ('DAMAGED', 'Produit endommagé'),
+        ('WRONG_ITEM', 'Mauvais article'),
+        ('NOT_RECEIVED', 'Non reçu'),
+        ('QUALITY', 'Qualité insatisfaisante'),
+        ('OTHER', 'Autre'),
+    ]
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='refunds')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='refunds')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REQUESTED', db_index=True)
+    admin_note = models.TextField(blank=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Refund #{self.pk} — Order #{self.order_id} — {self.status}"

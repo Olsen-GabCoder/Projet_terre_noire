@@ -3,7 +3,7 @@ import logging
 from django.contrib import admin
 from django.db import transaction
 
-from .models import Order, OrderItem, Payment
+from .models import Order, OrderItem, Payment, Refund
 
 logger = logging.getLogger(__name__)
 
@@ -78,3 +78,12 @@ class PaymentAdmin(admin.ModelAdmin):
     list_filter = ['provider', 'status']
     search_fields = ['transaction_id', 'order__id']
     readonly_fields = ['created_at']
+
+
+@admin.register(Refund)
+class RefundAdmin(admin.ModelAdmin):
+    list_display = ['id', 'order', 'user', 'amount', 'reason', 'status', 'created_at', 'processed_at']
+    list_filter = ['status', 'reason']
+    search_fields = ['order__id', 'user__username', 'user__email']
+    readonly_fields = ['created_at', 'processed_at']
+    raw_id_fields = ['order', 'user']

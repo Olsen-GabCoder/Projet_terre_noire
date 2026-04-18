@@ -11,7 +11,9 @@ from rest_framework.views import APIView
 from django.db.models import Prefetch
 from django.http import HttpResponse
 
-from .models import Order, OrderItem, Payment
+from rest_framework import generics, permissions
+
+from .models import Order, OrderItem, Payment, Refund
 from apps.core.invoice import generate_order_invoice_pdf
 
 
@@ -55,7 +57,10 @@ from .serializers import (
     OrderCreateSerializer,
     OrderListSerializer,
     OrderStatusUpdateSerializer,
-    PaymentSerializer
+    PaymentSerializer,
+    RefundSerializer,
+    RefundCreateSerializer,
+    RefundAdminSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -522,3 +527,110 @@ class EbookAccessCheckView(APIView):
         ).exists()
 
         return Response({'has_access': has_access})
+
+
+# ══════════════════════════════════════════════════════════════
+# Remboursements
+# ══════════════════════════════════════════════════════════════
+
+class RefundCreateView(generics.CreateAPIView):
+    """Client demande un remboursement sur une commande PAID/DELIVERED."""
+    serializer_class = RefundCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class RefundListView(generics.ListAPIView):
+    """Client voit ses demandes de remboursement."""
+    serializer_class = RefundSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return Refund.objects.filter(user=self.request.user).select_related('order')
+
+
+class RefundAdminListView(generics.ListAPIView):
+    """Admin voit toutes les demandes de remboursement."""
+    serializer_class = RefundSerializer
+    permission_classes = [IsAdminUser]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        qs = Refund.objects.select_related('order', 'user')
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+
+class RefundAdminActionView(APIView):
+    """Admin approuve ou rejette un remboursement."""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        from django.db import transaction
+        from django.utils import timezone
+        from django.shortcuts import get_object_or_404
+
+        refund = get_object_or_404(Refund, pk=pk)
+        if refund.status != 'REQUESTED':
+            return Response(
+                {'error': 'Ce remboursement a déjà été traité.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = RefundAdminSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        action = serializer.validated_data['action']
+        admin_note = serializer.validated_data.get('admin_note', '')
+
+        if action == 'reject':
+            refund.status = 'REJECTED'
+            refund.admin_note = admin_note
+            refund.save(update_fields=['status', 'admin_note', 'updated_at'])
+            return Response({'message': 'Remboursement rejeté.', 'status': 'REJECTED'})
+
+        # Approuver + traiter le remboursement
+        with transaction.atomic():
+            refund.status = 'PROCESSED'
+            refund.admin_note = admin_note
+            refund.processed_at = timezone.now()
+            refund.save(update_fields=['status', 'admin_note', 'processed_at', 'updated_at'])
+
+            refund.order.status = 'REFUNDED'
+            refund.order.save(update_fields=['status', 'updated_at'])
+
+            # TODO: débiter les VendorWallets proportionnellement
+            # TODO: initier le remboursement mobile money via payment_gateway.disburse()
+
+        # Journal d'activité
+        from apps.orders.utils import log_order_event
+        log_order_event(
+            refund.order, 'STATUS_CHANGE',
+            f"Remboursement #{refund.pk} approuvé — {refund.amount} FCFA",
+            actor=request.user, actor_role='admin',
+            from_status='PAID', to_status='REFUNDED',
+        )
+
+        # Notifier le client
+        try:
+            from apps.core.email import send_async, send_templated_email
+            send_async(
+                send_templated_email,
+                subject=f"Remboursement approuvé — Commande #{refund.order_id}",
+                template_name='refund_approved',
+                context={
+                    'user': refund.user,
+                    'refund': refund,
+                    'order': refund.order,
+                },
+                to_emails=[refund.user.email],
+            )
+        except Exception:
+            pass
+
+        return Response({'message': 'Remboursement approuvé et traité.', 'status': 'PROCESSED'})

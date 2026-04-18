@@ -1,0 +1,28 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ user.first_name|default:user.username }}</strong>,</p>
+<p style="margin: 0 0 16px; color: #333333; font-size: 14px;">Votre demande de remboursement pour la commande <strong style="color: #1e3a5f;">#{{ order.id|stringformat:"06d" }}</strong> a été <strong style="color: #10b981;">approuvée</strong>.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px; width: 100%;">
+  <tr>
+    <td style="padding: 12px 16px; background: #f0fdf4; border-radius: 8px;">
+      <p style="margin: 0 0 4px; font-size: 13px; color: #666;">Montant remboursé</p>
+      <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1e3a5f;">{{ refund.amount|floatformat:0 }} FCFA</p>
+    </td>
+  </tr>
+</table>
+
+{% if refund.admin_note %}
+<p style="margin: 0 0 16px; color: #333333; font-size: 13px;"><strong>Note :</strong> {{ refund.admin_note }}</p>
+{% endif %}
+
+<p style="margin: 0 0 20px; color: #333333; font-size: 13px;">Le remboursement sera effectué sur votre moyen de paiement d'origine sous 3 à 5 jours ouvrés.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+  <tr><td align="center" style="background-color: #1e3a5f; border-radius: 6px;">
+    <a href="{{ frontend_url }}/orders" target="_blank" style="display: inline-block; padding: 12px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;">Voir mes commandes</a>
+  </td></tr>
+</table>
+
+<p style="margin: 0; color: #333333;">À bientôt !</p>
+{% endblock %}
