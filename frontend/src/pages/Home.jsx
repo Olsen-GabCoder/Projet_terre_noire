@@ -867,43 +867,7 @@ const Home = () => {
             </RevealSection>
           )}
 
-          {/* ── Coup de cœur éditorial ── */}
-          {bestsellers.length > 0 && (() => {
-            const pick = bestsellers[0];
-            const pickAuthor = typeof pick.author === 'object' ? pick.author?.full_name : pick.author;
-            return (
-              <RevealSection className="home-editorial">
-                <div className="home-editorial__inner">
-                  <div className="home-editorial__visual">
-                    <div className="home-editorial__bloom" />
-                    <img
-                      src={pick.cover_image || '/images/default-book-cover.svg'}
-                      alt={pick.title}
-                      className="home-editorial__cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                  <div className="home-editorial__content">
-                    <span className="home-editorial__overtitle">
-                      <i className="fas fa-heart" aria-hidden="true" />
-                      {t('home.editorialOvertitle', 'Coup de cœur de la semaine')}
-                    </span>
-                    <h2 className="home-editorial__title">{pick.title}</h2>
-                    <p className="home-editorial__author">{pickAuthor}</p>
-                    <p className="home-editorial__pitch">
-                      {pick.description
-                        ? (pick.description.length > 200 ? pick.description.slice(0, 200) + '…' : pick.description)
-                        : t('home.editorialFallback', 'Un récit qui traverse les frontières et les époques. Une plume singulière, un regard neuf sur le monde francophone. À découvrir absolument.')}
-                    </p>
-                    <Link to={`/books/${pick.id}`} className="home-editorial__cta">
-                      {t('home.editorialCta', 'Découvrir ce livre')} <i className="fas fa-arrow-right" aria-hidden="true" />
-                    </Link>
-                  </div>
-                </div>
-              </RevealSection>
-            );
-          })()}
+
 
           {/* Disponible en librairie — Grille épurée */}
           {marketplace.length > 0 && (
