@@ -378,6 +378,14 @@ class UserProfile(models.Model):
     Profil métier d'un utilisateur sur Frollot.
     Un utilisateur peut activer plusieurs profils (Lecteur, Auteur, etc.).
     """
+    # Profile types and their functional roles:
+    # LECTEUR      → Default reader, browses catalog, social features, book clubs.
+    # AUTEUR       → Author, submits manuscripts, tracks editorial projects & sales.
+    # EDITEUR      → Editor/publisher, manages a publishing house org.
+    # CORRECTEUR   → Proofreader/corrector, offers correction services on marketplace.
+    # ILLUSTRATEUR → Illustrator/graphic designer, offers illustration services.
+    # TRADUCTEUR   → Translator, offers translation services.
+    # LIVREUR      → Delivery agent, manages assignments, delivery wallet & rates.
     PROFILE_TYPE_CHOICES = [
         ('LECTEUR', 'Lecteur'),
         ('AUTEUR', 'Auteur'),

@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
@@ -29,6 +31,8 @@ from .serializers import (
     SimpleUserSerializer,
 )
 from .recommendations import get_recommendations
+
+logger = logging.getLogger(__name__)
 
 
 # ── Pagination ──
@@ -63,6 +67,9 @@ class BaseFollowToggleView(APIView):
         )
         if not created:
             obj.delete()
+        else:
+            logger.info("User #%s followed %s #%s", request.user.id, self.target_model.__name__, target.pk)
+            # TODO Phase 8: send in-app notification to target user
         followers_count = self.follow_model.objects.filter(**{self.count_filter_field: target}).count()
         return Response({'followed': created, 'followers_count': followers_count})
 

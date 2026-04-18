@@ -1,0 +1,29 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">Bonjour <strong>{{ user.first_name|default:user.username }}</strong>,</p>
+
+<div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 14px 16px; margin: 0 0 20px; border-radius: 4px;">
+  <p style="margin: 0; color: #065f46; font-weight: bold; font-size: 14px;">
+    Votre demande de prêt a été approuvée !
+  </p>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; margin: 0 0 20px;">
+  <tr>
+    <td style="padding: 8px 0; color: #6b7280; font-size: 13px;">Livre</td>
+    <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">{{ book_title }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 0; color: #6b7280; font-size: 13px;">Bibliothèque</td>
+    <td style="padding: 8px 0; font-size: 14px;">{{ library_name }}</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px 0; color: #6b7280; font-size: 13px;">Date de retour</td>
+    <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">{{ due_date|date:"d/m/Y" }}</td>
+  </tr>
+</table>
+
+<p style="margin: 0 0 12px; color: #333333; font-size: 14px;">
+  Pensez à retourner le livre avant la date d'échéance pour éviter les pénalités.
+</p>
+{% endblock %}

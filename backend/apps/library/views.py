@@ -252,6 +252,24 @@ class BookLoanApproveView(APIView):
                 item.available_copies -= 1
                 item.save(update_fields=['available_copies'])
 
+        # Notifier l'emprunteur par email
+        try:
+            from apps.core.email import send_async, send_templated_email
+            send_async(
+                send_templated_email,
+                subject=f"Prêt approuvé — {loan.catalog_item.book.title}",
+                template_name='book_loan_approved',
+                context={
+                    'user': loan.borrower,
+                    'book_title': loan.catalog_item.book.title,
+                    'due_date': loan.due_date,
+                    'library_name': loan.catalog_item.library.name,
+                },
+                to_emails=[loan.borrower.email],
+            )
+        except Exception:
+            pass  # Email non bloquant
+
         return Response({
             'message': 'Prêt approuvé.',
             'loan': BookLoanSerializer(loan).data,
