@@ -41,6 +41,7 @@ const ORG_SUB_LINKS = {
   ],
   BIBLIOTHEQUE: (id, t, _role) => [
     { to: `/dashboard/organizations/${id}`, icon: 'fas fa-chart-line', label: t('dashboard.overview', "Vue d'ensemble"), end: true },
+    { to: `/dashboard/organizations/${id}/library-admin`, icon: 'fas fa-book-reader', label: t('dashboard.libraryAdmin', 'Gestion bibliothèque') },
     { to: `/dashboard/organizations/${id}/settings`, icon: 'fas fa-cog', label: t('dashboard.settings', 'Paramètres') },
   ],
   IMPRIMERIE: (id, t, _role) => [
@@ -147,6 +148,9 @@ const DashboardLayout = () => {
           <NavLink to="/dashboard/my-loans" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
             <i className="fas fa-book-reader" /> {t('dashboard.myLoans', 'Mes prêts')}
             <Badge count={counts.active_loans} />
+          </NavLink>
+          <NavLink to="/dashboard/my-reservations" className={({ isActive }) => `dashboard__nav-link ${isActive ? 'active' : ''}`}>
+            <i className="fas fa-bookmark" /> {t('dashboard.myReservations', 'Mes réservations')}
           </NavLink>
 
           {/* Vie sociale */}

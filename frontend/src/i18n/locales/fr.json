@@ -1796,6 +1796,8 @@
     "myLists": "Mes listes",
     "invitations": "Invitations",
     "myLoans": "Mes prêts",
+    "myReservations": "Mes réservations",
+    "libraryAdmin": "Gestion bibliothèque",
     "mySubmissions": "Mes soumissions",
     "myRequests": "Mes demandes pro",
     "security": "Sécurité",
@@ -3002,5 +3004,43 @@
       "couponCode": "Code coupon (optionnel)",
       "couponCodePlaceholder": "Entrez un code coupon"
     }
+  },
+  "libraryAdmin": {
+    "title": "Gestion de la bibliothèque",
+    "catalogCount": "Livres au catalogue",
+    "activeLoans": "Prêts actifs",
+    "overdueLoans": "En retard",
+    "totalMembers": "Membres",
+    "pendingReservations": "Réservations",
+    "pendingLoans": "Prêts en attente d'approbation",
+    "noPendingLoans": "Aucun prêt en attente.",
+    "borrower": "Emprunteur",
+    "approve": "Approuver",
+    "activeLoansTitle": "Prêts actifs",
+    "noActiveLoans": "Aucun prêt actif.",
+    "overdue": "EN RETARD",
+    "since": "depuis le",
+    "dueDate": "retour",
+    "returnBook": "Retourner",
+    "catalogTitle": "Catalogue",
+    "emptyCatalog": "Le catalogue est vide.",
+    "bookTitle": "Titre",
+    "author": "Auteur",
+    "stock": "Stock",
+    "digital": "Numérique"
+  },
+  "myReservations": {
+    "title": "Mes réservations",
+    "empty": "Vous n'avez aucune réservation.",
+    "statusPending": "En attente",
+    "statusNotified": "Disponible !",
+    "statusFulfilled": "Satisfaite",
+    "statusExpired": "Expirée",
+    "statusCancelled": "Annulée",
+    "createdAt": "Réservé le",
+    "notifiedAt": "Notifié le",
+    "notifiedMessage": "Le livre est disponible ! Rendez-vous à la bibliothèque pour l'emprunter.",
+    "expiresAt": "Expire le",
+    "cancel": "Annuler la réservation"
   }
 }

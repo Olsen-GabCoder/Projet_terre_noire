@@ -94,6 +94,8 @@ const OrgDashboard = lazy(() => import('./pages/dashboard/OrgDashboard'));
 const EditorialProjects = lazy(() => import('./pages/dashboard/EditorialProjects'));
 const EditorialProjectDetail = lazy(() => import('./pages/dashboard/EditorialProjectDetail'));
 const MyLoans = lazy(() => import('./pages/dashboard/MyLoans'));
+const MyReservations = lazy(() => import('./pages/dashboard/MyReservations'));
+const LibraryAdmin = lazy(() => import('./pages/dashboard/LibraryAdmin'));
 const MyManuscripts = lazy(() => import('./pages/dashboard/MyManuscripts'));
 const OrgManuscripts = lazy(() => import('./pages/dashboard/OrgManuscripts'));
 const OrgBooks = lazy(() => import('./pages/dashboard/OrgBooks'));
@@ -356,6 +358,7 @@ function AppContent() {
                   <Route path="my-quotes" element={<Quotes />} />
                   <Route path="my-quotes/:id" element={<QuoteDetail />} />
                   <Route path="my-loans" element={<MyLoans />} />
+                  <Route path="my-reservations" element={<MyReservations />} />
                   <Route path="lists" element={<ReadingLists />} />
                   <Route path="clubs" element={<BookClubs />} />
                   <Route path="profile" element={<Navigate to="/dashboard/settings" replace />} />
@@ -378,6 +381,7 @@ function AppContent() {
                   <Route path="organizations/:id/projects" element={<EditorialProjects />} />
                   <Route path="organizations/:id/projects/:projectId" element={<EditorialProjectDetail />} />
                   <Route path="organizations/:id/settings" element={<OrgSettings />} />
+                  <Route path="organizations/:id/library-admin" element={<LibraryAdmin />} />
 
                   {/* Espace Auteur */}
                   <Route path="author" element={<AuthorDashboard />} />

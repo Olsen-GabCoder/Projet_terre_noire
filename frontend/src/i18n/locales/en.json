@@ -1816,6 +1816,8 @@
     "myLists": "My lists",
     "invitations": "Invitations",
     "myLoans": "My loans",
+    "myReservations": "My reservations",
+    "libraryAdmin": "Library management",
     "mySubmissions": "My submissions",
     "myRequests": "My pro requests",
     "security": "Security",
@@ -3022,5 +3024,43 @@
       "couponCode": "Coupon code (optional)",
       "couponCodePlaceholder": "Enter a coupon code"
     }
+  },
+  "libraryAdmin": {
+    "title": "Library management",
+    "catalogCount": "Books in catalog",
+    "activeLoans": "Active loans",
+    "overdueLoans": "Overdue",
+    "totalMembers": "Members",
+    "pendingReservations": "Reservations",
+    "pendingLoans": "Loans pending approval",
+    "noPendingLoans": "No pending loans.",
+    "borrower": "Borrower",
+    "approve": "Approve",
+    "activeLoansTitle": "Active loans",
+    "noActiveLoans": "No active loans.",
+    "overdue": "OVERDUE",
+    "since": "since",
+    "dueDate": "return",
+    "returnBook": "Return",
+    "catalogTitle": "Catalog",
+    "emptyCatalog": "The catalog is empty.",
+    "bookTitle": "Title",
+    "author": "Author",
+    "stock": "Stock",
+    "digital": "Digital"
+  },
+  "myReservations": {
+    "title": "My reservations",
+    "empty": "You have no reservations.",
+    "statusPending": "Pending",
+    "statusNotified": "Available!",
+    "statusFulfilled": "Fulfilled",
+    "statusExpired": "Expired",
+    "statusCancelled": "Cancelled",
+    "createdAt": "Reserved on",
+    "notifiedAt": "Notified on",
+    "notifiedMessage": "The book is available! Visit the library to borrow it.",
+    "expiresAt": "Expires on",
+    "cancel": "Cancel reservation"
   }
 }
