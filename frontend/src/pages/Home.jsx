@@ -969,7 +969,7 @@ const Home = () => {
           {loading && authors.length === 0 ? (
             <SectionSkeleton count={6} type="author" label="Plumes" title="Nos auteurs" />
           ) : authors.length > 0 && (
-            <RevealSection className="home-section">
+            <RevealSection className="home-section home-section--separator">
               <div className="home-section__header">
                 <div>
                   <span className="home-section__label">{t('home.pens')}</span>
@@ -1039,7 +1039,7 @@ const Home = () => {
           )}
 
           {/* Services */}
-          <RevealSection className="home-section home-section--tight">
+          <RevealSection className="home-section home-section--tight home-section--separator">
             <div className="home-section__inner">
             <div className="home-section__header">
               <div>

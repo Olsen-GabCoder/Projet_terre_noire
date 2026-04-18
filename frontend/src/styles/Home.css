@@ -4,6 +4,26 @@
 
 .home-page {
   min-height: 100vh;
+  position: relative;
+}
+
+/* ── Fond atmosphérique continu — nébuleuses subtiles ── */
+.home-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 600px 500px at 10% 20%, var(--cosmos-nebula-1) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 600px at 85% 45%, var(--cosmos-nebula-2) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 400px at 50% 70%, var(--cosmos-nebula-3) 0%, transparent 70%),
+    radial-gradient(ellipse 350px 450px at 20% 90%, var(--cosmos-nebula-2) 0%, transparent 70%);
+}
+
+.home-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Reveal au scroll → classe .reveal-section définie dans App.css */
@@ -1057,7 +1077,31 @@
    ============================================= */
 .home-editorial {
   padding: var(--space-lg) var(--page-padding-x);
-  background: var(--color-bg-section-alt);
+  background:
+    radial-gradient(ellipse 500px 400px at 15% 50%, rgba(91, 94, 234, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 350px at 85% 30%, rgba(139, 92, 246, 0.03) 0%, transparent 70%),
+    var(--color-bg-section-alt);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dégradés de transition pour l'éditorial */
+.home-editorial::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, var(--color-bg-page), transparent);
+  pointer-events: none;
+}
+
+.home-editorial::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to top, var(--color-bg-page), transparent);
+  pointer-events: none;
 }
 
 .home-editorial__inner {
@@ -1513,11 +1557,61 @@
   padding: var(--section-spacing-y) var(--page-padding-x);
   width: 100%;
   max-width: none;
+  /* Micro-gradient pour casser le blanc pur */
+  background: linear-gradient(
+    180deg,
+    var(--color-bg-page) 0%,
+    color-mix(in srgb, var(--color-primary) 1.5%, var(--color-bg-page)) 50%,
+    var(--color-bg-page) 100%
+  );
 }
 
 .home-section--alt {
   background: var(--color-bg-section-alt);
   max-width: none;
+}
+
+/* ── Transitions dégradées entre sections ── */
+/* Section blanche → alt : fondu entrant */
+.home-section--alt::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, var(--color-bg-page), var(--color-bg-section-alt));
+  pointer-events: none;
+}
+
+/* Section alt → blanche : fondu sortant */
+.home-section--alt::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, var(--color-bg-section-alt), var(--color-bg-page));
+  pointer-events: none;
+}
+
+.home-section--alt {
+  position: relative;
+  padding-top: calc(var(--section-spacing-y) + 30px);
+  padding-bottom: calc(var(--section-spacing-y) + 30px);
+}
+
+/* ── Séparateur accent entre sections clés ── */
+.home-section--separator::before {
+  content: '';
+  display: block;
+  width: var(--accent-line-width, 48px);
+  height: var(--accent-line-height, 3px);
+  background: var(--accent-line-gradient);
+  border-radius: 2px;
+  margin: 0 auto 2rem;
+  max-width: var(--container-max, 1200px);
 }
 
 /* Rythme vertical — modificateurs sémantiques */
