@@ -46,10 +46,23 @@ def _process_successful_payment(order):
         from apps.books.signals import update_sales_after_payment
         update_sales_after_payment(order)
 
-    # Email hors transaction (non bloquant)
+    # Emails hors transaction (non bloquant) — envoyés UNIQUEMENT après paiement confirmé
     try:
-        from apps.core.tasks import send_order_paid_task
+        from apps.core.tasks import (
+            send_order_paid_task,
+            send_order_confirmation_task,
+            send_vendor_new_order_task,
+            send_delivery_assignment_task,
+        )
         send_order_paid_task.delay(order.id)
+        send_order_confirmation_task.delay(order.id)
+
+        # Notifier chaque vendeur + livreur assigné
+        from apps.marketplace.models import SubOrder
+        for so in SubOrder.objects.filter(order=order).select_related('delivery_agent'):
+            send_vendor_new_order_task.delay(so.id)
+            if so.delivery_agent_id:
+                send_delivery_assignment_task.delay(so.id)
     except Exception:
         pass
 from apps.users.throttles import OrderCreateThrottle

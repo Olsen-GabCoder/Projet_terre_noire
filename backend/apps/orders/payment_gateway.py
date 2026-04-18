@@ -132,14 +132,14 @@ class MobicashProvider(BasePaymentProvider):
     def _simulate_payment(self, order, phone_number):
         """
         Simulation mode — used when MOBICASH_API_URL is empty (development/testing).
-        Returns a synthetic PENDING response without any network call.
+        Returns SUCCESS immediately (no phone to confirm in simulation).
         Will be bypassed automatically when API credentials are configured.
         """
         return {
             'transaction_id': f'MOB-{uuid.uuid4().hex[:12].upper()}',
-            'status': 'PENDING',
+            'status': 'SUCCESS',
             'provider_ref': f'FRL-{order.id:06d}',
-            'message': f'[SIMULATION] USSD push envoyé au {phone_number}. Confirmez le paiement.',
+            'message': '[SIMULATION] Paiement accepté automatiquement.',
         }
 
     def verify(self, transaction_id):
@@ -325,14 +325,14 @@ class AirtelMoneyProvider(BasePaymentProvider):
     def _simulate_payment(self, order, phone_number):
         """
         Simulation mode — used when AIRTEL_API_URL is empty (development/testing).
-        Returns a synthetic PENDING response without any network call.
+        Returns SUCCESS immediately (no phone to confirm in simulation).
         Will be bypassed automatically when API credentials are configured.
         """
         return {
             'transaction_id': f'AIR-{uuid.uuid4().hex[:12].upper()}',
-            'status': 'PENDING',
+            'status': 'SUCCESS',
             'provider_ref': f'FRL-{order.id:06d}',
-            'message': f'[SIMULATION] STK push envoyé au {phone_number}. Confirmez le paiement.',
+            'message': '[SIMULATION] Paiement accepté automatiquement.',
         }
 
     def verify(self, transaction_id):

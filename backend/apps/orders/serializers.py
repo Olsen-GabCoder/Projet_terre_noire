@@ -262,15 +262,8 @@ class OrderCreateSerializer(serializers.Serializer):
                     order=order, vendor_id=coupon_org_id,
                 ).update(discount_amount=discount_amount, coupon=applied_coupon)
 
-        # Envoi emails (async, après commit de la transaction)
-        from django.db import transaction as db_transaction
-        from apps.core.tasks import (
-            send_order_confirmation_task,
-            send_vendor_new_order_task,
-            send_delivery_assignment_task,
-        )
-
-        db_transaction.on_commit(lambda: send_order_confirmation_task.delay(order.id))
+        # Emails envoyés APRÈS paiement confirmé (dans _process_successful_payment),
+        # pas ici — la commande est encore PENDING, personne n'a payé.
 
         # C3 : journal d'activité
         from apps.orders.utils import log_order_event
@@ -283,20 +276,8 @@ class OrderCreateSerializer(serializers.Serializer):
                             message=f'{len(order_items)} article(s) pour {float(order.total_amount):,.0f} FCFA',
                             link='/dashboard/orders')
 
-        # U2 : notifier chaque vendeur de la nouvelle sous-commande
-        # U4 : notifier le livreur s'il a été choisi au checkout
-        sub_order_ids = list(
-            SubOrder.objects.filter(order=order).values_list('id', flat=True)
-        )
-        for so_id in sub_order_ids:
-            db_transaction.on_commit(
-                lambda _id=so_id: send_vendor_new_order_task.delay(_id)
-            )
-        if selected_rate:
-            for so_id in sub_order_ids:
-                db_transaction.on_commit(
-                    lambda _id=so_id: send_delivery_assignment_task.delay(_id)
-                )
+        # U2/U4 : vendor + delivery notifications sent after payment confirmed
+        # (in _process_successful_payment → split_payment), not at order creation.
 
         return order
 
