@@ -181,7 +181,7 @@ class BookReservation(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='book_reservations', verbose_name="Utilisateur",
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     notified_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name="Expiration après notification")

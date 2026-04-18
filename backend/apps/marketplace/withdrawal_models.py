@@ -47,7 +47,7 @@ class WithdrawalRequest(models.Model):
     currency = models.CharField(max_length=3, default='XAF')
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
     phone_number = models.CharField(max_length=20, verbose_name="Numero Mobile Money")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
     transaction_id = models.CharField(
         max_length=100, blank=True, null=True,
         verbose_name="Reference transaction provider",

@@ -398,6 +398,7 @@ class UserProfile(models.Model):
         max_length=20,
         choices=PROFILE_TYPE_CHOICES,
         verbose_name="Type de profil",
+        db_index=True,
     )
     slug = models.SlugField(
         max_length=250,

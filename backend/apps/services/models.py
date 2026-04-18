@@ -131,7 +131,7 @@ class ServiceRequest(models.Model):
     )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='DRAFT',
-        verbose_name="Statut",
+        verbose_name="Statut", db_index=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -246,7 +246,7 @@ class ServiceOrder(models.Model):
     )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='PENDING',
-        verbose_name="Statut",
+        verbose_name="Statut", db_index=True,
     )
     amount = models.DecimalField(
         max_digits=10, decimal_places=2,
@@ -398,7 +398,7 @@ class EditorialProject(models.Model):
     description = models.TextField(blank=True, verbose_name="Description")
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='DRAFT',
-        verbose_name="Statut",
+        verbose_name="Statut", db_index=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -515,7 +515,7 @@ class PrintRequest(models.Model):
     delivery_address = models.TextField(blank=True, verbose_name="Adresse de livraison")
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='DRAFT',
-        verbose_name="Statut",
+        verbose_name="Statut", db_index=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

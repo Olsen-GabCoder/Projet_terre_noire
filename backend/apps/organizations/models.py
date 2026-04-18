@@ -20,7 +20,7 @@ class Organization(models.Model):
 
     name = models.CharField(max_length=200, verbose_name="Nom de l'organisation")
     slug = models.SlugField(max_length=220, unique=True, blank=True, verbose_name="Slug")
-    org_type = models.CharField(max_length=20, choices=ORG_TYPE_CHOICES, verbose_name="Type d'organisation")
+    org_type = models.CharField(max_length=20, choices=ORG_TYPE_CHOICES, verbose_name="Type d'organisation", db_index=True)
     description = models.TextField(blank=True, verbose_name="Description")
     logo = models.ImageField(upload_to='organizations/logos/', blank=True, null=True, verbose_name="Logo")
     cover_image = models.ImageField(upload_to='organizations/covers/', blank=True, null=True, verbose_name="Image de couverture")
@@ -251,7 +251,7 @@ class Invitation(models.Model):
         related_name='invitations',
         verbose_name="Organisation",
     )
-    email = models.EmailField(verbose_name="Email invité")
+    email = models.EmailField(verbose_name="Email invité", db_index=True)
     role = models.CharField(
         max_length=20,
         choices=OrganizationMembership.ROLE_CHOICES,
@@ -265,7 +265,7 @@ class Invitation(models.Model):
         verbose_name="Invité par",
     )
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
     message = models.TextField(blank=True, verbose_name="Message personnalisé")
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(verbose_name="Date d'expiration")

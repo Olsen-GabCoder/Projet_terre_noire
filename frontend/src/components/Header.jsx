@@ -195,7 +195,7 @@ const Header = () => {
 
 
 
-  const MobileMenuOverlay = () => (
+  const renderMobileMenuOverlay = () => (
     <div 
       ref={mobileMenuRef}
       className="mobile-menu-overlay"
@@ -694,7 +694,7 @@ const Header = () => {
       </nav>
 
       {mobileMenuOpen && createPortal(
-        <MobileMenuOverlay />,
+        renderMobileMenuOverlay(),
         document.body
       )}
     </>

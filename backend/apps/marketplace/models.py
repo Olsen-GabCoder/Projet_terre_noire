@@ -97,7 +97,7 @@ class SubOrder(models.Model):
         'organizations.Organization', on_delete=models.PROTECT,
         related_name='sub_orders', verbose_name="Vendeur",
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
     subtotal = models.DecimalField(
         max_digits=10, decimal_places=2,
         validators=[MinValueValidator(0)], default=0,
