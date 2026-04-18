@@ -26,20 +26,31 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          i18n: ['react-i18next', 'i18next'],
-          ui: ['react-hot-toast', 'react-helmet-async'],
-          charts: ['recharts'],
-          pdf: ['pdfjs-dist'],
-          query: ['@tanstack/react-query'],
-          icons: ['@fortawesome/fontawesome-free'],
-          http: ['axios'],
-          sanitize: ['dompurify'],
-          utils: ['fast-average-color', 'react-intersection-observer'],
+        manualChunks(id) {
+          // Locale JSON files → i18n chunk (keeps index.js lean)
+          if (id.includes('/i18n/locales/')) return 'i18n';
+
+          // Node-modules mappings
+          const pkgChunks = {
+            vendor: ['react-dom', 'react-router-dom'],
+            i18n: ['react-i18next', 'i18next'],
+            ui: ['react-hot-toast', 'react-helmet-async'],
+            charts: ['recharts'],
+            pdf: ['pdfjs-dist'],
+            query: ['@tanstack/react-query'],
+            icons: ['@fortawesome/fontawesome-free'],
+            http: ['axios'],
+            sanitize: ['dompurify'],
+            utils: ['fast-average-color', 'react-intersection-observer'],
+          };
+          if (id.includes('node_modules')) {
+            for (const [chunk, pkgs] of Object.entries(pkgChunks)) {
+              if (pkgs.some(pkg => id.includes(`/node_modules/${pkg}/`))) return chunk;
+            }
+          }
         },
       },
     },
