@@ -613,12 +613,14 @@
   min-width: 0;
 }
 
-/* Emoji-only messages — large, no bubble */
+/* Emoji-only messages — large, no bubble, animated */
 .cc-msg__emoji-only {
   font-size: 48px;
   line-height: 1.2;
   margin: 0;
   letter-spacing: 4px;
+  display: flex;
+  gap: 4px;
 }
 .cc-msg__bubble:has(.cc-msg__emoji-only) {
   background: transparent;
@@ -629,6 +631,113 @@
 .cc-msg--own .cc-msg__bubble:has(.cc-msg__emoji-only) {
   background: transparent;
   border: none;
+}
+
+/* Animated emoji spans */
+.cc-anim-emoji {
+  display: inline-block;
+  animation-fill-mode: both;
+}
+
+/* Beat — hearts pulse like a heartbeat */
+.cc-anim-emoji--beat {
+  animation: emoji-beat 0.8s ease-in-out 3;
+}
+@keyframes emoji-beat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.25); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+}
+
+/* Wiggle — laughing emojis shake with joy */
+.cc-anim-emoji--wiggle {
+  animation: emoji-wiggle 0.6s ease-in-out 3;
+}
+@keyframes emoji-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
+}
+
+/* Bounce — thumbs up, clap, party */
+.cc-anim-emoji--bounce {
+  animation: emoji-bounce 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) 3;
+}
+@keyframes emoji-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-12px); }
+  60% { transform: translateY(-4px); }
+}
+
+/* Glow — fire, stars, sparkles pulsate */
+.cc-anim-emoji--glow {
+  animation: emoji-glow 1.2s ease-in-out 3;
+}
+@keyframes emoji-glow {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.1); filter: brightness(1.3); }
+}
+
+/* Wave — waving hand rocks side to side */
+.cc-anim-emoji--wave {
+  transform-origin: 70% 80%;
+  animation: emoji-wave 0.8s ease-in-out 3;
+}
+@keyframes emoji-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  50% { transform: rotate(-10deg); }
+  75% { transform: rotate(15deg); }
+}
+
+/* Nod — thinking emoji tilts gently */
+.cc-anim-emoji--nod {
+  animation: emoji-nod 1s ease-in-out 2;
+}
+@keyframes emoji-nod {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(8deg); }
+  70% { transform: rotate(-5deg); }
+}
+
+/* Shake — crying, angry emojis tremble */
+.cc-anim-emoji--shake {
+  animation: emoji-shake 0.4s ease-in-out 4;
+}
+@keyframes emoji-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* Float — gentle floating for nature, music, flowers */
+.cc-anim-emoji--float {
+  animation: emoji-float 2s ease-in-out 2;
+}
+@keyframes emoji-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+/* Pop — default subtle entrance for all others */
+.cc-anim-emoji--pop {
+  animation: emoji-pop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.25) 1;
+}
+@keyframes emoji-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .cc-anim-emoji {
+    animation: none !important;
+  }
 }
 
 .cc-msg__text--deleted {

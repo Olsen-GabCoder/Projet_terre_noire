@@ -15,6 +15,33 @@ const EMOJIS = ['👍','❤️','😂','😮','📖','🔥','👏','💡','🎉'
 const EMOJI_ONLY_RE = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\u200D\s]{1,12}$/u;
 const isEmojiOnly = (text) => text && EMOJI_ONLY_RE.test(text.trim()) && text.trim().length <= 12;
 
+// Emoji animation mapping
+const EMOJI_ANIM = {
+  beat: new Set(['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💞','💓','💗','💖','💘','💝','💟','❤️‍🔥','❤️‍🩹','💔','🥰','😍','😘','🫶','🫶🏾']),
+  wiggle: new Set(['😂','🤣','😆','😅','😹','🤪','😜','😝','🙃']),
+  bounce: new Set(['👍','👏','👏🏾','🙌','🙌🏾','🎉','🎊','🥳','🎈','💪','💪🏾','✊','✊🏾','👊','🤜','🤛','🫡']),
+  glow: new Set(['🔥','❤️‍🔥','💯','⭐','🌟','✨','💫','☀️','🌈','💡','🏆']),
+  wave: new Set(['👋','🤚','🖐️','✋','🫱','🫲']),
+  nod: new Set(['🤔','🧐','😏','🫢','🤭','🤫','😌']),
+  shake: new Set(['😢','😭','😤','😡','🤯','😱','😨','😰','🥶','🥵']),
+  float: new Set(['🌙','☁️','🎵','🎶','🍃','🍂','🌺','🌸','🪻','🌹','☕','🍵']),
+};
+function getEmojiAnim(em) {
+  for (const [anim, set] of Object.entries(EMOJI_ANIM)) {
+    if (set.has(em)) return anim;
+  }
+  return 'pop'; // default subtle pop for all others
+}
+// Split emoji string into individual grapheme clusters
+const SPLIT_EMOJI_RE = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})(\uFE0F|\u200D(\p{Emoji_Presentation}|\p{Extended_Pictographic}))*/gu;
+function renderAnimatedEmojis(text) {
+  const emojis = text.match(SPLIT_EMOJI_RE);
+  if (!emojis) return text;
+  return emojis.map((em, i) => (
+    <span key={i} className={`cc-anim-emoji cc-anim-emoji--${getEmojiAnim(em)}`} style={{animationDelay: `${i * 0.12}s`}}>{em}</span>
+  ));
+}
+
 const STICKER_PACKS = [
   { name: 'Lecture', icon: '📖', stickers: ['📖✨','📚💫','🤓👆','😴📖','☕📚','🏆📖','📖❤️','🤯📚','📝💡','🎧📖'] },
   { name: 'Réactions', icon: '😄', stickers: ['🎉🎊','👏👏👏','🔥🔥🔥','💯','❤️‍🔥','🥳🎈','😂🤣','🙌✨','💪🏾','🫡'] },
@@ -721,7 +748,7 @@ export default function BookClubDetail() {
                             ):(
                               <>
                                 {item.message_type==='TEXT'&&(isEmojiOnly(item.content)
-                                  ?<p className="cc-msg__emoji-only">{item.content}</p>
+                                  ?<p className="cc-msg__emoji-only">{renderAnimatedEmojis(item.content)}</p>
                                   :<p className="cc-msg__text">{renderWithMentions(item.content,members,searchMatchIds&&searchMatchIds.has(item.id)?chatSearch:'')}</p>
                                 )}
                                 {item.message_type==='QUOTE'&&(
