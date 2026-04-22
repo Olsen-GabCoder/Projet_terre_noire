@@ -14,6 +14,14 @@ const TYPE_ICONS = {
   DELIVERY_ATTEMPTED: 'fas fa-exclamation-triangle',
   ORG_INVITATION: 'fas fa-envelope-open-text',
   MANUSCRIPT_STATUS: 'fas fa-file-alt',
+  CLUB_MESSAGE: 'fas fa-comments',
+  CLUB_MEMBER_JOINED: 'fas fa-user-plus',
+  CLUB_MEMBER_LEFT: 'fas fa-user-minus',
+  CLUB_INVITED: 'fas fa-envelope',
+  CLUB_MENTION: 'fas fa-at',
+  CLUB_POLL_CREATED: 'fas fa-poll',
+  CLUB_PROGRESS_COMPLETE: 'fas fa-trophy',
+  CLUB_SESSION_REMINDER: 'fas fa-calendar-check',
 };
 
 const formatAgo = (dateStr) => {

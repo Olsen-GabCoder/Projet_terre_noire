@@ -6,6 +6,8 @@ from .models import (
     ReadingList, ReadingListItem,
     Post, PostComment,
     BookClub, BookClubMembership, BookClubMessage,
+    MessageReport,
+    ClubSession, SessionRSVP, ClubBookHistory,
 )
 
 
@@ -215,6 +217,8 @@ class BookClubListSerializer(serializers.ModelSerializer):
     current_book = BookListSerializer(read_only=True)
     members_count = serializers.SerializerMethodField()
     user_is_member = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    user_membership_status = serializers.SerializerMethodField()
     frequency_display = serializers.CharField(source='get_meeting_frequency_display', read_only=True)
 
     class Meta:
@@ -223,24 +227,61 @@ class BookClubListSerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'description', 'cover_image',
             'category', 'meeting_frequency', 'frequency_display',
             'languages', 'tags', 'current_book',
-            'creator', 'is_public', 'max_members',
-            'members_count', 'user_is_member',
+            'creator', 'is_public', 'requires_approval', 'max_members',
+            'members_count', 'user_is_member', 'user_membership_status', 'unread_count',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 
     def get_members_count(self, obj):
-        return obj.memberships.count()
+        return obj.memberships.filter(membership_status='APPROVED').count()
 
     def get_user_is_member(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.memberships.filter(user=request.user).exists()
+            return obj.memberships.filter(user=request.user, membership_status='APPROVED').exists()
         return False
+
+    def get_user_membership_status(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            m = obj.memberships.filter(user=request.user).first()
+            return m.membership_status if m else None
+        return None
+
+    def get_unread_count(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 0
+        membership = obj.memberships.filter(user=request.user).first()
+        if not membership:
+            return 0
+        if not membership.last_read_at:
+            # Jamais lu → tous les messages sont non lus
+            return obj.messages.count()
+        return obj.messages.filter(created_at__gt=membership.last_read_at).count()
 
 
 class BookClubDetailSerializer(BookClubListSerializer):
-    pass
+    average_progress = serializers.SerializerMethodField()
+    my_progress = serializers.SerializerMethodField()
+
+    class Meta(BookClubListSerializer.Meta):
+        fields = BookClubListSerializer.Meta.fields + ['average_progress', 'my_progress']
+
+    def get_average_progress(self, obj):
+        memberships = obj.memberships.all()
+        if not memberships:
+            return 0
+        total = sum(m.reading_progress for m in memberships)
+        return round(total / len(memberships))
+
+    def get_my_progress(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 0
+        m = obj.memberships.filter(user=request.user).first()
+        return m.reading_progress if m else 0
 
 
 class BookClubCreateSerializer(serializers.ModelSerializer):
@@ -250,7 +291,7 @@ class BookClubCreateSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'cover_image',
             'category', 'rules', 'meeting_frequency',
             'languages', 'tags', 'current_book',
-            'is_public', 'max_members',
+            'is_public', 'requires_approval', 'max_members',
         ]
         read_only_fields = ['id']
 
@@ -269,22 +310,66 @@ class BookClubMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookClubMembership
-        fields = ['id', 'user', 'role', 'joined_at']
+        fields = ['id', 'user', 'role', 'membership_status', 'joined_at', 'reading_progress']
         read_only_fields = ['id', 'joined_at']
 
 
 class BookClubMessageSerializer(serializers.ModelSerializer):
     author = SimpleUserSerializer(read_only=True)
     attachment_url = serializers.SerializerMethodField()
+    reactions_summary = serializers.SerializerMethodField()
+    quote_book_detail = serializers.SerializerMethodField()
+    reply_to_preview = serializers.SerializerMethodField()
 
     class Meta:
         model = BookClubMessage
         fields = [
             'id', 'club', 'author', 'message_type',
             'content', 'attachment', 'attachment_url',
-            'attachment_name', 'voice_duration', 'created_at',
+            'attachment_name', 'voice_duration',
+            'quote_text', 'quote_page', 'quote_book', 'quote_book_detail',
+            'reply_to', 'reply_to_preview',
+            'is_deleted', 'is_pinned', 'edited_at', 'created_at',
+            'reactions_summary',
         ]
-        read_only_fields = ['id', 'club', 'author', 'created_at']
+        read_only_fields = ['id', 'club', 'author', 'is_deleted', 'is_pinned', 'edited_at', 'created_at']
+
+    def get_reply_to_preview(self, obj):
+        """Aperçu léger du message parent (pas de récursion)."""
+        if not obj.reply_to:
+            return None
+        parent = obj.reply_to
+        return {
+            'id': parent.id,
+            'author': SimpleUserSerializer(parent.author).data if parent.author else None,
+            'content': parent.content[:120] if parent.content else '',
+            'message_type': parent.message_type,
+            'is_deleted': parent.is_deleted,
+        }
+
+    def get_quote_book_detail(self, obj):
+        if obj.quote_book:
+            return BookListSerializer(obj.quote_book, context=self.context).data
+        return None
+
+    def get_reactions_summary(self, obj):
+        """Retourne [{emoji, count, reacted_by_me}] agrégé par emoji."""
+        from collections import Counter
+        reactions = obj.reactions.all()
+        if not reactions:
+            return []
+        request = self.context.get('request')
+        current_user_id = request.user.id if request and request.user.is_authenticated else None
+        counter = Counter()
+        user_reacted = set()
+        for r in reactions:
+            counter[r.emoji] += 1
+            if r.user_id == current_user_id:
+                user_reacted.add(r.emoji)
+        return [
+            {'emoji': emoji, 'count': count, 'reacted_by_me': emoji in user_reacted}
+            for emoji, count in counter.most_common()
+        ]
 
     def validate_attachment(self, value):
         if value:
@@ -299,3 +384,131 @@ class BookClubMessageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.attachment.url)
             return obj.attachment.url
         return None
+
+
+# ── Signalements ──
+
+class MessageReportSerializer(serializers.ModelSerializer):
+    reporter = SimpleUserSerializer(read_only=True)
+    message_preview = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MessageReport
+        fields = ['id', 'message', 'reporter', 'reason', 'details', 'status', 'created_at', 'message_preview']
+        read_only_fields = ['id', 'message', 'reporter', 'status', 'created_at']
+
+    def get_message_preview(self, obj):
+        msg = obj.message
+        return {
+            'id': msg.id,
+            'author': SimpleUserSerializer(msg.author).data if msg.author else None,
+            'content': msg.content[:120] if msg.content else '',
+            'message_type': msg.message_type,
+            'is_deleted': msg.is_deleted,
+            'created_at': msg.created_at,
+        }
+
+
+# ── Invitations ──
+
+class ClubInvitationSerializer(serializers.ModelSerializer):
+    created_by = SimpleUserSerializer(read_only=True)
+    club_name = serializers.CharField(source='club.name', read_only=True)
+    club_slug = serializers.CharField(source='club.slug', read_only=True)
+    club_cover = serializers.ImageField(source='club.cover_image', read_only=True)
+    club_members_count = serializers.SerializerMethodField()
+    is_valid = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        from apps.social.models import ClubInvitation
+        model = ClubInvitation
+        fields = [
+            'id', 'token', 'club_name', 'club_slug', 'club_cover',
+            'club_members_count', 'created_by',
+            'max_uses', 'use_count', 'expires_at', 'is_active', 'is_valid',
+            'created_at',
+        ]
+
+    def get_club_members_count(self, obj):
+        return obj.club.memberships.count()
+
+
+# ── Polls (votes pour le prochain livre) ──
+
+class BookPollOptionSerializer(serializers.ModelSerializer):
+    book = BookListSerializer(read_only=True)
+    proposed_by = SimpleUserSerializer(read_only=True)
+    votes_count = serializers.SerializerMethodField()
+    voted_by_me = serializers.SerializerMethodField()
+
+    class Meta:
+        from apps.social.models import BookPollOption
+        model = BookPollOption
+        fields = ['id', 'book', 'proposed_by', 'votes_count', 'voted_by_me', 'created_at']
+
+    def get_votes_count(self, obj):
+        return obj.votes.count()
+
+    def get_voted_by_me(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.votes.filter(user=request.user).exists()
+
+
+class BookPollSerializer(serializers.ModelSerializer):
+    options = BookPollOptionSerializer(many=True, read_only=True)
+    created_by = SimpleUserSerializer(read_only=True)
+    total_votes = serializers.SerializerMethodField()
+
+    class Meta:
+        from apps.social.models import BookPoll
+        model = BookPoll
+        fields = ['id', 'title', 'status', 'created_by', 'options', 'total_votes', 'created_at', 'closed_at']
+
+    def get_total_votes(self, obj):
+        return sum(o.votes.count() for o in obj.options.all())
+
+
+# ── Sessions (séances programmées) ──
+
+class ClubSessionSerializer(serializers.ModelSerializer):
+    created_by = SimpleUserSerializer(read_only=True)
+    rsvp_counts = serializers.SerializerMethodField()
+    my_rsvp = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubSession
+        fields = [
+            'id', 'club', 'title', 'description',
+            'scheduled_at', 'is_online', 'location',
+            'created_by', 'created_at',
+            'rsvp_counts', 'my_rsvp',
+        ]
+        read_only_fields = ['id', 'club', 'created_by', 'created_at']
+
+    def get_rsvp_counts(self, obj):
+        rsvps = obj.rsvps.all()
+        return {
+            'going': sum(1 for r in rsvps if r.status == 'GOING'),
+            'not_going': sum(1 for r in rsvps if r.status == 'NOT_GOING'),
+            'maybe': sum(1 for r in rsvps if r.status == 'MAYBE'),
+        }
+
+    def get_my_rsvp(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        rsvp = next((r for r in obj.rsvps.all() if r.user_id == request.user.id), None)
+        return rsvp.status if rsvp else None
+
+
+# ── Historique des livres lus ──
+
+class ClubBookHistorySerializer(serializers.ModelSerializer):
+    book = BookListSerializer(read_only=True)
+
+    class Meta:
+        model = ClubBookHistory
+        fields = ['id', 'club', 'book', 'started_at', 'finished_at', 'created_at']
+        read_only_fields = ['id', 'club', 'created_at']

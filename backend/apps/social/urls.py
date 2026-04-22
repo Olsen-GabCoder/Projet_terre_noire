@@ -29,6 +29,9 @@ urlpatterns = [
     # ── Avis plateforme (public — Home page) ──
     path('platform-reviews/featured/', views.FeaturedPlatformReviewsView.as_view(), name='featured-platform-reviews'),
 
+    # ── Invitation par lien (public GET, auth POST) ──
+    path('clubs/join/<uuid:token>/', views.ClubJoinByLinkView.as_view(), name='club-join-by-link'),
+
     # ── Router (lists, posts, clubs) ──
     path('', include(router.urls)),
 ]

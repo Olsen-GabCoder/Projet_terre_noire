@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import socialService from '../services/socialService';
@@ -12,23 +12,29 @@ const BookClubs = () => {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState('all'); // 'all' | 'mine'
 
-  useEffect(() => {
-    const fetchClubs = async () => {
-      try {
-        const res = await socialService.getClubs();
-        const data = res.data;
-        setClubs(Array.isArray(data) ? data : data?.results || []);
-      } catch (err) {
-        setError(t('pages.bookClubs.errorLoad'));
-      }
-      setLoading(false);
-    };
-    fetchClubs();
+  const fetchClubs = useCallback(async (filter) => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = filter === 'mine' ? { my_clubs: true } : {};
+      const res = await socialService.getClubs(params);
+      const data = res.data;
+      setClubs(Array.isArray(data) ? data : data?.results || []);
+    } catch (err) {
+      setError(t('pages.bookClubs.errorLoad'));
+    }
+    setLoading(false);
   }, [t]);
 
-  if (loading) return <div className="dashboard-loading"><div className="admin-spinner" /></div>;
-  if (error) return <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}><p>{error}</p><Link to="/">{t('common.back')}</Link></div>;
+  useEffect(() => {
+    fetchClubs(tab);
+  }, [tab, fetchClubs]);
+
+  const switchTab = (newTab) => {
+    if (newTab !== tab) setTab(newTab);
+  };
 
   return (
     <div className="clubs-page">
@@ -47,19 +53,57 @@ const BookClubs = () => {
         )}
       </div>
 
-      {/* Grid */}
-      {clubs.length === 0 ? (
+      {/* Tabs — Tous / Mes clubs */}
+      {user && (
+        <div className="clubs-page__tabs">
+          <button
+            className={`clubs-page__tab ${tab === 'all' ? 'active' : ''}`}
+            onClick={() => switchTab('all')}
+          >
+            <i className="fas fa-globe" /> {t('pages.bookClubs.allClubs', 'Tous les clubs')}
+          </button>
+          <button
+            className={`clubs-page__tab ${tab === 'mine' ? 'active' : ''}`}
+            onClick={() => switchTab('mine')}
+          >
+            <i className="fas fa-bookmark" /> {t('pages.bookClubs.myClubs', 'Mes clubs')}
+          </button>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="dashboard-loading"><div className="admin-spinner" /></div>
+      )}
+
+      {/* Error */}
+      {!loading && error && (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--fl-muted)' }}>
+          <p>{error}</p>
+          <Link to="/">{t('common.back')}</Link>
+        </div>
+      )}
+
+      {/* Empty */}
+      {!loading && !error && clubs.length === 0 && (
         <div className="clubs-page__empty">
           <div className="clubs-page__empty-icon"><i className="fas fa-users" /></div>
-          <h2>{t('pages.bookClubs.emptyTitle')}</h2>
-          <p>{t('pages.bookClubs.emptyText')}</p>
-          {user && (
+          <h2>{tab === 'mine' ? t('pages.bookClubs.noMyClubs', "Vous n'avez rejoint aucun club") : t('pages.bookClubs.emptyTitle')}</h2>
+          <p>{tab === 'mine' ? t('pages.bookClubs.noMyClubsDesc', 'Explorez les clubs et rejoignez ceux qui vous intéressent.') : t('pages.bookClubs.emptyText')}</p>
+          {tab === 'mine' ? (
+            <button className="clubs-page__create-btn" onClick={() => switchTab('all')}>
+              <i className="fas fa-compass" /> {t('pages.bookClubs.exploreClubs', 'Explorer les clubs')}
+            </button>
+          ) : user && (
             <Link to="/clubs/create" className="clubs-page__create-btn">
               <i className="fas fa-plus-circle" /> {t('pages.bookClubs.createFirst')}
             </Link>
           )}
         </div>
-      ) : (
+      )}
+
+      {/* Grid */}
+      {!loading && !error && clubs.length > 0 && (
         <div className="clubs-page__grid">
           {clubs.map((club) => (
             <Link key={club.id} to={`/clubs/${club.slug || club.id}`} className="club-card">
@@ -72,6 +116,12 @@ const BookClubs = () => {
                   )}
                 </div>
                 <div className="club-card__badges">
+                  {/* Badge non-lus */}
+                  {club.unread_count > 0 && (
+                    <span className="club-card__badge club-card__badge--unread">
+                      {club.unread_count > 99 ? '99+' : club.unread_count}
+                    </span>
+                  )}
                   <span className={`club-card__badge ${club.is_public ? 'club-card__badge--public' : 'club-card__badge--private'}`}>
                     <i className={`fas ${club.is_public ? 'fa-globe' : 'fa-lock'}`} />
                     {club.is_public ? t('pages.bookClubs.public') : t('pages.bookClubs.private')}
@@ -101,9 +151,14 @@ const BookClubs = () => {
                   </div>
                 )}
                 <div className="club-card__footer">
-                  <span className="club-card__members">
-                    <i className="fas fa-users" /> {club.members_count} / {club.max_members}
+                  <span className={`club-card__members${club.max_members && club.members_count >= club.max_members ? ' club-card__members--full' : ''}`}>
+                    <i className="fas fa-users" /> {club.members_count}{club.max_members ? ` / ${club.max_members}` : ''}
                   </span>
+                  {club.max_members && club.members_count >= club.max_members && (
+                    <span className="club-card__badge club-card__badge--full">
+                      {t('pages.bookClubs.clubFull', 'Complet')}
+                    </span>
+                  )}
                   <span className="club-card__freq">
                     <i className="fas fa-calendar-alt" /> {club.frequency_display}
                   </span>

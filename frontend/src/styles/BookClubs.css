@@ -18,14 +18,14 @@
 }
 
 .clubs-page__header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--fl-font-serif);
   font-size: 1.75rem;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin: 0 0 0.3rem;
 }
 
 .clubs-page__header p {
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   font-size: 0.95rem;
   max-width: 550px;
   line-height: 1.5;
@@ -37,24 +37,66 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 1.4rem;
-  background: var(--color-primary);
-  color: white;
+  background: var(--fl-ink);
+  color: var(--fl-cream);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: var(--transition-base);
-  box-shadow: var(--shadow-btn);
+  transition: all 160ms var(--ease-smooth);
+  box-shadow: var(--fl-shadow-sm);
 }
 
 .clubs-page__create-btn:hover {
-  background: var(--color-primary-dark);
-  box-shadow: var(--shadow-btn-hover);
+  background: var(--fl-ocre-ink);
+  box-shadow: var(--fl-shadow-md);
   transform: translateY(-1px);
-  color: white;
+  color: var(--fl-cream);
+}
+
+/* Tabs — Tous / Mes clubs */
+.clubs-page__tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--fl-border);
+  margin-bottom: 1.5rem;
+}
+
+.clubs-page__tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.15rem;
+  border: none;
+  background: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--fl-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: all 160ms ease;
+  font-family: inherit;
+}
+
+.clubs-page__tab:hover { color: var(--fl-ink); }
+.clubs-page__tab.active { color: var(--fl-ocre); border-bottom-color: var(--fl-ocre); }
+
+/* Badge non-lu */
+.club-card__badge--unread {
+  background: var(--fl-ocre);
+  color: var(--fl-cream);
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  line-height: 1.2;
 }
 
 /* Grille */
@@ -66,18 +108,18 @@
 
 /* Carte club */
 .club-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--fl-shadow-sm);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: var(--transition-base);
+  transition: all 160ms var(--ease-smooth);
 }
 
 .club-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: var(--fl-shadow-md);
   transform: translateY(-3px);
 }
 
@@ -91,10 +133,10 @@
 .club-card__avatar {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid var(--color-border-card);
+  border: 2px solid var(--fl-border);
 }
 
 .club-card__avatar img {
@@ -109,8 +151,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-section-alt);
-  color: var(--color-text-muted-ui);
+  background: var(--fl-bg-sunk);
+  color: var(--fl-muted);
   font-size: 1.25rem;
 }
 
@@ -124,34 +166,36 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-xl);
+  border-radius: 0;
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
-.club-card__badge--public { background: rgba(16, 185, 129, 0.9); color: white; }
-.club-card__badge--private { background: rgba(245, 158, 11, 0.9); color: white; }
-.club-card__badge--category { background: rgba(99, 102, 241, 0.85); color: white; }
+.club-card__badge--public { background: var(--color-success); color: var(--fl-cream); }
+.club-card__badge--private { background: var(--color-warning); color: var(--fl-cream); }
+.club-card__badge--category { background: var(--fl-accent-soft); color: var(--fl-ocre-ink); }
 
 .club-card__body { padding: 1.15rem; }
-.club-card__body h3 { font-size: 1.05rem; font-weight: 600; color: var(--color-text-heading); margin: 0 0 0.35rem; }
-.club-card__book { font-size: 0.82rem; color: var(--color-primary); margin: 0 0 0.3rem; font-weight: 500; }
+.club-card__body h3 { font-size: 1.05rem; font-weight: 600; color: var(--fl-ink); margin: 0 0 0.35rem; }
+.club-card__book { font-size: 0.82rem; color: var(--fl-ocre); margin: 0 0 0.3rem; font-weight: 500; }
 .club-card__book i { margin-right: 0.2rem; }
-.club-card__desc { font-size: 0.85rem; color: var(--color-text-body); line-height: 1.45; margin: 0 0 0.6rem; }
+.club-card__desc { font-size: 0.85rem; color: var(--fl-body); line-height: 1.45; margin: 0 0 0.6rem; }
 
 .club-card__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
-.club-card__tag { font-size: 0.72rem; padding: 0.15rem 0.5rem; background: var(--color-bg-section-alt); border-radius: var(--radius-xl); color: var(--color-text-muted-ui); }
+.club-card__tag { font-size: 0.72rem; padding: 0.15rem 0.5rem; background: var(--fl-bg-sunk); border-radius: 0; color: var(--fl-muted); }
 
-.club-card__footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--color-text-muted-ui); }
+.club-card__footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--fl-muted); flex-wrap: wrap; gap: 0.3rem; }
 .club-card__members i, .club-card__freq i { margin-right: 0.2rem; }
+.club-card__members--full { color: var(--color-error, #a63123); font-weight: 600; }
+.club-card__badge--full { background: var(--color-error, #a63123); color: var(--fl-cream, #fff); }
 
 /* Empty */
 .clubs-page__empty { text-align: center; padding: 4rem 2rem; }
-.clubs-page__empty-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--color-bg-section-alt); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 2rem; color: var(--color-text-muted-ui); }
-.clubs-page__empty h2 { font-size: 1.2rem; color: var(--color-text-heading); margin: 0 0 0.5rem; }
-.clubs-page__empty p { color: var(--color-text-muted-ui); max-width: 420px; margin: 0 auto 1.5rem; }
+.clubs-page__empty-icon { width: 80px; height: 80px; border-radius: 0; background: var(--fl-bg-sunk); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 2rem; color: var(--fl-muted); }
+.clubs-page__empty h2 { font-size: 1.2rem; color: var(--fl-ink); margin: 0 0 0.5rem; }
+.clubs-page__empty p { color: var(--fl-muted); max-width: 420px; margin: 0 auto 1.5rem; }
 
 
 /* ═══════════════════════════════════════════════
@@ -172,7 +216,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--color-primary);
+  color: var(--fl-ocre);
   text-decoration: none;
   font-size: 0.88rem;
   margin-bottom: 1rem;
@@ -181,14 +225,14 @@
 .club-create__back:hover { text-decoration: underline; }
 
 .club-create__top h1 {
-  font-family: var(--font-heading);
+  font-family: var(--fl-font-serif);
   font-size: 1.75rem;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin: 0 0 0.3rem;
 }
 
 .club-create__top p {
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   font-size: 0.95rem;
 }
 
@@ -199,26 +243,26 @@
   padding: 0.75rem 1rem;
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: var(--radius-md);
-  color: var(--color-error);
+  border-radius: var(--radius-sm);
+  color: var(--fl-red);
   font-size: 0.88rem;
   margin-bottom: 1.5rem;
 }
 
 /* Sections */
 .club-create__section {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-lg);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
   padding: 1.5rem;
   margin-bottom: 1.25rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--fl-shadow-sm);
 }
 
 .club-create__section h2 {
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin: 0 0 1.25rem;
   display: flex;
   align-items: center;
@@ -228,9 +272,9 @@
 .club-create__step {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: white;
+  border-radius: 0;
+  background: var(--fl-ink);
+  color: var(--fl-cream);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -241,7 +285,7 @@
 
 .club-create__section-desc {
   font-size: 0.88rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   margin: -0.75rem 0 1rem;
 }
 
@@ -257,16 +301,16 @@
   position: relative;
   width: 110px;
   height: 110px;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   cursor: pointer;
   flex-shrink: 0;
-  border: 3px solid var(--color-border-card);
-  transition: border-color var(--duration-fast);
+  border: 3px solid var(--fl-border);
+  transition: border-color 160ms;
 }
 
 .club-create__avatar:hover {
-  border-color: var(--color-primary);
+  border-color: var(--fl-ocre);
 }
 
 .club-create__avatar img {
@@ -281,8 +325,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-section-alt);
-  color: var(--color-text-muted-ui);
+  background: var(--fl-bg-sunk);
+  color: var(--fl-muted);
   font-size: 2rem;
 }
 
@@ -293,11 +337,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--fl-cream);
   font-size: 1rem;
   opacity: 0;
-  transition: opacity var(--duration-fast);
-  border-radius: 50%;
+  transition: opacity 160ms;
+  border-radius: 0;
 }
 
 .club-create__avatar:hover .club-create__avatar-overlay {
@@ -312,12 +356,12 @@
 .club-create__avatar-text span {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
 }
 
 .club-create__avatar-text small {
   font-size: 0.78rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   margin-top: 0.15rem;
 }
 
@@ -328,12 +372,12 @@
   display: block;
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin-bottom: 0.4rem;
 }
 
-.club-create__field .required { color: var(--color-error); }
-.club-create__field .optional { font-weight: 400; color: var(--color-text-muted-ui); font-size: 0.82rem; }
+.club-create__field .required { color: var(--fl-red); }
+.club-create__field .optional { font-weight: 400; color: var(--fl-muted); font-size: 0.82rem; }
 
 .club-create__field input[type="text"],
 .club-create__field input[type="number"],
@@ -341,21 +385,21 @@
 .club-create__field select {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  color: var(--color-text-body);
+  color: var(--fl-body);
   font-family: inherit;
-  background: var(--color-bg-card);
-  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+  background: var(--fl-bg-elev);
+  transition: border-color 160ms, box-shadow 160ms;
 }
 
 .club-create__field input:focus,
 .club-create__field textarea:focus,
 .club-create__field select:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  border-color: var(--fl-ocre);
+  box-shadow: 0 0 0 3px var(--fl-accent-soft);
 }
 
 .club-create__field textarea { resize: vertical; }
@@ -364,12 +408,27 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   margin-top: 0.3rem;
 }
 
 .club-create__row { display: flex; gap: 1rem; }
 .club-create__field--half { flex: 1; }
+.club-create__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--fl-body);
+  margin-top: 24px;
+}
+.club-create__toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fl-ocre, #a04a2a);
+  cursor: pointer;
+}
 
 /* Catégories */
 .club-create__categories {
@@ -383,50 +442,50 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.85rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
-  color: var(--color-text-body);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
+  background: var(--fl-bg-elev);
+  color: var(--fl-body);
   font-size: 0.82rem;
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
   font-family: inherit;
 }
 
-.club-create__cat-btn i { color: var(--color-text-muted-ui); font-size: 0.9rem; transition: color var(--duration-fast); }
-.club-create__cat-btn:hover { border-color: var(--color-primary); }
-.club-create__cat-btn:hover i { color: var(--color-primary); }
+.club-create__cat-btn i { color: var(--fl-muted); font-size: 0.9rem; transition: color 160ms; }
+.club-create__cat-btn:hover { border-color: var(--fl-ocre); }
+.club-create__cat-btn:hover i { color: var(--fl-ocre); }
 
 .club-create__cat-btn.active {
-  background: rgba(var(--color-primary-rgb), 0.08);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background: var(--fl-accent-soft);
+  border-color: var(--fl-ocre);
+  color: var(--fl-ocre);
   font-weight: 600;
 }
 
-.club-create__cat-btn.active i { color: var(--color-primary); }
+.club-create__cat-btn.active i { color: var(--fl-ocre); }
 
 /* Langues */
 .club-create__lang-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .club-create__lang-pill {
   padding: 0.4rem 1rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-xl);
-  background: var(--color-bg-card);
-  color: var(--color-text-body);
+  border: 1px solid var(--fl-border);
+  border-radius: 0;
+  background: var(--fl-bg-elev);
+  color: var(--fl-body);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
   font-family: inherit;
 }
 
-.club-create__lang-pill:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.club-create__lang-pill:hover { border-color: var(--fl-ocre); color: var(--fl-ocre); }
 
 .club-create__lang-pill.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
+  background: var(--fl-ink);
+  border-color: var(--fl-ocre);
+  color: var(--fl-cream);
 }
 
 /* Fréquence */
@@ -440,25 +499,25 @@
   display: flex;
   flex-direction: column;
   padding: 0.75rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
+  background: var(--fl-bg-elev);
   cursor: pointer;
   text-align: left;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
   font-family: inherit;
 }
 
-.club-create__freq-btn strong { font-size: 0.88rem; color: var(--color-text-heading); }
-.club-create__freq-btn span { font-size: 0.78rem; color: var(--color-text-muted-ui); margin-top: 0.15rem; }
-.club-create__freq-btn:hover { border-color: var(--color-primary); }
+.club-create__freq-btn strong { font-size: 0.88rem; color: var(--fl-ink); }
+.club-create__freq-btn span { font-size: 0.78rem; color: var(--fl-muted); margin-top: 0.15rem; }
+.club-create__freq-btn:hover { border-color: var(--fl-ocre); }
 
 .club-create__freq-btn.active {
-  border-color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.06);
+  border-color: var(--fl-ocre);
+  background: var(--fl-accent-soft);
 }
 
-.club-create__freq-btn.active strong { color: var(--color-primary); }
+.club-create__freq-btn.active strong { color: var(--fl-ocre); }
 
 /* Recherche livre */
 .club-create__book-search { position: relative; }
@@ -468,28 +527,28 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.65rem 0.85rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
-  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
+  transition: border-color 160ms, box-shadow 160ms;
 }
 
 .club-create__search-input:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+  border-color: var(--fl-ocre);
+  box-shadow: 0 0 0 3px var(--fl-accent-soft);
 }
 
-.club-create__search-input i { color: var(--color-text-muted-ui); }
+.club-create__search-input i { color: var(--fl-muted); }
 
 .club-create__search-input input {
   flex: 1; border: none; background: transparent;
-  font-size: 0.9rem; color: var(--color-text-body); outline: none; padding: 0;
+  font-size: 0.9rem; color: var(--fl-body); outline: none; padding: 0;
 }
 
 .club-create__search-spinner {
   width: 18px; height: 18px;
-  border: 2px solid var(--color-gray-200);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
+  border: 2px solid var(--fl-border);
+  border-top-color: var(--fl-ocre);
+  border-radius: 0;
   animation: clubSpin 0.6s linear infinite;
 }
 
@@ -497,10 +556,10 @@
 
 .club-create__search-results {
   position: absolute; top: 100%; left: 0; right: 0;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--fl-shadow-lg);
   max-height: 260px; overflow-y: auto;
   z-index: 10; margin-top: 0.25rem;
 }
@@ -510,55 +569,55 @@
   width: 100%; padding: 0.6rem 0.85rem;
   border: none; background: none; text-align: left;
   cursor: pointer; font-family: inherit;
-  transition: background var(--duration-fast);
+  transition: background 160ms;
 }
 
-.club-create__search-item:hover { background: var(--color-bg-section-alt); }
-.club-create__search-item + .club-create__search-item { border-top: 1px solid var(--color-border-card); }
+.club-create__search-item:hover { background: var(--fl-bg-sunk); }
+.club-create__search-item + .club-create__search-item { border-top: 1px solid var(--fl-border); }
 
 .club-create__search-cover {
   width: 32px; height: 44px; border-radius: var(--radius-xs);
   overflow: hidden; flex-shrink: 0;
-  background: var(--color-bg-section-alt);
+  background: var(--fl-bg-sunk);
   display: flex; align-items: center; justify-content: center;
-  color: var(--color-text-muted-ui); font-size: 0.75rem;
+  color: var(--fl-muted); font-size: 0.75rem;
 }
 
 .club-create__search-cover img { width: 100%; height: 100%; object-fit: cover; }
-.club-create__search-item strong { display: block; font-size: 0.88rem; color: var(--color-text-heading); }
-.club-create__search-item span { font-size: 0.78rem; color: var(--color-text-muted-ui); }
+.club-create__search-item strong { display: block; font-size: 0.88rem; color: var(--fl-ink); }
+.club-create__search-item span { font-size: 0.78rem; color: var(--fl-muted); }
 
 /* Livre sélectionné */
 .club-create__selected-book {
   display: flex; align-items: center; gap: 0.85rem;
   padding: 0.85rem 1rem;
-  background: rgba(var(--color-primary-rgb), 0.05);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
-  border-radius: var(--radius-md);
+  background: var(--fl-accent-soft);
+  border: 1px solid var(--fl-accent-soft);
+  border-radius: var(--radius-sm);
 }
 
 .club-create__book-cover {
   width: 44px; height: 60px; border-radius: var(--radius-xs);
   overflow: hidden; flex-shrink: 0;
-  background: var(--color-bg-section-alt);
+  background: var(--fl-bg-sunk);
   display: flex; align-items: center; justify-content: center;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
 }
 
 .club-create__book-cover img { width: 100%; height: 100%; object-fit: cover; }
 .club-create__book-info { flex: 1; }
-.club-create__book-info strong { display: block; font-size: 0.9rem; color: var(--color-text-heading); }
-.club-create__book-info span { font-size: 0.82rem; color: var(--color-text-muted-ui); }
+.club-create__book-info strong { display: block; font-size: 0.9rem; color: var(--fl-ink); }
+.club-create__book-info span { font-size: 0.82rem; color: var(--fl-muted); }
 
 .club-create__book-remove {
   display: inline-flex; align-items: center; gap: 0.3rem;
   padding: 0.35rem 0.75rem;
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: var(--radius-md);
-  color: var(--color-error);
+  border-radius: var(--radius-sm);
+  color: var(--fl-red);
   font-size: 0.8rem; cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
 }
 
 .club-create__book-remove:hover { background: rgba(239, 68, 68, 0.15); }
@@ -573,40 +632,91 @@
 
 .club-create__cancel {
   padding: 0.65rem 1.25rem;
-  border: 1px solid var(--color-border-card);
+  border: 1px solid var(--fl-border);
   background: transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  color: var(--color-text-body);
+  color: var(--fl-body);
   cursor: pointer;
   font-weight: 500;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
 }
 
-.club-create__cancel:hover { background: var(--color-bg-section-alt); }
+.club-create__cancel:hover { background: var(--fl-bg-sunk); }
 
 .club-create__submit {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.65rem 1.75rem;
-  background: var(--color-primary);
-  color: white; border: none;
-  border-radius: var(--radius-md);
+  background: var(--fl-ink);
+  color: var(--fl-cream); border: none;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem; font-weight: 600;
   cursor: pointer;
-  transition: all var(--duration-fast);
-  box-shadow: var(--shadow-btn);
+  transition: all 160ms;
+  box-shadow: var(--fl-shadow-sm);
 }
 
-.club-create__submit:hover:not(:disabled) { background: var(--color-primary-dark); box-shadow: var(--shadow-btn-hover); }
+.club-create__submit:hover:not(:disabled) { background: var(--fl-ocre-ink); box-shadow: var(--fl-shadow-md); }
 .club-create__submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .club-create__spinner {
   width: 16px; height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
+  border-top-color: var(--fl-cream);
+  border-radius: 0;
   animation: clubSpin 0.6s linear infinite;
 }
+
+/* ═══════════════════════════════════════════════
+   Page Invitation Club
+   ═══════════════════════════════════════════════ */
+.club-invite {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 60vh; padding: 2rem;
+}
+
+.club-invite__card {
+  background: var(--fl-bg-elev); border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm); padding: 2.5rem 2rem;
+  text-align: center; max-width: 420px; width: 100%;
+  box-shadow: var(--fl-shadow-md);
+}
+
+.club-invite__avatar {
+  width: 80px; height: 80px; margin: 0 auto 1.25rem;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: var(--fl-bg-sunk); color: var(--fl-muted); font-size: 2rem;
+  border: 2px solid var(--fl-border);
+}
+.club-invite__avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.club-invite__card h1 {
+  font-family: var(--fl-font-serif); font-size: 1.5rem; color: var(--fl-ink);
+  margin: 0 0 0.5rem; font-weight: 500;
+}
+
+.club-invite__meta {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  font-size: 0.82rem; color: var(--fl-muted); margin-bottom: 1.5rem;
+}
+.club-invite__meta i { margin-right: 0.3rem; }
+
+.club-invite__join { width: 100%; justify-content: center; font-size: 1rem; padding: 0.85rem; }
+
+.club-invite__icon { width: 64px; height: 64px; margin: 0 auto 1rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; color: var(--fl-muted);
+  background: var(--fl-bg-sunk); border-radius: 999px;
+}
+.club-invite__icon--error { color: var(--fl-red); }
+
+.club-invite__expired { color: var(--fl-muted); font-size: 0.9rem; }
+.club-invite__expired i { font-size: 1.5rem; color: var(--fl-faint); display: block; margin-bottom: 0.5rem; }
+
+.club-invite__auth p { color: var(--fl-muted); font-size: 0.9rem; margin: 0 0 1rem; }
+.club-invite__auth { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.club-invite__register { background: transparent; color: var(--fl-ocre); border: 1px solid var(--fl-ocre); }
+.club-invite__register:hover { background: var(--fl-accent-soft); }
 
 /* Mobile */
 @media (max-width: 768px) {
@@ -616,6 +726,7 @@
   .club-create__freq-grid { grid-template-columns: 1fr; }
   .club-create__row { flex-direction: column; gap: 0; }
   .club-create__cover-upload { aspect-ratio: 2.5 / 1; }
+  .club-invite__card { padding: 1.5rem 1.25rem; }
 }
 
 
@@ -633,7 +744,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--color-primary);
+  color: var(--fl-ocre);
   text-decoration: none;
   font-size: 0.88rem;
   margin-bottom: 1.25rem;
@@ -652,10 +763,10 @@
 .club-detail__avatar {
   width: 88px;
   height: 88px;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
-  border: 3px solid var(--color-border-card);
+  border: 3px solid var(--fl-border);
 }
 
 .club-detail__avatar img {
@@ -670,17 +781,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-section-alt);
-  color: var(--color-text-muted-ui);
+  background: var(--fl-bg-sunk);
+  color: var(--fl-muted);
   font-size: 2rem;
 }
 
 .club-detail__info { flex: 1; }
 
 .club-detail__info h1 {
-  font-family: var(--font-heading);
+  font-family: var(--fl-font-serif);
   font-size: 1.5rem;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin: 0 0 0.4rem;
 }
 
@@ -689,7 +800,7 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   font-size: 0.82rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -709,9 +820,9 @@
 .club-detail__cat-tag {
   font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
-  background: rgba(var(--color-primary-rgb), 0.08);
-  color: var(--color-primary);
-  border-radius: var(--radius-xl);
+  background: var(--fl-accent-soft);
+  color: var(--fl-ocre);
+  border-radius: 0;
   font-weight: 500;
 }
 
@@ -725,37 +836,37 @@
 .club-detail__tag {
   font-size: 0.72rem;
   padding: 0.15rem 0.5rem;
-  background: var(--color-bg-section-alt);
-  border-radius: var(--radius-xl);
-  color: var(--color-text-muted-ui);
+  background: var(--fl-bg-sunk);
+  border-radius: 0;
+  color: var(--fl-muted);
 }
 
 .club-detail__actions { margin-top: 0.5rem; }
 
 .club-detail__leave-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border-card);
+  border: 1px solid var(--fl-border);
   background: transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
-  color: var(--color-text-body);
+  color: var(--fl-body);
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
 }
 
-.club-detail__leave-btn:hover { border-color: var(--color-error); color: var(--color-error); }
+.club-detail__leave-btn:hover { border-color: var(--fl-red); color: var(--fl-red); }
 
 /* Description */
 .club-detail__description {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-lg);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 
 .club-detail__description p {
-  color: var(--color-text-body);
+  color: var(--fl-body);
   line-height: 1.7;
   margin: 0;
   white-space: pre-wrap;
@@ -763,21 +874,21 @@
 
 /* Livre en cours */
 .club-detail__current-book {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-lg);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 
 .club-detail__current-book h3 {
   font-size: 0.9rem;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
   margin: 0 0 0.75rem;
 }
 
 .club-detail__current-book h3 i {
-  color: var(--color-primary);
+  color: var(--fl-ocre);
   margin-right: 0.3rem;
 }
 
@@ -788,11 +899,11 @@
   text-decoration: none;
   color: inherit;
   padding: 0.5rem;
-  border-radius: var(--radius-md);
-  transition: background var(--duration-fast);
+  border-radius: var(--radius-sm);
+  transition: background 160ms;
 }
 
-.club-detail__book-link:hover { background: var(--color-bg-section-alt); }
+.club-detail__book-link:hover { background: var(--fl-bg-sunk); }
 
 .club-detail__book-link img {
   width: 40px;
@@ -804,19 +915,19 @@
 .club-detail__book-link strong {
   display: block;
   font-size: 0.9rem;
-  color: var(--color-text-heading);
+  color: var(--fl-ink);
 }
 
 .club-detail__book-link span {
   font-size: 0.82rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
 }
 
 /* Onglets */
 .club-detail__tabs {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid var(--color-border-card);
+  border-bottom: 2px solid var(--fl-border);
   margin-bottom: 0;
 }
 
@@ -829,21 +940,21 @@
   background: none;
   font-size: 0.88rem;
   font-weight: 500;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   white-space: nowrap;
-  transition: all var(--duration-fast);
+  transition: all 160ms;
   font-family: inherit;
 }
 
-.club-detail__tab:hover { color: var(--color-text-heading); }
-.club-detail__tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+.club-detail__tab:hover { color: var(--fl-ink); }
+.club-detail__tab.active { color: var(--fl-ocre); border-bottom-color: var(--fl-ocre); }
 
 .club-detail__content {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
+  background: var(--fl-bg-elev);
+  border: 1px solid var(--fl-border);
   border-top: none;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   min-height: 300px;
@@ -861,7 +972,7 @@
 .club-detail__no-msg {
   text-align: center;
   padding: 3rem 1rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
 }
 
 .club-detail__no-msg i { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
@@ -877,14 +988,14 @@
 .club-msg__avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--color-bg-section-alt);
+  background: var(--fl-bg-sunk);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   font-size: 0.8rem;
 }
 
@@ -892,13 +1003,13 @@
 
 .club-msg__body {
   flex: 1;
-  background: var(--color-bg-section-alt);
-  border-radius: var(--radius-md);
+  background: var(--fl-bg-sunk);
+  border-radius: var(--radius-sm);
   padding: 0.55rem 0.85rem;
 }
 
 .club-msg--own .club-msg__body {
-  background: rgba(var(--color-primary-rgb), 0.08);
+  background: var(--fl-accent-soft);
 }
 
 .club-msg__header {
@@ -908,57 +1019,57 @@
   margin-bottom: 0.2rem;
 }
 
-.club-msg__header strong { font-size: 0.82rem; color: var(--color-text-heading); }
-.club-msg__header time { font-size: 0.72rem; color: var(--color-text-muted-ui); }
+.club-msg__header strong { font-size: 0.82rem; color: var(--fl-ink); }
+.club-msg__header time { font-size: 0.72rem; color: var(--fl-muted); }
 
-.club-msg__body p { margin: 0; font-size: 0.88rem; color: var(--color-text-body); line-height: 1.5; }
+.club-msg__body p { margin: 0; font-size: 0.88rem; color: var(--fl-body); line-height: 1.5; }
 
 /* Input message */
 .club-detail__send {
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--color-border-card);
+  border-top: 1px solid var(--fl-border);
 }
 
 .club-detail__send input {
   flex: 1;
   padding: 0.6rem 0.85rem;
-  border: 1px solid var(--color-border-card);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--fl-border);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  color: var(--color-text-body);
+  color: var(--fl-body);
   font-family: inherit;
   outline: none;
-  transition: border-color var(--duration-fast);
+  transition: border-color 160ms;
 }
 
-.club-detail__send input:focus { border-color: var(--color-primary); }
+.club-detail__send input:focus { border-color: var(--fl-ocre); }
 
 .club-detail__send button {
   width: 42px;
   height: 42px;
   border: none;
-  background: var(--color-primary);
-  color: white;
-  border-radius: var(--radius-md);
+  background: var(--fl-ink);
+  color: var(--fl-cream);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background var(--duration-fast);
+  transition: background 160ms;
 }
 
-.club-detail__send button:hover:not(:disabled) { background: var(--color-primary-dark); }
+.club-detail__send button:hover:not(:disabled) { background: var(--fl-ocre-ink); }
 .club-detail__send button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Prompt rejoindre */
 .club-detail__join-prompt {
   text-align: center;
   padding: 1.5rem;
-  border-top: 1px solid var(--color-border-card);
+  border-top: 1px solid var(--fl-border);
 }
 
 .club-detail__join-prompt p {
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
 }
@@ -976,34 +1087,34 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-md);
-  transition: background var(--duration-fast);
+  border-radius: var(--radius-sm);
+  transition: background 160ms;
 }
 
-.club-member-card:hover { background: var(--color-bg-section-alt); }
+.club-member-card:hover { background: var(--fl-bg-sunk); }
 
 .club-member-card__avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--color-bg-section-alt);
+  background: var(--fl-bg-sunk);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
 }
 
 .club-member-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .club-member-card__info { flex: 1; }
-.club-member-card__info strong { display: block; font-size: 0.9rem; color: var(--color-text-heading); }
+.club-member-card__info strong { display: block; font-size: 0.9rem; color: var(--fl-ink); }
 
-.club-member-card__role { font-size: 0.78rem; color: var(--color-text-muted-ui); }
+.club-member-card__role { font-size: 0.78rem; color: var(--fl-muted); }
 .club-member-card__role--admin { color: var(--color-warning); font-weight: 600; }
 
-.club-member-card__date { font-size: 0.75rem; color: var(--color-text-muted-ui); }
+.club-member-card__date { font-size: 0.75rem; color: var(--fl-muted); }
 
 /* Règles */
 .club-detail__rules {
@@ -1011,7 +1122,7 @@
 }
 
 .club-detail__rules p {
-  color: var(--color-text-body);
+  color: var(--fl-body);
   line-height: 1.7;
   white-space: pre-wrap;
   margin: 0;
@@ -1021,11 +1132,11 @@
 .club-detail-error {
   text-align: center;
   padding: 4rem 2rem;
-  color: var(--color-text-muted-ui);
+  color: var(--fl-muted);
 }
 
 .club-detail-error i { font-size: 2.5rem; margin-bottom: 1rem; display: block; color: var(--color-warning); }
-.club-detail-error a { color: var(--color-primary); }
+.club-detail-error a { color: var(--fl-ocre); }
 
 /* Mobile */
 @media (max-width: 768px) {

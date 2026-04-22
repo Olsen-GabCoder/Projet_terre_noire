@@ -16,6 +16,15 @@ class Notification(models.Model):
         ('MANUSCRIPT_STATUS', 'Statut manuscrit'),
         ('COUPON_RECEIVED', 'Coupon reçu'),
         ('COUPON_REVOKED', 'Coupon révoqué'),
+        # Clubs de lecture
+        ('CLUB_MESSAGE', 'Nouveau message dans le club'),
+        ('CLUB_MEMBER_JOINED', 'Nouveau membre dans le club'),
+        ('CLUB_MEMBER_LEFT', 'Membre parti du club'),
+        ('CLUB_INVITED', 'Invitation à un club'),
+        ('CLUB_MENTION', 'Mention dans un club'),
+        ('CLUB_POLL_CREATED', 'Nouveau sondage dans le club'),
+        ('CLUB_PROGRESS_COMPLETE', 'Lecture terminée'),
+        ('CLUB_SESSION_REMINDER', 'Séance demain'),
     ]
 
     recipient = models.ForeignKey(

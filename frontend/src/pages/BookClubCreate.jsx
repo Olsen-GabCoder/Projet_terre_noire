@@ -52,6 +52,7 @@ const BookClubCreate = () => {
     languages: ['FR'],
     tags: '',
     is_public: true,
+    requires_approval: false,
     max_members: 50,
   });
 
@@ -125,6 +126,7 @@ const BookClubCreate = () => {
       if (form.categories.length) data.append('category', JSON.stringify(form.categories));
       data.append('meeting_frequency', form.meeting_frequency);
       data.append('is_public', form.is_public);
+      data.append('requires_approval', form.requires_approval);
       data.append('max_members', form.max_members);
       if (form.rules.trim()) data.append('rules', form.rules);
       if (form.languages.length) data.append('languages', JSON.stringify(form.languages));
@@ -327,6 +329,16 @@ const BookClubCreate = () => {
             </div>
 
             {/* Max membres */}
+            <div className="club-create__field club-create__field--half">
+              <label className="club-create__toggle">
+                <input
+                  type="checkbox"
+                  checked={form.requires_approval}
+                  onChange={(e) => setForm({ ...form, requires_approval: e.target.checked })}
+                />
+                <span>Approbation manuelle des membres</span>
+              </label>
+            </div>
             <div className="club-create__field club-create__field--half">
               <label htmlFor="club-max">Nombre max de membres</label>
               <input

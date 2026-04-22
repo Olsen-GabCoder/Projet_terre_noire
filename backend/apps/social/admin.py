@@ -5,6 +5,7 @@ from .models import (
     ReadingList, ReadingListItem,
     Post, PostLike, PostComment,
     BookClub, BookClubMembership, BookClubMessage,
+    MessageReport,
 )
 
 
@@ -96,3 +97,11 @@ class BookClubMessageAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['author__username', 'content', 'club__name']
     raw_id_fields = ['author', 'club']
+
+
+@admin.register(MessageReport)
+class MessageReportAdmin(admin.ModelAdmin):
+    list_display = ['id', 'reason', 'status', 'reporter', 'created_at']
+    list_filter = ['status', 'reason', 'created_at']
+    search_fields = ['reporter__username', 'details']
+    raw_id_fields = ['message', 'reporter']

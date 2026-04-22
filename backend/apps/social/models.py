@@ -306,6 +306,7 @@ class BookClub(models.Model):
         related_name='created_clubs', verbose_name="Créateur",
     )
     is_public = models.BooleanField(default=True, verbose_name="Public")
+    requires_approval = models.BooleanField(default=False, verbose_name="Approbation requise")
     max_members = models.PositiveIntegerField(default=50, verbose_name="Nombre max de membres")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -334,6 +335,7 @@ class BookClubMembership(models.Model):
     """Appartenance d'un utilisateur à un club."""
     ROLE_CHOICES = [
         ('ADMIN', 'Administrateur'),
+        ('MODERATOR', 'Modérateur'),
         ('MEMBER', 'Membre'),
     ]
 
@@ -345,8 +347,26 @@ class BookClubMembership(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='club_memberships', verbose_name="Membre",
     )
+    MEMBERSHIP_STATUS_CHOICES = [
+        ('APPROVED', 'Approuvé'),
+        ('PENDING', 'En attente'),
+        ('REJECTED', 'Rejeté'),
+    ]
+
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='MEMBER')
+    membership_status = models.CharField(
+        max_length=10, choices=MEMBERSHIP_STATUS_CHOICES, default='APPROVED',
+        verbose_name="Statut d'adhésion",
+    )
     joined_at = models.DateTimeField(auto_now_add=True)
+    last_read_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Dernière lecture",
+        help_text="Horodatage de la dernière fois que le membre a consulté le chat.",
+    )
+    reading_progress = models.PositiveIntegerField(
+        default=0, verbose_name="Progression de lecture (%)",
+        help_text="Pourcentage de progression dans le livre en cours du club (0-100).",
+    )
 
     class Meta:
         unique_together = [['club', 'user']]
@@ -364,6 +384,7 @@ class BookClubMessage(models.Model):
         ('VOICE', 'Note vocale'),
         ('IMAGE', 'Image'),
         ('FILE', 'Fichier'),
+        ('QUOTE', 'Citation de passage'),
     ]
 
     club = models.ForeignKey(
@@ -392,6 +413,25 @@ class BookClubMessage(models.Model):
         null=True, blank=True,
         verbose_name="Durée note vocale (secondes)",
     )
+    quote_text = models.TextField(
+        blank=True, verbose_name="Texte du passage cité",
+    )
+    quote_page = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Numéro de page du passage",
+    )
+    quote_book = models.ForeignKey(
+        'books.Book', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='club_quotes', verbose_name="Livre cité",
+    )
+    reply_to = models.ForeignKey(
+        'self', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='replies', verbose_name="En réponse à",
+    )
+    is_deleted = models.BooleanField(default=False, verbose_name="Supprimé")
+    is_pinned = models.BooleanField(default=False, verbose_name="Épinglé")
+    edited_at = models.DateTimeField(null=True, blank=True, verbose_name="Modifié le")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -404,16 +444,272 @@ class BookClubMessage(models.Model):
         return f"{username}: {self.content[:50]}"
 
 
-# TODO Phase 7: Report model for post/comment/message moderation
-# class Report(models.Model):
-#     reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-#     object_id = models.PositiveIntegerField()
-#     reason = models.CharField(max_length=50, choices=[
-#         ('SPAM', 'Spam'), ('HARASSMENT', 'Harcèlement'),
-#         ('INAPPROPRIATE', 'Contenu inapproprié'), ('OTHER', 'Autre'),
-#     ])
-#     status = models.CharField(max_length=20, choices=[
-#         ('PENDING', 'En attente'), ('REVIEWED', 'Examiné'), ('DISMISSED', 'Rejeté'),
-#     ], default='PENDING')
-#     created_at = models.DateTimeField(auto_now_add=True)
+class MessageReaction(models.Model):
+    """Réaction emoji sur un message de club."""
+    message = models.ForeignKey(
+        BookClubMessage, on_delete=models.CASCADE,
+        related_name='reactions', verbose_name="Message",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='message_reactions', verbose_name="Utilisateur",
+    )
+    emoji = models.CharField(max_length=8, verbose_name="Emoji")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['message', 'user', 'emoji']]
+        verbose_name = "Réaction"
+        verbose_name_plural = "Réactions"
+
+    def __str__(self):
+        return f"{self.user.username} → {self.emoji} sur msg #{self.message_id}"
+
+
+class ClubInvitation(models.Model):
+    """Lien d'invitation partageable pour rejoindre un club."""
+    import uuid as _uuid
+
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='invitations', verbose_name="Club",
+    )
+    token = models.UUIDField(default=_uuid.uuid4, unique=True, editable=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='club_invitations_created',
+    )
+    max_uses = models.PositiveIntegerField(default=0, help_text="0 = illimité")
+    use_count = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Invitation de club"
+        verbose_name_plural = "Invitations de club"
+
+    def __str__(self):
+        return f"Invitation {self.token} → {self.club.name}"
+
+    @property
+    def is_valid(self):
+        if not self.is_active:
+            return False
+        if self.max_uses > 0 and self.use_count >= self.max_uses:
+            return False
+        if self.expires_at:
+            from django.utils import timezone
+            if timezone.now() > self.expires_at:
+                return False
+        return True
+
+
+class BookPoll(models.Model):
+    """Vote pour choisir le prochain livre du club."""
+    STATUS_CHOICES = [
+        ('OPEN', 'Ouvert'),
+        ('CLOSED', 'Clos'),
+    ]
+
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='polls', verbose_name="Club",
+    )
+    title = models.CharField(max_length=200, default="Vote pour le prochain livre")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='OPEN')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='created_polls',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Vote de club"
+        verbose_name_plural = "Votes de club"
+
+    def __str__(self):
+        return f"{self.title} — {self.club.name}"
+
+
+class BookPollOption(models.Model):
+    """Un livre proposé dans un vote."""
+    poll = models.ForeignKey(
+        BookPoll, on_delete=models.CASCADE,
+        related_name='options', verbose_name="Vote",
+    )
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE,
+        related_name='poll_options', verbose_name="Livre",
+    )
+    proposed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='proposed_options',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['poll', 'book']]
+        verbose_name = "Option de vote"
+
+    def __str__(self):
+        return f"{self.book.title} dans {self.poll}"
+
+
+class BookPollVote(models.Model):
+    """Vote d'un membre pour une option."""
+    option = models.ForeignKey(
+        BookPollOption, on_delete=models.CASCADE,
+        related_name='votes', verbose_name="Option",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='poll_votes', verbose_name="Votant",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['option', 'user']]
+        verbose_name = "Vote"
+
+    def __str__(self):
+        return f"{self.user.username} → {self.option.book.title}"
+
+
+class ClubSession(models.Model):
+    """Séance de lecture programmée dans un club."""
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='sessions', verbose_name="Club",
+    )
+    title = models.CharField(max_length=200, verbose_name="Sujet de la séance")
+    description = models.TextField(blank=True, verbose_name="Description")
+    scheduled_at = models.DateTimeField(verbose_name="Date et heure")
+    is_online = models.BooleanField(default=True, verbose_name="En ligne")
+    location = models.CharField(
+        max_length=255, blank=True,
+        verbose_name="Lieu (si en présentiel)",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='created_sessions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['scheduled_at']
+        verbose_name = "Séance de club"
+        verbose_name_plural = "Séances de club"
+
+    def __str__(self):
+        return f"{self.title} — {self.club.name}"
+
+
+class SessionRSVP(models.Model):
+    """RSVP d'un membre pour une séance de club."""
+    STATUS_CHOICES = [
+        ('GOING', 'Participe'),
+        ('NOT_GOING', 'Ne participe pas'),
+        ('MAYBE', 'Peut-être'),
+    ]
+
+    session = models.ForeignKey(
+        ClubSession, on_delete=models.CASCADE,
+        related_name='rsvps', verbose_name="Séance",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='session_rsvps', verbose_name="Membre",
+    )
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES,
+        verbose_name="Statut",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [['session', 'user']]
+        verbose_name = "RSVP séance"
+        verbose_name_plural = "RSVPs séances"
+
+    def __str__(self):
+        return f"{self.user} — {self.get_status_display()} — {self.session.title}"
+
+    def __str__(self):
+        return f"{self.title} — {self.club.name} ({self.scheduled_at})"
+
+
+class ClubBookHistory(models.Model):
+    """Historique des livres lus par un club."""
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='book_history', verbose_name="Club",
+    )
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE,
+        related_name='club_history', verbose_name="Livre",
+    )
+    started_at = models.DateField(verbose_name="Commencé le")
+    finished_at = models.DateField(null=True, blank=True, verbose_name="Terminé le")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-finished_at', '-started_at']
+        unique_together = [['club', 'book']]
+        verbose_name = "Historique de lecture du club"
+        verbose_name_plural = "Historiques de lecture du club"
+
+    def __str__(self):
+        return f"{self.book.title} @ {self.club.name}"
+
+
+# ── Signalement de messages ──
+
+class MessageReport(models.Model):
+    """Signalement d'un message de club par un membre."""
+    REASON_CHOICES = [
+        ('SPAM', 'Spam'),
+        ('HARASSMENT', 'Harcèlement'),
+        ('INAPPROPRIATE', 'Contenu inapproprié'),
+        ('HATE_SPEECH', 'Discours haineux'),
+        ('OTHER', 'Autre'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('REVIEWED', 'Examiné'),
+        ('DISMISSED', 'Rejeté'),
+    ]
+
+    message = models.ForeignKey(
+        BookClubMessage, on_delete=models.CASCADE,
+        related_name='reports', verbose_name="Message signalé",
+    )
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='message_reports', verbose_name="Signalé par",
+    )
+    reason = models.CharField(
+        max_length=20, choices=REASON_CHOICES,
+        verbose_name="Motif",
+    )
+    details = models.TextField(
+        blank=True, verbose_name="Détails supplémentaires",
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='PENDING',
+        verbose_name="Statut",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['message', 'reporter']]
+        ordering = ['-created_at']
+        verbose_name = "Signalement de message"
+        verbose_name_plural = "Signalements de messages"
+
+    def __str__(self):
+        return f"Report #{self.pk} — {self.get_reason_display()} par {self.reporter}"
