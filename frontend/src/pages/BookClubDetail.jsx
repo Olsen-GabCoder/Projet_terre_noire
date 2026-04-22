@@ -12,6 +12,9 @@ import '../styles/ClubChat.css';
 
 const CAT_KEYS = { GENERAL:'pages.bookClubDetail.cat.general',ROMAN:'pages.bookClubDetail.cat.novels',POESIE:'pages.bookClubDetail.cat.poetry',ESSAI:'pages.bookClubDetail.cat.essays',JEUNESSE:'pages.bookClubDetail.cat.youth',SF_FANTASY:'pages.bookClubDetail.cat.sfFantasy',POLAR:'pages.bookClubDetail.cat.thriller',BD_MANGA:'pages.bookClubDetail.cat.comics',CLASSIQUES:'pages.bookClubDetail.cat.classics',AFRICAIN:'pages.bookClubDetail.cat.african',DEVELOPPEMENT:'pages.bookClubDetail.cat.selfHelp',AUTRE:'pages.bookClubDetail.cat.other' };
 const EMOJIS = ['👍','❤️','😂','😮','📖','🔥','👏','💡','🎉','✨','😊','🤔','📚','✅','💬'];
+const EMOJI_ONLY_RE = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\u200D\s]{1,12}$/u;
+const isEmojiOnly = (text) => text && EMOJI_ONLY_RE.test(text.trim()) && text.trim().length <= 12;
+
 const STICKER_PACKS = [
   { name: 'Lecture', icon: '📖', stickers: ['📖✨','📚💫','🤓👆','😴📖','☕📚','🏆📖','📖❤️','🤯📚','📝💡','🎧📖'] },
   { name: 'Réactions', icon: '😄', stickers: ['🎉🎊','👏👏👏','🔥🔥🔥','💯','❤️‍🔥','🥳🎈','😂🤣','🙌✨','💪🏾','🫡'] },
@@ -709,7 +712,10 @@ export default function BookClubDetail() {
                               </div>
                             ):(
                               <>
-                                {item.message_type==='TEXT'&&<p className="cc-msg__text">{renderWithMentions(item.content,members,searchMatchIds&&searchMatchIds.has(item.id)?chatSearch:'')}</p>}
+                                {item.message_type==='TEXT'&&(isEmojiOnly(item.content)
+                                  ?<p className="cc-msg__emoji-only">{item.content}</p>
+                                  :<p className="cc-msg__text">{renderWithMentions(item.content,members,searchMatchIds&&searchMatchIds.has(item.id)?chatSearch:'')}</p>
+                                )}
                                 {item.message_type==='QUOTE'&&(
                                   <div className="cc-msg__quote">
                                     {item.quote_book_detail&&<div className="cc-msg__quote-cover"><img src={item.quote_book_detail.cover_image} alt=""/></div>}
@@ -817,16 +823,14 @@ export default function BookClubDetail() {
                         <button type="button" className="cc-bar__reply-close" onClick={()=>setReplyTo(null)}><i className="fas fa-times"/></button>
                       </div>
                     )}
-                    <div className="cc-bar__tools">
-                      <button type="button" className="cc-bar__icon" onClick={()=>setShowEmoji(p=>!p)} title="Emoji"><i className="fas fa-quote-right"/></button>
-                      <button type="button" className="cc-bar__icon" onClick={startRec} title="Vocal"><i className="fas fa-microphone"/></button>
-                      <button type="button" className="cc-bar__icon" onClick={()=>imgRef.current?.click()} title="Image"><i className="fas fa-image"/></button>
-                      <button type="button" className="cc-bar__icon" onClick={()=>fileRef.current?.click()} title="Fichier"><i className="fas fa-paperclip"/></button>
-                      <input ref={imgRef} type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])uploadFile(e.target.files[0],'IMAGE');e.target.value='';}}/>
-                      <input ref={fileRef} type="file" style={{display:'none'}} onChange={e=>{if(e.target.files[0])uploadFile(e.target.files[0],'FILE');e.target.value='';}}/>
-                      <span className="cc-bar__hint">{t('pages.bookClubDetail.citePassage')}</span>
-                    </div>
+                    <input ref={imgRef} type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])uploadFile(e.target.files[0],'IMAGE');e.target.value='';}}/>
+                    <input ref={fileRef} type="file" style={{display:'none'}} onChange={e=>{if(e.target.files[0])uploadFile(e.target.files[0],'FILE');e.target.value='';}}/>
                     <div className="cc-bar__row">
+                      <div className="cc-bar__tools">
+                        <button type="button" className="cc-bar__icon" onClick={()=>setShowEmoji(p=>!p)} title="Emoji"><i className="fas fa-smile"/></button>
+                        <button type="button" className="cc-bar__icon" onClick={()=>imgRef.current?.click()} title="Image"><i className="fas fa-image"/></button>
+                        <button type="button" className="cc-bar__icon" onClick={()=>fileRef.current?.click()} title="Fichier"><i className="fas fa-paperclip"/></button>
+                      </div>
                       <div className="cc-bar__input-wrap">
                         {mentionResults.length>0&&(
                           <div className="cc-mention-dropdown">
@@ -838,9 +842,10 @@ export default function BookClubDetail() {
                             ))}
                           </div>
                         )}
-                        <textarea ref={inputRef} className="cc-bar__input" value={msgText} onChange={onMsgChange} placeholder={t('pages.bookClubDetail.yourContribution')} disabled={sending} rows={1} onFocus={()=>setShowEmoji(false)} onKeyDown={onMsgKeyDown}/>
+                        <textarea ref={inputRef} className="cc-bar__input" value={msgText} onChange={e=>{onMsgChange(e);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,160)+'px';}} placeholder={t('pages.bookClubDetail.yourContribution')} disabled={sending} rows={1} onFocus={()=>setShowEmoji(false)} onKeyDown={onMsgKeyDown}/>
                       </div>
-                      <button type="submit" className="cc-btn cc-btn--join cc-bar__send" disabled={sending||!msgText.trim()}>{t('pages.bookClubDetail.sendMessage')} <i className="fas fa-arrow-right"/></button>
+                      <button type="button" className="cc-bar__icon" onClick={startRec} title="Vocal"><i className="fas fa-microphone"/></button>
+                      <button type="submit" className="cc-bar__send" disabled={sending||!msgText.trim()}><i className="fas fa-paper-plane"/></button>
                     </div>
                   </form>
                 )}
