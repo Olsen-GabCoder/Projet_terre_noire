@@ -12,6 +12,46 @@ import '../styles/ClubChat.css';
 
 const CAT_KEYS = { GENERAL:'pages.bookClubDetail.cat.general',ROMAN:'pages.bookClubDetail.cat.novels',POESIE:'pages.bookClubDetail.cat.poetry',ESSAI:'pages.bookClubDetail.cat.essays',JEUNESSE:'pages.bookClubDetail.cat.youth',SF_FANTASY:'pages.bookClubDetail.cat.sfFantasy',POLAR:'pages.bookClubDetail.cat.thriller',BD_MANGA:'pages.bookClubDetail.cat.comics',CLASSIQUES:'pages.bookClubDetail.cat.classics',AFRICAIN:'pages.bookClubDetail.cat.african',DEVELOPPEMENT:'pages.bookClubDetail.cat.selfHelp',AUTRE:'pages.bookClubDetail.cat.other' };
 const EMOJIS = ['👍','❤️','😂','😮','📖','🔥','👏','💡','🎉','✨','😊','🤔','📚','✅','💬'];
+const STICKER_PACKS = [
+  { name: 'Lecture', icon: '📖', stickers: ['📖✨','📚💫','🤓👆','😴📖','☕📚','🏆📖','📖❤️','🤯📚','📝💡','🎧📖'] },
+  { name: 'Réactions', icon: '😄', stickers: ['🎉🎊','👏👏👏','🔥🔥🔥','💯','❤️‍🔥','🥳🎈','😂🤣','🙌✨','💪🏾','🫡'] },
+  { name: 'Afrique', icon: '🌍', stickers: ['🌍📚','☀️🌴','🥁🎶','🫶🏾','✊🏾','🌺','🦁','🏠📖','🍵📖','🌙✨'] },
+];
+
+const EMOJI_CATEGORIES = [
+  { name:'Fréquents', icon:'🕐', emojis:['👍','❤️','😂','😮','🔥','👏','🎉','✨','😊','🤔','💯','🙏','😍','🥰','💪'] },
+  { name:'Visages', icon:'😀', emojis:['😀','😃','😄','😁','😆','🥹','😅','🤣','😂','🙂','😉','😊','😇','🥰','😍','🤩','😘','😋','😛','🤪','😜','🤑','🤗','🤭','🫢','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','🫥','😏','😒','🙄','😬','😮‍💨','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐'] },
+  { name:'Gestes', icon:'👋', emojis:['👋','🤚','🖐️','✋','🖖','🫱','🫲','🫳','🫴','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🙏','💪','🫶🏾','✊🏾','👏🏾','🙌🏾','💪🏾'] },
+  { name:'Livres', icon:'📚', emojis:['📖','📚','📕','📗','📘','📙','📓','📒','📃','📝','✏️','🖊️','🖋️','✒️','📎','🔖','🏷️','📑','🗒️','📰','🗞️','💡','🎓','🏫','🧠','💭','📜'] },
+  { name:'Nature', icon:'🌿', emojis:['🌍','🌎','🌏','🌺','🌸','🌼','🌻','🌹','🌷','🪻','🌱','🌿','☘️','🍀','🌴','🌳','🌲','🍃','🍂','🍁','🌾','☀️','🌤️','⛅','🌈','🌙','⭐','✨','🌟','💫'] },
+  { name:'Nourriture', icon:'☕', emojis:['☕','🍵','🧃','🥤','🍶','🍷','🍺','🥂','🍰','🎂','🍫','🍬','🍭','🍩','🍪','🥐','🍞','🥖','🥨','🧀','🍕','🍔','🍟','🌮','🍜','🍲','🥘','🍛'] },
+  { name:'Activités', icon:'🎉', emojis:['🎉','🎊','🎈','🎀','🎁','🏆','🥇','🥈','🥉','🏅','🎖️','🎗️','🎵','🎶','🎤','🎧','🎸','🎹','🥁','🎬','🎨','🎭','🎪','🎯','🎲','🧩','♟️','🎮'] },
+  { name:'Symboles', icon:'❤️', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','✅','❌','❓','❗','‼️','⁉️','💬','💭','🗯️','💤'] },
+];
+
+function EmojiPicker({onSelect}){
+  const [cat,setCat]=useState(0);
+  const [search,setSearch]=useState('');
+  const filtered=search?EMOJI_CATEGORIES.flatMap(c=>c.emojis).filter(e=>e.includes(search)):EMOJI_CATEGORIES[cat].emojis;
+  return(
+    <div className="cc-epicker">
+      <div className="cc-epicker__search">
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher un emoji..."/>
+      </div>
+      {!search&&<div className="cc-epicker__cats">
+        {EMOJI_CATEGORIES.map((c,i)=>(
+          <button key={c.name} className={`cc-epicker__cat${i===cat?' cc-epicker__cat--active':''}`} onClick={()=>setCat(i)} title={c.name}>{c.icon}</button>
+        ))}
+      </div>}
+      {!search&&<div className="cc-epicker__label">{EMOJI_CATEGORIES[cat].name}</div>}
+      <div className="cc-epicker__grid">
+        {filtered.map((em,i)=>(
+          <button key={`${em}-${i}`} className="cc-epicker__em" onClick={()=>onSelect({native:em})}>{em}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const fmtTime = (d, lng) => new Date(d).toLocaleTimeString(lng === 'en' ? 'en-US' : 'fr-FR',{hour:'2-digit',minute:'2-digit'});
 const fmtDur = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
@@ -106,6 +146,7 @@ export default function BookClubDetail() {
   const [msgText,setMsgText]=useState('');
   const [sending,setSending]=useState(false);
   const [showEmoji,setShowEmoji]=useState(false);
+  const [pickerTab,setPickerTab]=useState('emoji'); // 'emoji' | 'stickers'
   const [showScrollBtn,setShowScrollBtn]=useState(false);
   const [msgMenu,setMsgMenu]=useState(null); // {id, own, canEdit}
   const [editingMsg,setEditingMsg]=useState(null); // {id, content}
@@ -703,6 +744,12 @@ export default function BookClubDetail() {
                         {reactionPicker===item.id&&(
                           <div className="cc-msg__react-picker" onClick={e=>e.stopPropagation()}>
                             {EMOJIS.map(em=><button key={em} onClick={()=>handleReact(item.id,em)}>{em}</button>)}
+                            <button className="cc-msg__react-more" onClick={()=>setReactionPicker(`full-${item.id}`)}>+</button>
+                          </div>
+                        )}
+                        {reactionPicker===`full-${item.id}`&&(
+                          <div className="cc-msg__react-full" onClick={e=>e.stopPropagation()}>
+                            <EmojiPicker onSelect={e=>handleReact(item.id,e.native)} perLine={7}/>
                           </div>
                         )}
                       </div>
@@ -724,7 +771,30 @@ export default function BookClubDetail() {
             </div>
 
             {showScrollBtn&&<button className="cc-scroll-btn" onClick={scrollToBottom}><i className="fas fa-chevron-down"/></button>}
-            {showEmoji&&<div className="cc-emoji"><div className="cc-emoji__grid">{EMOJIS.map(em=><button key={em} type="button" onClick={()=>insertEmoji(em)}>{em}</button>)}</div></div>}
+            {showEmoji&&(
+              <div className="cc-picker">
+                <div className="cc-picker__tabs">
+                  <button className={`cc-picker__tab${pickerTab==='emoji'?' cc-picker__tab--active':''}`} onClick={()=>setPickerTab('emoji')}>Émojis</button>
+                  <button className={`cc-picker__tab${pickerTab==='stickers'?' cc-picker__tab--active':''}`} onClick={()=>setPickerTab('stickers')}>Stickers</button>
+                </div>
+                {pickerTab==='emoji'?(
+                  <EmojiPicker onSelect={e=>insertEmoji(e.native)} perLine={8}/>
+                ):(
+                  <div className="cc-sticker-packs">
+                    {STICKER_PACKS.map(pack=>(
+                      <div key={pack.name} className="cc-sticker-pack">
+                        <div className="cc-sticker-pack__name">{pack.icon} {pack.name}</div>
+                        <div className="cc-sticker-pack__grid">
+                          {pack.stickers.map(s=>(
+                            <button key={s} className="cc-sticker" onClick={()=>{insertEmoji(s);setShowEmoji(false);}}>{s}</button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Composer */}
             {isMember?(

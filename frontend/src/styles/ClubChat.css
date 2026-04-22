@@ -1155,32 +1155,181 @@
 /* ═══════════════════════════════════════════════════════════════
    EMOJI PICKER
    ═══════════════════════════════════════════════════════════════ */
-.cc-emoji {
+/* ═══════════════════════════════════════════════════════════════
+   EMOJI & STICKER PICKER
+   ═══════════════════════════════════════════════════════════════ */
+.cc-picker {
   border: 1px solid var(--fl-border);
   border-radius: 4px;
   background: var(--fl-bg-elev);
-  padding: 8px;
   margin-bottom: 8px;
-  box-shadow: var(--fl-shadow-md);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
-.cc-emoji__grid {
+.cc-picker__tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  border-bottom: 1px solid var(--fl-border);
 }
-.cc-emoji__grid button {
+.cc-picker__tab {
+  flex: 1;
+  padding: 8px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fl-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.cc-picker__tab--active {
+  color: var(--fl-ink);
+  border-bottom-color: var(--fl-ocre);
+}
+
+/* Native emoji picker */
+.cc-epicker {
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+.cc-epicker__search {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--fl-border);
+}
+.cc-epicker__search input {
+  width: 100%;
+  border: 1px solid var(--fl-border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--fl-font-sans);
+  background: var(--fl-bg);
+  color: var(--fl-ink);
+  outline: none;
+}
+.cc-epicker__search input:focus {
+  border-color: var(--fl-ocre);
+}
+.cc-epicker__cats {
+  display: flex;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--fl-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cc-epicker__cat {
+  background: none;
+  border: none;
+  font-size: 16px;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.1s;
+}
+.cc-epicker__cat--active {
+  background: var(--fl-accent-soft);
+  border-bottom-color: var(--fl-ocre);
+}
+.cc-epicker__label {
+  font-family: var(--fl-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--fl-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 10px 2px;
+}
+.cc-epicker__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 4px 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+.cc-epicker__em {
+  background: none;
+  border: none;
+  font-size: 22px;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
   line-height: 1;
-  transition: background 0.08s;
+  text-align: center;
+  transition: background 0.08s, transform 0.08s;
 }
-.cc-emoji__grid button:hover {
+.cc-epicker__em:hover {
   background: var(--fl-bg-sunk);
+  transform: scale(1.15);
 }
+
+/* Sticker packs */
+.cc-sticker-packs {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.cc-sticker-pack {
+  margin-bottom: 12px;
+}
+.cc-sticker-pack__name {
+  font-family: var(--fl-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fl-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.cc-sticker-pack__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.cc-sticker {
+  background: var(--fl-bg-sunk);
+  border: 1px solid var(--fl-border);
+  border-radius: 8px;
+  padding: 10px 4px;
+  font-size: 24px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1;
+  transition: transform 0.1s, background 0.1s;
+}
+.cc-sticker:hover {
+  transform: scale(1.1);
+  background: var(--fl-accent-soft);
+  border-color: var(--fl-ocre);
+}
+
+/* Reaction full picker (on message) */
+.cc-msg__react-more {
+  font-size: 16px;
+  color: var(--fl-muted);
+  font-weight: 700;
+}
+.cc-msg__react-full {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cc-msg--own .cc-msg__react-full {
+  right: auto;
+  left: 0;
+}
+
+/* Legacy emoji grid — hidden */
+.cc-emoji { display: none; }
 
 /* ═══════════════════════════════════════════════════════════════
    COMPOSER BAR

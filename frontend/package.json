@@ -26,6 +26,7 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^17.0.2",
     "react-intersection-observer": "^10.0.0",
+    "react-is": "^19.2.5",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.7.0"
   },
