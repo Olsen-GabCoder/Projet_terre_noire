@@ -1205,13 +1205,15 @@
 
 /* Native emoji picker — professional */
 .cc-epicker {
-  max-height: 320px;
+  height: 320px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .cc-epicker__search {
   padding: 8px 10px;
   border-bottom: 1px solid var(--fl-border);
+  flex-shrink: 0;
 }
 .cc-epicker__search input {
   width: 100%;
@@ -1235,6 +1237,7 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  flex-shrink: 0;
 }
 .cc-epicker__cats::-webkit-scrollbar { display: none; }
 .cc-epicker__cat {
@@ -1261,16 +1264,27 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 8px 12px 4px;
+  flex-shrink: 0;
 }
 .cc-epicker__grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  align-content: start;
   gap: 2px;
   padding: 4px 8px 8px;
-  overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--fl-border-strong) transparent;
+}
+.cc-epicker__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px;
+  color: var(--fl-muted);
+  font-size: 13px;
 }
 .cc-epicker__em {
   background: none;

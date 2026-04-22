@@ -35,22 +35,30 @@ const EMOJI_CATEGORIES = [
 function EmojiPicker({onSelect}){
   const [cat,setCat]=useState(0);
   const [search,setSearch]=useState('');
-  const filtered=search?EMOJI_CATEGORIES.flatMap(c=>c.emojis).filter(e=>e.includes(search)):EMOJI_CATEGORIES[cat].emojis;
+  const gridRef=useRef(null);
+  const filtered=search
+    ?EMOJI_CATEGORIES.flatMap(c=>c.emojis).filter(e=>e.includes(search))
+    :EMOJI_CATEGORIES[cat].emojis;
+  const switchCat=(i)=>{
+    setCat(i);
+    setSearch('');
+    if(gridRef.current)gridRef.current.scrollTop=0;
+  };
   return(
     <div className="cc-epicker">
       <div className="cc-epicker__search">
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher un emoji..."/>
+        <input value={search} onChange={e=>{setSearch(e.target.value);if(gridRef.current)gridRef.current.scrollTop=0;}} placeholder="Rechercher un emoji..."/>
       </div>
-      {!search&&<div className="cc-epicker__cats">
+      <div className="cc-epicker__cats">
         {EMOJI_CATEGORIES.map((c,i)=>(
-          <button key={c.name} className={`cc-epicker__cat${i===cat?' cc-epicker__cat--active':''}`} onClick={()=>setCat(i)} title={c.name}>{c.icon}</button>
+          <button key={c.name} className={`cc-epicker__cat${!search&&i===cat?' cc-epicker__cat--active':''}`} onClick={()=>switchCat(i)} title={c.name}>{c.icon}</button>
         ))}
-      </div>}
-      {!search&&<div className="cc-epicker__label">{EMOJI_CATEGORIES[cat].name}</div>}
-      <div className="cc-epicker__grid">
-        {filtered.map((em,i)=>(
-          <button key={`${em}-${i}`} className="cc-epicker__em" onClick={()=>onSelect({native:em})}>{em}</button>
-        ))}
+      </div>
+      <div className="cc-epicker__label">{search?`Résultats pour « ${search} »`:EMOJI_CATEGORIES[cat].name}</div>
+      <div className="cc-epicker__grid" ref={gridRef}>
+        {filtered.length>0?filtered.map((em,i)=>(
+          <button key={`${cat}-${em}-${i}`} className="cc-epicker__em" onClick={()=>onSelect({native:em})}>{em}</button>
+        )):<div className="cc-epicker__empty">Aucun résultat</div>}
       </div>
     </div>
   );
