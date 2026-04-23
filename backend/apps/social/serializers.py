@@ -8,6 +8,7 @@ from .models import (
     BookClub, BookClubMembership, BookClubMessage,
     MessageReport,
     ClubSession, SessionRSVP, ClubBookHistory,
+    ClubWishlistItem, ReadingCheckpoint, ModerationLog,
 )
 
 
@@ -228,6 +229,7 @@ class BookClubListSerializer(serializers.ModelSerializer):
             'category', 'meeting_frequency', 'frequency_display',
             'languages', 'tags', 'current_book',
             'creator', 'is_public', 'requires_approval', 'max_members',
+            'reading_goal_pages', 'reading_goal_deadline',
             'members_count', 'user_is_member', 'user_membership_status', 'unread_count',
             'created_at', 'updated_at',
         ]
@@ -292,6 +294,7 @@ class BookClubCreateSerializer(serializers.ModelSerializer):
             'category', 'rules', 'meeting_frequency',
             'languages', 'tags', 'current_book',
             'is_public', 'requires_approval', 'max_members',
+            'reading_goal_pages', 'reading_goal_deadline',
         ]
         read_only_fields = ['id']
 
@@ -310,7 +313,7 @@ class BookClubMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookClubMembership
-        fields = ['id', 'user', 'role', 'membership_status', 'joined_at', 'reading_progress']
+        fields = ['id', 'user', 'role', 'membership_status', 'joined_at', 'reading_progress', 'is_banned', 'banned_at']
         read_only_fields = ['id', 'joined_at']
 
 
@@ -321,6 +324,8 @@ class BookClubMessageSerializer(serializers.ModelSerializer):
     quote_book_detail = serializers.SerializerMethodField()
     reply_to_preview = serializers.SerializerMethodField()
 
+    forwarded_from_preview = serializers.SerializerMethodField()
+
     class Meta:
         model = BookClubMessage
         fields = [
@@ -329,6 +334,7 @@ class BookClubMessageSerializer(serializers.ModelSerializer):
             'attachment_name', 'voice_duration',
             'quote_text', 'quote_page', 'quote_book', 'quote_book_detail',
             'reply_to', 'reply_to_preview',
+            'forwarded_from', 'forwarded_from_preview',
             'is_deleted', 'is_pinned', 'edited_at', 'created_at',
             'reactions_summary',
         ]
@@ -345,6 +351,18 @@ class BookClubMessageSerializer(serializers.ModelSerializer):
             'content': parent.content[:120] if parent.content else '',
             'message_type': parent.message_type,
             'is_deleted': parent.is_deleted,
+        }
+
+    def get_forwarded_from_preview(self, obj):
+        if not obj.forwarded_from:
+            return None
+        fwd = obj.forwarded_from
+        return {
+            'id': fwd.id,
+            'author': SimpleUserSerializer(fwd.author).data if fwd.author else None,
+            'content': fwd.content[:120] if fwd.content else '',
+            'message_type': fwd.message_type,
+            'club_name': fwd.club.name if fwd.club else None,
         }
 
     def get_quote_book_detail(self, obj):
@@ -444,7 +462,7 @@ class BookPollOptionSerializer(serializers.ModelSerializer):
     class Meta:
         from apps.social.models import BookPollOption
         model = BookPollOption
-        fields = ['id', 'book', 'proposed_by', 'votes_count', 'voted_by_me', 'created_at']
+        fields = ['id', 'book', 'text_label', 'proposed_by', 'votes_count', 'voted_by_me', 'created_at']
 
     def get_votes_count(self, obj):
         return obj.votes.count()
@@ -464,7 +482,7 @@ class BookPollSerializer(serializers.ModelSerializer):
     class Meta:
         from apps.social.models import BookPoll
         model = BookPoll
-        fields = ['id', 'title', 'status', 'created_by', 'options', 'total_votes', 'created_at', 'closed_at']
+        fields = ['id', 'title', 'poll_type', 'status', 'created_by', 'options', 'total_votes', 'created_at', 'closed_at']
 
     def get_total_votes(self, obj):
         return sum(o.votes.count() for o in obj.options.all())
@@ -482,6 +500,7 @@ class ClubSessionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'club', 'title', 'description',
             'scheduled_at', 'is_online', 'location',
+            'recurrence',
             'created_by', 'created_at',
             'rsvp_counts', 'my_rsvp',
         ]
@@ -512,3 +531,53 @@ class ClubBookHistorySerializer(serializers.ModelSerializer):
         model = ClubBookHistory
         fields = ['id', 'club', 'book', 'started_at', 'finished_at', 'created_at']
         read_only_fields = ['id', 'club', 'created_at']
+
+
+# ── Wishlist collective ──
+
+class ClubWishlistItemSerializer(serializers.ModelSerializer):
+    book = BookListSerializer(read_only=True)
+    suggested_by = SimpleUserSerializer(read_only=True)
+    votes_count = serializers.SerializerMethodField()
+    voted_by_me = serializers.SerializerMethodField()
+
+    class Meta:
+        from apps.social.models import ClubWishlistItem
+        model = ClubWishlistItem
+        fields = ['id', 'book', 'suggested_by', 'votes_count', 'voted_by_me', 'created_at']
+
+    def get_votes_count(self, obj):
+        return obj.votes.count()
+
+    def get_voted_by_me(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.votes.filter(user=request.user).exists()
+
+
+# ── Jalons de lecture ──
+
+class ReadingCheckpointSerializer(serializers.ModelSerializer):
+    created_by = SimpleUserSerializer(read_only=True)
+    is_reached = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingCheckpoint
+        fields = ['id', 'label', 'target_page', 'sort_order', 'reached_at', 'is_reached', 'created_by', 'created_at']
+        read_only_fields = ['id', 'reached_at', 'created_at']
+
+    def get_is_reached(self, obj):
+        return obj.reached_at is not None
+
+
+# ── Journal de modération ──
+
+class ModerationLogSerializer(serializers.ModelSerializer):
+    actor = SimpleUserSerializer(read_only=True)
+    target_user = SimpleUserSerializer(read_only=True)
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+
+    class Meta:
+        model = ModerationLog
+        fields = ['id', 'action', 'action_display', 'actor', 'target_user', 'target_message', 'details', 'created_at']

@@ -308,6 +308,12 @@ class BookClub(models.Model):
     is_public = models.BooleanField(default=True, verbose_name="Public")
     requires_approval = models.BooleanField(default=False, verbose_name="Approbation requise")
     max_members = models.PositiveIntegerField(default=50, verbose_name="Nombre max de membres")
+    reading_goal_pages = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Objectif de lecture (pages/semaine)",
+    )
+    reading_goal_deadline = models.DateField(
+        null=True, blank=True, verbose_name="Date limite de l'objectif",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -367,6 +373,8 @@ class BookClubMembership(models.Model):
         default=0, verbose_name="Progression de lecture (%)",
         help_text="Pourcentage de progression dans le livre en cours du club (0-100).",
     )
+    is_banned = models.BooleanField(default=False, verbose_name="Banni")
+    banned_at = models.DateTimeField(null=True, blank=True, verbose_name="Banni le")
 
     class Meta:
         unique_together = [['club', 'user']]
@@ -428,6 +436,11 @@ class BookClubMessage(models.Model):
         'self', on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='replies', verbose_name="En réponse à",
+    )
+    forwarded_from = models.ForeignKey(
+        'self', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='forwards', verbose_name="Transféré depuis",
     )
     is_deleted = models.BooleanField(default=False, verbose_name="Supprimé")
     is_pinned = models.BooleanField(default=False, verbose_name="Épinglé")
@@ -507,10 +520,14 @@ class ClubInvitation(models.Model):
 
 
 class BookPoll(models.Model):
-    """Vote pour choisir le prochain livre du club."""
+    """Vote pour choisir le prochain livre du club ou sondage générique."""
     STATUS_CHOICES = [
         ('OPEN', 'Ouvert'),
         ('CLOSED', 'Clos'),
+    ]
+    POLL_TYPE_CHOICES = [
+        ('BOOK', 'Livre'),
+        ('GENERIC', 'Générique'),
     ]
 
     club = models.ForeignKey(
@@ -518,6 +535,7 @@ class BookPoll(models.Model):
         related_name='polls', verbose_name="Club",
     )
     title = models.CharField(max_length=200, default="Vote pour le prochain livre")
+    poll_type = models.CharField(max_length=10, choices=POLL_TYPE_CHOICES, default='BOOK', verbose_name="Type de sondage")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='OPEN')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
@@ -536,7 +554,7 @@ class BookPoll(models.Model):
 
 
 class BookPollOption(models.Model):
-    """Un livre proposé dans un vote."""
+    """Un livre proposé dans un vote ou une option texte pour un sondage générique."""
     poll = models.ForeignKey(
         BookPoll, on_delete=models.CASCADE,
         related_name='options', verbose_name="Vote",
@@ -544,7 +562,9 @@ class BookPollOption(models.Model):
     book = models.ForeignKey(
         'books.Book', on_delete=models.CASCADE,
         related_name='poll_options', verbose_name="Livre",
+        null=True, blank=True,
     )
+    text_label = models.CharField(max_length=200, null=True, blank=True, verbose_name="Option texte")
     proposed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='proposed_options',
@@ -555,8 +575,16 @@ class BookPollOption(models.Model):
         unique_together = [['poll', 'book']]
         verbose_name = "Option de vote"
 
+    @property
+    def label(self):
+        if self.text_label:
+            return self.text_label
+        if self.book:
+            return self.book.title
+        return '—'
+
     def __str__(self):
-        return f"{self.book.title} dans {self.poll}"
+        return f"{self.label} dans {self.poll}"
 
 
 class BookPollVote(models.Model):
@@ -581,6 +609,13 @@ class BookPollVote(models.Model):
 
 class ClubSession(models.Model):
     """Séance de lecture programmée dans un club."""
+    RECURRENCE_CHOICES = [
+        ('NONE', 'Aucune'),
+        ('WEEKLY', 'Hebdomadaire'),
+        ('BIWEEKLY', 'Bimensuel'),
+        ('MONTHLY', 'Mensuel'),
+    ]
+
     club = models.ForeignKey(
         BookClub, on_delete=models.CASCADE,
         related_name='sessions', verbose_name="Club",
@@ -592,6 +627,10 @@ class ClubSession(models.Model):
     location = models.CharField(
         max_length=255, blank=True,
         verbose_name="Lieu (si en présentiel)",
+    )
+    recurrence = models.CharField(
+        max_length=10, choices=RECURRENCE_CHOICES, default='NONE',
+        verbose_name="Récurrence",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
@@ -665,6 +704,135 @@ class ClubBookHistory(models.Model):
 
     def __str__(self):
         return f"{self.book.title} @ {self.club.name}"
+
+
+# ── Jalons de lecture ──
+
+class ReadingCheckpoint(models.Model):
+    """Jalon de lecture — point de discussion sans spoilers."""
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='checkpoints', verbose_name="Club",
+    )
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE,
+        related_name='reading_checkpoints', verbose_name="Livre",
+    )
+    label = models.CharField(max_length=200, verbose_name="Nom du jalon")
+    target_page = models.PositiveIntegerField(verbose_name="Page cible")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="Ordre")
+    reached_at = models.DateTimeField(null=True, blank=True, verbose_name="Atteint le")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='created_checkpoints',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'target_page']
+        unique_together = [['club', 'book', 'target_page']]
+        verbose_name = "Jalon de lecture"
+        verbose_name_plural = "Jalons de lecture"
+
+    def __str__(self):
+        return f"{self.label} (p.{self.target_page}) — {self.club.name}"
+
+
+# ── Wishlist collective ──
+
+class ClubWishlistItem(models.Model):
+    """Suggestion de livre par un membre du club."""
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='wishlist_items', verbose_name="Club",
+    )
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE,
+        related_name='club_wishlist_entries', verbose_name="Livre",
+    )
+    suggested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='club_suggestions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['club', 'book']]
+        ordering = ['-created_at']
+        verbose_name = "Suggestion de lecture"
+        verbose_name_plural = "Suggestions de lecture"
+
+    def __str__(self):
+        return f"{self.book.title} — wishlist {self.club.name}"
+
+
+class ClubWishlistVote(models.Model):
+    """Vote d'un membre pour une suggestion de la wishlist."""
+    item = models.ForeignKey(
+        ClubWishlistItem, on_delete=models.CASCADE,
+        related_name='votes', verbose_name="Suggestion",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='wishlist_votes', verbose_name="Votant",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['item', 'user']]
+        verbose_name = "Vote wishlist"
+        verbose_name_plural = "Votes wishlist"
+
+    def __str__(self):
+        return f"{self.user.username} → {self.item.book.title}"
+
+
+# ── Journal de modération ──
+
+class ModerationLog(models.Model):
+    """Journal des actions de modération dans un club."""
+    ACTION_CHOICES = [
+        ('KICK', 'Exclusion'),
+        ('BAN', 'Bannissement'),
+        ('ROLE_CHANGE', 'Changement de rôle'),
+        ('MSG_DELETE', 'Suppression de message'),
+        ('MSG_PIN', 'Épinglage de message'),
+        ('MSG_UNPIN', 'Désépinglage de message'),
+        ('MEMBER_APPROVE', 'Approbation de membre'),
+        ('MEMBER_REJECT', 'Rejet de membre'),
+        ('REPORT_REVIEW', 'Traitement de signalement'),
+    ]
+
+    club = models.ForeignKey(
+        BookClub, on_delete=models.CASCADE,
+        related_name='moderation_logs', verbose_name="Club",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='moderation_actions',
+        verbose_name="Auteur de l'action",
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name="Action")
+    target_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='moderation_targets',
+        verbose_name="Utilisateur ciblé",
+    )
+    target_message = models.ForeignKey(
+        'BookClubMessage', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='moderation_logs',
+        verbose_name="Message ciblé",
+    )
+    details = models.CharField(max_length=300, blank=True, verbose_name="Détails")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Journal de modération"
+        verbose_name_plural = "Journal de modération"
+
+    def __str__(self):
+        return f"{self.get_action_display()} par {self.actor} dans {self.club.name}"
 
 
 # ── Signalement de messages ──

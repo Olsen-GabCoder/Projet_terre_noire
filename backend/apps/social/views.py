@@ -21,6 +21,7 @@ from .models import (
     Post, PostLike, PostComment,
     BookClub, BookClubMembership, BookClubMessage, MessageReport,
     ClubSession, SessionRSVP, ClubBookHistory,
+    ClubWishlistItem, ModerationLog,
 )
 from .serializers import (
     UserFollowSerializer, AuthorFollowSerializer, OrganizationFollowSerializer,
@@ -539,6 +540,8 @@ class BookClubViewSet(viewsets.ModelViewSet):
             )
         existing = BookClubMembership.objects.filter(club=club, user=request.user).first()
         if existing:
+            if existing.is_banned:
+                return Response({'detail': 'Vous avez été banni de ce club.'}, status=status.HTTP_403_FORBIDDEN)
             if existing.membership_status == 'REJECTED':
                 return Response({'detail': 'Votre demande a été refusée.'}, status=status.HTTP_403_FORBIDDEN)
             return Response({'detail': 'Vous êtes déjà membre ou en attente.'}, status=status.HTTP_409_CONFLICT)
@@ -663,6 +666,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
 
         membership.role = new_role
         membership.save(update_fields=['role'])
+        self._log_moderation(club, request.user, 'ROLE_CHANGE', target_user=membership.user, details=f'→ {new_role}')
         return Response({
             'message': f'{membership.user.get_full_name()} est maintenant {membership.get_role_display()}.',
             'membership': BookClubMemberSerializer(membership, context={'request': request}).data,
@@ -686,9 +690,41 @@ class BookClubViewSet(viewsets.ModelViewSet):
         if not self._is_club_admin(club, request.user) and membership.role in ('ADMIN', 'MODERATOR'):
             return Response({'detail': 'Un modérateur ne peut pas exclure un admin ou un autre modérateur.'}, status=status.HTTP_403_FORBIDDEN)
 
-        name = membership.user.get_full_name()
+        name = membership.user.get_full_name() or membership.user.username
+        target = membership.user
         membership.delete()
+        self._log_moderation(club, request.user, 'KICK', target_user=target, details=name)
         return Response({'message': f'{name} a été exclu du club.', 'members_count': club.memberships.count()})
+
+    @action(detail=True, methods=['post'], url_path='members/(?P<member_id>[0-9]+)/ban')
+    def ban_member(self, request, slug=None, member_id=None):
+        """Bannir un membre du club de façon permanente (admin ou modérateur)."""
+        club = self.get_object()
+        if not self._is_club_mod(club, request.user):
+            return Response({'detail': 'Réservé aux administrateurs et modérateurs.'}, status=status.HTTP_403_FORBIDDEN)
+
+        membership = BookClubMembership.objects.filter(club=club, id=member_id).select_related('user').first()
+        if not membership:
+            return Response({'detail': 'Membre introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if membership.user == club.creator:
+            return Response({'detail': 'Impossible de bannir le créateur.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not self._is_club_admin(club, request.user) and membership.role in ('ADMIN', 'MODERATOR'):
+            return Response({'detail': 'Un modérateur ne peut pas bannir un admin ou un autre modérateur.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if membership.is_banned:
+            return Response({'detail': 'Ce membre est déjà banni.'}, status=status.HTTP_409_CONFLICT)
+
+        from django.utils import timezone
+        membership.is_banned = True
+        membership.banned_at = timezone.now()
+        membership.membership_status = 'REJECTED'
+        membership.save(update_fields=['is_banned', 'banned_at', 'membership_status'])
+
+        name = membership.user.get_full_name() or membership.user.username
+        self._log_moderation(club, request.user, 'BAN', target_user=membership.user, details=name)
+        return Response({'message': f'{name} a été banni du club.'})
 
     @action(detail=True, methods=['post'], url_path='members/(?P<member_id>[0-9]+)/approve')
     def approve_member(self, request, slug=None, member_id=None):
@@ -710,6 +746,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
             link=f'/clubs/{club.slug}',
             metadata={'club_id': club.id, 'club_slug': club.slug},
         )
+        self._log_moderation(club, request.user, 'MEMBER_APPROVE', target_user=membership.user)
         return Response(BookClubMemberSerializer(membership, context={'request': request}).data)
 
     @action(detail=True, methods=['post'], url_path='members/(?P<member_id>[0-9]+)/reject')
@@ -721,7 +758,9 @@ class BookClubViewSet(viewsets.ModelViewSet):
         membership = BookClubMembership.objects.filter(club=club, id=member_id, membership_status='PENDING').first()
         if not membership:
             return Response({'detail': 'Demande introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        target = membership.user
         membership.delete()
+        self._log_moderation(club, request.user, 'MEMBER_REJECT', target_user=target)
         return Response({'status': 'rejected'})
 
     @action(detail=True, methods=['post'])
@@ -776,6 +815,8 @@ class BookClubViewSet(viewsets.ModelViewSet):
             msg.is_deleted = True
             msg.content = ''
             msg.save(update_fields=['is_deleted', 'content'])
+            if not is_author:
+                self._log_moderation(club, request.user, 'MSG_DELETE', target_user=msg.author, target_message=msg)
             return Response({'status': 'deleted'})
 
         # PATCH — édition
@@ -809,6 +850,7 @@ class BookClubViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Message introuvable.'}, status=status.HTTP_404_NOT_FOUND)
         msg.is_pinned = not msg.is_pinned
         msg.save(update_fields=['is_pinned'])
+        self._log_moderation(club, request.user, 'MSG_PIN' if msg.is_pinned else 'MSG_UNPIN', target_message=msg)
         return Response({'status': 'pinned' if msg.is_pinned else 'unpinned', 'is_pinned': msg.is_pinned})
 
     @action(detail=True, methods=['post'], url_path='messages/(?P<msg_id>[0-9]+)/report')
@@ -856,7 +898,28 @@ class BookClubViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Statut invalide.'}, status=status.HTTP_400_BAD_REQUEST)
         report.status = new_status
         report.save(update_fields=['status'])
+        self._log_moderation(club, request.user, 'REPORT_REVIEW', details=f'{new_status}: {report.reason}')
         return Response(MessageReportSerializer(report, context={'request': request}).data)
+
+    # ── Journal de modération ──
+
+    def _log_moderation(self, club, actor, action, target_user=None, target_message=None, details=''):
+        ModerationLog.objects.create(
+            club=club, actor=actor, action=action,
+            target_user=target_user, target_message=target_message,
+            details=details[:300],
+        )
+
+    @action(detail=True, methods=['get'], url_path='moderation-log')
+    def moderation_log(self, request, slug=None):
+        """Journal de modération du club (admin/mod uniquement)."""
+        club = self.get_object()
+        if not self._is_club_mod(club, request.user):
+            return Response({'detail': 'Réservé aux administrateurs et modérateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        from apps.social.serializers import ModerationLogSerializer
+        logs = ModerationLog.objects.filter(club=club).select_related('actor', 'target_user')[:50]
+        serializer = ModerationLogSerializer(logs, many=True, context={'request': request})
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='messages/(?P<msg_id>[0-9]+)/react')
     def react_to_message(self, request, slug=None, msg_id=None):
@@ -888,6 +951,41 @@ class BookClubViewSet(viewsets.ModelViewSet):
             'action': action,
             'reactions_summary': serializer.data['reactions_summary'],
         })
+
+    @action(detail=True, methods=['post'], url_path='messages/(?P<msg_id>[0-9]+)/forward')
+    def forward_message(self, request, slug=None, msg_id=None):
+        """Transférer un message vers un autre club. Body: { target_club_slug }"""
+        source_club = self.get_object()
+        if not source_club.memberships.filter(user=request.user, membership_status='APPROVED').exists():
+            return Response({'detail': 'Vous devez être membre du club.'}, status=status.HTTP_403_FORBIDDEN)
+
+        msg = BookClubMessage.objects.filter(club=source_club, id=msg_id, is_deleted=False).first()
+        if not msg:
+            return Response({'detail': 'Message introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        target_slug = request.data.get('target_club_slug')
+        if not target_slug:
+            return Response({'detail': 'target_club_slug requis.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        target_club = BookClub.objects.filter(slug=target_slug).first()
+        if not target_club:
+            return Response({'detail': 'Club cible introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        if not target_club.memberships.filter(user=request.user, membership_status='APPROVED').exists():
+            return Response({'detail': 'Vous devez être membre du club cible.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Créer le message transféré
+        forwarded = BookClubMessage.objects.create(
+            club=target_club,
+            author=request.user,
+            message_type=msg.message_type,
+            content=msg.content,
+            quote_text=msg.quote_text,
+            quote_page=msg.quote_page,
+            quote_book=msg.quote_book,
+            forwarded_from=msg,
+        )
+        serializer = BookClubMessageSerializer(forwarded, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'], url_path='media')
     def shared_media(self, request, slug=None):
@@ -966,10 +1064,15 @@ class BookClubViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
         # Fermer les votes ouverts précédents
         BookPoll.objects.filter(club=club, status='OPEN').update(status='CLOSED')
+        poll_type = request.data.get('poll_type', 'BOOK')
+        if poll_type not in ('BOOK', 'GENERIC'):
+            poll_type = 'BOOK'
+        default_title = 'Vote pour le prochain livre' if poll_type == 'BOOK' else 'Sondage'
         poll = BookPoll.objects.create(
             club=club,
             created_by=request.user,
-            title=request.data.get('title', 'Vote pour le prochain livre'),
+            title=request.data.get('title', default_title),
+            poll_type=poll_type,
         )
         # Notifier tous les membres
         from apps.notifications.services import create_notification
@@ -988,7 +1091,10 @@ class BookClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='polls/(?P<poll_id>[0-9]+)/add-option')
     def poll_add_option(self, request, slug=None, poll_id=None):
-        """Proposer un livre dans un vote. Body: { book_id }"""
+        """Proposer un livre ou une option texte dans un vote.
+        Body (BOOK poll): { book_id }
+        Body (GENERIC poll): { text_label }
+        """
         club = self.get_object()
         if not club.memberships.filter(user=request.user).exists():
             return Response({'detail': 'Vous devez être membre du club.'}, status=status.HTTP_403_FORBIDDEN)
@@ -998,19 +1104,27 @@ class BookClubViewSet(viewsets.ModelViewSet):
         if not poll:
             return Response({'detail': 'Vote introuvable ou déjà clos.'}, status=status.HTTP_404_NOT_FOUND)
 
-        book_id = request.data.get('book_id')
-        if not book_id:
-            return Response({'detail': 'book_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        if poll.poll_type == 'GENERIC':
+            text_label = (request.data.get('text_label') or '').strip()
+            if not text_label:
+                return Response({'detail': 'text_label requis pour un sondage générique.'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(text_label) > 200:
+                return Response({'detail': 'Option trop longue (200 caractères max).'}, status=status.HTTP_400_BAD_REQUEST)
+            if BookPollOption.objects.filter(poll=poll, text_label=text_label).exists():
+                return Response({'detail': 'Cette option existe déjà.'}, status=status.HTTP_409_CONFLICT)
+            BookPollOption.objects.create(poll=poll, text_label=text_label, proposed_by=request.user)
+        else:
+            book_id = request.data.get('book_id')
+            if not book_id:
+                return Response({'detail': 'book_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
+            from apps.books.models import Book
+            book = Book.objects.filter(id=book_id).first()
+            if not book:
+                return Response({'detail': 'Livre introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+            if BookPollOption.objects.filter(poll=poll, book=book).exists():
+                return Response({'detail': 'Ce livre est déjà proposé.'}, status=status.HTTP_409_CONFLICT)
+            BookPollOption.objects.create(poll=poll, book=book, proposed_by=request.user)
 
-        from apps.books.models import Book
-        book = Book.objects.filter(id=book_id).first()
-        if not book:
-            return Response({'detail': 'Livre introuvable.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if BookPollOption.objects.filter(poll=poll, book=book).exists():
-            return Response({'detail': 'Ce livre est déjà proposé.'}, status=status.HTTP_409_CONFLICT)
-
-        BookPollOption.objects.create(poll=poll, book=book, proposed_by=request.user)
         from apps.social.serializers import BookPollSerializer
         serializer = BookPollSerializer(poll, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1062,19 +1176,23 @@ class BookClubViewSet(viewsets.ModelViewSet):
         poll.closed_at = timezone.now()
         poll.save(update_fields=['status', 'closed_at'])
 
-        # Appliquer le gagnant comme livre en cours
+        # Appliquer le gagnant comme livre en cours (seulement pour les sondages de type BOOK)
         winner = poll.options.annotate(vote_count=Count('votes')).order_by('-vote_count').first()
+        winner_label = None
         if winner and winner.vote_count > 0:
-            club.current_book = winner.book
-            club.save(update_fields=['current_book', 'updated_at'])
-            # Réinitialiser la progression de tous les membres
-            club.memberships.update(reading_progress=0)
+            if poll.poll_type == 'BOOK' and winner.book:
+                club.current_book = winner.book
+                club.save(update_fields=['current_book', 'updated_at'])
+                club.memberships.update(reading_progress=0)
+                winner_label = winner.book.title
+            else:
+                winner_label = winner.text_label or (winner.book.title if winner.book else None)
 
         from apps.social.serializers import BookPollSerializer
         serializer = BookPollSerializer(poll, context={'request': request})
         return Response({
             'poll': serializer.data,
-            'winner': winner.book.title if winner and winner.vote_count > 0 else None,
+            'winner': winner_label,
         })
 
     # ── Invitations par lien ──
@@ -1108,13 +1226,46 @@ class BookClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get', 'post'], url_path='sessions')
     def sessions(self, request, slug=None):
-        """GET : liste des séances futures. POST : créer une séance (admin)."""
+        """GET : liste des séances futures (auto-génère les récurrences passées). POST : créer une séance (admin)."""
         club = self.get_object()
 
         if request.method == 'GET':
             from django.utils import timezone
+            from datetime import timedelta
+            now = timezone.now()
+
+            # Auto-generate next occurrence for recurring sessions that are past
+            recurring_past = ClubSession.objects.filter(
+                club=club, recurrence__in=['WEEKLY', 'BIWEEKLY', 'MONTHLY'],
+                scheduled_at__lt=now,
+            )
+            for session in recurring_past:
+                next_dt = session.scheduled_at
+                if session.recurrence == 'WEEKLY':
+                    delta = timedelta(weeks=1)
+                elif session.recurrence == 'BIWEEKLY':
+                    delta = timedelta(weeks=2)
+                else:  # MONTHLY
+                    delta = timedelta(days=30)
+                while next_dt < now:
+                    next_dt += delta
+                # Only create if it doesn't already exist at that time
+                if not ClubSession.objects.filter(club=club, scheduled_at=next_dt).exists():
+                    ClubSession.objects.create(
+                        club=club, title=session.title,
+                        description=session.description,
+                        scheduled_at=next_dt,
+                        is_online=session.is_online,
+                        location=session.location,
+                        recurrence=session.recurrence,
+                        created_by=session.created_by,
+                    )
+                # Remove recurrence from the old past session
+                session.recurrence = 'NONE'
+                session.save(update_fields=['recurrence'])
+
             sessions = ClubSession.objects.filter(
-                club=club, scheduled_at__gte=timezone.now()
+                club=club, scheduled_at__gte=now
             ).select_related('created_by').prefetch_related('rsvps')
             serializer = ClubSessionSerializer(sessions, many=True, context={'request': request})
             return Response(serializer.data)
@@ -1147,6 +1298,179 @@ class BookClubViewSet(viewsets.ModelViewSet):
         session = ClubSession.objects.filter(id=session.id).select_related('created_by').prefetch_related('rsvps').first()
         serializer = ClubSessionSerializer(session, context={'request': request})
         return Response(serializer.data)
+
+    # ── Jalons de lecture (checkpoints) ──
+
+    @action(detail=True, methods=['get', 'post'], url_path='checkpoints')
+    def checkpoints(self, request, slug=None):
+        """
+        GET  : liste des jalons du livre en cours.
+        POST : créer un jalon (admin). Body: { label, target_page }
+        """
+        club = self.get_object()
+        from apps.social.models import ReadingCheckpoint
+        from apps.social.serializers import ReadingCheckpointSerializer
+
+        if request.method == 'GET':
+            if not club.current_book:
+                return Response([])
+            qs = ReadingCheckpoint.objects.filter(club=club, book=club.current_book)
+            serializer = ReadingCheckpointSerializer(qs, many=True, context={'request': request})
+            return Response(serializer.data)
+
+        # POST
+        if not self._is_club_admin(club, request.user):
+            return Response({'detail': 'Réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        if not club.current_book:
+            return Response({'detail': 'Aucun livre en cours.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        label = (request.data.get('label') or '').strip()
+        target_page = request.data.get('target_page')
+        if not label or not target_page:
+            return Response({'detail': 'label et target_page requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            target_page = int(target_page)
+            if target_page < 1:
+                raise ValueError
+        except (TypeError, ValueError):
+            return Response({'detail': 'target_page doit être un entier positif.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if ReadingCheckpoint.objects.filter(club=club, book=club.current_book, target_page=target_page).exists():
+            return Response({'detail': 'Un jalon existe déjà pour cette page.'}, status=status.HTTP_409_CONFLICT)
+
+        max_order = ReadingCheckpoint.objects.filter(club=club, book=club.current_book).count()
+        checkpoint = ReadingCheckpoint.objects.create(
+            club=club, book=club.current_book,
+            label=label, target_page=target_page,
+            sort_order=max_order, created_by=request.user,
+        )
+        serializer = ReadingCheckpointSerializer(checkpoint, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='checkpoints/(?P<cp_id>[0-9]+)')
+    def checkpoint_delete(self, request, slug=None, cp_id=None):
+        """Supprimer un jalon (admin)."""
+        club = self.get_object()
+        if not self._is_club_admin(club, request.user):
+            return Response({'detail': 'Réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        from apps.social.models import ReadingCheckpoint
+        cp = ReadingCheckpoint.objects.filter(club=club, id=cp_id).first()
+        if not cp:
+            return Response({'detail': 'Jalon introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        cp.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path='checkpoints/(?P<cp_id>[0-9]+)/reach')
+    def checkpoint_reach(self, request, slug=None, cp_id=None):
+        """Marquer un jalon comme atteint (admin). Envoie une notification."""
+        club = self.get_object()
+        if not self._is_club_admin(club, request.user):
+            return Response({'detail': 'Réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        from apps.social.models import ReadingCheckpoint
+        from apps.social.serializers import ReadingCheckpointSerializer
+        from django.utils import timezone
+        cp = ReadingCheckpoint.objects.filter(club=club, id=cp_id).first()
+        if not cp:
+            return Response({'detail': 'Jalon introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        if cp.reached_at:
+            return Response({'detail': 'Jalon déjà atteint.'}, status=status.HTTP_409_CONFLICT)
+
+        cp.reached_at = timezone.now()
+        cp.save(update_fields=['reached_at'])
+
+        # Notifier les membres
+        from apps.notifications.services import create_notification
+        for m in club.memberships.filter(user__isnull=False).exclude(user=request.user).select_related('user'):
+            create_notification(
+                recipient=m.user,
+                notification_type='CLUB_CHECKPOINT_REACHED',
+                title=f'Jalon atteint dans {club.name}',
+                message=f'Le club a atteint le jalon « {cp.label} » (page {cp.target_page}) !',
+                link=f'/clubs/{club.slug}',
+                metadata={'club_id': club.id, 'club_slug': club.slug, 'checkpoint_id': cp.id},
+            )
+
+        serializer = ReadingCheckpointSerializer(cp, context={'request': request})
+        return Response(serializer.data)
+
+    # ── Wishlist collective ──
+
+    @action(detail=True, methods=['get', 'post'], url_path='wishlist')
+    def wishlist(self, request, slug=None):
+        """
+        GET  : liste des suggestions triées par votes décroissants.
+        POST : suggérer un livre. Body: { book_id }
+        """
+        club = self.get_object()
+        from apps.social.models import ClubWishlistItem
+        from apps.social.serializers import ClubWishlistItemSerializer
+
+        if request.method == 'GET':
+            qs = ClubWishlistItem.objects.filter(club=club).select_related('book', 'suggested_by').prefetch_related('votes')
+            # Tri par nombre de votes décroissant
+            qs = qs.annotate(vote_count=Count('votes')).order_by('-vote_count', '-created_at')
+            serializer = ClubWishlistItemSerializer(qs, many=True, context={'request': request})
+            return Response(serializer.data)
+
+        # POST — suggérer un livre
+        if not club.memberships.filter(user=request.user, membership_status='APPROVED').exists():
+            return Response({'detail': 'Vous devez être membre du club.'}, status=status.HTTP_403_FORBIDDEN)
+
+        book_id = request.data.get('book_id')
+        if not book_id:
+            return Response({'detail': 'book_id requis.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        book = get_object_or_404(Book, id=book_id)
+
+        if ClubWishlistItem.objects.filter(club=club, book=book).exists():
+            return Response({'detail': 'Ce livre est déjà dans la wishlist.'}, status=status.HTTP_409_CONFLICT)
+
+        item = ClubWishlistItem.objects.create(club=club, book=book, suggested_by=request.user)
+        serializer = ClubWishlistItemSerializer(item, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='wishlist/(?P<item_id>[0-9]+)/vote')
+    def wishlist_vote(self, request, slug=None, item_id=None):
+        """Toggle vote sur une suggestion (vote/dévote)."""
+        club = self.get_object()
+        if not club.memberships.filter(user=request.user, membership_status='APPROVED').exists():
+            return Response({'detail': 'Vous devez être membre du club.'}, status=status.HTTP_403_FORBIDDEN)
+
+        from apps.social.models import ClubWishlistItem, ClubWishlistVote
+        from apps.social.serializers import ClubWishlistItemSerializer
+
+        item = ClubWishlistItem.objects.filter(club=club, id=item_id).first()
+        if not item:
+            return Response({'detail': 'Suggestion introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        existing = ClubWishlistVote.objects.filter(item=item, user=request.user).first()
+        if existing:
+            existing.delete()
+            action_done = 'removed'
+        else:
+            ClubWishlistVote.objects.create(item=item, user=request.user)
+            action_done = 'voted'
+
+        serializer = ClubWishlistItemSerializer(item, context={'request': request})
+        return Response({'action': action_done, 'item': serializer.data})
+
+    @action(detail=True, methods=['delete'], url_path='wishlist/(?P<item_id>[0-9]+)')
+    def wishlist_remove(self, request, slug=None, item_id=None):
+        """Supprimer une suggestion (auteur de la suggestion ou admin)."""
+        club = self.get_object()
+        from apps.social.models import ClubWishlistItem
+
+        item = ClubWishlistItem.objects.filter(club=club, id=item_id).first()
+        if not item:
+            return Response({'detail': 'Suggestion introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        is_author = item.suggested_by_id == request.user.id
+        is_admin = self._is_club_admin(club, request.user)
+        if not is_author and not is_admin:
+            return Response({'detail': 'Non autorisé.'}, status=status.HTTP_403_FORBIDDEN)
+
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     # ── Archives (historique des livres lus) ──
 
@@ -1217,6 +1541,8 @@ class ClubJoinByLinkView(APIView):
 
         existing = club.memberships.filter(user=request.user).first()
         if existing:
+            if existing.is_banned:
+                return Response({'detail': 'Vous avez été banni de ce club.'}, status=status.HTTP_403_FORBIDDEN)
             if existing.membership_status == 'APPROVED':
                 return Response({'detail': 'Vous êtes déjà membre.', 'slug': club.slug}, status=status.HTTP_409_CONFLICT)
             if existing.membership_status == 'PENDING':

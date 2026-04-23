@@ -24,6 +24,7 @@ class Notification(models.Model):
         ('CLUB_MENTION', 'Mention dans un club'),
         ('CLUB_POLL_CREATED', 'Nouveau sondage dans le club'),
         ('CLUB_PROGRESS_COMPLETE', 'Lecture terminée'),
+        ('CLUB_CHECKPOINT_REACHED', 'Jalon de lecture atteint'),
         ('CLUB_SESSION_REMINDER', 'Séance demain'),
     ]
 

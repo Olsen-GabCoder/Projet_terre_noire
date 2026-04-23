@@ -72,6 +72,26 @@ const socialService = {
   addPollOption: (slug, pollId, bookId) => api.post(`/social/clubs/${slug}/polls/${pollId}/add-option/`, { book_id: bookId }),
   votePoll: (slug, pollId, optionId) => api.post(`/social/clubs/${slug}/polls/${pollId}/vote/${optionId}/`),
   closePoll: (slug, pollId) => api.post(`/social/clubs/${slug}/polls/${pollId}/close/`),
+  createPollWithBooks: async (slug, title, bookIds) => {
+    const pollRes = await api.post(`/social/clubs/${slug}/polls/`, { title, poll_type: 'BOOK' });
+    const pollId = pollRes.data.id;
+    for (const bookId of bookIds) {
+      await api.post(`/social/clubs/${slug}/polls/${pollId}/add-option/`, { book_id: bookId });
+    }
+    const fresh = await api.get(`/social/clubs/${slug}/polls/`);
+    const polls = Array.isArray(fresh.data) ? fresh.data : [];
+    return polls.find(p => p.id === pollId) || pollRes.data;
+  },
+  createGenericPoll: async (slug, title, textOptions) => {
+    const pollRes = await api.post(`/social/clubs/${slug}/polls/`, { title, poll_type: 'GENERIC' });
+    const pollId = pollRes.data.id;
+    for (const label of textOptions) {
+      await api.post(`/social/clubs/${slug}/polls/${pollId}/add-option/`, { text_label: label });
+    }
+    const fresh = await api.get(`/social/clubs/${slug}/polls/`);
+    const polls = Array.isArray(fresh.data) ? fresh.data : [];
+    return polls.find(p => p.id === pollId) || pollRes.data;
+  },
   // Invitations
   createInviteLink: (slug, expiresDays, maxUses) => api.post(`/social/clubs/${slug}/invite-link/`, { expires_days: expiresDays || 7, max_uses: maxUses || 0 }),
   getInvitePreview: (token) => api.get(`/social/clubs/join/${token}/`),
@@ -90,6 +110,19 @@ const socialService = {
   // ── Archives (historique des livres lus) ──
   getClubArchives: (slug) => api.get(`/social/clubs/${slug}/archives/`),
   addClubArchive: (slug, data) => api.post(`/social/clubs/${slug}/archives/`, data),
+  // Wishlist
+  getWishlist: (slug) => api.get(`/social/clubs/${slug}/wishlist/`),
+  suggestBook: (slug, bookId) => api.post(`/social/clubs/${slug}/wishlist/`, { book_id: bookId }),
+  voteWishlistItem: (slug, itemId) => api.post(`/social/clubs/${slug}/wishlist/${itemId}/vote/`),
+  removeWishlistItem: (slug, itemId) => api.delete(`/social/clubs/${slug}/wishlist/${itemId}/`),
+  banMember: (slug, memberId) => api.post(`/social/clubs/${slug}/members/${memberId}/ban/`),
+  forwardMessage: (slug, msgId, targetClubSlug) => api.post(`/social/clubs/${slug}/messages/${msgId}/forward/`, { target_club_slug: targetClubSlug }),
+  // Checkpoints
+  getCheckpoints: (slug) => api.get(`/social/clubs/${slug}/checkpoints/`),
+  createCheckpoint: (slug, data) => api.post(`/social/clubs/${slug}/checkpoints/`, data),
+  deleteCheckpoint: (slug, cpId) => api.delete(`/social/clubs/${slug}/checkpoints/${cpId}/`),
+  reachCheckpoint: (slug, cpId) => api.post(`/social/clubs/${slug}/checkpoints/${cpId}/reach/`),
+  getModerationLog: (slug) => api.get(`/social/clubs/${slug}/moderation-log/`),
 };
 
 export default socialService;
