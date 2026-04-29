@@ -7,12 +7,63 @@ import organizationService from '../services/organizationService';
 import libraryService from '../services/libraryService';
 import servicesService from '../services/servicesService';
 import socialService from '../services/socialService';
+import analyticsService from '../services/analyticsService';
+import aiService from '../services/aiService';
 import SEO from '../components/SEO';
 import BookCard from '../components/BookCard';
 import toast from 'react-hot-toast';
 import '../styles/OrganizationDetail.css';
 
 const GENRE_LABELS = { ROMAN: 'Roman', NOUVELLE: 'Nouvelle', POESIE: 'Poésie', ESSAI: 'Essai', THEATRE: 'Théâtre', JEUNESSE: 'Jeunesse', BD: 'BD', SCOLAIRE: 'Scolaire', UNIVERSITAIRE: 'Universitaire', RELIGIEUX: 'Religieux', AUTRE: 'Autre' };
+
+function LibraryRecommendations({ orgId, t }) {
+  const [recs, setRecs] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const load = async () => {
+    if (recs) { setOpen(o => !o); return; }
+    setLoading(true);
+    try {
+      const { recommendations } = await aiService.libraryRecommend(orgId);
+      setRecs(recommendations || []);
+      setOpen(true);
+    } catch {
+      toast.error('Erreur recommandations IA');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="od-lib-recs">
+      <button className="od-lib-recs__btn" onClick={load} disabled={loading}>
+        {loading
+          ? <><i className="fas fa-spinner fa-spin" /> {t('pages.orgDetail.loadingRecs', 'Analyse en cours...')}</>
+          : open
+            ? <><i className="fas fa-chevron-up" /> {t('pages.orgDetail.hideRecs', 'Masquer les suggestions')}</>
+            : <><i className="fas fa-robot" /> {t('pages.orgDetail.aiRecs', 'Suggestions personnalisées (IA)')}</>
+        }
+      </button>
+      {open && recs?.length > 0 && (
+        <div className="od-lib-recs__grid">
+          {recs.map((r, i) => (
+            <Link key={i} to={`/books/${r.book_id}`} className="od-lib-recs__card">
+              {r.book?.cover_image && <img src={r.book.cover_image} alt="" className="od-lib-recs__cover" />}
+              <div className="od-lib-recs__info">
+                <strong>{r.book?.title || `Livre #${r.book_id}`}</strong>
+                {r.book?.author?.full_name && <span className="od-lib-recs__author">{r.book.author.full_name}</span>}
+                <p className="od-lib-recs__reason">{r.reason}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+      {open && recs?.length === 0 && (
+        <p className="od-lib-recs__empty">{t('pages.orgDetail.noRecs', 'Empruntez quelques livres pour obtenir des suggestions personnalisées.')}</p>
+      )}
+    </div>
+  );
+}
 const ORG_TYPE_ICONS = { MAISON_EDITION: 'fas fa-book-open', LIBRAIRIE: 'fas fa-store', BIBLIOTHEQUE: 'fas fa-landmark', IMPRIMERIE: 'fas fa-print' };
 
 const DAYS_ORDER = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -241,6 +292,8 @@ const OrganizationDetail = () => {
     setLoanLoading(catalogItemId);
     try {
       await libraryService.loans.create(org.id, { catalog_item: catalogItemId, loan_type: loanType });
+      const borrowedItem = (Array.isArray(catalog) ? catalog : []).find(b => b.catalog_item_id === catalogItemId);
+      if (borrowedItem) analyticsService.trackBorrowRequest(borrowedItem.id);
       toast.success(t('pages.orgDetail.loanRequested', 'Demande d\'emprunt envoyée !'));
       // Refresh catalog to update availability
       organizationService.getCatalog(slug).then(r => setCatalog(r.data)).catch(() => {});
@@ -423,7 +476,7 @@ const OrganizationDetail = () => {
           <div className="od-profile__trust">
             {org.owner_name && (
               <span className="od-profile__trust-item">
-                <i className="fas fa-user-tie" /> {t('pages.orgDetail.foundedBy', 'Fondée par')} <strong>{org.owner_name}</strong>
+                <i className="fas fa-user-tie" /> {t('pages.orgDetail.foundedBy', 'Fondée par')} {org.owner_slug ? <Link to={`/u/${org.owner_slug}`}><strong>{org.owner_name}</strong></Link> : <strong>{org.owner_name}</strong>}
               </span>
             )}
             {org.created_at && (
@@ -831,38 +884,54 @@ const OrganizationDetail = () => {
                     <span>{t('pages.orgDetail.memberOf', 'Membre')} — N° {libraryMembership.membership_number}</span>
                   </div>
                 )}
-                <div className="home-books-grid">
+                {isAuthenticated && libraryMembership && (
+                  <LibraryRecommendations orgId={org.id} t={t} />
+                )}
+                <div className="od-lib-grid">
                   {(Array.isArray(catalog) ? catalog : []).map(b => (
-                    <div key={b.catalog_item_id || b.id} className="od-bookcard-wrap">
-                      <BookCard book={b} />
-                      <div className="od-bookcard-extra">
-                        <div className="od-bookcard-extra__row">
-                          <span className={`od-book__avail ${b.in_stock ? 'od-book__avail--yes' : 'od-book__avail--no'}`}>
+                    <div key={b.catalog_item_id || b.id} className="od-lib-card">
+                      <Link to={`/books/${b.id}`} className="od-lib-card__cover-link">
+                        {b.cover_image ? (
+                          <img src={b.cover_image} alt={b.title} className="od-lib-card__cover" />
+                        ) : (
+                          <div className="od-lib-card__cover od-lib-card__cover--empty">
+                            <i className="fas fa-book" />
+                          </div>
+                        )}
+                      </Link>
+                      <div className="od-lib-card__body">
+                        <Link to={`/books/${b.id}`} className="od-lib-card__title">{b.title}</Link>
+                        <span className="od-lib-card__author">{b.author || '\u00A0'}</span>
+                        <div className="od-lib-card__infos">
+                          <span className={`od-lib-card__avail ${b.in_stock ? 'od-lib-card__avail--yes' : 'od-lib-card__avail--no'}`}>
                             <i className={`fas fa-${b.in_stock ? 'check-circle' : 'times-circle'}`} />
                             {b.in_stock
                               ? `${b.available_copies}/${b.total_copies} ${t('pages.orgDetail.available', 'dispo.')}`
                               : t('pages.orgDetail.unavailable', 'Indisponible')
                             }
                           </span>
-                          {b.allows_digital_loan && <span className="od-book__digital"><i className="fas fa-tablet-alt" /> {t('pages.orgDetail.digitalLoan', 'Prêt num.')}</span>}
-                          <span className="od-book__loan-days"><i className="fas fa-calendar-day" /> {b.max_loan_days}j</span>
+                          {b.allows_digital_loan && <span className="od-lib-card__tag"><i className="fas fa-tablet-alt" /> {t('pages.orgDetail.digitalLoan', 'Prêt num.')}</span>}
+                          {b.consultation_only
+                            ? <span className="od-lib-card__tag od-lib-card__tag--consult"><i className="fas fa-eye" /> {t('pages.orgDetail.consultationOnly', 'Sur place')}</span>
+                            : <span className="od-lib-card__tag"><i className="fas fa-calendar-day" /> {b.max_loan_days}j</span>
+                          }
                         </div>
-                        {libraryMembership && (
-                          <div className="od-book__actions">
+                        {libraryMembership && !b.consultation_only && (
+                          <div className="od-lib-card__actions">
                             {b.in_stock ? (
                               <>
-                                <button className="od-book__cart-btn" onClick={() => handleBorrow(b.catalog_item_id, 'PHYSICAL')} disabled={loanLoading === b.catalog_item_id}>
+                                <button className="od-lib-card__btn" onClick={() => handleBorrow(b.catalog_item_id, 'PHYSICAL')} disabled={loanLoading === b.catalog_item_id}>
                                   {loanLoading === b.catalog_item_id ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-hand-holding" />}
                                   {t('pages.orgDetail.borrow', 'Emprunter')}
                                 </button>
                                 {b.allows_digital_loan && (
-                                  <button className="od-book__cart-btn od-book__cart-btn--digital" onClick={() => handleBorrow(b.catalog_item_id, 'DIGITAL')} disabled={loanLoading === b.catalog_item_id}>
+                                  <button className="od-lib-card__btn od-lib-card__btn--digital" onClick={() => handleBorrow(b.catalog_item_id, 'DIGITAL')} disabled={loanLoading === b.catalog_item_id}>
                                     <i className="fas fa-tablet-alt" /> {t('pages.orgDetail.borrowDigital', 'Numérique')}
                                   </button>
                                 )}
                               </>
                             ) : (
-                              <button className="od-book__cart-btn od-book__cart-btn--reserve" onClick={() => handleReserve(b.catalog_item_id)}>
+                              <button className="od-lib-card__btn od-lib-card__btn--reserve" onClick={() => handleReserve(b.catalog_item_id)}>
                                 <i className="fas fa-bell" /> {t('pages.orgDetail.reserve', 'Réserver')}
                               </button>
                             )}
@@ -893,11 +962,11 @@ const OrganizationDetail = () => {
             ) : (
               <div className="od-team__grid">
                 {team.map(m => (
-                  <div key={m.id} className="od-member">
+                  <Link key={m.id} to={m.user_slug ? `/u/${m.user_slug}` : '#'} className="od-member" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="od-member__avatar">{m.avatar ? <img src={m.avatar} alt={m.user_name} /> : <span>{(m.user_name || '?')[0].toUpperCase()}</span>}</div>
                     <h4>{m.user_name}</h4>
                     <span className="od-member__role">{m.role_display}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -932,7 +1001,7 @@ const OrganizationDetail = () => {
                     <div className="od-review__avatar">{(r.user_name || '?')[0].toUpperCase()}</div>
                     <div className="od-review__body">
                       <div className="od-review__header">
-                        <strong>{r.user_name}</strong>
+                        {r.user_slug ? <Link to={`/u/${r.user_slug}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong>{r.user_name}</strong></Link> : <strong>{r.user_name}</strong>}
                         <StarRating rating={r.rating} size=".75rem" />
                         <span className="od-review__date">{formatDate(r.created_at)}</span>
                       </div>

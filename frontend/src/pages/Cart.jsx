@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -6,9 +6,11 @@ import { useDeliveryConfig } from '../context/DeliveryConfigContext';
 import { useTranslation } from 'react-i18next';
 import { couponAPI } from '../services/api';
 import { useReveal } from '../hooks/useReveal';
+import aiService from '../services/aiService';
+import { BookItem } from '../components/home';
 import '../styles/Cart.css';
+import '../styles/Home.css';
 import SEO from '../components/SEO';
-import PageHero from '../components/PageHero';
 import CouponWidget from '../components/CouponWidget';
 
 const Cart = () => {
@@ -35,6 +37,8 @@ const Cart = () => {
   const [notes, setNotes] = useState('');
   const [checking, setChecking] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [crossSell, setCrossSell] = useState([]);
+  const [crossSellLoaded, setCrossSellLoaded] = useState(false);
 
   const fmt = (p) =>
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(p) + ' FCFA';
@@ -47,6 +51,16 @@ const Cart = () => {
       localStorage.removeItem('pending_coupon_code');
     }
   });
+
+  // Cross-sell IA — fetch once when cart has items
+  useEffect(() => {
+    if (cartItems.length && isAuthenticated && !crossSellLoaded) {
+      const bookIds = cartItems.map(i => i.id);
+      aiService.crossSell(bookIds).then(data => {
+        setCrossSell(data.suggestions || []);
+      }).catch(() => {}).finally(() => setCrossSellLoaded(true));
+    }
+  }, [cartItems.length, isAuthenticated, crossSellLoaded]);
 
   const subtotal = cartItems.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
   const allEbooks = cartItems.every(i => i.format === 'EBOOK');
@@ -109,10 +123,12 @@ const Cart = () => {
     return (
       <div className="crt-page">
         <SEO title={t('cart.pageTitle')} />
-        <PageHero
-          title={t('cart.pageTitle')}
-          subtitle={t('cart.emptyText')}
-        />
+        <header className="crt-topbar">
+          <div>
+            <span className="crt-topbar__eyebrow">— {t('cart.pageTitle')}</span>
+            <h1 className="crt-topbar__title">{t('cart.emptyTitle')}</h1>
+          </div>
+        </header>
 
         <div className="crt-content">
           <div className="crt-empty">
@@ -139,7 +155,6 @@ const Cart = () => {
             </div>
           </div>
         </div>
-        <div className="crt-footer-fade" />
       </div>
     );
   }
@@ -147,12 +162,31 @@ const Cart = () => {
   /* ── PANIER REMPLI ── */
   return (
     <div className="crt-page">
-      <PageHero
-        title={t('cart.pageTitle')}
-        subtitle={t('cart.itemCount', { count: getTotalItems(), s: getTotalItems() > 1 ? 's' : '' })}
-      />
+      <header className="crt-topbar">
+        <div>
+          <span className="crt-topbar__eyebrow">— {t('cart.pageTitle')} · {getTotalItems()} {t('cart.itemCount', { count: getTotalItems(), s: getTotalItems() > 1 ? 's' : '' })}</span>
+          <h1 className="crt-topbar__title">{t('cart.pageTitle')}</h1>
+        </div>
+      </header>
 
       <div className="crt-content reveal-section" ref={revealRef}>
+        {/* Stepper */}
+        <div className="crt-stepper">
+          {[
+            { n: '01', label: t('cart.pageTitle', 'Panier'), sub: t('checkout.stepInProgress', 'En cours'), active: true },
+            { n: '02', label: t('checkout.stepShippingPayment', 'Livraison & paiement'), sub: '—' },
+            { n: '03', label: t('checkout.stepConfirmation', 'Confirmation'), sub: '—' },
+          ].map((step) => (
+            <div key={step.n} className={`crt-step${step.active ? ' crt-step--active' : ''}`}>
+              <span className="crt-step__num">{step.n}</span>
+              <div>
+                <div className="crt-step__label">{step.label}</div>
+                <div className="crt-step__sub">{step.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="crt-layout">
 
           {/* ── COLONNE ARTICLES ── */}
@@ -234,6 +268,28 @@ const Cart = () => {
               </div>
             ))}
           </div>
+
+          {/* ── CROSS-SELL IA ── */}
+          {crossSell.length > 0 && (
+            <div className="crt-crosssell">
+              <h3 className="crt-crosssell__title">
+                <i className="fas fa-wand-magic-sparkles" /> Vous pourriez aussi aimer
+              </h3>
+              <div className="home-book-rack">
+                {crossSell.slice(0, 4).map((sug, i) => {
+                  const b = sug.book;
+                  if (!b) return null;
+                  return (
+                    <BookItem
+                      key={b.id || i}
+                      book={{ ...b, ai_reason: sug.reason }}
+                      showAiReason
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ── COLONNE RÉSUMÉ ── */}
           <div className="crt-summary">
@@ -345,7 +401,6 @@ const Cart = () => {
 
         </div>
       </div>
-      <div className="crt-footer-fade" />
     </div>
   );
 };

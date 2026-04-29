@@ -2,24 +2,27 @@
  * MessageComposer — Chat input bar with emoji, voice, file upload, mentions
  * Extracted from BookClubDetail.jsx — zero functional change
  */
-import { useState, useRef, useCallback } from 'react';
-import EmojiPicker, { StickerPacks } from './EmojiPicker';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import EmojiPicker from './EmojiPicker';
 import { fmtDur, ini } from './clubUtils';
+import aiService from '../../services/aiService';
 
 export default function MessageComposer({
   slug, user, isMember, isFull, club, members,
   messages, setMessages,
   replyTo, setReplyTo,
+  typingUsers,
+  wsConnected, sendWsEvent,
   t, inputRef,
   socialService, toast, handleApiError,
 }) {
   const [msgText, setMsgText] = useState('');
   const [sending, setSending] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [pickerTab, setPickerTab] = useState('emoji');
   const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionResults, setMentionResults] = useState([]);
   const [mentionIdx, setMentionIdx] = useState(0);
+  const [moderationWarn, setModerationWarn] = useState(null);
   const [isRec, setIsRec] = useState(false);
   const [recTime, setRecTime] = useState(0);
   const recRef = useRef(null);
@@ -28,15 +31,43 @@ export default function MessageComposer({
   const cancelledRef = useRef(false);
   const fileRef = useRef(null);
   const imgRef = useRef(null);
+  const lastTypingRef = useRef(0);
 
-  // Send text
+  // Typing is WebSocket-only — no HTTP fallback
+  const emitTyping = useCallback(() => {
+    if (!wsConnected || !sendWsEvent) return;
+    const now = Date.now();
+    if (now - lastTypingRef.current < 2000) return;
+    lastTypingRef.current = now;
+    sendWsEvent({ type: 'typing' });
+  }, [wsConnected, sendWsEvent]);
+
+  // Send text (with AI moderation)
   const send = async e => {
     e.preventDefault(); if (!msgText.trim()) return; setSending(true);
+    setModerationWarn(null);
+
+    // AI moderation check — non-blocking on failure
+    try {
+      const mod = await aiService.moderate(msgText, club?.name || '');
+      if (mod.severity === 'block') {
+        setModerationWarn(mod.reason || 'Ce message ne respecte pas les règles du club.');
+        setSending(false);
+        return;
+      }
+      if (mod.severity === 'warning') {
+        setModerationWarn(mod.reason || 'Attention : ce message pourrait être perçu comme inapproprié.');
+      }
+    } catch {
+      // Si l'IA est indisponible, on laisse passer
+    }
+
     const payload = {content: msgText, message_type: 'TEXT'};
     if (replyTo) payload.reply_to = replyTo.id;
     try {
       const r = await socialService.sendClubMessage(slug, payload);
-      setMessages(p => [...p, r.data]); setMsgText(''); setReplyTo(null); setShowEmoji(false); inputRef.current?.focus();
+      setMessages(p => p.some(m => m.id === r.data.id) ? p : [...p, r.data]); setMsgText(''); setReplyTo(null); setShowEmoji(false); setModerationWarn(null);
+      if (inputRef.current) { inputRef.current.style.height = 'auto'; inputRef.current.focus(); }
     } catch { toast.error('Erreur.'); }
     setSending(false);
   };
@@ -45,6 +76,7 @@ export default function MessageComposer({
   const onMsgChange = e => {
     const val = e.target.value;
     setMsgText(val);
+    if (val.trim()) emitTyping();
     const cursor = e.target.selectionStart;
     const before = val.slice(0, cursor);
     const match = before.match(/@(\w*)$/);
@@ -92,7 +124,7 @@ export default function MessageComposer({
   // Send file
   const uploadFile = async (file, type) => {
     const fd = new FormData(); fd.append('message_type', type); fd.append('attachment', file); fd.append('attachment_name', file.name); fd.append('content', '');
-    try { const r = await socialService.sendClubMessage(slug, fd); setMessages(p => [...p, r.data]); } catch { toast.error('Erreur fichier.'); }
+    try { const r = await socialService.sendClubMessage(slug, fd); setMessages(p => p.some(m => m.id === r.data.id) ? p : [...p, r.data]); } catch { toast.error('Erreur fichier.'); }
   };
 
   // Insert emoji
@@ -113,7 +145,7 @@ export default function MessageComposer({
         if (blob.size === 0 || duration < 1) { setRecTime(0); return; }
         const file = new File([blob], `voice-${Date.now()}.webm`, {type: 'audio/webm'});
         const fd = new FormData(); fd.append('message_type', 'VOICE'); fd.append('attachment', file); fd.append('attachment_name', file.name); fd.append('voice_duration', duration); fd.append('content', '');
-        try { const r = await socialService.sendClubMessage(slug, fd); setMessages(p => [...p, r.data]); } catch {} setRecTime(0);
+        try { const r = await socialService.sendClubMessage(slug, fd); setMessages(p => p.some(m => m.id === r.data.id) ? p : [...p, r.data]); } catch {} setRecTime(0);
       };
       recRef.current = mr; mr.start(); setIsRec(true); setRecTime(0);
       timerRef.current = setInterval(() => setRecTime(t => t + 1), 1000);
@@ -133,19 +165,30 @@ export default function MessageComposer({
     );
   }
 
+  const typingNames = (typingUsers || []).map(u => u.name);
+
   return (
     <>
+      {typingNames.length > 0 && (
+        <div className="cc-typing">
+          <span className="cc-typing__dots"><span /><span /><span /></span>
+          <span className="cc-typing__text">
+            {typingNames.length === 1
+              ? t('pages.bookClubDetail.typingOne', '{{name}} écrit...', { name: typingNames[0] })
+              : t('pages.bookClubDetail.typingSeveral', '{{count}} personnes écrivent...', { count: typingNames.length })}
+          </span>
+        </div>
+      )}
       {showEmoji && (
         <div className="cc-picker">
-          <div className="cc-picker__tabs">
-            <button className={`cc-picker__tab${pickerTab === 'emoji' ? ' cc-picker__tab--active' : ''}`} onClick={() => setPickerTab('emoji')}>Émojis</button>
-            <button className={`cc-picker__tab${pickerTab === 'stickers' ? ' cc-picker__tab--active' : ''}`} onClick={() => setPickerTab('stickers')}>Stickers</button>
-          </div>
-          {pickerTab === 'emoji' ? (
-            <EmojiPicker onSelect={e => insertEmoji(e.native)} />
-          ) : (
-            <StickerPacks onSelect={s => insertEmoji(s)} onClose={() => setShowEmoji(false)} />
-          )}
+          <EmojiPicker onSelect={e => insertEmoji(e.native)} />
+        </div>
+      )}
+      {moderationWarn && (
+        <div className="cc-moderation-warn">
+          <i className="fas fa-shield-alt" />
+          <span>{moderationWarn}</span>
+          <button type="button" onClick={() => setModerationWarn(null)} aria-label="Fermer"><i className="fas fa-times" /></button>
         </div>
       )}
       <div className="cc-bar">

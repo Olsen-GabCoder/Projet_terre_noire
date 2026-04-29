@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from apps.social.models import BookClub
 from .models import Book, Author, Category, BookReview, ReviewLike
 from .filters import BookFilter
 from .serializers import (
@@ -544,7 +545,8 @@ class BookViewSet(viewsets.ModelViewSet):
                 'average_price': average_price,
                 'bestsellers_count': Book.objects.filter(is_bestseller=True).count(),
                 'average_rating': average_rating,
-                'books_with_discount': books_with_discount
+                'books_with_discount': books_with_discount,
+                'total_clubs': BookClub.objects.count(),
             }
 
             serializer = BookStatisticsSerializer(stats)
@@ -562,7 +564,8 @@ class BookViewSet(viewsets.ModelViewSet):
                 'average_price': 0.0,
                 'bestsellers_count': 0,
                 'average_rating': 0.0,
-                'books_with_discount': 0
+                'books_with_discount': 0,
+                'total_clubs': 0,
             })
 
 
@@ -688,19 +691,40 @@ class AuthorViewSet(viewsets.ModelViewSet):
         """
         GET /api/authors/featured/?limit=16
         Auteurs mis en avant : au moins 1 livre, triés par ventes + note moyenne.
-        Retourne plus que nécessaire pour permettre un mélange côté frontend.
         """
         limit = min(int(request.query_params.get('limit', 16)), 50)
         authors = (
             Author.objects
-            .prefetch_related('books')
+            .prefetch_related('books', 'books__category')
             .annotate(
                 num_books=Count('books', filter=Q(books__available=True)),
                 avg_rating=Avg('books__rating', filter=Q(books__rating__gt=0)),
                 sales=Sum('books__total_sales'),
+                _followers_count=Count('author_followers'),
             )
             .filter(num_books__gt=0)
             .order_by('-sales', '-avg_rating', '-num_books')
+            [:limit]
+        )
+        serializer = AuthorSerializer(authors, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='recent')
+    def recent(self, request):
+        """
+        GET /api/authors/recent/?limit=6
+        Derniers auteurs ajoutés ayant au moins 1 livre.
+        """
+        limit = min(int(request.query_params.get('limit', 6)), 20)
+        authors = (
+            Author.objects
+            .prefetch_related('books', 'books__category')
+            .annotate(
+                num_books=Count('books', filter=Q(books__available=True)),
+                _followers_count=Count('author_followers'),
+            )
+            .filter(num_books__gt=0)
+            .order_by('-created_at')
             [:limit]
         )
         serializer = AuthorSerializer(authors, many=True, context={'request': request})
@@ -805,7 +829,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'], url_path='books')
+    @action(detail=True, methods=['get'], url_path='books')  # noqa: category_books
     def category_books(self, request, pk=None):
         """
         Endpoint personnalisé: /api/categories/{id}/books/
@@ -822,3 +846,109 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
         serializer = BookListSerializer(books, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+# ─── ISBN Lookup (Google Books + Open Library) ─────────────────────
+
+from rest_framework.views import APIView
+
+
+class ISBNLookupView(APIView):
+    """Recherche automatique de métadonnées par ISBN via Google Books + Open Library."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, isbn):
+        import requests as http_requests
+        import re
+
+        # Nettoyer l'ISBN
+        clean_isbn = re.sub(r'[^0-9X]', '', isbn.upper())
+        if len(clean_isbn) not in (10, 13):
+            return Response({'error': 'ISBN invalide (10 ou 13 chiffres)'}, status=400)
+
+        # Vérifier le cache
+        cache_key = f"isbn_lookup:{clean_isbn}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        result = None
+
+        # 1. Google Books API
+        try:
+            resp = http_requests.get(
+                'https://www.googleapis.com/books/v1/volumes',
+                params={'q': f'isbn:{clean_isbn}', 'maxResults': 1},
+                timeout=8,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('totalItems', 0) > 0:
+                    vol = data['items'][0]['volumeInfo']
+                    result = {
+                        'source': 'google_books',
+                        'title': vol.get('title', ''),
+                        'authors': vol.get('authors', []),
+                        'description': vol.get('description', ''),
+                        'page_count': vol.get('pageCount'),
+                        'categories': vol.get('categories', []),
+                        'language': vol.get('language', ''),
+                        'published_date': vol.get('publishedDate', ''),
+                        'publisher': vol.get('publisher', ''),
+                        'cover_url': vol.get('imageLinks', {}).get('thumbnail', ''),
+                        'isbn': clean_isbn,
+                    }
+                    if result['cover_url']:
+                        result['cover_url'] = result['cover_url'].replace('zoom=1', 'zoom=2').replace('&edge=curl', '')
+        except Exception as e:
+            logging.getLogger(__name__).warning("Google Books lookup failed for %s: %s", clean_isbn, e)
+
+        # 2. Fallback: Open Library API
+        if not result:
+            try:
+                resp = http_requests.get(
+                    f'https://openlibrary.org/isbn/{clean_isbn}.json',
+                    timeout=8,
+                )
+                if resp.status_code == 200:
+                    ol = resp.json()
+                    authors = []
+                    for author_ref in ol.get('authors', []):
+                        author_key = author_ref.get('key', '')
+                        if author_key:
+                            try:
+                                a_resp = http_requests.get(
+                                    f'https://openlibrary.org{author_key}.json', timeout=5,
+                                )
+                                if a_resp.status_code == 200:
+                                    authors.append(a_resp.json().get('name', ''))
+                            except Exception:
+                                pass
+                    cover_url = ''
+                    covers = ol.get('covers', [])
+                    if covers:
+                        cover_url = f'https://covers.openlibrary.org/b/id/{covers[0]}-L.jpg'
+                    desc = ol.get('description', '')
+                    if isinstance(desc, dict):
+                        desc = desc.get('value', '')
+                    result = {
+                        'source': 'open_library',
+                        'title': ol.get('title', ''),
+                        'authors': authors,
+                        'description': desc or '',
+                        'page_count': ol.get('number_of_pages'),
+                        'categories': (ol.get('subjects', []) or [])[:5],
+                        'language': '',
+                        'published_date': ol.get('publish_date', ''),
+                        'publisher': ', '.join(ol.get('publishers', [])),
+                        'cover_url': cover_url,
+                        'isbn': clean_isbn,
+                    }
+            except Exception as e:
+                logging.getLogger(__name__).warning("Open Library lookup failed for %s: %s", clean_isbn, e)
+
+        if not result:
+            return Response({'error': 'Aucun livre trouvé pour cet ISBN'}, status=404)
+
+        cache.set(cache_key, result, timeout=604800)
+        return Response(result)

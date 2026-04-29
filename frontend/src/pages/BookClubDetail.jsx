@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import socialService from '../services/socialService';
@@ -9,55 +9,99 @@ import toast from 'react-hot-toast';
 import '../styles/ClubChat.css';
 
 import { groupByDate, ini } from '../components/club/clubUtils';
-import { ChatMessages, MessageComposer, ConversationPoll, PollCreateModal, SessionCreateModal, MemberList, ArchiveSection, PassagesSection, WishlistSection, ClubRail, QrModal, ReportModal, ForwardModal, DeleteConfirmModal } from '../components/club';
+import { ChatMessages, MessageComposer, ConversationPoll, PollCreateModal, SessionCreateModal, MemberList, ChronicleSection, PassagesSection, WishlistSection, ClubRail, QrModal, ReportModal, ForwardModal, DeleteConfirmModal } from '../components/club';
+import ThreadPanel from '../components/club/ThreadPanel';
+import VideoRoom from '../components/club/VideoRoom';
+
+import useClub from '../hooks/club/useClub';
+import useClubMessages from '../hooks/club/useClubMessages';
+import useClubPolls from '../hooks/club/useClubPolls';
 
 export default function BookClubDetail() {
   const { t, i18n } = useTranslation();
   const { slug } = useParams();
   const { user } = useAuth();
 
-  // ── Core state ──
-  const [club, setClub] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isMember, setIsMember] = useState(false);
+  // ── Hook 1: Club core ──
+  const {
+    club, setClub, members, setMembers, loading, error, isMember, setIsMember,
+    isAdmin, isMod, isFull,
+    joining, join, leave,
+    myApplication, applyForm, setApplyForm, applySubmitting, applySuccess, submitApplication,
+    reloadMembers, changeRole, kick, ban, invite, inviteInput, setInviteInput, inviting,
+    approveMember, rejectMember, deleteClub,
+    registerSetMessages, registerOnMyProgress,
+  } = useClub(slug, user, t, toast, handleApiError, socialService);
 
-  // ── UI state ──
+  // ── Hook 2: Messages ──
+  const {
+    messages, setMessages,
+    chatRef, topSentinelRef, endRef, inputRef, longPressRef, longPressFired,
+    showScrollBtn, scrollToBottom, onChatScroll,
+    loadingOlder,
+    handleDeleteMsg, handleEditMsg, handlePin, handleReact,
+    showSearch, setShowSearch, chatSearch, setChatSearch,
+    searchMatchIds, searchIdx, searchMatchArr, doSearch, navigateSearch, clearSearch,
+    msgMenu, setMsgMenu, editingMsg, setEditingMsg, replyTo, setReplyTo,
+    reactionPicker, setReactionPicker, reportMsg, setReportMsg, forwardMsg, setForwardMsg,
+    pinnedIdx, setPinnedIdx,
+    typingUsers,
+    wsConnected, sendWsEvent,
+    onlineUsers,
+    blockedIds, setBlockedIds,
+    registerSessionUpdate,
+  } = useClubMessages(slug, club, isMember, user, socialService, toast, handleApiError);
+
+  // ── Hook 3: Polls ──
+  const {
+    activePoll, setActivePoll, applicationPolls,
+    myVotes, setMyVotes,
+    votePollOption, closePollAction,
+  } = useClubPolls(slug, isMember, club, setClub, socialService, toast, handleApiError);
+
+  // ── Wire join's setMessages to useClubMessages ──
+  useEffect(() => { registerSetMessages(setMessages); }, [registerSetMessages, setMessages]);
+
+  // ── Wire session updates from WebSocket ──
+  useEffect(() => {
+    registerSessionUpdate((sessionId, meetingActive, sessionData) => {
+      setSessions(prev => prev.map(s => {
+        if (s.id !== sessionId) return s;
+        // Use full session data from broadcast if available, else patch meeting_active
+        return sessionData ? { ...s, ...sessionData } : { ...s, meeting_active: meetingActive };
+      }));
+      // Close VideoRoom if session ended
+      if (meetingActive === false) {
+        setVideoSession(prev => prev?.id === sessionId ? null : prev);
+      }
+    });
+  }, [registerSessionUpdate]);
+
+  // ── UI state (stays in component) ──
   const [mainTab, setMainTab] = useState('discussion');
   const [railOpen, setRailOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState('info');
-  const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+  const [threadMsg, setThreadMsg] = useState(null);
+  const [videoSession, setVideoSession] = useState(null);
+  const videoPeakRef = useRef(0);
 
-  // ── Chat state ──
-  const [msgMenu, setMsgMenu] = useState(null);
-  const [editingMsg, setEditingMsg] = useState(null);
-  const [replyTo, setReplyTo] = useState(null);
-  const [reportMsg, setReportMsg] = useState(null);
-  const [forwardMsg, setForwardMsg] = useState(null);
-  const [reactionPicker, setReactionPicker] = useState(null);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-
-  // ── Search state ──
-  const [chatSearch, setChatSearch] = useState('');
-  const [searchMatchIds, setSearchMatchIds] = useState(null);
-  const [searchIdx, setSearchIdx] = useState(0);
-  const [pinnedIdx, setPinnedIdx] = useState(0);
-
-  // ── Data sections ──
+  // ── Data sections (stays in component) ──
   const [myProgress, setMyProgress] = useState(0);
-  const [activePoll, setActivePoll] = useState(null);
-  const [myVote, setMyVote] = useState(null);
   const [sessions, setSessions] = useState([]);
-  const [archives, setArchives] = useState([]);
   const [reports, setReports] = useState([]);
 
+  // ── Wire myProgress callback ──
+  useEffect(() => { registerOnMyProgress(setMyProgress); }, [registerOnMyProgress]);
+
+  // ── Load sessions when isMember ──
+  useEffect(() => {
+    if (!club || !isMember) return;
+    (async () => {
+      try { const s = await socialService.getClubSessions(slug); setSessions(Array.isArray(s.data) ? s.data : []); } catch {}
+    })();
+  }, [club, isMember, slug]);
+
   // ── Admin state ──
-  const [inviteInput, setInviteInput] = useState('');
-  const [inviting, setInviting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -68,194 +112,17 @@ export default function BookClubDetail() {
   const [showPollCreate, setShowPollCreate] = useState(false);
   const [showSessionCreate, setShowSessionCreate] = useState(false);
 
-  // ── Refs ──
-  const chatRef = useRef(null);
-  const topSentinelRef = useRef(null);
-  const endRef = useRef(null);
-  const inputRef = useRef(null);
-  const longPressRef = useRef(null);
-  const longPressFired = useRef(false);
-
-  // ── Load data ──
-  useEffect(() => { (async () => { try {
-    const r = await socialService.getClub(slug); setClub(r.data); setIsMember(r.data.user_is_member);
-    if (r.data.my_progress !== undefined) setMyProgress(r.data.my_progress);
-    const [m, mb] = await Promise.all([socialService.getClubMessages(slug), socialService.getClubMembers(slug)]);
-    setMessages(Array.isArray(m.data) ? m.data : m.data.results || []);
-    setMembers(Array.isArray(mb.data) ? mb.data : mb.data.results || []);
-    if (r.data.user_is_member) socialService.markClubRead(slug).catch(() => {});
-    try { const p = await socialService.getPolls(slug); const polls = Array.isArray(p.data) ? p.data : []; const open = polls.find(x => x.status === 'OPEN'); if (open) { setActivePoll(open); const voted = open.options?.find(o => o.voted_by_me); if (voted) setMyVote(voted.id); } } catch {}
-    try { const s = await socialService.getClubSessions(slug); setSessions(Array.isArray(s.data) ? s.data : []); } catch {}
-    try { const a = await socialService.getClubArchives(slug); setArchives(Array.isArray(a.data) ? a.data : []); } catch {}
-  } catch (e) { setError(handleApiError(e)); } setLoading(false); })(); }, [slug]);
-
-  // ── Auto-scroll (only on new messages when user is near bottom) ──
-  const prevMsgCountRef = useRef(0);
-  const scrollChatToBottom = useCallback((smooth = true) => {
-    const c = chatRef.current;
-    if (!c) return;
-    if (smooth) {
-      c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
-    } else {
-      c.scrollTop = c.scrollHeight;
-    }
-  }, []);
-
-  useEffect(() => {
-    const prev = prevMsgCountRef.current;
-    const cur = messages.length;
-    prevMsgCountRef.current = cur;
-    if (cur <= prev) return; // edit/delete/react — no scroll
-    const c = chatRef.current;
-    if (!c) return;
-    const nearBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 150;
-    if (prev === 0) {
-      // Initial load — jump to bottom instantly
-      requestAnimationFrame(() => scrollChatToBottom(false));
-    } else if (nearBottom) {
-      scrollChatToBottom(true);
-    }
-  }, [messages, scrollChatToBottom]);
-
-  // ── Scroll button ──
-  const onChatScroll = useCallback(() => {
-    if (!chatRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = chatRef.current;
-    setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 200);
-    setReactionPicker(null);
-  }, []);
-
-  const scrollToBottom = () => scrollChatToBottom(true);
-
-  // ── Message actions ──
-  const handleDeleteMsg = async (msgId) => {
-    try { await socialService.deleteClubMessage(slug, msgId); setMessages(prev => prev.map(m => m.id === msgId ? {...m, is_deleted: true, content: ''} : m)); } catch (e) { toast.error(handleApiError(e)); }
-    setMsgMenu(null);
-  };
-
-  const handleEditMsg = async () => {
-    if (!editingMsg || !editingMsg.content.trim()) return;
-    try { const r = await socialService.editClubMessage(slug, editingMsg.id, editingMsg.content.trim()); setMessages(prev => prev.map(m => m.id === editingMsg.id ? {...m, content: r.data.content, edited_at: r.data.edited_at} : m)); } catch (e) { toast.error(handleApiError(e)); }
-    setEditingMsg(null);
-  };
-
-  // ── Load older messages ──
-  const loadOlderMessages = useCallback(async () => {
-    if (loadingOlder || !hasMore || messages.length === 0) return;
-    setLoadingOlder(true);
-    try {
-      const firstId = messages[0].id;
-      const r = await socialService.getOlderClubMessages(slug, firstId, 30);
-      const older = r.data.results || [];
-      if (older.length > 0) {
-        const container = chatRef.current;
-        const prevHeight = container?.scrollHeight || 0;
-        setMessages(prev => [...older, ...prev]);
-        requestAnimationFrame(() => { if (container) { container.scrollTop = container.scrollHeight - prevHeight; } });
-      }
-      setHasMore(r.data.has_more !== false && older.length === 30);
-    } catch {}
-    setLoadingOlder(false);
-  }, [loadingOlder, hasMore, messages, slug]);
-
-  // ── Infinite scroll observer ──
-  useEffect(() => {
-    if (!topSentinelRef.current || !isMember) return;
-    const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) loadOlderMessages(); }, {root: chatRef.current, threshold: 0.1});
-    observer.observe(topSentinelRef.current);
-    return () => observer.disconnect();
-  }, [loadOlderMessages, isMember]);
-
-  // ── Pin message ──
-  const handlePin = async (msgId) => {
-    try { const r = await socialService.pinMessage(slug, msgId); setMessages(prev => prev.map(m => m.id === msgId ? {...m, is_pinned: r.data.is_pinned} : m)); } catch (e) { toast.error(handleApiError(e)); }
-    setMsgMenu(null);
-  };
-
   // ── Reports ──
   const loadReports = async () => { try { const r = await socialService.getReports(slug, {status: 'PENDING'}); setReports(Array.isArray(r.data) ? r.data : []); } catch {} };
   const handleReportAction = async (reportId, newStatus) => { try { await socialService.updateReport(slug, reportId, {status: newStatus}); setReports(p => p.filter(r => r.id !== reportId)); toast.success(newStatus === 'REVIEWED' ? 'Signalement traité' : 'Signalement rejeté'); } catch {} };
 
-  // ── Search ──
-  const doSearch = async () => {
-    if (!chatSearch.trim()) { setSearchMatchIds(null); return; }
-    try {
-      const r = await socialService.searchMessages(slug, chatSearch.trim());
-      const results = Array.isArray(r.data) ? r.data : r.data?.results || [];
-      const ids = new Set(results.map(m => m.id));
-      setSearchMatchIds(ids);
-      setSearchIdx(0);
-      if (results.length > 0) { const el = document.getElementById(`msg-${results[0].id}`); if (el) { el.scrollIntoView({behavior: 'smooth', block: 'center'}); } }
-    } catch { setSearchMatchIds(new Set()); }
-  };
-  const searchMatchArr = searchMatchIds ? messages.filter(m => searchMatchIds.has(m.id)) : [];
-  const navigateSearch = (dir) => {
-    if (!searchMatchArr.length) return;
-    const next = (searchIdx + dir + searchMatchArr.length) % searchMatchArr.length;
-    setSearchIdx(next);
-    const el = document.getElementById(`msg-${searchMatchArr[next].id}`);
-    if (el) { el.scrollIntoView({behavior: 'smooth', block: 'center'}); }
-  };
-  const clearSearch = () => { setChatSearch(''); setSearchMatchIds(null); setSearchIdx(0); setShowSearch(false); };
-
-  // ── Poll actions ──
-  const votePollOption = async (optionId) => {
-    if (!activePoll || optionId === myVote) return;
-    try { const r = await socialService.votePoll(slug, activePoll.id, optionId); setActivePoll(r.data.poll); setMyVote(optionId); } catch (e) { toast.error(handleApiError(e)); }
-  };
-  const closePollAction = async () => {
-    if (!activePoll) return;
-    try { const r = await socialService.closePoll(slug, activePoll.id); setActivePoll({...activePoll, status: 'CLOSED', ...r.data}); const cr = await socialService.getClub(slug); setClub(cr.data); } catch (e) { toast.error(handleApiError(e)); }
-  };
-
   // ── Reading progress ──
   const saveProgress = async (val) => { setMyProgress(val); try { await socialService.updateReadingProgress(slug, val); } catch {} };
-
-  // ── Reactions ──
-  const handleReact = async (msgId, emoji) => {
-    try { const r = await socialService.reactToMessage(slug, msgId, emoji); setMessages(prev => prev.map(m => m.id === msgId ? {...m, reactions_summary: r.data.reactions_summary} : m)); } catch {}
-    setReactionPicker(null);
-  };
-
-  // ── Polling for new messages ──
-  const lastMsgIdRef = useRef(0);
-  useEffect(() => {
-    if (messages.length) lastMsgIdRef.current = messages[messages.length - 1].id;
-  }, [messages]);
-
-  useEffect(() => {
-    if (!club || !isMember) return;
-    const iv = setInterval(async () => { try {
-      const r = await socialService.getNewClubMessages(slug, lastMsgIdRef.current);
-      const n = Array.isArray(r.data) ? r.data : [];
-      if (n.length) setMessages(p => [...p, ...n]);
-    } catch {} }, 4000);
-    return () => clearInterval(iv);
-  }, [club, isMember, slug]);
-
-  // ── Join / Leave ──
-  const join = async () => { try { const res = await socialService.joinClub(slug); if (res.status === 202) { toast.success(t('pages.bookClubDetail.pendingSent', 'Demande envoyée ! En attente d\'approbation.')); } else { setIsMember(true); toast.success('Bienvenue !'); const r = await socialService.getClubMembers(slug); setMembers(Array.isArray(r.data) ? r.data : r.data.results || []); } } catch (e) { toast.error(handleApiError(e)); } };
-  const leave = async () => { try { await socialService.leaveClub(slug); setIsMember(false); toast.success('Vous avez quitté le club.'); } catch (e) { toast.error(handleApiError(e)); } };
-
-  // ── Derived state ──
-  const isAdmin = club && user && (club.creator?.id === user.id || members.some(m => m.user?.id === user.id && m.role === 'ADMIN'));
-  const isMod = isAdmin || (club && user && members.some(m => m.user?.id === user.id && m.role === 'MODERATOR'));
-  const isFull = club && club.max_members && members.length >= club.max_members;
-
-  // ── Member management ──
-  const reloadMembers = async () => { const r = await socialService.getClubMembers(slug); setMembers(Array.isArray(r.data) ? r.data : r.data.results || []); };
-  const changeRole = async (memberId, role) => { try { await socialService.updateMemberRole(slug, memberId, role); toast.success('Rôle mis à jour.'); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } };
-  const kick = async (memberId, name) => { if (!window.confirm(`Exclure ${name} du club ?`)) return; try { await socialService.kickMember(slug, memberId); toast.success(`${name} exclu.`); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } };
-  const ban = async (memberId, name) => { if (!window.confirm(t('pages.bookClubDetail.banConfirm', `Bannir ${name} définitivement ? Cette personne ne pourra plus rejoindre le club.`, {name}))) return; try { await socialService.banMember(slug, memberId); toast.success(t('pages.bookClubDetail.banSuccess', `${name} a été banni.`, {name})); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } };
-  const invite = async () => { if (!inviteInput.trim()) return; setInviting(true); try { await socialService.inviteToClub(slug, inviteInput.trim()); toast.success('Membre ajouté !'); setInviteInput(''); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } setInviting(false); };
-  const approveMember = async (memberId, name) => { try { await socialService.approveMember(slug, memberId); toast.success(`${name} approuvé !`); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } };
-  const rejectMember = async (memberId, name) => { try { await socialService.rejectMember(slug, memberId); toast.success(`${name} refusé.`); await reloadMembers(); } catch (e) { toast.error(handleApiError(e)); } };
-  const deleteClub = async () => { try { await socialService.deleteClub(slug); toast.success('Club supprimé.'); window.location.href = '/clubs'; } catch (e) { toast.error(handleApiError(e)); } };
 
   // ── Invite link ──
   const generateInviteUrl = async () => {
     if (inviteUrl) return inviteUrl;
-    try { const r = await socialService.createInviteLink(slug, 7, 0); const url = `${window.location.origin}/clubs/invite/${r.data.token}`; setInviteUrl(url); return url; } catch { toast.error('Erreur lors de la création du lien.'); return null; }
+    try { const r = await socialService.createInviteLink(slug, 7, 0); const url = `${window.location.origin}/clubs/invite/${r.data.token}`; setInviteUrl(url); return url; } catch { toast.error(t('pages.bookClubDetail.inviteLinkError')); return null; }
   };
   const shareClub = async () => {
     const url = isAdmin ? await generateInviteUrl() : window.location.href;
@@ -268,7 +135,15 @@ export default function BookClubDetail() {
     if (navigator.share) {
       try { await navigator.share(shareData); return; } catch (e) { if (e.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(url); toast.success(t('pages.bookClubDetail.shareCopied')); } catch {}
+    const waText = encodeURIComponent(`${shareData.text}\n${url}`);
+    window.open(`https://wa.me/?text=${waText}`, '_blank', 'noopener');
+  };
+  const shareWhatsApp = async () => {
+    const url = isAdmin ? await generateInviteUrl() : window.location.href;
+    if (!url) return;
+    const text = t('pages.bookClubDetail.shareText', { clubName: club.name });
+    const waText = encodeURIComponent(`${text}\n${url}`);
+    window.open(`https://wa.me/?text=${waText}`, '_blank', 'noopener');
   };
   const openQr = async () => { await generateInviteUrl(); setShowQr(true); };
 
@@ -287,7 +162,7 @@ export default function BookClubDetail() {
 
   // ── Loading / Error ──
   if (loading) return <div className="dashboard-loading"><div className="admin-spinner" /></div>;
-  if (error) return <div className="cc-error"><i className="fas fa-exclamation-triangle" /><p>{error}</p><Link to="/clubs">Retour</Link></div>;
+  if (error) return <div className="cc-error"><i className="fas fa-exclamation-triangle" /><p>{error}</p><Link to="/clubs">{t('pages.bookClubDetail.back')}</Link></div>;
   if (!club) return null;
 
   // ── Derived data ──
@@ -303,8 +178,26 @@ export default function BookClubDetail() {
 
       {/* ══ MOBILE TOPBAR ══ */}
       <div className="cc-mob" onClick={() => setRailOpen(o => !o)}>
-        <div className="cc-mob__av">{club.cover_image ? <img src={club.cover_image} alt="" /> : <i className="fas fa-users" />}</div>
-        <div className="cc-mob__txt"><h1>{club.name}</h1><span>{members.length} membre{members.length > 1 ? 's' : ''}{isFull && ` · ${t('pages.bookClubDetail.clubFull', 'Complet')}`}</span></div>
+        <div className="cc-mob__av">
+          {club.current_book?.cover_image
+            ? <img src={club.current_book.cover_image} alt="" />
+            : club.cover_image
+              ? <img src={club.cover_image} alt="" />
+              : <i className="fas fa-users" />}
+        </div>
+        <div className="cc-mob__txt">
+          <h1>{club.name}</h1>
+          <span>
+            {club.current_book && <><i className="fas fa-book-open" style={{fontSize: 10, marginRight: 4}} />{club.current_book.title} · </>}
+            {t('pages.bookClubDetail.memberCount', { count: members.length })}{isFull && ` · ${t('pages.bookClubDetail.clubFull', 'Complet')}`}
+            {sessions.length > 0 && sessions[0].meeting_active && (
+              <> · <strong className="cc-mob__live">{t('pages.bookClubDetail.sessionLive', 'EN DIRECT')}</strong></>
+            )}
+            {sessions.length > 0 && !sessions[0].meeting_active && (
+              <> · {new Date(sessions[0].scheduled_at).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'fr-FR', {day: 'numeric', month: 'short'})}, {new Date(sessions[0].scheduled_at).toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'fr-FR', {hour: '2-digit', minute: '2-digit'})}</>
+            )}
+          </span>
+        </div>
       </div>
 
       {/* ══ HEADER ══ */}
@@ -342,19 +235,94 @@ export default function BookClubDetail() {
           </div>
         </div>
         <div className="cc-header__actions">
-          {user && !isMember && (isFull
+          {user && !isMember && !club.requires_approval && (isFull
             ? <button className="cc-btn cc-btn--join cc-btn--disabled" disabled title={t('pages.bookClubDetail.clubFullTooltip', 'Ce club est complet')}><i className="fas fa-lock" /> {t('pages.bookClubDetail.clubFull', 'Complet')}</button>
-            : <button className="cc-btn cc-btn--join" onClick={join}>{t('pages.bookClubDetail.joinClub')}</button>
+            : <button className="cc-btn cc-btn--join" onClick={() => join()}>{t('pages.bookClubDetail.joinClub')}</button>
           )}
-          {user && isMember && club.creator?.id !== user.id && <button className="cc-btn cc-btn--leave" onClick={leave}><i className="fas fa-sign-out-alt" /> Quitter</button>}
-          {isAdmin && <button className="cc-btn cc-btn--outline" onClick={shareClub}><i className="fas fa-share-alt" /> Partager</button>}
+          {user && isMember && club.creator?.id !== user.id && <button className="cc-btn cc-btn--leave" onClick={leave}><i className="fas fa-sign-out-alt" /> {t('pages.bookClubDetail.leave')}</button>}
+          {isAdmin && <button className="cc-btn cc-btn--outline" onClick={shareClub}><i className="fas fa-share-alt" /> {t('pages.bookClubDetail.shareNative')}</button>}
+          {isAdmin && <button className="cc-btn cc-btn--outline cc-btn--whatsapp" onClick={shareWhatsApp}><i className="fab fa-whatsapp" /> {t('pages.bookClubDetail.shareWhatsApp')}</button>}
           {isAdmin && <button className="cc-btn cc-btn--outline" onClick={openQr}><i className="fas fa-qrcode" /> QR</button>}
-          {isAdmin && <button className="cc-btn cc-btn--outline" onClick={openEdit}><i className="fas fa-pen" /> Modifier</button>}
+          {isAdmin && <button className="cc-btn cc-btn--outline" onClick={openEdit}><i className="fas fa-pen" /> {t('pages.bookClubDetail.edit')}</button>}
         </div>
       </div>
 
-      {/* ══ BODY: 2 columns ══ */}
-      <div className="cc-body">
+      {/* ══ NON-MEMBER LANDING ══ */}
+      {!isMember && (
+        <div className="cc-landing">
+          <div className="cc-landing__card">
+            <div className="cc-landing__badge">
+              <i className={`fas ${club.is_public ? 'fa-globe' : 'fa-lock'}`} />
+              {club.is_public ? t('pages.bookClubDetail.publicClub', 'Club public') : t('pages.bookClubDetail.privateClub', 'Club privé')}
+            </div>
+            {club.description && <p className="cc-landing__desc">{club.description}</p>}
+            {club.category?.length > 0 && (
+              <div className="cc-landing__tags">
+                {club.category.map((c, i) => <span key={i} className="cc-tag cc-tag--pri">{c}</span>)}
+              </div>
+            )}
+            <div className="cc-landing__meta">
+              <span><i className="fas fa-users" /> {members.length} {t('pages.bookClubDetail.members')}</span>
+              {club.meeting_frequency && <span><i className="fas fa-calendar" /> {club.frequency_display}</span>}
+            </div>
+
+            {!user ? (
+              <div className="cc-landing__auth">
+                <p>{t('pages.bookClubDetail.loginToJoin', 'Connectez-vous pour rejoindre ce club.')}</p>
+                <Link to="/login" className="cc-btn cc-btn--join">{t('pages.bookClubDetail.login', 'Se connecter')}</Link>
+              </div>
+            ) : isFull ? (
+              <div className="cc-landing__full">
+                <i className="fas fa-lock" /> {t('pages.bookClubDetail.clubFull', 'Complet')}
+              </div>
+            ) : !club.requires_approval ? (
+              <div className="cc-landing__join">
+                <button className="cc-btn cc-btn--join cc-landing__join-btn" onClick={() => join()} disabled={joining}>
+                  {joining ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-sign-in-alt" />}
+                  {' '}{t('pages.bookClubDetail.joinClub')}
+                </button>
+              </div>
+            ) : (applySuccess || myApplication?.status === 'PENDING') ? (
+              <div className="cc-landing__status">
+                <i className="fas fa-hourglass-half" />
+                {t('pages.bookClubDetail.applyPending', 'Votre candidature est en cours de vote par les membres.')}
+              </div>
+            ) : (myApplication?.status === 'REJECTED' && myApplication.resolved_at && new Date(new Date(myApplication.resolved_at).getTime() + 30 * 86400e3) > Date.now()) ? (
+              <div className="cc-landing__status">
+                <i className="fas fa-calendar-times" />
+                {t('pages.bookClubDetail.applyRejectedWait', { date: new Date(new Date(myApplication.resolved_at).getTime() + 30 * 86400e3).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'fr-FR') })}
+              </div>
+            ) : (
+              <div className="cc-landing__form">
+                <h3>{t('pages.bookClubDetail.applyTitle', 'Postuler pour rejoindre ce club')}</h3>
+                <div className="cc-landing__field">
+                  <label>{t('pages.bookClubDetail.applyReading', 'Quel est votre rapport à la lecture ?')}</label>
+                  <textarea value={applyForm.reading_relationship} onChange={e => setApplyForm(f => ({...f, reading_relationship: e.target.value}))} placeholder={t('pages.bookClubDetail.applyReadingPlaceholder')} rows={3} />
+                </div>
+                <div className="cc-landing__field">
+                  <label>{t('pages.bookClubDetail.applyMotivation', 'Pourquoi souhaitez-vous rejoindre ce club ?')}</label>
+                  <textarea value={applyForm.motivation} onChange={e => setApplyForm(f => ({...f, motivation: e.target.value}))} placeholder={t('pages.bookClubDetail.applyMotivationPlaceholder')} rows={3} />
+                </div>
+                <div className="cc-landing__field">
+                  <label>{t('pages.bookClubDetail.applyContribution', "Qu'aimeriez-vous apporter au club ?")}</label>
+                  <textarea value={applyForm.contribution} onChange={e => setApplyForm(f => ({...f, contribution: e.target.value}))} placeholder={t('pages.bookClubDetail.applyContributionPlaceholder')} rows={3} />
+                </div>
+                <button className="cc-btn cc-btn--join cc-landing__join-btn" onClick={submitApplication} disabled={applySubmitting || !applyForm.reading_relationship.trim() || !applyForm.motivation.trim() || !applyForm.contribution.trim()}>
+                  {applySubmitting ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-paper-plane" />}
+                  {' '}{applySubmitting ? t('pages.bookClubDetail.applySubmitting', 'Envoi...') : t('pages.bookClubDetail.applySubmit', 'Soumettre ma candidature')}
+                </button>
+              </div>
+            )}
+
+            <Link to="/clubs" className="cc-landing__back">
+              <i className="fas fa-arrow-left" /> {t('pages.bookClubDetail.backToClubs', 'Retour aux clubs')}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ══ BODY: 2 columns (members only) ══ */}
+      {isMember && <div className="cc-body">
         {/* ── LEFT: Tabs + Content ── */}
         <div className="cc-main">
           <div className="cc-tabs">
@@ -367,8 +335,8 @@ export default function BookClubDetail() {
             <button className={`cc-tabs__btn ${mainTab === 'participants' ? 'cc-tabs__btn--active' : ''}`} onClick={() => setMainTab('participants')}>
               {t('pages.bookClubDetail.tabParticipants')}
             </button>
-            <button className={`cc-tabs__btn ${mainTab === 'archives' ? 'cc-tabs__btn--active' : ''}`} onClick={() => setMainTab('archives')}>
-              {t('pages.bookClubDetail.tabArchives')}
+            <button className={`cc-tabs__btn ${mainTab === 'chronicle' ? 'cc-tabs__btn--active' : ''}`} onClick={() => setMainTab('chronicle')}>
+              {t('pages.bookClubDetail.tabChronicle', 'Chronique')}
             </button>
             {mainTab === 'discussion' && <button className={`cc-tabs__btn cc-tabs__btn--icon${showSearch ? ' cc-tabs__btn--active' : ''}`} onClick={() => setShowSearch(p => !p)} title="Rechercher"><i className="fas fa-search" /></button>}
           </div>
@@ -419,13 +387,10 @@ export default function BookClubDetail() {
               handlePin={handlePin} handleReact={handleReact}
               loadingOlder={loadingOlder} onChatScroll={onChatScroll}
               chatRef={chatRef} topSentinelRef={topSentinelRef} endRef={endRef}
+              activePoll={activePoll} applicationPolls={applicationPolls} myVotes={myVotes} votePollOption={votePollOption} closePollAction={closePollAction}
+              blockedIds={blockedIds} onOpenThread={setThreadMsg}
               t={t} i18n={i18n}
               longPressRef={longPressRef} longPressFired={longPressFired}
-            />
-
-            <ConversationPoll
-              activePoll={activePoll} isMember={isMember} isAdmin={isAdmin}
-              myVote={myVote} votePollOption={votePollOption} closePollAction={closePollAction} t={t}
             />
 
             {showScrollBtn && <button className="cc-scroll-btn" onClick={scrollToBottom}><i className="fas fa-chevron-down" /></button>}
@@ -434,28 +399,30 @@ export default function BookClubDetail() {
               slug={slug} user={user} isMember={isMember} isFull={isFull} club={club} members={members}
               messages={messages} setMessages={setMessages}
               replyTo={replyTo} setReplyTo={setReplyTo}
+              typingUsers={typingUsers}
+              wsConnected={wsConnected} sendWsEvent={sendWsEvent}
               t={t} inputRef={inputRef}
               socialService={socialService} toast={toast} handleApiError={handleApiError}
             />
           </>}
 
           {/* ── TAB: Passages ── */}
-          {mainTab === 'passages' && <PassagesSection messages={messages} i18n={i18n} />}
+          {mainTab === 'passages' && <PassagesSection messages={messages} i18n={i18n} t={t} />}
 
           {/* ── TAB: Participants ── */}
           {mainTab === 'participants' && (
             <MemberList
               members={members} club={club} user={user} isAdmin={isAdmin} isMod={isMod}
               inviteInput={inviteInput} setInviteInput={setInviteInput} inviting={inviting} invite={invite}
-              changeRole={changeRole} kick={kick} ban={ban} t={t}
+              changeRole={changeRole} kick={kick} ban={ban} onlineUsers={onlineUsers} t={t}
+              toast={toast} handleApiError={handleApiError}
             />
           )}
 
-          {/* ── TAB: Archives ── */}
-          {mainTab === 'archives' && <>
-            <ArchiveSection archives={archives} t={t} i18n={i18n} />
-            <WishlistSection slug={slug} isMember={isMember} isAdmin={isAdmin} user={user} socialService={socialService} toast={toast} handleApiError={handleApiError} t={t} />
-          </>}
+          {/* ── TAB: Chronicle ── */}
+          {mainTab === 'chronicle' && (
+            <ChronicleSection slug={slug} club={club} isMember={isMember} isAdmin={isAdmin} user={user} socialService={socialService} toast={toast} handleApiError={handleApiError} t={t} i18n={i18n} />
+          )}
         </div>{/* end cc-main */}
 
         {/* ── RIGHT RAIL ── */}
@@ -463,26 +430,26 @@ export default function BookClubDetail() {
           club={club} setClub={setClub} members={members} user={user} isMember={isMember} isAdmin={isAdmin} isMod={isMod} isFull={isFull}
           myProgress={myProgress} setMyProgress={setMyProgress} saveProgress={saveProgress}
           sessions={sessions} setSessions={setSessions}
-          activePoll={activePoll} setActivePoll={setActivePoll} myVote={myVote} setMyVote={setMyVote}
+          activePoll={activePoll} setActivePoll={setActivePoll} myVotes={myVotes} setMyVotes={setMyVotes}
           votePollOption={votePollOption} closePollAction={closePollAction} openPollCreate={() => setShowPollCreate(true)}
           railOpen={railOpen} setRailOpen={setRailOpen}
           sidebarTab={sidebarTab} setSidebarTab={setSidebarTab} editForm={editForm} setEditForm={setEditForm} saving={saving} saveEdit={saveEdit}
           slug={slug} socialService={socialService} toast={toast} handleApiError={handleApiError}
           join={join} leave={leave} deleteClub={deleteClub} showDeleteConfirm={showDeleteConfirm} setShowDeleteConfirm={setShowDeleteConfirm}
-          shareClub={shareClub} openQr={openQr} inviteUrl={inviteUrl}
+          shareClub={shareClub} shareWhatsApp={shareWhatsApp} openQr={openQr} inviteUrl={inviteUrl}
           reports={reports} loadReports={loadReports} handleReportAction={handleReportAction}
-          setShowSessionCreate={setShowSessionCreate}
+          setShowSessionCreate={setShowSessionCreate} onJoinSession={setVideoSession} videoPeakRef={videoPeakRef}
           bookSearch={bookSearch} setBookSearch={setBookSearch} bookResults={bookResults} changeBook={changeBook}
           approveMember={approveMember} rejectMember={rejectMember}
           t={t} i18n={i18n}
         />
-      </div>{/* end cc-body */}
+      </div>}{/* end cc-body */}
 
       {/* ══ FAB ══ */}
-      <button className="cc-fab" onClick={() => setRailOpen(true)} aria-label="Infos du club">
+      {isMember && <button className="cc-fab" onClick={() => setRailOpen(true)} aria-label="Infos du club">
         <i className="fas fa-info-circle" />
-      </button>
-      {railOpen && <div className="cc-rail-overlay" onClick={() => setRailOpen(false)} />}
+      </button>}
+      {isMember && railOpen && <div className="cc-rail-overlay" onClick={() => setRailOpen(false)} />}
     </div>
 
     {/* ══ MODALS (portals) ══ */}
@@ -491,6 +458,8 @@ export default function BookClubDetail() {
     <ForwardModal forwardMsg={forwardMsg} onClose={() => setForwardMsg(null)} slug={slug} socialService={socialService} toast={toast} handleApiError={handleApiError} t={t} />
     <DeleteConfirmModal show={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onDelete={deleteClub} />
     <SessionCreateModal show={showSessionCreate} onClose={() => setShowSessionCreate(false)} club={club} slug={slug} socialService={socialService} setSessions={setSessions} toast={toast} handleApiError={handleApiError} t={t} />
-    <PollCreateModal show={showPollCreate} onClose={() => setShowPollCreate(false)} slug={slug} socialService={socialService} toast={toast} handleApiError={handleApiError} setActivePoll={setActivePoll} setMyVote={setMyVote} t={t} />
+    <PollCreateModal show={showPollCreate} onClose={() => setShowPollCreate(false)} slug={slug} socialService={socialService} toast={toast} handleApiError={handleApiError} setActivePoll={setActivePoll} setMyVotes={setMyVotes} t={t} />
+    <ThreadPanel slug={slug} rootMsg={threadMsg} onClose={() => setThreadMsg(null)} user={user} members={members} socialService={socialService} toast={toast} handleApiError={handleApiError} t={t} i18n={i18n} />
+    {videoSession && <VideoRoom session={videoSession} user={user} club={club} slug={slug} socialService={socialService} onClose={() => setVideoSession(null)} t={t} videoPeakRef={videoPeakRef} />}
   </>);
 }

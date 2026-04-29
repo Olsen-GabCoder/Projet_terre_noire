@@ -1,13 +1,43 @@
 /**
  * MemberList — Participants tab with roles, progress, admin actions, ban
  */
+import { useState } from 'react';
 import { ini } from './clubUtils';
+import aiService from '../../services/aiService';
 
 export default function MemberList({
   members, club, user, isAdmin, isMod,
   inviteInput, setInviteInput, inviting, invite,
-  changeRole, kick, ban, t,
+  changeRole, kick, ban, onlineUsers, t, toast, handleApiError,
 }) {
+  const [search, setSearch] = useState('');
+  const [inactiveData, setInactiveData] = useState(null);
+  const [inactiveLoading, setInactiveLoading] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+  const filtered = search.trim()
+    ? members.filter(m => {
+        const q = search.toLowerCase();
+        const name = (m.user?.full_name || '').toLowerCase();
+        const uname = (m.user?.username || '').toLowerCase();
+        return name.includes(q) || uname.includes(q);
+      })
+    : members;
+
+  const handleDetectInactive = async () => {
+    setInactiveLoading(true);
+    try {
+      const data = await aiService.detectInactive(club.id);
+      setInactiveData(data);
+      setShowInactive(true);
+      if (!data.inactive_members?.length) {
+        toast.success(data.message || t('pages.bookClubDetail.allMembersActive', 'Tous les membres sont actifs !'));
+      }
+    } catch (e) {
+      toast.error(handleApiError(e));
+    }
+    setInactiveLoading(false);
+  };
+
   return (
     <div className="cc-tab-content">
       {isAdmin && <div className="cc-sec">
@@ -16,8 +46,14 @@ export default function MemberList({
           <button onClick={invite} disabled={inviting || !inviteInput.trim()}>{inviting ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-plus" />}</button>
         </div>
       </div>}
+      {members.length > 5 && (
+        <div className="cc-members__search">
+          <i className="fas fa-search" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('pages.bookClubDetail.searchMembers', 'Rechercher un membre...')} />
+        </div>
+      )}
       <div className="cc-members">
-        {members.map(m => {
+        {filtered.map(m => {
           const isCreator = m.user?.id === club.creator?.id;
           const isSelf = m.user?.id === user?.id;
           const canChangeRole = isAdmin && !isCreator && !isSelf && !m.is_banned;
@@ -25,7 +61,10 @@ export default function MemberList({
           const canBan = isMod && !isCreator && !isSelf && !m.is_banned && (isAdmin || m.role === 'MEMBER');
           return (
             <div key={m.id} className={`cc-member${m.is_banned ? ' cc-member--banned' : ''}`}>
-              <div className="cc-member__av">{m.user?.profile_image ? <img src={m.user.profile_image} alt="" /> : <span>{ini(m.user?.full_name || m.user?.username)}</span>}</div>
+              <div className="cc-member__av">
+                {m.user?.profile_image ? <img src={m.user.profile_image} alt="" /> : <span>{ini(m.user?.full_name || m.user?.username)}</span>}
+                {onlineUsers?.has(m.user?.id) && <span className="cc-member__online" />}
+              </div>
               <div className="cc-member__info">
                 <div className="cc-member__top">
                   <strong>{m.user?.full_name || m.user?.username}</strong>
@@ -60,6 +99,43 @@ export default function MemberList({
           );
         })}
       </div>
+
+      {/* AI Inactive Members Detection — admin only */}
+      {(isAdmin || isMod) && (
+        <div className="cc-inactive-section">
+          <button
+            className="cc-inactive-section__btn"
+            onClick={showInactive && inactiveData ? () => setShowInactive(false) : handleDetectInactive}
+            disabled={inactiveLoading}
+          >
+            {inactiveLoading
+              ? <><i className="fas fa-spinner fa-spin" /> {t('pages.bookClubDetail.analyzingActivity', 'Analyse en cours...')}</>
+              : showInactive && inactiveData
+                ? <><i className="fas fa-chevron-up" /> {t('pages.bookClubDetail.hideInactive', 'Masquer')}</>
+                : <><i className="fas fa-robot" /> {t('pages.bookClubDetail.detectInactive', 'Relancer les inactifs (IA)')}</>
+            }
+          </button>
+
+          {showInactive && inactiveData?.inactive_members?.length > 0 && (
+            <div className="cc-inactive-section__results">
+              {inactiveData.inactive_members.map((m, i) => (
+                <div key={i} className="cc-inactive-card">
+                  <div className="cc-inactive-card__header">
+                    <strong>{m.name || `Membre #${m.user_id}`}</strong>
+                    <span className="cc-inactive-card__days">
+                      <i className="fas fa-clock" /> {m.days_inactive}j
+                    </span>
+                  </div>
+                  <div className="cc-inactive-card__message">
+                    <i className="fas fa-comment-dots" />
+                    <p>{m.suggested_message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

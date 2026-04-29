@@ -1,0 +1,473 @@
+/* VendorListings — Offres marketplace Frollot */
+
+.vl { padding: 1.5rem; max-width: 900px; }
+
+/* ═══ Header ═══ */
+.vl__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.vl__title { font-family: var(--font-heading); font-size: 1.4rem; color: var(--color-text-heading); margin: 0; }
+.vl__title i { margin-right: 0.4rem; color: var(--color-primary); }
+.vl__subtitle { font-size: 0.82rem; color: var(--color-text-muted-ui); margin: 0.2rem 0 0; }
+
+/* ═══ Alert ═══ */
+.vl__alert { padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.9rem; }
+.vl__alert--error { background: rgba(166, 49, 35, 0.06); color: var(--color-error); border: 1px solid rgba(166, 49, 35, 0.15); }
+
+/* ═══ Buttons ═══ */
+.vl__btn {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.5rem 1rem; border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+  background: var(--color-bg-card); color: var(--color-text-body); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+}
+.vl__btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.vl__btn:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+.vl__btn--primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.vl__btn--primary:hover:not(:disabled) { background: var(--color-primary-dark); border-color: var(--color-primary-dark); color: #fff; }
+.vl__btn--sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+
+/* ═══ Empty state ═══ */
+.vl__empty-state {
+  text-align: center; padding: 4rem 2rem;
+  background: var(--color-bg-card); border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+}
+.vl__empty-state__icon {
+  width: 72px; height: 72px; margin: 0 auto 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(160, 74, 42, 0.06); color: var(--color-primary); font-size: 1.8rem;
+}
+.vl__empty-state h3 { font-family: var(--font-heading); font-size: 1.15rem; color: var(--color-text-heading); margin: 0 0 0.5rem; }
+.vl__empty-state p { font-size: 0.88rem; color: var(--color-text-muted-ui); margin: 0 0 1.5rem; line-height: 1.6; }
+
+/* ═══ Form card ═══ */
+.vl__form-card {
+  background: var(--color-bg-card); border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-sm); margin-bottom: 1.5rem; box-shadow: var(--shadow-card);
+}
+.vl__form-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-border-card);
+}
+.vl__form-header h2 { font-family: var(--font-heading); font-size: 1.05rem; color: var(--color-text-heading); margin: 0; }
+.vl__form-header h2 i { margin-right: 0.35rem; color: var(--color-primary); }
+.vl__form-close { background: none; border: none; color: var(--color-text-muted-ui); font-size: 1rem; cursor: pointer; padding: 0.25rem; }
+.vl__form-close:hover { color: var(--color-text-heading); }
+.vl__form { padding: 0; }
+
+/* ── Steps ── */
+.vl__step {
+  display: flex; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid var(--color-border-card);
+}
+.vl__step--disabled { opacity: 0.4; pointer-events: none; }
+.vl__step-num {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--color-primary); color: #fff;
+  font-size: 0.75rem; font-weight: 700;
+}
+.vl__step--disabled .vl__step-num { background: var(--color-border-card); color: var(--color-text-muted-ui); }
+.vl__step-content { flex: 1; min-width: 0; }
+.vl__step-label { font-size: 0.9rem; font-weight: 600; color: var(--color-text-heading); margin-bottom: 0.75rem; }
+.vl__step-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+
+/* ── Fields ── */
+.vl__field { display: flex; flex-direction: column; gap: 0.25rem; }
+.vl__field label { font-size: 0.78rem; font-weight: 600; color: var(--color-text-heading); }
+.vl__field-hint { font-weight: 400; color: var(--color-text-muted-ui); font-size: 0.72rem; }
+.vl__field input, .vl__field select {
+  padding: 0.5rem 0.65rem; border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+  background: var(--color-bg-page); color: var(--color-text-heading); font-size: 0.88rem; transition: border-color 0.15s;
+}
+.vl__field input:focus, .vl__field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(160, 74, 42, 0.08); }
+.vl__field input:disabled, .vl__field select:disabled { opacity: 0.5; }
+
+/* ── AI Price Suggestion ── */
+.vl__ai-suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 4px 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(160, 74, 42, 0.06);
+  border: 1px solid rgba(160, 74, 42, 0.15);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vl__ai-suggest-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.vl__ai-suggest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.vl__ai-suggest-btn i { font-size: 11px; }
+
+.vl__ai-price {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(160, 74, 42, 0.04);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 8px;
+  animation: vl-ai-in 0.3s ease;
+}
+
+@keyframes vl-ai-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vl__ai-price__suggestion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.vl__ai-price__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.vl__ai-price__apply {
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.vl__ai-price__apply:hover { opacity: 0.85; }
+
+.vl__ai-price__range {
+  font-size: 0.74rem;
+  color: var(--color-text-muted-ui);
+  margin-bottom: 4px;
+}
+
+.vl__ai-price__reason {
+  font-size: 0.78rem;
+  color: var(--color-text-body);
+  font-style: italic;
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+
+.vl__ai-price__position {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+  background: rgba(160, 74, 42, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Condition pills */
+.vl__condition-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.vl__condition-pill {
+  padding: 0.45rem 0.9rem; border: 1px solid var(--color-border-card); border-radius: 999px;
+  background: none; color: var(--color-text-muted-ui); font-size: 0.82rem; cursor: pointer; transition: all 0.15s;
+}
+.vl__condition-pill i { margin-right: 0.2rem; }
+.vl__condition-pill:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+.vl__condition-pill--active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.vl__condition-pill:disabled { opacity: 0.4; cursor: default; }
+
+/* Form actions */
+.vl__form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--color-border-card); }
+
+/* ═══ Book search ═══ */
+.vl__book-search { position: relative; }
+.vl__book-search__input-wrap {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 0.75rem; border: 1px solid var(--color-border-card); border-radius: var(--radius-sm); background: var(--color-bg-page);
+}
+.vl__book-search__input-wrap > i { color: var(--color-text-muted-ui); font-size: 0.8rem; flex-shrink: 0; }
+.vl__book-search__input-wrap input {
+  flex: 1; border: none !important; outline: none !important; background: none !important;
+  box-shadow: none !important; padding: 0 !important; font-size: 0.88rem; color: var(--color-text-heading); min-width: 0;
+}
+.vl__book-search__input-wrap input::placeholder { color: var(--color-gray-400); }
+.vl__book-search__spinner { color: var(--color-primary); }
+.vl__book-search__results {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+  background: var(--color-bg-card); border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); max-height: 320px; overflow-y: auto; list-style: none; margin: 4px 0 0; padding: 0;
+}
+.vl__book-search__item { display: flex; align-items: center; gap: 0.65rem; padding: 0.55rem 0.75rem; cursor: pointer; transition: background 0.1s; }
+.vl__book-search__item:hover { background: var(--color-bg-section-alt); }
+.vl__book-search__item + .vl__book-search__item { border-top: 1px solid var(--color-border-card); }
+.vl__book-search__item-cover {
+  width: 34px; height: 46px; border-radius: 2px; overflow: hidden; flex-shrink: 0;
+  background: var(--color-bg-section-alt); display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted-ui); font-size: 0.7rem;
+}
+.vl__book-search__item-cover img { width: 100%; height: 100%; object-fit: cover; }
+.vl__book-search__item-title { font-size: 0.85rem; font-weight: 500; color: var(--color-text-heading); }
+.vl__book-search__item-author { font-size: 0.75rem; color: var(--color-text-muted-ui); }
+.vl__book-search__empty { padding: 1rem; text-align: center; color: var(--color-text-muted-ui); font-size: 0.85rem; }
+
+/* ═══ Book selected ═══ */
+.vl__book-selected {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem;
+  border: 2px solid var(--color-primary); border-radius: var(--radius-sm);
+  background: rgba(160, 74, 42, 0.03); position: relative;
+}
+.vl__book-selected__cover { width: 52px; height: 68px; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.vl__book-selected__cover img { width: 100%; height: 100%; object-fit: cover; }
+.vl__book-selected__cover--empty {
+  width: 52px; height: 68px; display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg-section-alt); color: var(--color-text-muted-ui); font-size: 1.1rem;
+}
+.vl__book-selected__info { flex: 1; min-width: 0; }
+.vl__book-selected__title { font-weight: 600; font-size: 0.9rem; color: var(--color-text-heading); }
+.vl__book-selected__author { font-size: 0.78rem; color: var(--color-text-muted-ui); margin-top: 0.1rem; }
+.vl__book-selected__meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.35rem; font-size: 0.72rem; color: var(--color-text-muted-ui); }
+.vl__book-selected__meta i { margin-right: 0.15rem; }
+.vl__book-selected__ref-price { color: var(--color-primary); font-weight: 600; }
+.vl__book-selected__clear { position: absolute; top: 0.4rem; right: 0.4rem; background: none; border: none; color: var(--color-text-muted-ui); cursor: pointer; font-size: 0.8rem; }
+.vl__book-selected__clear:hover { color: var(--color-error); }
+
+/* Vendeurs existants */
+.vl__book-selected__vendors {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--color-border-card);
+}
+.vl__book-selected__vendors-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted-ui);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.vl__book-selected__vendors-label i { margin-right: 0.2rem; }
+.vl__book-selected__vendor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.78rem;
+}
+.vl__book-selected__vendor + .vl__book-selected__vendor { border-top: 1px solid var(--color-border-card); }
+.vl__book-selected__vendor-name {
+  font-weight: 500;
+  color: var(--color-text-heading);
+  flex: 1;
+  min-width: 0;
+}
+.vl__book-selected__vendor-verified { color: var(--color-success); font-size: 0.6rem; margin-left: 0.2rem; }
+.vl__book-selected__vendor-tag {
+  font-size: 0.65rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-bg-section-alt);
+  color: var(--color-text-muted-ui);
+  white-space: nowrap;
+}
+.vl__book-selected__vendor-price {
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+.vl__book-selected__vendor-none { font-size: 0.78rem; color: var(--color-text-muted-ui); font-style: italic; }
+.vl__book-selected__vendor-price--free { color: var(--color-success); font-weight: 500; }
+
+/* Already exists alert */
+.vl__already-exists {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(184, 121, 31, 0.06);
+  border: 1px solid rgba(184, 121, 31, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--color-text-body);
+  line-height: 1.5;
+}
+.vl__already-exists > i {
+  color: var(--color-warning);
+  font-size: 1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+.vl__already-exists strong { color: var(--color-text-heading); }
+.vl__already-exists__link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.vl__already-exists__link:hover { text-decoration: underline; }
+
+/* Blocked state (non-vendor) */
+.vl__blocked {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-sm);
+}
+.vl__blocked__icon {
+  width: 72px; height: 72px; margin: 0 auto 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--color-bg-section-alt);
+  color: var(--color-text-muted-ui);
+  font-size: 1.8rem;
+}
+.vl__blocked h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  color: var(--color-text-heading);
+  margin: 0 0 0.5rem;
+}
+.vl__blocked p {
+  font-size: 0.88rem;
+  color: var(--color-text-muted-ui);
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+}
+
+/* ═══ Filters ═══ */
+.vl__filters { display: flex; gap: 0.35rem; margin-bottom: 1rem; }
+.vl__filter {
+  padding: 0.35rem 0.8rem; border: 1px solid var(--color-border-card); border-radius: 999px;
+  background: none; color: var(--color-text-muted-ui); font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+}
+.vl__filter:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.vl__filter--active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+/* ═══ AI Trends Panel ═══ */
+.vl__trends { margin-bottom: 1rem; }
+.vl__trends-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-sm); background: var(--color-bg-card);
+  font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  color: var(--color-text-body); transition: background 0.15s;
+}
+.vl__trends-btn:hover { background: var(--color-bg-hover, #f5f3ef); }
+.vl__trends-btn:disabled { opacity: 0.6; cursor: wait; }
+.vl__trends-btn i.fa-robot { color: var(--color-primary); }
+.vl__trends-panel {
+  margin-top: 10px; padding: 14px 16px;
+  background: var(--color-bg-card); border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-sm);
+}
+.vl__trends-section { margin-bottom: 12px; }
+.vl__trends-section:last-child { margin-bottom: 0; }
+.vl__trends-section strong {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.82rem; margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--color-text-muted-ui);
+}
+.vl__trends-section strong i { color: var(--color-primary); font-size: 0.78rem; }
+.vl__trends-section ul {
+  margin: 4px 0 0 16px; padding: 0;
+  font-size: 0.84rem; line-height: 1.55; color: var(--color-text-body);
+}
+.vl__trends-section li { margin-bottom: 3px; }
+.vl__trends-section p {
+  margin: 4px 0 0; font-size: 0.84rem;
+  line-height: 1.5; color: var(--color-text-body);
+}
+
+/* ═══ List + cards ═══ */
+.vl__list { display: flex; flex-direction: column; gap: 0.5rem; }
+.vl__empty { color: var(--color-text-muted-ui); font-size: 0.88rem; }
+.vl__card {
+  background: var(--color-bg-card); border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+  transition: border-color 0.15s;
+}
+.vl__card:hover { border-color: rgba(160, 74, 42, 0.15); }
+.vl__card--inactive { opacity: 0.5; }
+.vl__card--editing { border-color: var(--color-primary); }
+
+.vl__card-row { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; flex-wrap: wrap; }
+.vl__card-book { flex: 1; min-width: 150px; }
+.vl__card-book__title { font-weight: 600; font-size: 0.9rem; color: var(--color-text-heading); text-decoration: none; }
+.vl__card-book__title:hover { color: var(--color-primary); }
+.vl__card-book__org {
+  display: inline-block; margin-left: 0.4rem; font-size: 0.65rem; font-weight: 600;
+  padding: 0.08rem 0.35rem; border-radius: 999px; background: rgba(160, 74, 42, 0.08); color: var(--color-primary);
+}
+
+.vl__card-info { display: flex; flex-direction: column; gap: 0.3rem; min-width: 200px; }
+.vl__card-info__price { font-weight: 700; font-size: 1rem; color: var(--color-primary); font-family: var(--font-heading); }
+.vl__card-info__price small { font-weight: 400; font-size: 0.7rem; }
+.vl__card-info__old { margin-left: 0.4rem; font-weight: 400; text-decoration: line-through; color: var(--color-text-muted-ui); font-size: 0.78rem; }
+.vl__card-info__discount { margin-left: 0.3rem; font-weight: 700; color: var(--color-error); font-size: 0.72rem; }
+.vl__card-info__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+.vl__tag {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  padding: 0.12rem 0.45rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600;
+  background: var(--color-bg-section-alt); color: var(--color-text-muted-ui);
+}
+.vl__tag i { font-size: 0.55rem; }
+.vl__tag--ok { background: rgba(61, 92, 58, 0.08); color: var(--color-success); }
+.vl__tag--out { background: rgba(166, 49, 35, 0.06); color: var(--color-error); }
+
+.vl__card-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
+.vl__act {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border-card); border-radius: var(--radius-sm);
+  background: none; color: var(--color-text-muted-ui); cursor: pointer; font-size: 0.75rem; transition: all 0.15s;
+}
+.vl__act:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.vl__act--danger:hover { border-color: var(--color-error); color: var(--color-error); }
+
+/* Edit inline */
+.vl__card-edit { padding: 1rem; }
+.vl__card-edit__title { font-weight: 600; font-size: 0.88rem; color: var(--color-text-heading); margin-bottom: 0.75rem; }
+.vl__card-edit__title i { margin-right: 0.25rem; color: var(--color-primary); }
+.vl__card-edit__fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; }
+.vl__card-edit__actions { display: flex; gap: 0.35rem; margin-top: 0.75rem; }
+
+/* ═══ Responsive ═══ */
+@media (max-width: 768px) {
+  .vl__step-grid { grid-template-columns: 1fr 1fr; }
+  .vl__card-row { flex-direction: column; align-items: stretch; }
+  .vl__card-info { min-width: 0; }
+  .vl__card-actions { justify-content: flex-end; }
+  .vl__card-edit__fields { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .vl { padding: 1rem; }
+  .vl__step { flex-direction: column; gap: 0.5rem; }
+  .vl__step-grid { grid-template-columns: 1fr; }
+  .vl__card-edit__fields { grid-template-columns: 1fr; }
+  .vl__book-selected { flex-direction: column; text-align: center; }
+  .vl__book-selected__meta { justify-content: center; }
+}
+
+/* ═══ Dark mode ═══ */
+:root[data-theme="dark"] .vl__book-search__results { background: var(--color-bg-card); }
+:root[data-theme="dark"] .vl__book-search__item:hover { background: var(--color-bg-section-alt); }
+:root[data-theme="dark"] .vl__book-selected { background: rgba(160, 74, 42, 0.06); border-color: var(--color-primary); }
+:root[data-theme="dark"] .vl__field input, :root[data-theme="dark"] .vl__field select { background: var(--color-bg-section-alt); color: var(--color-text-heading); }
+:root[data-theme="dark"] .vl__empty-state__icon { background: rgba(160, 74, 42, 0.12); }
+:root[data-theme="dark"] .vl__step-num { background: var(--color-primary); }
+:root[data-theme="dark"] .vl__step--disabled .vl__step-num { background: var(--color-border-card); }

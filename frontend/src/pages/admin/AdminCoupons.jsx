@@ -2,9 +2,81 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { couponAPI } from '../../services/api';
+import aiService from '../../services/aiService';
+import toast from 'react-hot-toast';
 import '../../styles/AdminCoupons.css';
 
 const FILTERS = ['', 'SENT', 'USED', 'EXPIRED', 'REVOKED', 'PENDING', 'FAILED'];
+
+const SEGMENTS = [
+  { key: 'churn', label: 'Risque de départ', icon: 'fa-user-clock', desc: 'Clients ayant acheté mais inactifs récemment' },
+  { key: 'high_value', label: 'Meilleurs clients', icon: 'fa-crown', desc: 'Plus gros dépensiers de la plateforme' },
+  { key: 'new', label: 'Nouveaux inscrits', icon: 'fa-user-plus', desc: 'Comptes créés depuis moins de 30 jours' },
+  { key: 'inactive', label: 'Inactifs', icon: 'fa-moon', desc: 'Plus de 60 jours sans commande' },
+];
+
+function SmartTargetingPanel() {
+  const [segment, setSegment] = useState('churn');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const analyze = async () => {
+    if (data && data._segment === segment) { setOpen(o => !o); return; }
+    setLoading(true);
+    try {
+      const result = await aiService.smartCouponTargeting(segment);
+      result._segment = segment;
+      setData(result);
+      setOpen(true);
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Erreur ciblage IA');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="ac-targeting">
+      <h3 className="ac-section-title"><i className="fas fa-crosshairs" /> Ciblage intelligent (IA)</h3>
+      <div className="ac-targeting__segments">
+        {SEGMENTS.map(s => (
+          <button
+            key={s.key}
+            className={`ac-targeting__seg ${segment === s.key ? 'ac-targeting__seg--active' : ''}`}
+            onClick={() => setSegment(s.key)}
+            title={s.desc}
+          >
+            <i className={`fas ${s.icon}`} /> {s.label}
+          </button>
+        ))}
+      </div>
+      <button className="ac-targeting__btn" onClick={analyze} disabled={loading}>
+        {loading
+          ? <><i className="fas fa-spinner fa-spin" /> Analyse en cours...</>
+          : <><i className="fas fa-robot" /> Identifier les cibles</>
+        }
+      </button>
+      {open && data?.targets?.length > 0 && (
+        <div className="ac-targeting__results">
+          {data.targets.map((t, i) => (
+            <div key={i} className="ac-targeting__card">
+              <div className="ac-targeting__card-header">
+                <strong>{t.user_id ? `Utilisateur #${t.user_id}` : (t.name || `Cible ${i + 1}`)}</strong>
+                {t.suggested_discount && (
+                  <span className="ac-targeting__discount">{t.suggested_discount}</span>
+                )}
+              </div>
+              <p className="ac-targeting__reason">{t.reason}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {open && data && (!data.targets || data.targets.length === 0) && (
+        <p className="ac-targeting__empty"><i className="fas fa-check-circle" /> Aucun utilisateur trouvé pour ce segment.</p>
+      )}
+    </div>
+  );
+}
 
 const AdminCoupons = () => {
   const { t } = useTranslation();
@@ -97,6 +169,9 @@ const AdminCoupons = () => {
               </div>
             </div>
           )}
+
+          {/* ── AI Smart Targeting ── */}
+          <SmartTargetingPanel />
 
           {/* ── Filters ── */}
           <div className="ac-filters">

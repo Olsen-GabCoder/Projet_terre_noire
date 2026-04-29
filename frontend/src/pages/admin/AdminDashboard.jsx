@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import api from '../../services/api';
+import aiService from '../../services/aiService';
+import toast from 'react-hot-toast';
 import '../../styles/AdminDashboard.css';
 
 const COLORS = ['#2563eb', '#e63946', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
@@ -170,6 +172,9 @@ const AdminDashboard = () => {
                 <span className="admin-dash-stat__badge admin-dash-stat__badge--warn">{kpis.unread_messages} msg non lus</span>
               )}
             </div>
+
+            {/* AI Newsletter Preview */}
+            <NewsletterPreviewCard />
           </div>
 
           {/* ── Graphiques ── */}
@@ -320,5 +325,53 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+function NewsletterPreviewCard() {
+  const [email, setEmail] = useState('');
+  const [preview, setPreview] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const generate = async () => {
+    if (!email.trim()) { toast.error('Entrez un email d\'abonné'); return; }
+    setLoading(true);
+    try {
+      const { newsletter } = await aiService.personalizedNewsletter(email.trim());
+      setPreview(newsletter);
+      setOpen(true);
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Erreur génération newsletter');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="admin-dash-stat admin-dash-stat--ai-newsletter">
+      <div className="admin-dash-stat__icon"><i className="fas fa-robot" /></div>
+      <div className="admin-dash-stat__body" style={{ flex: 1 }}>
+        <span className="admin-dash-stat__label">Newsletter IA</span>
+        <div className="ad-newsletter-form">
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Email abonné..."
+            className="ad-newsletter-input"
+            onKeyDown={e => { if (e.key === 'Enter') generate(); }}
+          />
+          <button className="ad-newsletter-btn" onClick={generate} disabled={loading}>
+            {loading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-wand-magic-sparkles" />}
+          </button>
+        </div>
+      </div>
+      {open && preview && (
+        <div className="ad-newsletter-preview">
+          <button className="ad-newsletter-preview__close" onClick={() => setOpen(false)}><i className="fas fa-times" /></button>
+          <pre className="ad-newsletter-preview__text">{preview}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default AdminDashboard;

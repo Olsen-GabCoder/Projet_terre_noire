@@ -206,6 +206,39 @@
   box-shadow: var(--shadow-btn-hover);
 }
 
+/* ── AI Wishlist Alerts ── */
+.wishlist-alerts { margin-bottom: 1.25rem; }
+.wishlist-alerts__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1px solid var(--fl-border-strong, #d5d0c8);
+  border-radius: 6px; background: var(--fl-bg-subtle, #f7f5f0);
+  font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  color: var(--fl-text, #2c2824); transition: background 0.15s;
+}
+.wishlist-alerts__btn:hover { background: var(--fl-bg-hover, #efe9e0); }
+.wishlist-alerts__btn:disabled { opacity: 0.6; cursor: wait; }
+.wishlist-alerts__btn i.fa-robot { color: var(--fl-accent, #a04a2a); }
+.wishlist-alerts__list {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 10px;
+}
+.wishlist-alert-card {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 12px; background: var(--fl-bg-subtle, #f7f5f0);
+  border: 1px solid var(--fl-border, #e5e2da); border-radius: 8px;
+}
+.wishlist-alert-card > i { margin-top: 2px; font-size: 0.9rem; flex-shrink: 0; }
+.wishlist-alert-card__body { min-width: 0; }
+.wishlist-alert-card__body strong { display: block; font-size: 0.85rem; }
+.wishlist-alert-card__body p {
+  margin: 2px 0 0; font-size: 0.78rem;
+  color: var(--fl-text-muted, #8a857e); line-height: 1.4;
+}
+.wishlist-alerts__empty {
+  margin: 10px 0 0; font-size: 0.82rem;
+  color: var(--fl-text-muted, #8a857e);
+}
+.wishlist-alerts__empty i { color: #22c55e; margin-right: 4px; }
+
 /* Grille des livres */
 .wishlist-grid {
   display: grid;

@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import aiService from '../services/aiService';
 import '../styles/Dashboard.css';
 
 const Badge = ({ count, accent }) => {
@@ -341,8 +342,54 @@ const DashboardLayout = () => {
       <main className="dashboard__main">
         <Outlet />
       </main>
+
+      <DashboardHelpBubble pathname={location.pathname} />
     </div>
   );
 };
+
+function DashboardHelpBubble({ pathname }) {
+  const [open, setOpen] = useState(false);
+  const [help, setHelp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [cachedPath, setCachedPath] = useState('');
+
+  const toggle = async () => {
+    if (open) { setOpen(false); return; }
+    if (cachedPath === pathname && help) { setOpen(true); return; }
+    setLoading(true);
+    setOpen(true);
+    try {
+      const { help: text } = await aiService.dashboardHelp(pathname);
+      setHelp(text);
+      setCachedPath(pathname);
+    } catch {
+      setHelp('Aide temporairement indisponible.');
+    }
+    setLoading(false);
+  };
+
+  // Reset when page changes
+  useEffect(() => {
+    if (pathname !== cachedPath) { setOpen(false); setHelp(''); }
+  }, [pathname, cachedPath]);
+
+  return createPortal(
+    <div className="dash-help">
+      {open && (
+        <div className="dash-help__bubble">
+          {loading
+            ? <div className="dash-help__loading"><i className="fas fa-spinner fa-spin" /> Analyse...</div>
+            : <p className="dash-help__text">{help}</p>
+          }
+        </div>
+      )}
+      <button className={`dash-help__btn ${open ? 'dash-help__btn--open' : ''}`} onClick={toggle} title="Aide IA">
+        <i className={`fas fa-${open ? 'times' : 'question'}`} />
+      </button>
+    </div>,
+    document.body
+  );
+}
 
 export default DashboardLayout;

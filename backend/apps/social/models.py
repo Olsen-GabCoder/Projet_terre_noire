@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -293,11 +295,9 @@ class BookClub(models.Model):
         null=True, blank=True,
         related_name='current_clubs', verbose_name="Livre en cours de discussion",
     )
-    # Ancien champ — rendu optionnel pour rétrocompatibilité
-    book = models.ForeignKey(
-        'books.Book', on_delete=models.SET_NULL,
+    current_book_since = models.DateTimeField(
         null=True, blank=True,
-        related_name='clubs', verbose_name="Livre fondateur (legacy)",
+        verbose_name="Livre en cours depuis",
     )
 
     creator = models.ForeignKey(
@@ -307,6 +307,9 @@ class BookClub(models.Model):
     )
     is_public = models.BooleanField(default=True, verbose_name="Public")
     requires_approval = models.BooleanField(default=False, verbose_name="Approbation requise")
+    application_vote_duration = models.PositiveIntegerField(
+        default=48, verbose_name="Durée du vote de candidature (heures)",
+    )
     max_members = models.PositiveIntegerField(default=50, verbose_name="Nombre max de membres")
     reading_goal_pages = models.PositiveIntegerField(
         null=True, blank=True, verbose_name="Objectif de lecture (pages/semaine)",
@@ -332,6 +335,17 @@ class BookClub(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
+    @property
+    def active_members_count(self):
+        """Number of approved, non-banned members. Uses queryset annotation if available."""
+        # If annotated by the queryset (e.g. in ViewSet.get_queryset), use that value
+        annotated = self.__dict__.get('_active_members_count')
+        if annotated is not None:
+            return annotated
+        return self.memberships.filter(
+            membership_status='APPROVED', is_banned=False,
+        ).count()
 
     def __str__(self):
         return self.name
@@ -393,6 +407,7 @@ class BookClubMessage(models.Model):
         ('IMAGE', 'Image'),
         ('FILE', 'Fichier'),
         ('QUOTE', 'Citation de passage'),
+        ('SYSTEM', 'Message système'),
     ]
 
     club = models.ForeignKey(
@@ -528,6 +543,7 @@ class BookPoll(models.Model):
     POLL_TYPE_CHOICES = [
         ('BOOK', 'Livre'),
         ('GENERIC', 'Générique'),
+        ('APPLICATION', 'Candidature'),
     ]
 
     club = models.ForeignKey(
@@ -535,7 +551,7 @@ class BookPoll(models.Model):
         related_name='polls', verbose_name="Club",
     )
     title = models.CharField(max_length=200, default="Vote pour le prochain livre")
-    poll_type = models.CharField(max_length=10, choices=POLL_TYPE_CHOICES, default='BOOK', verbose_name="Type de sondage")
+    poll_type = models.CharField(max_length=15, choices=POLL_TYPE_CHOICES, default='BOOK', verbose_name="Type de sondage")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='OPEN')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
@@ -543,11 +559,48 @@ class BookPoll(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Date d'expiration",
+        help_text="Si défini, le sondage se ferme automatiquement à cette date.",
+    )
+    allow_multiple = models.BooleanField(
+        default=False,
+        verbose_name="Choix multiples",
+        help_text="Permet de voter pour plusieurs options.",
+    )
 
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Vote de club"
         verbose_name_plural = "Votes de club"
+
+    @property
+    def is_expired(self):
+        if not self.expires_at:
+            return False
+        from django.utils import timezone
+        return timezone.now() >= self.expires_at
+
+    def auto_close_if_expired(self):
+        """Close the poll if it has expired. Returns True if closed.
+
+        Legacy convenience method — used by tests.
+        Production flow uses the close_expired_polls Celery task
+        + resolve_application service directly.
+        """
+        if self.status == 'OPEN' and self.is_expired:
+            from django.utils import timezone
+            self.status = 'CLOSED'
+            self.closed_at = timezone.now()
+            self.save(update_fields=['status', 'closed_at'])
+
+            if self.poll_type == 'APPLICATION':
+                from apps.social.services import resolve_application
+                resolve_application(self)
+
+            return True
+        return False
 
     def __str__(self):
         return f"{self.title} — {self.club.name}"
@@ -608,7 +661,12 @@ class BookPollVote(models.Model):
 
 
 class ClubSession(models.Model):
-    """Séance de lecture programmée dans un club."""
+    """Séance de club — instantanée, planifiée ou permanente."""
+    SESSION_TYPE_CHOICES = [
+        ('INSTANT', 'Instantanée'),
+        ('SCHEDULED', 'Planifiée'),
+        ('PERMANENT', 'Permanente'),
+    ]
     RECURRENCE_CHOICES = [
         ('NONE', 'Aucune'),
         ('WEEKLY', 'Hebdomadaire'),
@@ -616,6 +674,10 @@ class ClubSession(models.Model):
         ('MONTHLY', 'Mensuel'),
     ]
 
+    session_type = models.CharField(
+        max_length=10, choices=SESSION_TYPE_CHOICES, default='SCHEDULED',
+        verbose_name="Type de séance",
+    )
     club = models.ForeignKey(
         BookClub, on_delete=models.CASCADE,
         related_name='sessions', verbose_name="Club",
@@ -632,6 +694,34 @@ class ClubSession(models.Model):
         max_length=10, choices=RECURRENCE_CHOICES, default='NONE',
         verbose_name="Récurrence",
     )
+    # Video meeting
+    room_id = models.UUIDField(
+        default=uuid.uuid4, editable=False,
+        verbose_name="ID de la salle vidéo",
+    )
+    meeting_active = models.BooleanField(
+        default=False, verbose_name="Séance en cours",
+    )
+    meeting_started_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Début de la visio",
+    )
+    meeting_ended_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Fin de la visio",
+    )
+    meeting_participants_count = models.PositiveIntegerField(
+        default=0, verbose_name="Nombre de participants",
+    )
+    # AI meeting summary
+    meeting_summary = models.TextField(blank=True, verbose_name="Résumé IA de la séance")
+    summary_key_points = models.JSONField(blank=True, default=list, verbose_name="Points clés")
+    summary_next_steps = models.TextField(blank=True, verbose_name="Prochaines étapes")
+    summary_generated_at = models.DateTimeField(null=True, blank=True, verbose_name="Date du résumé")
+    summary_generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+',
+        verbose_name="Résumé généré par",
+    )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='created_sessions',
@@ -642,6 +732,13 @@ class ClubSession(models.Model):
         ordering = ['scheduled_at']
         verbose_name = "Séance de club"
         verbose_name_plural = "Séances de club"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club'],
+                condition=models.Q(session_type='PERMANENT'),
+                name='unique_permanent_session_per_club',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.title} — {self.club.name}"
@@ -678,12 +775,9 @@ class SessionRSVP(models.Model):
     def __str__(self):
         return f"{self.user} — {self.get_status_display()} — {self.session.title}"
 
-    def __str__(self):
-        return f"{self.title} — {self.club.name} ({self.scheduled_at})"
-
 
 class ClubBookHistory(models.Model):
-    """Historique des livres lus par un club."""
+    """Historique des livres lus par un club — enrichi de métriques figées à l'archivage."""
     club = models.ForeignKey(
         BookClub, on_delete=models.CASCADE,
         related_name='book_history', verbose_name="Club",
@@ -694,11 +788,23 @@ class ClubBookHistory(models.Model):
     )
     started_at = models.DateField(verbose_name="Commencé le")
     finished_at = models.DateField(null=True, blank=True, verbose_name="Terminé le")
+    metrics = models.JSONField(
+        default=dict, blank=True,
+        verbose_name="Métriques de lecture figées",
+        help_text="members_completed, checkpoints_reached, checkpoints_total, duration_days, etc.",
+    )
+    source_poll = models.ForeignKey(
+        'BookPoll', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='archived_books', verbose_name="Sondage source",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='archived_club_books', verbose_name="Archivé par",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-finished_at', '-started_at']
-        unique_together = [['club', 'book']]
         verbose_name = "Historique de lecture du club"
         verbose_name_plural = "Historiques de lecture du club"
 
@@ -835,6 +941,43 @@ class ModerationLog(models.Model):
         return f"{self.get_action_display()} par {self.actor} dans {self.club.name}"
 
 
+# ── Candidatures démocratiques ──
+
+class MembershipApplication(models.Model):
+    """Candidature démocratique — soumise au vote des membres du club."""
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente de vote'),
+        ('APPROVED', 'Acceptée'),
+        ('REJECTED', 'Refusée'),
+        ('NO_QUORUM', 'Quorum non atteint'),
+    ]
+
+    club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='applications')
+    applicant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='club_applications')
+
+    reading_relationship = models.TextField(verbose_name="Rapport à la lecture")
+    motivation = models.TextField(verbose_name="Motivation pour rejoindre le club")
+    contribution = models.TextField(verbose_name="Ce que le candidat souhaite apporter")
+
+    poll = models.OneToOneField('BookPoll', on_delete=models.SET_NULL, null=True, blank=True, related_name='application')
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    votes_for = models.PositiveIntegerField(default=0)
+    votes_against = models.PositiveIntegerField(default=0)
+    total_eligible = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Candidature"
+        verbose_name_plural = "Candidatures"
+
+    def __str__(self):
+        return f"Candidature de {self.applicant} pour {self.club.name}"
+
+
 # ── Signalement de messages ──
 
 class MessageReport(models.Model):
@@ -881,3 +1024,25 @@ class MessageReport(models.Model):
 
     def __str__(self):
         return f"Report #{self.pk} — {self.get_reason_display()} par {self.reporter}"
+
+
+class BlockedUser(models.Model):
+    """Un utilisateur en bloque un autre — les messages sont masqués côté client."""
+
+    blocker = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='blocked_users', verbose_name='Bloqueur',
+    )
+    blocked = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='blocked_by', verbose_name='Bloqué',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['blocker', 'blocked']
+        verbose_name = 'Utilisateur bloqué'
+        verbose_name_plural = 'Utilisateurs bloqués'
+
+    def __str__(self):
+        return f"{self.blocker} bloque {self.blocked}"

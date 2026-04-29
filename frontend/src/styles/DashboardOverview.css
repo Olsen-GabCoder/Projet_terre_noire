@@ -119,6 +119,38 @@
   margin-bottom: 2rem;
 }
 
+/* ── AI Activity Summary ── */
+.dov__ai-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1px solid var(--color-border-card, #e5e2da);
+  border-radius: 6px; background: var(--color-bg-card, #fff);
+  font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  color: var(--color-text-body, #2c2824); transition: background 0.15s;
+}
+.dov__ai-btn:hover { background: var(--color-bg-hover, #f5f3ef); }
+.dov__ai-btn:disabled { opacity: 0.6; cursor: wait; }
+.dov__ai-btn i.fa-robot { color: var(--color-primary, #a04a2a); }
+.dov__ai-content {
+  margin-top: 10px; padding: 14px 16px;
+  background: var(--color-bg-card, #fff);
+  border: 1px solid var(--color-border-card, #e5e2da);
+  border-radius: 8px; font-size: 0.85rem; line-height: 1.55;
+}
+.dov__ai-text { margin: 0 0 8px; color: var(--color-text-body, #2c2824); }
+.dov__ai-highlights {
+  list-style: none; padding: 0; margin: 0 0 8px;
+}
+.dov__ai-highlights li {
+  padding: 3px 0; font-size: 0.82rem;
+}
+.dov__ai-highlights i { color: #f59e0b; margin-right: 5px; font-size: 0.7rem; }
+.dov__ai-suggestion {
+  padding: 8px 12px; background: rgba(160, 74, 42, 0.06);
+  border-radius: 6px; font-size: 0.82rem;
+  color: var(--color-primary, #a04a2a); font-style: italic;
+}
+.dov__ai-suggestion i { margin-right: 5px; }
+
 .dov__kpis {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

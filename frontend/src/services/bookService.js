@@ -2,6 +2,9 @@
 import api from './api';
 
 const bookService = {
+  // ============ ISBN LOOKUP ============
+  isbnLookup: (isbn) => api.get(`/books/isbn-lookup/${isbn}/`).then(r => r.data),
+
   // ============ BOOKS ============
   
   // Récupérer la liste des livres avec filtres et pagination
@@ -186,6 +189,16 @@ const bookService = {
   getFeaturedAuthors: async (limit = 16) => {
     try {
       const response = await api.get('/authors/featured/', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Auteurs récents (derniers ajoutés)
+  getRecentAuthors: async (limit = 6) => {
+    try {
+      const response = await api.get('/authors/recent/', { params: { limit } });
       return response.data;
     } catch (error) {
       throw error;

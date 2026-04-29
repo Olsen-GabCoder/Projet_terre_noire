@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { organizationAPI, handleApiError } from '../../services/api';
 import bookService from '../../services/bookService';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import aiService from '../../services/aiService';
 import '../../styles/OrgBooks.css';
 
 const PER_PAGE = 10;
@@ -14,7 +15,7 @@ const EMPTY_FORM = {
   format: 'PAPIER', category: '', author: '', available: true,
   cover_image: null, back_cover_image: null, pdf_file: null,
   stock: '1', condition: 'NEW',
-  total_copies: '1', allows_digital_loan: false, max_loan_days: '21',
+  total_copies: '1', allows_digital_loan: false, max_loan_days: '21', consultation_only: false,
 };
 
 const OrgBooks = () => {
@@ -56,10 +57,49 @@ const OrgBooks = () => {
   const [coverPreview, setCoverPreview] = useState(null);
   const [authorSearch, setAuthorSearch] = useState('');
   const [showNewAuthor, setShowNewAuthor] = useState(false);
-  const [newAuthorName, setNewAuthorName] = useState('');
+  const [newAuthor, setNewAuthor] = useState({ full_name: '', biography: '', photo: null });
+  const [newAuthorPhotoPreview, setNewAuthorPhotoPreview] = useState(null);
   const [creatingAuthor, setCreatingAuthor] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(null); // 'description' | 'categorize' | null
+  const [stockPrediction, setStockPrediction] = useState(null); // { bookId, data }
+  const [stockPredicting, setStockPredicting] = useState(null); // bookId
+  const [isbnLoading, setIsbnLoading] = useState(false);
 
   const canManage = hasOrgRole(Number(orgId), 'PROPRIETAIRE') || hasOrgRole(Number(orgId), 'ADMINISTRATEUR') || hasOrgRole(Number(orgId), 'EDITEUR');
+
+  const handleAiGenerate = async (type) => {
+    if (!form.title) { toast.error('Renseignez au moins le titre'); return; }
+    setAiGenerating(type);
+    try {
+      if (type === 'description') {
+        const authorName = authors.find(a => String(a.id) === String(form.author))?.full_name || '';
+        const catName = categories.find(c => String(c.id) === String(form.category))?.name || '';
+        const { description } = await aiService.generateDescription({
+          title: form.title, author: authorName, genre: catName, context: form.description || '',
+        });
+        setForm(f => ({ ...f, description }));
+        toast.success('Description générée');
+      } else if (type === 'back_cover') {
+        const authorName = authors.find(a => String(a.id) === String(form.author))?.full_name || '';
+        const { back_cover } = await aiService.generateBackCover({
+          title: form.title, author: authorName, description: form.description || '',
+        });
+        setForm(f => ({ ...f, description: f.description + '\n\n— 4e de couverture —\n' + back_cover }));
+        toast.success('4e de couverture générée');
+      } else if (type === 'categorize') {
+        const authorName = authors.find(a => String(a.id) === String(form.author))?.full_name || '';
+        const result = await aiService.categorize({
+          title: form.title, author: authorName, description: form.description || '',
+        });
+        if (result.genre) {
+          const match = categories.find(c => c.name.toLowerCase() === result.genre.toLowerCase());
+          if (match) setForm(f => ({ ...f, category: String(match.id) }));
+        }
+        toast.success(`Genre : ${result.genre} · Public : ${result.public}`);
+      }
+    } catch { toast.error('Erreur IA — réessayez'); }
+    finally { setAiGenerating(null); }
+  };
 
   const fetchBooks = useCallback(async () => {
     try {
@@ -146,25 +186,41 @@ const OrgBooks = () => {
       available: book.available ?? true, cover_image: null, back_cover_image: null, pdf_file: null,
       stock: book.stock ?? '1', condition: book.condition || 'NEW',
       total_copies: book.total_copies ?? '1', allows_digital_loan: book.allows_digital_loan ?? false,
-      max_loan_days: book.max_loan_days ?? '21',
+      max_loan_days: book.max_loan_days ?? '21', consultation_only: book.consultation_only ?? false,
     });
     setCoverPreview(book.cover_image || null);
     setAuthorSearch(typeof book.author === 'object' ? book.author?.full_name || '' : authors.find(a => a.id === book.author)?.full_name || '');
     setShowForm(true);
   };
 
-  const closeForm = () => { setShowForm(false); setEditingBook(null); setShowNewAuthor(false); setNewAuthorName(''); setAuthorSearch(''); };
+  const closeForm = () => { setShowForm(false); setEditingBook(null); setShowNewAuthor(false); setNewAuthor({ full_name: '', biography: '', photo: null }); setNewAuthorPhotoPreview(null); setAuthorSearch(''); };
+
+  const openAuthorModal = () => { setNewAuthor({ full_name: '', biography: '', photo: null }); setNewAuthorPhotoPreview(null); setShowNewAuthor(true); };
+  const closeAuthorModal = () => { setShowNewAuthor(false); setNewAuthor({ full_name: '', biography: '', photo: null }); setNewAuthorPhotoPreview(null); };
+
+  const handleAuthorFieldChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'photo' && files?.[0]) {
+      setNewAuthor(a => ({ ...a, photo: files[0] }));
+      setNewAuthorPhotoPreview(URL.createObjectURL(files[0]));
+    } else {
+      setNewAuthor(a => ({ ...a, [name]: value }));
+    }
+  };
 
   const handleCreateAuthor = async () => {
-    if (!newAuthorName.trim()) return;
+    if (!newAuthor.full_name.trim()) return;
     setCreatingAuthor(true);
     try {
-      const created = await bookService.createAuthor({ full_name: newAuthorName.trim() });
+      const fd = new FormData();
+      fd.append('full_name', newAuthor.full_name.trim());
+      if (newAuthor.biography.trim()) fd.append('biography', newAuthor.biography.trim());
+      if (newAuthor.photo instanceof File) fd.append('photo', newAuthor.photo);
+      const created = await bookService.createAuthor(fd);
       setAuthors(prev => [...prev, created].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')));
       setForm(f => ({ ...f, author: created.id }));
-      setShowNewAuthor(false);
-      setNewAuthorName('');
-      setAuthorSearch('');
+      setAuthorSearch(created.full_name);
+      closeAuthorModal();
       toast.success(`Auteur « ${created.full_name} » créé.`);
     } catch (err) { toast.error(handleApiError(err)); }
     finally { setCreatingAuthor(false); }
@@ -175,9 +231,11 @@ const OrgBooks = () => {
     setSaving(true);
     try {
       const fd = new FormData();
-      ['title', 'reference', 'description', 'price', 'format', 'category', 'author'].forEach(k => fd.append(k, form[k]));
+      const baseFields = ['title', 'reference', 'description', 'format', 'category', 'author'];
+      if (orgType !== 'BIBLIOTHEQUE') baseFields.push('price');
+      baseFields.forEach(k => fd.append(k, form[k]));
       fd.append('available', form.available);
-      if (form.original_price) fd.append('original_price', form.original_price);
+      if (orgType !== 'BIBLIOTHEQUE' && form.original_price) fd.append('original_price', form.original_price);
       if (form.cover_image instanceof File) fd.append('cover_image', form.cover_image);
       if (form.back_cover_image instanceof File) fd.append('back_cover_image', form.back_cover_image);
       if (form.pdf_file instanceof File) fd.append('pdf_file', form.pdf_file);
@@ -253,66 +311,108 @@ const OrgBooks = () => {
             <form onSubmit={handleSubmit} className="ob-form">
               <div className="ob-form__grid">
                 <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelTitle')} *</label><input type="text" name="title" value={form.title} onChange={handleChange} required /></div>
-                <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelISBN')} *</label><input type="text" name="reference" value={form.reference} onChange={handleChange} required placeholder="978-2-XXX" /></div>
+                <div className="ob-form__field">
+                  <label>{t('dashboard.orgBooks.labelISBN')} *</label>
+                  <div className="ob-isbn-row">
+                    <input type="text" name="reference" value={form.reference} onChange={handleChange} required placeholder="978-2-XXX" />
+                    <button
+                      type="button"
+                      className="ob-isbn-btn"
+                      disabled={isbnLoading || !form.reference.trim()}
+                      onClick={async () => {
+                        setIsbnLoading(true);
+                        try {
+                          const data = await bookService.isbnLookup(form.reference.trim());
+                          setForm(f => ({
+                            ...f,
+                            title: data.title || f.title,
+                            description: data.description || f.description,
+                          }));
+                          // Chercher/créer l'auteur si trouvé
+                          if (data.authors?.length > 0) {
+                            const authorName = data.authors[0];
+                            const match = authors.find(a => a.full_name.toLowerCase() === authorName.toLowerCase());
+                            if (match) {
+                              setForm(f => ({ ...f, author: String(match.id) }));
+                            }
+                            toast.success(`Trouvé : ${data.title} — ${authorName}`);
+                          } else {
+                            toast.success(`Trouvé : ${data.title}`);
+                          }
+                          // Chercher la catégorie si trouvée
+                          if (data.categories?.length > 0) {
+                            const catName = data.categories[0];
+                            const catMatch = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+                            if (catMatch) setForm(f => ({ ...f, category: String(catMatch.id) }));
+                          }
+                        } catch (e) {
+                          toast.error(e?.response?.data?.error || 'Aucun résultat pour cet ISBN');
+                        }
+                        setIsbnLoading(false);
+                      }}
+                      title="Rechercher les métadonnées par ISBN"
+                    >
+                      {isbnLoading ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-search" />}
+                    </button>
+                  </div>
+                </div>
                 <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelFormat')}</label>
                   <select name="format" value={form.format} onChange={handleChange}>{FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                 </div>
-                <div className="ob-form__field ob-form__field--full"><label>{t('dashboard.orgBooks.labelDescription')} *</label><textarea name="description" value={form.description} onChange={handleChange} rows={3} required /></div>
-                <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelPrice')} *</label><input type="number" name="price" value={form.price} onChange={handleChange} min="0" required /></div>
-                <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelOriginalPrice')}</label><input type="number" name="original_price" value={form.original_price} onChange={handleChange} min="0" placeholder={t('dashboard.orgBooks.promoPlaceholder')} /></div>
+                <div className="ob-form__field ob-form__field--full">
+                  <label>{t('dashboard.orgBooks.labelDescription')} *</label>
+                  <textarea name="description" value={form.description} onChange={handleChange} rows={3} required />
+                  <div className="ob-ai-actions">
+                    <button type="button" className="ob-ai-btn" disabled={!!aiGenerating || !form.title} onClick={() => handleAiGenerate('description')}>
+                      {aiGenerating === 'description' ? <><i className="fas fa-spinner fa-spin" /> Génération...</> : <><i className="fas fa-wand-magic-sparkles" /> Générer avec l'IA</>}
+                    </button>
+                    <button type="button" className="ob-ai-btn" disabled={!!aiGenerating || !form.title} onClick={() => handleAiGenerate('back_cover')}>
+                      {aiGenerating === 'back_cover' ? <><i className="fas fa-spinner fa-spin" /> Génération...</> : <><i className="fas fa-book-open" /> 4e de couverture</>}
+                    </button>
+                    <button type="button" className="ob-ai-btn" disabled={!!aiGenerating || !form.title} onClick={() => handleAiGenerate('categorize')}>
+                      {aiGenerating === 'categorize' ? <><i className="fas fa-spinner fa-spin" /> Analyse...</> : <><i className="fas fa-tags" /> Catégoriser</>}
+                    </button>
+                  </div>
+                </div>
+                {orgType !== 'BIBLIOTHEQUE' && <>
+                  <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelPrice')} *</label><input type="number" name="price" value={form.price} onChange={handleChange} min="0" required /></div>
+                  <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelOriginalPrice')}</label><input type="number" name="original_price" value={form.original_price} onChange={handleChange} min="0" placeholder={t('dashboard.orgBooks.promoPlaceholder')} /></div>
+                </>}
                 <div className="ob-form__field"><label>{t('dashboard.orgBooks.labelCategory')} *</label>
                   <select name="category" value={form.category} onChange={handleChange} required><option value="">—</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
                 </div>
                 <div className="ob-form__field ob-form__field--full">
                   <label>{t('dashboard.orgBooks.labelAuthor')} *</label>
-                  {showNewAuthor ? (
-                    <div className="ob-author-create">
+                  <div className="ob-author-pick">
+                    <div className="ob-author-pick__select">
                       <input
                         type="text"
-                        placeholder={t('dashboard.orgBooks.newAuthorPlaceholder')}
-                        value={newAuthorName}
-                        onChange={e => setNewAuthorName(e.target.value)}
-                        autoFocus
+                        placeholder={t('dashboard.orgBooks.searchAuthorPlaceholder')}
+                        value={authorSearch}
+                        onChange={e => { setAuthorSearch(e.target.value); if (form.author) setForm(f => ({ ...f, author: '' })); }}
                       />
-                      <button type="button" className="dashboard-btn dashboard-btn--primary" onClick={handleCreateAuthor} disabled={creatingAuthor || !newAuthorName.trim()}>
-                        {creatingAuthor ? '...' : t('dashboard.orgBooks.create')}
-                      </button>
-                      <button type="button" className="dashboard-btn" onClick={() => { setShowNewAuthor(false); setNewAuthorName(''); }}>
-                        {t('common.cancel')}
-                      </button>
+                      {(authorSearch || !form.author) && authors.filter(a =>
+                        !authorSearch || a.full_name?.toLowerCase().includes(authorSearch.toLowerCase())
+                      ).length > 0 && authorSearch.length > 0 && (
+                        <ul className="ob-author-pick__list">
+                          {authors
+                            .filter(a => a.full_name?.toLowerCase().includes(authorSearch.toLowerCase()))
+                            .slice(0, 8)
+                            .map(a => (
+                              <li key={a.id} onClick={() => { setForm(f => ({ ...f, author: a.id })); setAuthorSearch(a.full_name); }}>
+                                {a.full_name}
+                                {a.is_registered && <span className="ob-author-pick__badge">{t('dashboard.orgBooks.authorSelected')}</span>}
+                              </li>
+                            ))
+                          }
+                        </ul>
+                      )}
                     </div>
-                  ) : (
-                    <div className="ob-author-pick">
-                      <div className="ob-author-pick__select">
-                        <input
-                          type="text"
-                          placeholder={t('dashboard.orgBooks.searchAuthorPlaceholder')}
-                          value={authorSearch}
-                          onChange={e => { setAuthorSearch(e.target.value); if (form.author) setForm(f => ({ ...f, author: '' })); }}
-                        />
-                        {(authorSearch || !form.author) && authors.filter(a =>
-                          !authorSearch || a.full_name?.toLowerCase().includes(authorSearch.toLowerCase())
-                        ).length > 0 && authorSearch.length > 0 && (
-                          <ul className="ob-author-pick__list">
-                            {authors
-                              .filter(a => a.full_name?.toLowerCase().includes(authorSearch.toLowerCase()))
-                              .slice(0, 8)
-                              .map(a => (
-                                <li key={a.id} onClick={() => { setForm(f => ({ ...f, author: a.id })); setAuthorSearch(a.full_name); }}>
-                                  {a.full_name}
-                                  {a.is_registered && <span className="ob-author-pick__badge">{t('dashboard.orgBooks.authorSelected')}</span>}
-                                </li>
-                              ))
-                            }
-                          </ul>
-                        )}
-                      </div>
-                      <button type="button" className="dashboard-btn" onClick={() => setShowNewAuthor(true)} title={t('dashboard.orgBooks.createNewAuthor')}>
-                        <i className="fas fa-plus" /> {t('dashboard.orgBooks.new')}
-                      </button>
-                      <input type="hidden" name="author" value={form.author} required />
-                    </div>
-                  )}
+                    <button type="button" className="dashboard-btn" onClick={openAuthorModal} title={t('dashboard.orgBooks.createNewAuthor')}>
+                      <i className="fas fa-plus" /> {t('dashboard.orgBooks.new')}
+                    </button>
+                    <input type="hidden" name="author" value={form.author} required />
+                  </div>
                   {form.author && !showNewAuthor && (
                     <span className="ob-author-selected">
                       <i className="fas fa-check-circle" /> {authors.find(a => a.id === Number(form.author))?.full_name || t('dashboard.orgBooks.authorSelected')}
@@ -375,7 +475,8 @@ const OrgBooks = () => {
               <thead>
                 <tr>
                   <th className="ob-table__th-book">{t('dashboard.orgBooks.colBook')}</th>
-                  <th>{t('dashboard.orgBooks.colPrice')}</th>
+                  {orgType !== 'BIBLIOTHEQUE' && <th>{t('dashboard.orgBooks.colPrice')}</th>}
+                  {orgType === 'BIBLIOTHEQUE' && <th>{t('dashboard.orgBooks.colCopies', 'Exemplaires')}</th>}
                   <th className="ob-hide-sm">{t('dashboard.orgBooks.labelFormat')}</th>
                   {orgType !== 'BIBLIOTHEQUE' && <th className="ob-hide-sm">{t('dashboard.orgBooks.colSales')}</th>}
                   <th>{t('dashboard.orgBooks.colStatus')}</th>
@@ -388,8 +489,8 @@ const OrgBooks = () => {
                   const price = parseFloat(book.price || 0);
                   const orig = parseFloat(book.original_price || 0);
                   const rating = book.rating ? parseFloat(book.rating) : 0;
-                  return (
-                    <tr key={book.id} className={!book.available ? 'ob-table__row--muted' : ''}>
+                  return (<React.Fragment key={book.id}>
+                    <tr className={!book.available ? 'ob-table__row--muted' : ''}>
                       <td>
                         <div className="ob-table__book">
                           {book.cover_image ? <img src={book.cover_image} alt="" className="ob-table__cover" /> : <div className="ob-table__cover ob-table__cover--empty"><i className="fas fa-book" /></div>}
@@ -399,10 +500,18 @@ const OrgBooks = () => {
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <span className="ob-table__price">{price.toLocaleString('fr-FR')} F</span>
-                        {orig > price && <span className="ob-table__price-old">{orig.toLocaleString('fr-FR')}</span>}
-                      </td>
+                      {orgType !== 'BIBLIOTHEQUE' ? (
+                        <td>
+                          <span className="ob-table__price">{price.toLocaleString('fr-FR')} F</span>
+                          {orig > price && <span className="ob-table__price-old">{orig.toLocaleString('fr-FR')}</span>}
+                        </td>
+                      ) : (
+                        <td>
+                          <span className={`ob-badge ${(book.total_copies || 0) > 0 ? 'ob-badge--ok' : 'ob-badge--off'}`}>
+                            {book.available_copies ?? '?'} / {book.total_copies ?? '?'}
+                          </span>
+                        </td>
+                      )}
                       <td className="ob-hide-sm"><span className="ob-badge">{book.format === 'EBOOK' ? 'Ebook' : 'Papier'}</span></td>
                       {orgType !== 'BIBLIOTHEQUE' && <td className="ob-hide-sm">{book.total_sales || 0}</td>}
                       <td>
@@ -416,12 +525,61 @@ const OrgBooks = () => {
                           <div className="ob-table__actions">
                             <button onClick={() => openEdit(book)} title={t('common.edit')}><i className="fas fa-pen" /></button>
                             <button onClick={() => handleToggle(book)} title={book.available ? t('dashboard.orgBooks.hide') : t('dashboard.orgBooks.online')}><i className={`fas fa-${book.available ? 'eye-slash' : 'eye'}`} /></button>
+                            {orgType !== 'BIBLIOTHEQUE' && (
+                              <button
+                                title={t('dashboard.orgBooks.predictStock', 'Prédire le stock')}
+                                disabled={stockPredicting === book.id}
+                                onClick={async () => {
+                                  if (stockPrediction?.bookId === book.id) { setStockPrediction(null); return; }
+                                  setStockPredicting(book.id);
+                                  try {
+                                    const data = await aiService.predictStock(book.id, Number(orgId));
+                                    setStockPrediction({ bookId: book.id, data });
+                                  } catch (e) { toast.error(e?.response?.data?.error || 'Erreur prédiction stock'); }
+                                  setStockPredicting(null);
+                                }}
+                              >
+                                {stockPredicting === book.id ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-chart-line" />}
+                              </button>
+                            )}
                             <button className="ob-table__actions--danger" onClick={() => handleDelete(book)} title={t('dashboard.orgBooks.remove')}><i className="fas fa-trash" /></button>
                           </div>
                         </td>
                       )}
                     </tr>
-                  );
+                    {stockPrediction?.bookId === book.id && (
+                      <tr className="ob-stock-row">
+                        <td colSpan={canManage ? 6 : 5}>
+                          <div className="ob-stock-prediction">
+                            <button className="ob-stock-prediction__close" onClick={() => setStockPrediction(null)}><i className="fas fa-times" /></button>
+                            <div className="ob-stock-prediction__grid">
+                              <div className="ob-stock-prediction__item">
+                                <span className="ob-stock-prediction__label">Stock actuel</span>
+                                <strong>{stockPrediction.data.current_stock}</strong>
+                              </div>
+                              <div className="ob-stock-prediction__item">
+                                <span className="ob-stock-prediction__label">Rupture estimée</span>
+                                <strong style={{color: (stockPrediction.data.days_until_stockout || 999) <= 14 ? 'var(--color-danger, #e74c3c)' : 'inherit'}}>
+                                  {stockPrediction.data.days_until_stockout != null ? `${stockPrediction.data.days_until_stockout}j` : '?'}
+                                </strong>
+                              </div>
+                              <div className="ob-stock-prediction__item">
+                                <span className="ob-stock-prediction__label">Réappro. suggéré</span>
+                                <strong>{stockPrediction.data.reorder_suggestion ?? '?'} ex.</strong>
+                              </div>
+                              <div className="ob-stock-prediction__item">
+                                <span className="ob-stock-prediction__label">Confiance</span>
+                                <strong>{stockPrediction.data.confidence || '?'}</strong>
+                              </div>
+                            </div>
+                            {stockPrediction.data.reasoning && (
+                              <p className="ob-stock-prediction__reason"><i className="fas fa-robot" /> {stockPrediction.data.reasoning}</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>);
                 })}
               </tbody>
             </table>
@@ -446,6 +604,39 @@ const OrgBooks = () => {
             </nav>
           )}
         </>
+      )}
+
+      {/* ── Modale création auteur ── */}
+      {showNewAuthor && (
+        <div className="ob-modal-overlay" onClick={closeAuthorModal}>
+          <div className="ob-modal" onClick={e => e.stopPropagation()}>
+            <div className="ob-modal__header">
+              <h2><i className="fas fa-user-plus" /> {t('dashboard.orgBooks.createNewAuthor', 'Nouvel auteur')}</h2>
+              <button type="button" className="ob-modal__close" onClick={closeAuthorModal}><i className="fas fa-times" /></button>
+            </div>
+            <div className="ob-modal__body">
+              <div className="ob-modal__field">
+                <label>{t('dashboard.orgBooks.authorName', 'Nom complet')} *</label>
+                <input type="text" name="full_name" value={newAuthor.full_name} onChange={handleAuthorFieldChange} autoFocus placeholder="Ex: Fatou Diome" />
+              </div>
+              <div className="ob-modal__field">
+                <label>{t('dashboard.orgBooks.authorBio', 'Biographie')}</label>
+                <textarea name="biography" value={newAuthor.biography} onChange={handleAuthorFieldChange} rows={4} placeholder="Quelques lignes sur l'auteur..." />
+              </div>
+              <div className="ob-modal__field">
+                <label>{t('dashboard.orgBooks.authorPhoto', 'Photo')}</label>
+                {newAuthorPhotoPreview && <img src={newAuthorPhotoPreview} alt="" className="ob-modal__photo-preview" />}
+                <input type="file" name="photo" accept="image/*" onChange={handleAuthorFieldChange} />
+              </div>
+            </div>
+            <div className="ob-modal__footer">
+              <button type="button" className="dashboard-btn" onClick={closeAuthorModal}>{t('common.cancel')}</button>
+              <button type="button" className="dashboard-btn dashboard-btn--primary" onClick={handleCreateAuthor} disabled={creatingAuthor || !newAuthor.full_name.trim()}>
+                {creatingAuthor ? <><i className="fas fa-spinner fa-spin" /> ...</> : <><i className="fas fa-check" /> {t('dashboard.orgBooks.create', 'Créer')}</>}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

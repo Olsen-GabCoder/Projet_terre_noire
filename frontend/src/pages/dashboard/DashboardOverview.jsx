@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import aiService from '../../services/aiService';
 import '../../styles/DashboardOverview.css';
 
 /* ── Helpers ── */
@@ -275,6 +276,9 @@ const DashboardOverview = () => {
         )}
       </div>
 
+      {/* ═══ Zone 2b — AI Activity Summary ═══ */}
+      <ActivitySummaryPanel t={t} />
+
       {/* ═══ Zone 3 — KPIs ═══ */}
       <div className="dov__section">
         <h2 className="dov__section-title">
@@ -313,5 +317,50 @@ const DashboardOverview = () => {
     </div>
   );
 };
+
+function ActivitySummaryPanel({ t }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const load = async () => {
+    if (data) { setOpen(o => !o); return; }
+    setLoading(true);
+    try {
+      const result = await aiService.activitySummary();
+      setData(result);
+      setOpen(true);
+    } catch { /* silent */ }
+    setLoading(false);
+  };
+
+  return (
+    <div className="dov__section dov__ai-summary">
+      <button className="dov__ai-btn" onClick={load} disabled={loading}>
+        {loading
+          ? <><i className="fas fa-spinner fa-spin" /> {t('dashboard.ov.loadingSummary', 'Analyse...')}</>
+          : open
+            ? <><i className="fas fa-chevron-up" /> {t('dashboard.ov.hideSummary', 'Masquer le résumé')}</>
+            : <><i className="fas fa-robot" /> {t('dashboard.ov.aiSummary', 'Mon résumé d\'activité (IA)')}</>
+        }
+      </button>
+      {open && data && (
+        <div className="dov__ai-content">
+          {data.summary && <p className="dov__ai-text">{data.summary}</p>}
+          {data.highlights?.length > 0 && (
+            <ul className="dov__ai-highlights">
+              {data.highlights.map((h, i) => <li key={i}><i className="fas fa-star" /> {h}</li>)}
+            </ul>
+          )}
+          {data.suggestion && (
+            <div className="dov__ai-suggestion">
+              <i className="fas fa-lightbulb" /> {data.suggestion}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default DashboardOverview;

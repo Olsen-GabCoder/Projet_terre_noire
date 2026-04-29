@@ -3,32 +3,291 @@
  * Extracted from BookClubDetail.jsx — zero functional change
  */
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { SessionList } from './SessionSection';
+import { SessionList, PermanentRoomSection } from './SessionSection';
 import CheckpointSection from './CheckpointSection';
+import WishlistSection from './WishlistSection';
+import { ConfirmModal } from './ClubModals';
 import { ini, CAT_KEYS, fmtDur } from './clubUtils';
+import aiService from '../../services/aiService';
+
+function MediaGallery({ slug, socialService, t }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalFilter, setModalFilter] = useState('ALL');
+  const [viewIdx, setViewIdx] = useState(null); // index in modalFiltered for single-item view
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await socialService.getClubMedia(slug);
+        setItems(Array.isArray(r.data) ? r.data : r.data.results || []);
+      } catch {}
+      setLoading(false);
+    })();
+  }, [slug]);
+
+  // Keyboard navigation in viewer — must be unconditional (Rules of Hooks)
+  useEffect(() => {
+    if (viewIdx === null) return;
+    const len = items.length;
+    const filteredLen = modalFilter === 'ALL' ? len : items.filter(m => m.message_type === modalFilter).length;
+    if (filteredLen === 0) return;
+    const handler = (e) => {
+      if (e.key === 'ArrowLeft') setViewIdx(prev => (prev - 1 + filteredLen) % filteredLen);
+      else if (e.key === 'ArrowRight') setViewIdx(prev => (prev + 1) % filteredLen);
+      else if (e.key === 'Escape') setViewIdx(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [viewIdx, items, modalFilter]);
+
+  if (loading || items.length === 0) return null;
+
+  const preview = items.slice(0, 6);
+  const counts = {
+    ALL: items.length,
+    IMAGE: items.filter(m => m.message_type === 'IMAGE').length,
+    VOICE: items.filter(m => m.message_type === 'VOICE').length,
+    FILE: items.filter(m => m.message_type === 'FILE').length,
+  };
+  const modalFiltered = modalFilter === 'ALL' ? items : items.filter(m => m.message_type === modalFilter);
+  const viewItem = viewIdx !== null ? modalFiltered[viewIdx] : null;
+
+  const openItem = (idx) => setViewIdx(idx);
+  const closeItem = () => setViewIdx(null);
+  const prevItem = () => setViewIdx(prev => (prev - 1 + modalFiltered.length) % modalFiltered.length);
+  const nextItem = () => setViewIdx(prev => (prev + 1) % modalFiltered.length);
+
+  const renderThumb = (m) => {
+    if (m.message_type === 'IMAGE') return <img src={m.attachment_url} alt="" loading="lazy" />;
+    if (m.message_type === 'VOICE') return <><i className="fas fa-microphone" /><span>{fmtDur(m.voice_duration || 0)}</span></>;
+    return <><i className="fas fa-file-alt" /><span>{m.attachment_name || 'Fichier'}</span></>;
+  };
+
+  return (
+    <div className="cc-rail__section">
+      <div className="cc-rail__eyebrow">— {t('pages.bookClubDetail.mediaTitle', 'Médias')} <span className="cc-media__count">{items.length}</span></div>
+
+      {/* Rail preview — max 6 items */}
+      <div className="cc-media-grid">
+        {preview.map((m, idx) => (
+          <div
+            key={m.id}
+            className={`cc-media-item cc-media-item--${m.message_type.toLowerCase()}`}
+            onClick={() => { setModalOpen(true); setModalFilter('ALL'); openItem(items.indexOf(m)); }}
+            role="button" tabIndex={0}
+          >
+            {renderThumb(m)}
+            <div className="cc-media-item__overlay">
+              <span className="cc-media-item__author">{m.author?.full_name || m.author?.username || ''}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {items.length > 6 && (
+        <button className="cc-media__more" onClick={() => { setModalOpen(true); setModalFilter('ALL'); setViewIdx(null); }}>
+          {t('pages.bookClubDetail.mediaShowAll', 'Voir tout')} ({items.length})
+        </button>
+      )}
+
+      {/* ── Full-screen media modal (portal) ── */}
+      {modalOpen && createPortal(
+        <div className="cc-media-modal">
+          <div className="cc-media-modal__header">
+            <h2>{t('pages.bookClubDetail.mediaTitle', 'Médias')}</h2>
+            <div className="cc-media__filters">
+              {[['ALL', 'fa-th', t('pages.bookClubDetail.mediaAll', 'Tout')],
+                ['IMAGE', 'fa-image', t('pages.bookClubDetail.mediaImages', 'Photos')],
+                ['VOICE', 'fa-microphone', t('pages.bookClubDetail.mediaVoice', 'Voix')],
+                ['FILE', 'fa-file-alt', t('pages.bookClubDetail.mediaFiles', 'Fichiers')]
+              ].map(([key, icon, label]) => counts[key] > 0 && (
+                <button
+                  key={key}
+                  className={`cc-media__filter${modalFilter === key ? ' cc-media__filter--active' : ''}`}
+                  onClick={() => { setModalFilter(key); setViewIdx(null); }}
+                >
+                  <i className={`fas ${icon}`} /> {label} <span>{counts[key]}</span>
+                </button>
+              ))}
+            </div>
+            <button className="cc-media-modal__close" onClick={() => { setModalOpen(false); setViewIdx(null); }}>
+              <i className="fas fa-times" />
+            </button>
+          </div>
+
+          {viewIdx === null ? (
+            /* Grid view */
+            <div className="cc-media-modal__grid">
+              {modalFiltered.map((m, idx) => (
+                <div
+                  key={m.id}
+                  className={`cc-media-item cc-media-item--${m.message_type.toLowerCase()}`}
+                  onClick={() => openItem(idx)}
+                  role="button" tabIndex={0}
+                >
+                  {renderThumb(m)}
+                  <div className="cc-media-item__overlay">
+                    <span className="cc-media-item__author">{m.author?.full_name || m.author?.username || ''}</span>
+                  </div>
+                </div>
+              ))}
+              {modalFiltered.length === 0 && (
+                <div className="cc-media-modal__empty">
+                  <i className="fas fa-folder-open" />
+                  <p>{t('pages.bookClubDetail.mediaEmpty', 'Aucun média dans cette catégorie.')}</p>
+                </div>
+              )}
+            </div>
+          ) : viewItem && (
+            /* Single item viewer */
+            <div className="cc-media-viewer">
+              {modalFiltered.length > 1 && (
+                <>
+                  <button className="cc-lightbox__nav cc-lightbox__nav--prev" onClick={prevItem}><i className="fas fa-chevron-left" /></button>
+                  <button className="cc-lightbox__nav cc-lightbox__nav--next" onClick={nextItem}><i className="fas fa-chevron-right" /></button>
+                </>
+              )}
+
+              <div className="cc-media-viewer__content">
+                {viewItem.message_type === 'IMAGE' && (
+                  <img src={viewItem.attachment_url} alt="" className="cc-media-viewer__img" />
+                )}
+                {viewItem.message_type === 'VOICE' && (
+                  <div className="cc-media-viewer__audio">
+                    <i className="fas fa-microphone" />
+                    <audio src={viewItem.attachment_url} controls autoPlay />
+                    <span>{fmtDur(viewItem.voice_duration || 0)}</span>
+                  </div>
+                )}
+                {viewItem.message_type === 'FILE' && (
+                  <div className="cc-media-viewer__file">
+                    <i className="fas fa-file-alt" />
+                    <span>{viewItem.attachment_name || 'Fichier'}</span>
+                    <a href={viewItem.attachment_url} target="_blank" rel="noopener noreferrer" className="cc-btn cc-btn--join">
+                      <i className="fas fa-download" /> {t('pages.bookClubDetail.mediaDownload', 'Télécharger')}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="cc-media-viewer__meta">
+                <span>{viewItem.author?.full_name || viewItem.author?.username || ''}</span>
+                {viewItem.created_at && <span> · {new Date(viewItem.created_at).toLocaleDateString()}</span>}
+                <span className="cc-media-viewer__counter">{viewIdx + 1} / {modalFiltered.length}</span>
+              </div>
+              <button className="cc-media-viewer__back" onClick={closeItem}>
+                <i className="fas fa-th" /> {t('pages.bookClubDetail.mediaBackToGrid', 'Grille')}
+              </button>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+/* ── AI Club Section — résumé + questions ── */
+function AiClubSection({ club, slug, t, toast }) {
+  const [aiLoading, setAiLoading] = useState(null); // 'summary' | 'questions'
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiQuestions, setAiQuestions] = useState(null);
+
+  const handleSummarize = async () => {
+    setAiLoading('summary');
+    try {
+      const { summary } = await aiService.summarizeDiscussion(club.id);
+      setAiSummary(summary);
+    } catch {
+      toast.error('Impossible de résumer la discussion');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const handleQuestions = async () => {
+    if (!club.current_book) {
+      toast.error('Aucun livre en cours pour générer des questions');
+      return;
+    }
+    setAiLoading('questions');
+    try {
+      const data = await aiService.discussionQuestions(club.current_book.id);
+      setAiQuestions(data.questions || []);
+    } catch {
+      toast.error('Impossible de générer les questions');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  return (
+    <div className="cc-rail__section">
+      <div className="cc-rail__eyebrow">— <i className="fas fa-wand-magic-sparkles" style={{fontSize: 10, marginRight: 4}} /> {t('pages.bookClubDetail.aiAssistant', 'Assistant IA')}</div>
+      <div className="cc-ai-btns">
+        <button className="cc-btn cc-btn--ai" onClick={handleSummarize} disabled={!!aiLoading}>
+          {aiLoading === 'summary' ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-file-lines" />}
+          <span>{t('pages.bookClubDetail.aiSummarize', 'Résumer la discussion')}</span>
+        </button>
+        <button className="cc-btn cc-btn--ai" onClick={handleQuestions} disabled={!!aiLoading}>
+          {aiLoading === 'questions' ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-comments" />}
+          <span>{t('pages.bookClubDetail.aiQuestions', 'Questions de discussion')}</span>
+        </button>
+      </div>
+
+      {aiSummary && (
+        <div className="cc-ai-result">
+          <div className="cc-ai-result__head">
+            <i className="fas fa-file-lines" /> Résumé
+            <button className="cc-ai-result__close" onClick={() => setAiSummary(null)}><i className="fas fa-times" /></button>
+          </div>
+          <p className="cc-ai-result__text">{aiSummary}</p>
+        </div>
+      )}
+
+      {aiQuestions && aiQuestions.length > 0 && (
+        <div className="cc-ai-result">
+          <div className="cc-ai-result__head">
+            <i className="fas fa-comments" /> Questions
+            <button className="cc-ai-result__close" onClick={() => setAiQuestions(null)}><i className="fas fa-times" /></button>
+          </div>
+          <ol className="cc-ai-result__list">
+            {aiQuestions.map((q, i) => <li key={i}>{q}</li>)}
+          </ol>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ClubRail({
   club, setClub, members, user, isMember, isAdmin, isMod, isFull,
   myProgress, setMyProgress, saveProgress,
   sessions, setSessions,
-  activePoll, setActivePoll, myVote, setMyVote,
+  activePoll, setActivePoll, myVotes, setMyVotes,
   votePollOption, closePollAction, openPollCreate,
   railOpen, setRailOpen,
   sidebarTab, setSidebarTab, editForm, setEditForm, saving, saveEdit,
   slug, socialService, toast, handleApiError,
   join, leave, deleteClub, showDeleteConfirm, setShowDeleteConfirm,
-  shareClub, openQr,
+  shareClub, shareWhatsApp, openQr,
   inviteUrl,
   reports, loadReports, handleReportAction,
-  setShowSessionCreate,
+  setShowSessionCreate, onJoinSession, videoPeakRef,
   bookSearch, setBookSearch, bookResults, changeBook,
   approveMember, rejectMember,
   t, i18n,
 }) {
-  const [media, setMedia] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
 
-  const loadMedia = async () => { if (media) return; try { const r = await socialService.getClubMedia(slug); setMedia(Array.isArray(r.data) ? r.data : r.data.results || []); } catch { setMedia([]); } };
+  useEffect(() => {
+    socialService.getClubStats(slug).then(r => setStats(r.data)).catch(() => {});
+  }, [slug]);
 
   const cats = Array.isArray(club.category) ? club.category : [];
   const topReader = members.reduce((top, m) => (!top || m.reading_progress > top.reading_progress) ? m : top, null);
@@ -49,6 +308,81 @@ export default function ClubRail({
           <span className={isFull ? 'cc-rail__members--full' : ''}><i className="fas fa-users" /> {members.length}{club.max_members ? `/${club.max_members}` : ''}{isFull && ` · ${t('pages.bookClubDetail.clubFull', 'Complet')}`}</span>
         </div>
       </div>
+
+      {/* Club stats */}
+      {stats && (
+        <div className="cc-rail__section">
+          <div className="cc-rail__eyebrow">— {t('pages.bookClubDetail.statsTitle', 'Statistiques')}</div>
+          <div className="cc-stats">
+            <div className="cc-stats__item">
+              <div className="cc-stats__value">{stats.books_read}</div>
+              <div className="cc-stats__label">{t('pages.bookClubDetail.statsBooksRead', 'Livres lus')}</div>
+            </div>
+            <div className="cc-stats__item">
+              <div className="cc-stats__value">{stats.active_members}<span className="cc-stats__unit">/{stats.total_members}</span></div>
+              <div className="cc-stats__label">{t('pages.bookClubDetail.statsActiveMembers', 'Actifs (30j)')}</div>
+            </div>
+            <div className="cc-stats__item">
+              <div className="cc-stats__value">{stats.participation_rate}<span className="cc-stats__unit">%</span></div>
+              <div className="cc-stats__label">{t('pages.bookClubDetail.statsParticipation', 'Participation')}</div>
+            </div>
+            <div className="cc-stats__item">
+              <div className="cc-stats__value">{stats.total_messages}</div>
+              <div className="cc-stats__label">{t('pages.bookClubDetail.statsMessages', 'Messages')}</div>
+            </div>
+          </div>
+
+          {/* Activity chart — messages per day (7 days) */}
+          {stats.activity_days && stats.activity_days.some(d => d.count > 0) && (() => {
+            const max = Math.max(...stats.activity_days.map(d => d.count), 1);
+            return (
+              <div className="cc-stats__chart">
+                <div className="cc-stats__chart-label">{t('pages.bookClubDetail.statsActivity', 'Activité (7j)')}</div>
+                <div className="cc-stats__bars">
+                  {stats.activity_days.map((d, i) => (
+                    <div key={i} className="cc-stats__bar-col">
+                      <div className="cc-stats__bar-wrap">
+                        <div
+                          className="cc-stats__bar"
+                          style={{ height: `${Math.max((d.count / max) * 100, d.count > 0 ? 8 : 0)}%` }}
+                          title={`${d.count} msg`}
+                        />
+                      </div>
+                      <span className="cc-stats__bar-day">{d.day}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Reading progress distribution */}
+          {stats.progress_distribution && stats.total_members > 0 && (() => {
+            const dist = stats.progress_distribution;
+            const max = Math.max(...dist, 1);
+            const labels = ['0%', '1-25', '26-50', '51-75', '76-100'];
+            return (
+              <div className="cc-stats__chart">
+                <div className="cc-stats__chart-label">{t('pages.bookClubDetail.statsProgressDist', 'Répartition lecture')}</div>
+                <div className="cc-stats__bars">
+                  {dist.map((count, i) => (
+                    <div key={i} className="cc-stats__bar-col">
+                      <div className="cc-stats__bar-wrap">
+                        <div
+                          className="cc-stats__bar cc-stats__bar--progress"
+                          style={{ height: `${Math.max((count / max) * 100, count > 0 ? 8 : 0)}%` }}
+                          title={`${count} membre${count > 1 ? 's' : ''}`}
+                        />
+                      </div>
+                      <span className="cc-stats__bar-day">{labels[i]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Collective progress */}
       {club.current_book && (
@@ -109,13 +443,26 @@ export default function ClubRail({
         socialService={socialService} toast={toast} handleApiError={handleApiError} t={t}
       />
 
+      {/* Permanent room — above scheduled sessions */}
+      <PermanentRoomSection
+        club={club} slug={slug} isMember={isMember} isAdmin={isAdmin}
+        socialService={socialService} onJoinSession={onJoinSession}
+        sessions={sessions} setSessions={setSessions}
+        toast={toast} handleApiError={handleApiError} t={t}
+      />
+
       {/* Sessions */}
       <SessionList
-        sessions={sessions} isMember={isMember} isAdmin={isAdmin}
-        slug={slug} socialService={socialService} setSessions={setSessions}
-        setShowSessionCreate={setShowSessionCreate}
+        sessions={sessions} isMember={isMember} isAdmin={isAdmin} isMod={isMod} user={user}
+        slug={slug} club={club} socialService={socialService} setSessions={setSessions}
+        setShowSessionCreate={setShowSessionCreate} onJoinSession={onJoinSession} videoPeakRef={videoPeakRef}
         toast={toast} handleApiError={handleApiError} t={t} i18n={i18n}
       />
+
+      {/* ── AI Assistant Section ── */}
+      {isMember && (
+        <AiClubSection club={club} slug={slug} t={t} toast={toast} />
+      )}
 
       {/* Moderator */}
       {moderator && (
@@ -160,10 +507,27 @@ export default function ClubRail({
             {club.current_book.cover_image && <img src={club.current_book.cover_image} alt="" />}
             <div><strong>{club.current_book.title}</strong>{club.current_book.author?.full_name && <span>{club.current_book.author.full_name}</span>}</div>
           </Link>
-        ) : <p className="cc-rail__empty">Aucun livre sélectionné</p>}
+        ) : <div className="cc-empty cc-empty--compact"><div className="cc-empty__icon"><i className="fas fa-book-open" /></div><p>{t('pages.bookClubDetail.noBookSub', 'Aucun livre sélectionné. L\'admin peut en choisir un.')}</p></div>}
+        {isAdmin && club.current_book && (
+          <button className="cc-btn cc-btn--outline" style={{width: '100%', marginTop: 8}} onClick={() => setConfirmAction({
+            icon: 'fa-check-circle',
+            title: t('pages.bookClubDetail.finishBook', 'Terminer la lecture'),
+            message: t('pages.bookClubDetail.finishBookConfirm', 'Terminer la lecture de ce livre et l\'archiver ?'),
+            confirmLabel: t('pages.bookClubDetail.finishBook', 'Terminer'),
+            action: async () => {
+              try {
+                const r = await socialService.updateClub(slug, { current_book: null });
+                setClub(r.data);
+                toast.success(t('pages.bookClubDetail.finishBookDone', 'Lecture terminée et archivée'));
+              } catch (e) { toast.error(handleApiError(e)); }
+            },
+          })}>
+            <i className="fas fa-check-circle" /> {t('pages.bookClubDetail.finishBook', 'Terminer la lecture')}
+          </button>
+        )}
         {isAdmin && <div className="cc-book-change">
           <div className="cc-book-search">
-            <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder="Changer le livre..." />
+            <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder={t('pages.bookClubDetail.changeBookPlaceholder', 'Changer le livre...')} />
             {bookResults.length > 0 && <div className="cc-book-results">{bookResults.map(b => (
               <button key={b.id} onClick={() => changeBook(b.id)}>
                 {b.cover_image && <img src={b.cover_image} alt="" />}
@@ -198,41 +562,17 @@ export default function ClubRail({
       {/* Poll in rail */}
       {isMember && (
         <div className="cc-rail__section">
-          <div className="cc-rail__eyebrow">— Sondage</div>
-          {activePoll ? (() => {
-            const totalVotes = activePoll.options?.reduce((s, o) => s + o.votes_count, 0) || 0;
-            const isClosed = activePoll.status === 'CLOSED';
-            return (
-              <div className="cc-poll-rail">
-                <div className="cc-poll-rail__title">{activePoll.title}</div>
-                <div className="cc-poll-rail__meta">{t('pages.bookClubDetail.pollTotalVotes', {count: totalVotes})} · {t('pages.bookClubDetail.pollAnonymous')}</div>
-                <div className="cc-poll-rail__options">
-                  {activePoll.options?.map(opt => {
-                    const pct = totalVotes > 0 ? Math.round(opt.votes_count / totalVotes * 100) : 0;
-                    const isLeader = opt.votes_count === Math.max(...activePoll.options.map(o => o.votes_count)) && opt.votes_count > 0;
-                    return (
-                      <div key={opt.id} className={`cc-poll-rail__opt${isLeader ? ' cc-poll-rail__opt--leader' : ''}`}>
-                        <div className="cc-poll-rail__opt-head">
-                          {isLeader ? <i className="fas fa-check-circle" /> : <i className="far fa-circle" />}
-                          <span className="cc-poll-rail__opt-title">{opt.text_label || opt.book?.title}</span>
-                          <span className="cc-poll-rail__opt-votes">{opt.votes_count} · {pct}%</span>
-                        </div>
-                        <div className="cc-poll-rail__bar-wrap"><div className="cc-poll-rail__bar" style={{width: `${pct}%`}} /></div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="cc-poll-rail__footer">
-                  {isAdmin && <button className="cc-poll-rail__link" disabled>{t('pages.bookClubDetail.pollSeeVoters')}</button>}
-                  {!isClosed && isAdmin && <button className="cc-btn cc-btn--poll-close" onClick={closePollAction}><i className="fas fa-check" /> {t('pages.bookClubDetail.closePoll')}</button>}
-                </div>
-              </div>
-            );
-          })() : (
-            isAdmin ? <button className="cc-btn cc-btn--join" onClick={openPollCreate} style={{width: '100%'}}><i className="fas fa-poll" /> {t('pages.bookClubDetail.createPollTitle')}</button>
-            : <p className="cc-rail__empty">{t('pages.bookClubDetail.pollNoOptions')}</p>
-          )}
+          <div className="cc-rail__eyebrow">— {t('pages.bookClubDetail.pollRailTitle', 'Sondages')}</div>
+          {activePoll && <RailPollCard poll={activePoll} isAdmin={isAdmin} closePollAction={closePollAction} t={t} />}
+          {!activePoll && isAdmin && <button className="cc-btn cc-btn--join" onClick={openPollCreate} style={{width: '100%', marginBottom: 8}}><i className="fas fa-poll" /> {t('pages.bookClubDetail.createPollTitle')}</button>}
+          {!activePoll && !isAdmin && <div className="cc-empty cc-empty--compact"><div className="cc-empty__icon"><i className="fas fa-poll" /></div><p>{t('pages.bookClubDetail.pollEmptySub', 'Aucun sondage en cours.')}</p></div>}
+          {/* Closed polls are now in the Chronicle tab */}
         </div>
+      )}
+
+      {/* Wishlist (suggestions de lecture) */}
+      {isMember && (
+        <WishlistSection slug={slug} isMember={isMember} isAdmin={isAdmin} user={user} socialService={socialService} toast={toast} handleApiError={handleApiError} t={t} />
       )}
 
       {/* Pending members (admin) */}
@@ -295,24 +635,8 @@ export default function ClubRail({
         <ModerationLogSection slug={slug} socialService={socialService} t={t} />
       )}
 
-      {/* Shared media */}
-      <div className="cc-rail__section">
-        <div className="cc-rail__eyebrow">— Médias</div>
-        <button className="cc-btn cc-btn--outline" onClick={loadMedia} style={{width: '100%', marginBottom: 8}}>
-          <i className="fas fa-photo-video" /> {media ? `${media.length} médias` : 'Charger'}
-        </button>
-        {media && media.length > 0 && (
-          <div className="cc-media-grid">
-            {media.slice(0, 6).map(m => (
-              <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer" className={`cc-media-item cc-media-item--${m.message_type.toLowerCase()}`}>
-                {m.message_type === 'IMAGE' ? <img src={m.attachment_url} alt="" /> :
-                 m.message_type === 'VOICE' ? <><i className="fas fa-microphone" /><span>{fmtDur(m.voice_duration || 0)}</span></> :
-                 <><i className="fas fa-file-alt" /><span>{m.attachment_name || 'Fichier'}</span></>}
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Shared media gallery */}
+      {isMember && <MediaGallery slug={slug} socialService={socialService} t={t} />}
 
       {/* Edit form (admin) */}
       {sidebarTab === 'edit' && editForm && (
@@ -336,6 +660,7 @@ export default function ClubRail({
           <div className="cc-rail__eyebrow">— {t('pages.bookClubDetail.invite', 'Invitation')}</div>
           <div className="cc-rail__invite-actions">
             <button className="cc-btn cc-btn--outline" onClick={shareClub}><i className="fas fa-share-alt" /> {t('pages.bookClubDetail.shareLink', 'Partager le lien')}</button>
+            <button className="cc-btn cc-btn--whatsapp" onClick={shareWhatsApp}><i className="fab fa-whatsapp" /> {t('pages.bookClubDetail.shareWhatsApp', 'WhatsApp')}</button>
             <button className="cc-btn cc-btn--outline" onClick={openQr}><i className="fas fa-qrcode" /> {t('pages.bookClubDetail.qrTitle', 'QR Code')}</button>
           </div>
         </div>
@@ -346,10 +671,31 @@ export default function ClubRail({
           ? <button className="cc-btn cc-btn--join cc-btn--disabled" disabled><i className="fas fa-lock" /> {t('pages.bookClubDetail.clubFull', 'Complet')}</button>
           : <button className="cc-btn cc-btn--join" onClick={join}><i className="fas fa-sign-in-alt" /> {t('pages.bookClubDetail.joinClub')}</button>
         )}
-        {user && isMember && club.creator?.id !== user.id && <button className="cc-btn cc-btn--leave" onClick={leave}><i className="fas fa-sign-out-alt" /> Quitter</button>}
-        {isAdmin && <button className="cc-btn cc-btn--danger" onClick={() => setShowDeleteConfirm(true)}><i className="fas fa-trash" /> Supprimer</button>}
-        <Link to="/clubs" className="cc-rail__back"><i className="fas fa-arrow-left" /> Tous les clubs</Link>
+        {user && isMember && club.creator?.id !== user.id && <button className="cc-btn cc-btn--leave" onClick={leave}><i className="fas fa-sign-out-alt" /> {t('pages.bookClubDetail.leave')}</button>}
+        {user && club.creator?.id === user.id && (
+          <button className="cc-btn" onClick={async () => {
+            try {
+              const r = await socialService.exportClubData(slug);
+              const blob = new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a'); a.href = url; a.download = `${club.slug}-export.json`; a.click();
+              URL.revokeObjectURL(url);
+            } catch (e) { toast.error(handleApiError(e)); }
+          }}><i className="fas fa-download" /> {t('pages.bookClubDetail.exportData', 'Exporter les données')}</button>
+        )}
+        {isAdmin && <button className="cc-btn cc-btn--danger" onClick={() => setShowDeleteConfirm(true)}><i className="fas fa-trash" /> {t('pages.bookClubDetail.deleteClub', 'Supprimer')}</button>}
+        <Link to="/clubs" className="cc-rail__back"><i className="fas fa-arrow-left" /> {t('pages.bookClubs.allClubs')}</Link>
       </div>
+      <ConfirmModal
+        show={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={async () => { await confirmAction?.action?.(); setConfirmAction(null); }}
+        icon={confirmAction?.icon}
+        title={confirmAction?.title}
+        message={confirmAction?.message}
+        confirmLabel={confirmAction?.confirmLabel}
+        danger={confirmAction?.danger}
+      />
     </aside>
   );
 }
@@ -410,6 +756,54 @@ function ReadingGoalForm({ club, slug, socialService, toast, handleApiError, set
   );
 }
 
+function RailPollCard({ poll, isAdmin, closePollAction, t }) {
+  const totalVotes = poll.options?.reduce((s, o) => s + o.votes_count, 0) || 0;
+  const isExpired = poll.expires_at && new Date(poll.expires_at) <= Date.now();
+  const isClosed = poll.status === 'CLOSED' || isExpired;
+  const expiresAt = poll.expires_at ? new Date(poll.expires_at) : null;
+  const remaining = (() => {
+    if (!expiresAt || isClosed) return '';
+    const diff = expiresAt - Date.now();
+    if (diff <= 0) return '';
+    const d = Math.floor(diff / 86400e3);
+    const h = Math.floor((diff % 86400e3) / 3600e3);
+    const m = Math.floor((diff % 3600e3) / 60e3);
+    if (d > 0) return `${d}j ${h}h`;
+    if (h > 0) return `${h}h ${m}min`;
+    return `${m}min`;
+  })();
+  return (
+    <div className={`cc-poll-rail${isClosed ? ' cc-poll-rail--closed' : ''}`}>
+      <div className="cc-poll-rail__title">{poll.title}</div>
+      <div className="cc-poll-rail__meta">
+        {t('pages.bookClubDetail.pollTotalVotes', {count: totalVotes})} · {isClosed ? t('pages.bookClubDetail.pollClosed', 'Terminé') : t('pages.bookClubDetail.pollAnonymous')}
+        {remaining && <> · <i className="fas fa-clock" /> {remaining}</>}
+      </div>
+      <div className="cc-poll-rail__options">
+        {poll.options?.map(opt => {
+          const pct = totalVotes > 0 ? Math.round(opt.votes_count / totalVotes * 100) : 0;
+          const isLeader = opt.votes_count === Math.max(...poll.options.map(o => o.votes_count)) && opt.votes_count > 0;
+          return (
+            <div key={opt.id} className={`cc-poll-rail__opt${isLeader ? ' cc-poll-rail__opt--leader' : ''}`}>
+              <div className="cc-poll-rail__opt-head">
+                {isLeader ? <i className="fas fa-check-circle" /> : <i className="far fa-circle" />}
+                <span className="cc-poll-rail__opt-title">{opt.text_label || opt.book?.title}</span>
+                <span className="cc-poll-rail__opt-votes">{opt.votes_count} · {pct}%</span>
+              </div>
+              <div className="cc-poll-rail__bar-wrap"><div className="cc-poll-rail__bar" style={{width: `${pct}%`}} /></div>
+            </div>
+          );
+        })}
+      </div>
+      {isAdmin && !isClosed && closePollAction && (
+        <div className="cc-poll-rail__footer">
+          <button className="cc-btn cc-btn--poll-close" onClick={() => closePollAction()}><i className="fas fa-check" /> {t('pages.bookClubDetail.closePoll')}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ACTION_ICONS = {
   KICK: 'fa-user-slash', BAN: 'fa-ban', ROLE_CHANGE: 'fa-shield-alt',
   MSG_DELETE: 'fa-trash', MSG_PIN: 'fa-thumbtack', MSG_UNPIN: 'fa-thumbtack',
@@ -419,24 +813,39 @@ const ACTION_ICONS = {
 function ModerationLogSection({ slug, socialService, t }) {
   const [logs, setLogs] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  const load = async () => {
-    if (logs) return;
-    setLoading(true);
-    try {
-      const r = await socialService.getModerationLog(slug);
-      setLogs(Array.isArray(r.data) ? r.data : []);
-    } catch { setLogs([]); }
-    setLoading(false);
+  const toggle = async () => {
+    if (!logs && !open) {
+      // First click: load + open
+      setLoading(true);
+      try {
+        const r = await socialService.getModerationLog(slug);
+        setLogs(Array.isArray(r.data) ? r.data : []);
+      } catch { setLogs([]); }
+      setLoading(false);
+      setOpen(true);
+    } else {
+      // Subsequent clicks: toggle visibility (data stays cached)
+      setOpen(o => !o);
+    }
   };
+
+  const label = loading
+    ? t('pages.bookClubDetail.modLogLoading', 'Chargement...')
+    : open
+      ? t('pages.bookClubDetail.modLogHide', 'Masquer')
+      : logs
+        ? `${logs.length} entrée(s)`
+        : t('pages.bookClubDetail.modLogLoad', 'Charger');
 
   return (
     <div className="cc-rail__section">
       <div className="cc-rail__eyebrow">— {t('pages.bookClubDetail.modLogTitle', 'Journal de modération')}</div>
-      <button className="cc-btn cc-btn--outline" onClick={load} style={{width: '100%', marginBottom: 8}} disabled={loading}>
-        <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-history'}`} /> {logs ? `${logs.length} entrée(s)` : t('pages.bookClubDetail.modLogLoad', 'Charger')}
+      <button className="cc-btn cc-btn--outline" onClick={toggle} style={{width: '100%', marginBottom: 8}} disabled={loading}>
+        <i className={`fas ${loading ? 'fa-spinner fa-spin' : open ? 'fa-chevron-up' : 'fa-history'}`} /> {label}
       </button>
-      {logs && logs.length > 0 && (
+      {open && logs && logs.length > 0 && (
         <div className="cc-mod-log">
           {logs.map(log => (
             <div key={log.id} className="cc-mod-log__entry">
@@ -454,7 +863,7 @@ function ModerationLogSection({ slug, socialService, t }) {
           ))}
         </div>
       )}
-      {logs && logs.length === 0 && <p className="cc-rail__empty">{t('pages.bookClubDetail.modLogEmpty', 'Aucune action enregistrée')}</p>}
+      {open && logs && logs.length === 0 && <p className="cc-rail__empty">{t('pages.bookClubDetail.modLogEmpty', 'Aucune action enregistrée')}</p>}
     </div>
   );
 }

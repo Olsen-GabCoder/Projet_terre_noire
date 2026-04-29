@@ -1,22 +1,75 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import bookService from '../services/bookService';
+import aiService from '../services/aiService';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useReveal } from '../hooks/useReveal';
 import '../styles/Authors.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+function AuthorSuggestions({ t }) {
+  const [suggestions, setSuggestions] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const load = async () => {
+    if (suggestions) { setOpen(o => !o); return; }
+    setLoading(true);
+    try {
+      const { suggestions: data } = await aiService.suggestAuthors(6);
+      setSuggestions(data || []);
+      setOpen(true);
+    } catch { /* silent */ }
+    setLoading(false);
+  };
+
+  const ini = (name) => (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  return (
+    <div className="auth-suggestions">
+      <button className="auth-suggestions__btn" onClick={load} disabled={loading}>
+        {loading
+          ? <><i className="fas fa-spinner fa-spin" /> {t('pages.authors.loadingSuggestions', 'Analyse...')}</>
+          : open
+            ? <><i className="fas fa-chevron-up" /> {t('pages.authors.hideSuggestions', 'Masquer')}</>
+            : <><i className="fas fa-robot" /> {t('pages.authors.aiSuggestions', 'Auteurs suggérés pour vous')}</>
+        }
+      </button>
+      {open && suggestions?.length > 0 && (
+        <div className="auth-suggestions__grid">
+          {suggestions.map((s, i) => (
+            <Link key={i} to={`/authors/${s.author?.slug || s.author_id}`} className="auth-suggestions__card">
+              <div className="auth-suggestions__av">
+                {s.author?.photo
+                  ? <img src={s.author.photo} alt="" />
+                  : <span>{ini(s.author?.full_name)}</span>
+                }
+              </div>
+              <div className="auth-suggestions__info">
+                <strong>{s.author?.full_name || `Auteur #${s.author_id}`}</strong>
+                <p className="auth-suggestions__reason">{s.reason}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const Authors = () => {
   const { t } = useTranslation();
-  const revealRef = useReveal();
+  const { user } = useAuth();
   const [authors, setAuthors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef(null);
   const [sortBy, setSortBy] = useState('name');
   const [letterFilter, setLetterFilter] = useState('');
 
@@ -100,26 +153,40 @@ const Authors = () => {
         </div>
       </PageHero>
 
+      {/* AI Suggestions */}
+      {user && (
+        <div className="authors-content" style={{ paddingBottom: 0 }}>
+          <div className="auth-wrap">
+            <AuthorSuggestions t={t} />
+          </div>
+        </div>
+      )}
+
       {/* CONTENU */}
-      <div ref={revealRef} className="authors-content reveal-section">
+      <div className="authors-content">
         <div className="auth-wrap">
 
           {/* Barre de recherche + tri */}
           <div className="auth-toolbar">
-            <div className="auth-search">
-              <i className="fas fa-search auth-search__ico" />
+            <div className={`search-expand__field auth-search-open ${searchFocused ? 'auth-search-focused' : ''}`}>
               <input
+                ref={searchRef}
                 type="text"
+                className="search-expand__input"
                 placeholder={t('pages.authors.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="auth-search__input"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
               />
               {search && (
-                <button type="button" className="auth-search__clear" onClick={() => setSearch('')}>
+                <button type="button" className="search-expand__clear" onClick={() => { setSearch(''); searchRef.current?.focus(); }}>
                   <i className="fas fa-times" />
                 </button>
               )}
+              <button type="button" className="search-expand__submit" onClick={() => searchRef.current?.focus()} aria-label={t('common.search')}>
+                <i className="fas fa-search" />
+              </button>
             </div>
             <div className="auth-toolbar__right">
               <div className="auth-sort">
@@ -181,7 +248,7 @@ const Authors = () => {
           ) : (
             <div className="auth-grid">
               {filtered.map((author) => (
-                <Link key={author.id} to={`/authors/${author.id}`} className="acard">
+                <Link key={author.id} to={author.user_slug ? `/u/${author.user_slug}` : `/authors/${author.id}`} className="acard">
                   <div className="acard__visual">
                     <div className="acard__avatar">
                       {(author.display_photo || author.photo) ? (

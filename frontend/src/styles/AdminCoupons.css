@@ -250,6 +250,70 @@
   border-color: rgba(91, 94, 234, 0.25);
 }
 
+/* ── AI Smart Targeting ── */
+.ac-targeting {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-bg-card, #1e1e2e);
+  border: 1px solid var(--color-border-card, #2a2a3d);
+  border-radius: var(--radius-sm, 8px);
+}
+.ac-targeting__segments {
+  display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 12px;
+}
+.ac-targeting__seg {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border: 1px solid var(--color-border-card, #2a2a3d);
+  border-radius: 6px; background: transparent;
+  font-size: 0.78rem; color: var(--color-text-secondary, #a0a0b0);
+  cursor: pointer; transition: all 0.15s;
+}
+.ac-targeting__seg:hover { border-color: var(--color-primary, #5b5eea); color: var(--color-text-primary, #eee); }
+.ac-targeting__seg--active {
+  background: rgba(91, 94, 234, 0.12);
+  border-color: var(--color-primary, #5b5eea);
+  color: var(--color-primary, #5b5eea);
+  font-weight: 600;
+}
+.ac-targeting__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border: 1px solid var(--color-primary, #5b5eea);
+  border-radius: 6px; background: rgba(91, 94, 234, 0.08);
+  font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  color: var(--color-primary, #5b5eea); transition: background 0.15s;
+}
+.ac-targeting__btn:hover { background: rgba(91, 94, 234, 0.18); }
+.ac-targeting__btn:disabled { opacity: 0.5; cursor: wait; }
+.ac-targeting__results {
+  margin-top: 12px; display: flex; flex-direction: column; gap: 6px;
+}
+.ac-targeting__card {
+  padding: 10px 12px;
+  background: rgba(91, 94, 234, 0.04);
+  border: 1px solid var(--color-border-card, #2a2a3d);
+  border-radius: 6px;
+}
+.ac-targeting__card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 3px;
+}
+.ac-targeting__card-header strong { font-size: 0.85rem; }
+.ac-targeting__discount {
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--color-primary, #5b5eea);
+  background: rgba(91, 94, 234, 0.12);
+  padding: 2px 8px; border-radius: 4px;
+}
+.ac-targeting__reason {
+  margin: 0; font-size: 0.78rem; font-style: italic;
+  color: var(--color-text-secondary, #a0a0b0); line-height: 1.4;
+}
+.ac-targeting__empty {
+  margin: 10px 0 0; font-size: 0.82rem;
+  color: var(--color-text-secondary, #a0a0b0);
+}
+.ac-targeting__empty i { color: #22c55e; margin-right: 4px; }
+
 /* ── Filters ── */
 .ac-filters {
   display: flex;

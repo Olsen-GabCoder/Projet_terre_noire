@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import manuscriptService from '../../services/manuscriptService';
 import servicesService from '../../services/servicesService';
+import aiService from '../../services/aiService';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -54,6 +55,12 @@ const OrgManuscripts = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [pubRecommendations, setPubRecommendations] = useState(null);
+  const [pubLoading, setPubLoading] = useState(false);
+  const [similarData, setSimilarData] = useState(null);
+  const [similarLoading, setSimilarLoading] = useState(false);
 
   const fetchManuscripts = useCallback(() => {
     setLoading(true);
@@ -78,6 +85,9 @@ const OrgManuscripts = () => {
     setDetailLoading(true);
     setActionMsg('');
     setRejectionReason('');
+    setAiAnalysis(null);
+    setPubRecommendations(null);
+    setSimilarData(null);
     manuscriptService.getOrgManuscript(orgId, ms.id)
       .then((res) => setSelected(res.data))
       .catch(() => setSelected(ms))
@@ -102,6 +112,22 @@ const OrgManuscripts = () => {
       setActionMsg(err.response?.data?.error || 'Erreur lors de la mise \u00e0 jour.');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleAiAnalysis = async () => {
+    if (!selected) return;
+    setAiAnalyzing(true);
+    try {
+      const result = await aiService.analyzeManuscript({
+        manuscript_id: selected.id,
+        title: selected.title,
+      });
+      setAiAnalysis(result);
+    } catch {
+      toast.error('Erreur lors de l\'analyse IA.');
+    } finally {
+      setAiAnalyzing(false);
     }
   };
 
@@ -277,6 +303,271 @@ const OrgManuscripts = () => {
                   <strong>Description</strong>
                   <p>{selected.description}</p>
                 </div>
+                {/* ── Analyse IA ── */}
+                <div className="ms-ai-section">
+                  {!aiAnalysis && (
+                    <button
+                      className="ms-ai-section__btn"
+                      onClick={handleAiAnalysis}
+                      disabled={aiAnalyzing}
+                    >
+                      {aiAnalyzing
+                        ? <><i className="fas fa-spinner fa-spin" /> Analyse en cours...</>
+                        : <><i className="fas fa-wand-magic-sparkles" /> Analyser avec l'IA</>
+                      }
+                    </button>
+                  )}
+
+                  {aiAnalysis && (
+                    <div className="ms-ai-report">
+                      <div className="ms-ai-report__header">
+                        <i className="fas fa-wand-magic-sparkles" />
+                        <h4>Rapport d'analyse IA</h4>
+                        <span className="ms-ai-report__disclaimer">Estimation — outil non certifié</span>
+                      </div>
+
+                      {/* Vérification de légitimité */}
+                      {aiAnalysis.verification && (
+                        <div className={`ms-ai-verification ${aiAnalysis.verification.trust_score < 50 ? 'ms-ai-verification--danger' : aiAnalysis.verification.trust_score < 75 ? 'ms-ai-verification--warning' : 'ms-ai-verification--ok'}`}>
+                          <div className="ms-ai-verification__header">
+                            <i className={`fas ${aiAnalysis.verification.trust_score < 50 ? 'fa-exclamation-triangle' : aiAnalysis.verification.trust_score < 75 ? 'fa-exclamation-circle' : 'fa-shield-alt'}`} />
+                            <span>Vérification de la soumission</span>
+                            <strong>{aiAnalysis.verification.trust_score}/100</strong>
+                          </div>
+                          <div className="ms-ai-verification__checks">
+                            {[
+                              { key: 'is_literary', label: 'Document littéraire', val: aiAnalysis.verification.is_literary },
+                              { key: 'is_coherent', label: 'Description cohérente', val: aiAnalysis.verification.is_coherent },
+                              { key: 'title_match', label: 'Titre correspond', val: aiAnalysis.verification.title_match },
+                              { key: 'genre_match', label: 'Genre correspond', val: aiAnalysis.verification.genre_match },
+                              { key: 'language_ok', label: 'Langue correcte', val: aiAnalysis.verification.language_ok },
+                            ].map(c => (
+                              <div key={c.key} className={`ms-ai-check ${c.val ? 'ms-ai-check--ok' : 'ms-ai-check--fail'}`}>
+                                <i className={`fas ${c.val ? 'fa-check-circle' : 'fa-times-circle'}`} />
+                                <span>{c.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {aiAnalysis.verification.flags?.length > 0 && (
+                            <div className="ms-ai-verification__flags">
+                              <strong><i className="fas fa-flag" /> Alertes</strong>
+                              <ul>
+                                {aiAnalysis.verification.flags.map((f, i) => <li key={i}>{f}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Jauges IA & Plagiat */}
+                      <div className="ms-ai-report__gauges">
+                        <div className="ms-ai-gauge">
+                          <div className="ms-ai-gauge__header">
+                            <i className="fas fa-robot" />
+                            <span>Contenu généré par IA</span>
+                            <strong className={`ms-ai-gauge__level ms-ai-gauge__level--${aiAnalysis.ai_detection?.level || 'faible'}`}>
+                              {aiAnalysis.ai_detection?.level || '—'}
+                            </strong>
+                          </div>
+                          <div className="ms-ai-gauge__bar">
+                            <div className="ms-ai-gauge__fill" style={{ width: `${aiAnalysis.ai_detection?.score || 0}%` }} data-level={aiAnalysis.ai_detection?.level || 'faible'} />
+                          </div>
+                          <div className="ms-ai-gauge__score">{aiAnalysis.ai_detection?.score || 0}/100</div>
+                          {aiAnalysis.ai_detection?.indices?.length > 0 && (
+                            <ul className="ms-ai-gauge__indices">
+                              {aiAnalysis.ai_detection.indices.map((idx, i) => <li key={i}>{idx}</li>)}
+                            </ul>
+                          )}
+                        </div>
+
+                        <div className="ms-ai-gauge">
+                          <div className="ms-ai-gauge__header">
+                            <i className="fas fa-copy" />
+                            <span>Similarité / Plagiat</span>
+                            <strong className={`ms-ai-gauge__level ms-ai-gauge__level--${aiAnalysis.plagiarism_check?.level || 'faible'}`}>
+                              {aiAnalysis.plagiarism_check?.level || '—'}
+                            </strong>
+                          </div>
+                          <div className="ms-ai-gauge__bar">
+                            <div className="ms-ai-gauge__fill" style={{ width: `${aiAnalysis.plagiarism_check?.score || 0}%` }} data-level={aiAnalysis.plagiarism_check?.level || 'faible'} />
+                          </div>
+                          <div className="ms-ai-gauge__score">{aiAnalysis.plagiarism_check?.score || 0}/100</div>
+                          {aiAnalysis.plagiarism_check?.note && <p className="ms-ai-gauge__note">{aiAnalysis.plagiarism_check.note}</p>}
+                          {aiAnalysis.plagiarism_check?.similar_works?.length > 0 && (
+                            <ul className="ms-ai-gauge__indices">
+                              {aiAnalysis.plagiarism_check.similar_works.map((w, i) => (
+                                <li key={i}><em>{w.title}</em> de {w.author}{w.similarity ? ` (${w.similarity})` : ''}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Analyse littéraire */}
+                      <div className="ms-ai-report__grid">
+                        <div className="ms-ai-report__item">
+                          <strong>Genre détecté</strong>
+                          <p>{aiAnalysis.genre_suggere}</p>
+                        </div>
+                        <div className="ms-ai-report__item">
+                          <strong>Public cible</strong>
+                          <p>{aiAnalysis.public_cible}</p>
+                        </div>
+                        <div className="ms-ai-report__item">
+                          <strong>Potentiel commercial</strong>
+                          <p>{typeof aiAnalysis.potentiel_commercial === 'object' ? aiAnalysis.potentiel_commercial.level || JSON.stringify(aiAnalysis.potentiel_commercial) : aiAnalysis.potentiel_commercial}</p>
+                        </div>
+                        <div className="ms-ai-report__item ms-ai-report__item--full">
+                          <strong>Style d'écriture</strong>
+                          <p>{aiAnalysis.style}</p>
+                        </div>
+                        <div className="ms-ai-report__item ms-ai-report__item--full">
+                          <strong>Structure narrative</strong>
+                          <p>{aiAnalysis.structure}</p>
+                        </div>
+                      </div>
+
+                      <div className="ms-ai-report__lists">
+                        <div>
+                          <strong><i className="fas fa-check-circle" /> Points forts</strong>
+                          <ul>{(aiAnalysis.points_forts || []).map((p, i) => <li key={i}>{p}</li>)}</ul>
+                        </div>
+                        <div>
+                          <strong><i className="fas fa-lightbulb" /> Axes d'amélioration</strong>
+                          <ul>{(aiAnalysis.axes_amelioration || []).map((a, i) => <li key={i}>{a}</li>)}</ul>
+                        </div>
+                        <div>
+                          <strong><i className="fas fa-users" /> Auteurs comparables</strong>
+                          <ul>{(aiAnalysis.auteurs_comparables || []).map((a, i) => <li key={i}>{a}</li>)}</ul>
+                        </div>
+                      </div>
+
+                      <div className="ms-ai-report__verdict">
+                        <strong><i className="fas fa-gavel" /> Verdict</strong>
+                        <p>{aiAnalysis.verdict}</p>
+                      </div>
+
+                      {/* AI Publisher Recommendations */}
+                      <div className="ms-ai-report__publishers">
+                        {!pubRecommendations ? (
+                          <button
+                            className="dashboard-btn dashboard-btn--secondary"
+                            style={{ marginTop: 12 }}
+                            disabled={pubLoading}
+                            onClick={async () => {
+                              setPubLoading(true);
+                              try {
+                                const data = await aiService.recommendPublishers(selected.id);
+                                setPubRecommendations(data.recommendations || []);
+                              } catch (e) {
+                                toast.error(e?.response?.data?.error || 'Erreur lors de la recommandation.');
+                              }
+                              setPubLoading(false);
+                            }}
+                          >
+                            {pubLoading
+                              ? <><i className="fas fa-spinner fa-spin" /> Recherche d'éditeurs...</>
+                              : <><i className="fas fa-building" /> Trouver des éditeurs compatibles (IA)</>
+                            }
+                          </button>
+                        ) : pubRecommendations.length > 0 ? (
+                          <div className="ms-pub-results">
+                            <strong className="ms-pub-results__title"><i className="fas fa-building" /> Éditeurs recommandés</strong>
+                            {pubRecommendations.map((r, i) => (
+                              <div key={i} className="ms-pub-card">
+                                <div className="ms-pub-card__header">
+                                  <span className="ms-pub-card__name">{r.publisher?.name || `Éditeur #${r.org_id}`}</span>
+                                  {r.publisher?.is_verified && <span className="ms-pub-card__verified" title="Vérifié"><i className="fas fa-check-circle" /></span>}
+                                  {r.compatibility != null && (
+                                    <span className="ms-pub-card__score" style={{color: r.compatibility >= 0.7 ? 'var(--fl-success)' : r.compatibility >= 0.4 ? '#f59e0b' : 'var(--fl-text-muted)'}}>
+                                      {Math.round(r.compatibility * 100)}%
+                                    </span>
+                                  )}
+                                </div>
+                                {r.publisher?.short_description && <p className="ms-pub-card__desc">{r.publisher.short_description}</p>}
+                                <p className="ms-pub-card__reason"><i className="fas fa-comment-dots" /> {r.reason}</p>
+                                <div className="ms-pub-card__meta">
+                                  {r.publisher?.avg_rating && <span><i className="fas fa-star" /> {r.publisher.avg_rating}</span>}
+                                  {r.publisher?.response_time_days && <span><i className="fas fa-clock" /> ~{r.publisher.response_time_days}j</span>}
+                                  {r.publisher?.city && <span><i className="fas fa-map-marker-alt" /> {r.publisher.city}</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p style={{ marginTop: 12, color: 'var(--fl-text-muted)', fontSize: 13 }}>
+                            <i className="fas fa-info-circle" /> Aucun éditeur compatible trouvé pour ce manuscrit.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* AI Similar Manuscripts Detection */}
+                      <div className="ms-ai-report__similar">
+                        {!similarData ? (
+                          <button
+                            className="dashboard-btn dashboard-btn--secondary"
+                            style={{ marginTop: 12 }}
+                            disabled={similarLoading}
+                            onClick={async () => {
+                              setSimilarLoading(true);
+                              try {
+                                const data = await aiService.similarManuscripts(selected.id);
+                                setSimilarData(data);
+                              } catch (e) {
+                                toast.error(e?.response?.data?.error || 'Erreur détection similarités.');
+                              }
+                              setSimilarLoading(false);
+                            }}
+                          >
+                            {similarLoading
+                              ? <><i className="fas fa-spinner fa-spin" /> Recherche de similarités...</>
+                              : <><i className="fas fa-clone" /> Détecter les similarités (IA)</>
+                            }
+                          </button>
+                        ) : (
+                          <div className="ms-similar-results">
+                            <strong className="ms-similar-results__title"><i className="fas fa-clone" /> Analyse de similarité</strong>
+
+                            <div className="ms-similar-results__summary">
+                              <div className="ms-similar-results__metric">
+                                <span className="ms-similar-results__label">Doublon ?</span>
+                                <strong style={{ color: similarData.is_duplicate ? '#e74c3c' : '#22c55e' }}>
+                                  {similarData.is_duplicate ? 'Oui' : 'Non'}
+                                </strong>
+                              </div>
+                              {similarData.originality_score != null && (
+                                <div className="ms-similar-results__metric">
+                                  <span className="ms-similar-results__label">Originalité</span>
+                                  <strong>{Math.round(similarData.originality_score * 100)}%</strong>
+                                </div>
+                              )}
+                            </div>
+
+                            {similarData.similar_books?.length > 0 && (
+                              <div className="ms-similar-results__list">
+                                <strong>Oeuvres similaires :</strong>
+                                {similarData.similar_books.map((s, i) => (
+                                  <div key={i} className="ms-similar-item">
+                                    <span className="ms-similar-item__title">
+                                      {s.book_id ? <a href={`/books/${s.book_id}`} target="_blank" rel="noreferrer">{s.title || `Livre #${s.book_id}`}</a> : (s.title || '?')}
+                                    </span>
+                                    {s.similarity != null && (
+                                      <span className="ms-similar-item__score" style={{ color: s.similarity >= 0.7 ? '#e74c3c' : s.similarity >= 0.4 ? '#f59e0b' : '#22c55e' }}>
+                                        {Math.round(s.similarity * 100)}%
+                                      </span>
+                                    )}
+                                    {s.explanation && <p className="ms-similar-item__explain">{s.explanation}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {selected.file_url && (
                   <button
                     type="button"

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import quoteService from '../../services/quoteService';
+import aiService from '../../services/aiService';
 import { handleApiError } from '../../services/api';
 import toast from 'react-hot-toast';
 import '../../styles/OrgBooks.css';
@@ -95,6 +96,7 @@ const QuoteCreate = () => {
   const [parentQuoteId, setParentQuoteId] = useState(null);
   const [sourceRef, setSourceRef] = useState('');
   const sourceFetched = useRef(false);
+  const [aiEstimating, setAiEstimating] = useState(false);
 
   // Pre-fill from source quote (révision)
   useEffect(() => {
@@ -423,6 +425,79 @@ const QuoteCreate = () => {
                 </small>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── AI Quote Estimation ── */}
+        {manuscriptId && (
+          <div style={{ marginBottom: '1rem' }}>
+            <button
+              type="button"
+              className="ob-ai-btn"
+              style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+              disabled={aiEstimating}
+              onClick={async () => {
+                setAiEstimating(true);
+                try {
+                  const result = await aiService.estimateQuote({
+                    manuscript_id: Number(manuscriptId),
+                    title,
+                    publishing_model: publishingModel,
+                  });
+
+                  // Construire les lots à partir de l'estimation IA
+                  const aiLots = [];
+                  if (result.editing_hours) {
+                    aiLots.push({
+                      name: 'Préparation éditoriale', order: 0,
+                      items: [
+                        { designation: 'Correction & relecture', description: '', unit: 'HEURE', quantity: result.editing_hours, unit_price: 15000, order: 0 },
+                      ],
+                    });
+                  }
+                  if (result.layout_hours) {
+                    aiLots.push({
+                      name: 'Mise en page & maquette', order: 1,
+                      items: [
+                        { designation: 'Mise en page intérieure', description: '', unit: 'HEURE', quantity: result.layout_hours, unit_price: 12000, order: 0 },
+                        { designation: 'Conception couverture', description: '', unit: 'FORFAIT', quantity: 1, unit_price: 75000, order: 1 },
+                      ],
+                    });
+                  }
+                  if (result.suggested_print_run && publishingModel !== 'NUMERIQUE_PUR') {
+                    const printUnitPrice = result.estimated_cost_fcfa
+                      ? Math.round((result.estimated_cost_fcfa * 0.4) / result.suggested_print_run)
+                      : 2500;
+                    aiLots.push({
+                      name: 'Impression & façonnage', order: 2,
+                      items: [
+                        { designation: 'Impression offset', description: '', unit: 'EXEMPLAIRE', quantity: result.suggested_print_run, unit_price: printUnitPrice, order: 0 },
+                      ],
+                    });
+                    if (!printRun) setPrintRun(String(result.suggested_print_run));
+                  }
+
+                  if (aiLots.length > 0) {
+                    setLots(aiLots);
+                    toast.success('Devis pré-rempli par l\'IA — ajustez les montants');
+                  } else {
+                    toast.error('Pas assez de données pour estimer');
+                  }
+
+                  if (result.reasoning) {
+                    toast(result.reasoning, { duration: 6000, icon: '🤖' });
+                  }
+                } catch (e) {
+                  toast.error(e?.response?.data?.error || 'Erreur estimation IA');
+                }
+                setAiEstimating(false);
+              }}
+            >
+              {aiEstimating
+                ? <><i className="fas fa-spinner fa-spin" /> Estimation en cours...</>
+                : <><i className="fas fa-robot" /> Pré-remplir avec l'IA</>
+              }
+            </button>
           </div>
         )}
 
