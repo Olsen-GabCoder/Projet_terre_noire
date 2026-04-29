@@ -6,10 +6,11 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import NotificationCenter from './NotificationCenter';
+import BrandLogo from './BrandLogo';
+import useSpeechRecognition from '../hooks/useSpeechRecognition';
+import CurrencyToggle from './CurrencyToggle';
 import '../styles/Header.css';
-
-// Logo : placer le fichier logo_frollot.png dans public/images/
-const LOGO_SRC = '/images/logo_frollot.png';
+import '../styles/HeaderFooterOverride.css';
 
 const Header = () => {
   const { t, i18n } = useTranslation();
@@ -86,6 +87,15 @@ const Header = () => {
       setActiveItem(active.label);
     }
   }, [location.pathname]);
+
+  const { listening, supported: speechSupported, startListening, stopListening } = useSpeechRecognition({
+    lang: i18n.language === 'en' ? 'en-US' : 'fr-FR',
+    onResult: (text) => {
+      setSearchQuery(text);
+      navigate(`/search?q=${encodeURIComponent(text)}`);
+      setMobileMenuOpen(false);
+    },
+  });
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -208,24 +218,7 @@ const Header = () => {
       <div className="mobile-menu-container">
         <div className="mobile-menu-header">
           <div className="mobile-menu-logo">
-            <div className="brand-logo-ring" style={{ width: 40, height: 40, padding: 2 }}>
-              <div className="brand-logo">
-                <img
-                  src={LOGO_SRC}
-                  alt="Frollot"
-                  className="brand-logo-img"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    const fallback = e.target.nextElementSibling;
-                    if (fallback) fallback.classList.add('show');
-                  }}
-                />
-                <span className="brand-logo-fallback" aria-hidden="true">
-                  <i className="fas fa-book-open"></i>
-                </span>
-              </div>
-            </div>
-            <span className="mobile-logo-name">Frollot</span>
+            <BrandLogo size="lg" />
           </div>
           <button 
             className="mobile-menu-close" 
@@ -279,6 +272,16 @@ const Header = () => {
                   aria-label={t('header.clearSearch')}
                 >
                   <i className="fas fa-times"></i>
+                </button>
+              )}
+              {speechSupported && (
+                <button
+                  type="button"
+                  className={`mobile-search-mic ${listening ? 'mobile-search-mic--active' : ''}`}
+                  onClick={listening ? stopListening : startListening}
+                  aria-label={listening ? 'Arrêter' : 'Recherche vocale'}
+                >
+                  <i className={`fas fa-${listening ? 'stop-circle' : 'microphone'}`} />
                 </button>
               )}
               <button type="submit" className="mobile-search-btn" aria-label={t('common.search')}>
@@ -447,27 +450,7 @@ const Header = () => {
       <nav className={`navbar-modern ${scrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
           <Link to="/" className="brand-modern" onClick={closeAllMenus} aria-label={`${t('common.frollot')} - ${t('nav.home')}`}>
-            <div className="brand-logo-ring">
-              <div className="brand-logo">
-                <img
-                  src={LOGO_SRC}
-                  alt="Frollot"
-                  className="brand-logo-img"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    const fallback = e.target.nextElementSibling;
-                    if (fallback) fallback.classList.add('show');
-                  }}
-                />
-                <span className="brand-logo-fallback" aria-hidden="true">
-                  <i className="fas fa-book-open"></i>
-                </span>
-              </div>
-            </div>
-            <div className="brand-text">
-              <span className="brand-name">Frollot</span>
-              <span className="brand-tagline">{t('common.tagline')}</span>
-            </div>
+            <BrandLogo />
           </Link>
 
           <div className="header-right-mobile">
@@ -541,12 +524,23 @@ const Header = () => {
                       <i className="fas fa-times"></i>
                     </button>
                   )}
+                  {speechSupported && (
+                    <button
+                      type="button"
+                      className={`search-expand__mic ${listening ? 'search-expand__mic--active' : ''}`}
+                      onClick={listening ? stopListening : startListening}
+                      aria-label={listening ? 'Arrêter' : 'Recherche vocale'}
+                    >
+                      <i className={`fas fa-${listening ? 'stop-circle' : 'microphone'}`} />
+                    </button>
+                  )}
                   <button type="submit" className="search-expand__submit" aria-label={t('common.search')}>
                     <i className="fas fa-arrow-right"></i>
                   </button>
                 </div>
               </form>
 
+              <CurrencyToggle />
               <button className="theme-toggle" onClick={cycleTheme} aria-label={t('header.themeLabel', { theme: themeLabel })} title={t('header.themeLabel', { theme: themeLabel })}>
                 <i className={themeIcon}></i>
               </button>

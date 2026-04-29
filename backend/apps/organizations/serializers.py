@@ -84,7 +84,7 @@ class OrganizationListSerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             'id', 'name', 'slug', 'org_type', 'org_type_display',
-            'logo', 'city', 'country', 'is_verified', 'member_count', 'created_at',
+            'logo', 'city', 'country', 'latitude', 'longitude', 'is_verified', 'member_count', 'created_at',
         ]
         read_only_fields = ['id', 'slug', 'is_verified', 'created_at']
 
@@ -100,7 +100,7 @@ class OrganizationDirectorySerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             'id', 'name', 'slug', 'org_type', 'org_type_display',
-            'logo', 'description', 'short_description', 'city', 'country',
+            'logo', 'description', 'short_description', 'city', 'country', 'latitude', 'longitude',
             'founding_year', 'languages',
             'is_verified', 'is_accepting_manuscripts',
             'accepted_genres', 'specialties',
@@ -114,6 +114,7 @@ class OrganizationStorefrontSerializer(serializers.ModelSerializer):
     """Vitrine publique complète d'une organisation."""
     org_type_display = serializers.CharField(source='get_org_type_display', read_only=True)
     owner_name = serializers.CharField(source='owner.get_full_name', read_only=True)
+    owner_slug = serializers.CharField(source='owner.slug', read_only=True)
     member_count = serializers.SerializerMethodField()
     book_count = serializers.SerializerMethodField()
 
@@ -122,7 +123,7 @@ class OrganizationStorefrontSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'org_type', 'org_type_display',
             'description', 'short_description', 'logo', 'cover_image',
-            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country',
+            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country', 'latitude', 'longitude',
             'social_links', 'business_hours', 'payment_methods',
             'founding_year', 'languages',
             'is_verified', 'is_accepting_manuscripts',
@@ -131,7 +132,7 @@ class OrganizationStorefrontSerializer(serializers.ModelSerializer):
             'editorial_line', 'target_audience',
             'type_specific_data',
             'avg_rating', 'review_count', 'avg_response_days',
-            'owner_name', 'member_count', 'book_count',
+            'owner_name', 'owner_slug', 'member_count', 'book_count',
             'created_at',
         ]
 
@@ -169,7 +170,7 @@ class OrganizationDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'org_type', 'org_type_display', 'description', 'short_description',
             'logo', 'cover_image', 'founding_year', 'languages',
-            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country',
+            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country', 'latitude', 'longitude',
             'social_links', 'business_hours', 'payment_methods',
             'is_accepting_manuscripts', 'accepted_genres', 'accepted_languages',
             'specialties', 'submission_guidelines', 'response_time_days',
@@ -191,7 +192,7 @@ class OrganizationCreateSerializer(JSONFieldMixin, serializers.ModelSerializer):
         fields = [
             'name', 'org_type', 'description', 'short_description',
             'logo', 'cover_image', 'founding_year', 'languages',
-            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country',
+            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country', 'latitude', 'longitude',
             'social_links', 'business_hours', 'payment_methods',
             'accepted_genres', 'accepted_languages', 'submission_guidelines', 'is_accepting_manuscripts',
             'specialties', 'response_time_days', 'required_documents', 'simultaneous_submissions',
@@ -216,7 +217,7 @@ class OrganizationUpdateSerializer(JSONFieldMixin, serializers.ModelSerializer):
         fields = [
             'name', 'description', 'short_description',
             'logo', 'cover_image', 'founding_year', 'languages',
-            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country',
+            'email', 'phone_number', 'whatsapp', 'website', 'address', 'po_box', 'city', 'country', 'latitude', 'longitude',
             'social_links', 'business_hours', 'payment_methods',
             'accepted_genres', 'accepted_languages', 'submission_guidelines', 'is_accepting_manuscripts',
             'specialties', 'response_time_days', 'required_documents', 'simultaneous_submissions',
@@ -290,11 +291,12 @@ class InvitationResponseSerializer(serializers.Serializer):
 
 class OrganizationReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    user_slug = serializers.CharField(source='user.slug', read_only=True)
 
     class Meta:
         model = OrganizationReview
         fields = [
-            'id', 'user', 'user_name', 'organization',
+            'id', 'user', 'user_name', 'user_slug', 'organization',
             'rating', 'comment', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'user', 'organization', 'created_at', 'updated_at']

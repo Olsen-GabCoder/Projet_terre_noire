@@ -8,6 +8,7 @@ import { authAPI } from '../services/api';
 import aiService from '../services/aiService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SEO from '../components/SEO';
+import CountryFlag from '../components/CountryFlag';
 import '../styles/UnifiedProfile.css';
 
 const DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -107,7 +108,7 @@ const UnifiedProfile = () => {
             </div>
             <div className="p-hero-meta">
               {(profile.city || profile.country) && (
-                <span><i className="fas fa-map-marker-alt" /> {[profile.city, profile.country].filter(Boolean).join(', ')}</span>
+                <span><CountryFlag country={profile.country} size={16} /> <i className="fas fa-map-marker-alt" /> {[profile.city, profile.country].filter(Boolean).join(', ')}</span>
               )}
               {profile.city && <span className="p-hero-dot" />}
               <span>{t('profile.memberSince', 'Membre depuis')} {new Date(profile.date_joined).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}</span>

@@ -11,6 +11,8 @@ import analyticsService from '../services/analyticsService';
 import aiService from '../services/aiService';
 import SEO from '../components/SEO';
 import BookCard from '../components/BookCard';
+import LocationMap from '../components/LocationMap';
+import CountryFlag from '../components/CountryFlag';
 import toast from 'react-hot-toast';
 import '../styles/OrganizationDetail.css';
 
@@ -390,7 +392,7 @@ const OrganizationDetail = () => {
             </div>
             <div className="od-profile__meta">
               <span className="od-profile__type"><i className={orgIcon} /> {org.org_type_display}</span>
-              {org.city && <span><i className="fas fa-map-marker-alt" /> {org.city}{org.country ? `, ${org.country}` : ''}</span>}
+              {org.city && <span><CountryFlag country={org.country} size={16} /> <i className="fas fa-map-marker-alt" /> {org.city}{org.country ? `, ${org.country}` : ''}</span>}
               {org.founding_year && <span><i className="fas fa-calendar" /> {t('pages.orgDetail.since', 'Depuis')} {org.founding_year}</span>}
               {org.member_count > 0 && <span><i className="fas fa-users" /> {org.member_count} {t('pages.orgDetail.member', 'membre')}{org.member_count > 1 ? 's' : ''}</span>}
             </div>
@@ -553,6 +555,11 @@ const OrganizationDetail = () => {
                 {org.website && <a href={org.website} target="_blank" rel="noopener noreferrer"><i className="fas fa-globe" /> {org.website}</a>}
                 {org.address && <p><i className="fas fa-map-marker-alt" /> {org.address}{org.po_box ? ` — ${org.po_box}` : ''}</p>}
               </div>
+              {org.latitude && org.longitude && (
+                <div className="od-map">
+                  <LocationMap lat={parseFloat(org.latitude)} lng={parseFloat(org.longitude)} height="200px" />
+                </div>
+              )}
             </div>
 
             {/* L3 gauche — Mission / Ligne éditoriale */}

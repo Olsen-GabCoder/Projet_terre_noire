@@ -5,8 +5,10 @@ import socialService from '../services/socialService';
 import bookService from '../services/bookService';
 import { handleApiError } from '../services/api';
 import SEO from '../components/SEO';
+import UnsplashPicker from '../components/UnsplashPicker';
 import toast from 'react-hot-toast';
 import '../styles/BookClubs.css';
+import '../styles/UnsplashPicker.css';
 
 const CATEGORIES = [
   { value: 'GENERAL', label: 'Général', icon: 'fas fa-book-open' },
@@ -193,6 +195,18 @@ const BookClubCreate = () => {
             <div className="club-create__avatar-text">
               <span>Photo du club</span>
               <small>JPG, PNG — max 5 MB</small>
+              <UnsplashPicker
+                buttonLabel="Chercher sur Unsplash"
+                defaultQuery="book club reading"
+                onSelect={(file, url) => {
+                  if (file) {
+                    setCoverFile(file);
+                    setCoverPreview(URL.createObjectURL(file));
+                  } else if (url) {
+                    setCoverPreview(url);
+                  }
+                }}
+              />
             </div>
           </div>
 

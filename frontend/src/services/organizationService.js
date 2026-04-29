@@ -1,6 +1,10 @@
 import api from './api';
 
 const organizationService = {
+  // Géocodage & carte
+  geocode: (query) => api.get('/organizations/geocode/', { params: { q: query } }).then(r => r.data),
+  nearby: (lat, lon, type = '') => api.get('/organizations/nearby/', { params: { lat, lon, type } }).then(r => r.data),
+
   // Annuaire — liste filtrable
   getDirectory: (params) => api.get('/organizations/directory/', { params }),
 

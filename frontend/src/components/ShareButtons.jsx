@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import analyticsService from '../services/analyticsService';
 import '../styles/ShareButtons.css';
 
 const ShareButtons = ({ book }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   if (!book) return null;
 
@@ -98,6 +100,7 @@ const ShareButtons = ({ book }) => {
             style={{ '--share-color': ch.color }}
             aria-label={`${t('share.shareOn')} ${ch.name}`}
             title={ch.name}
+            onClick={() => analyticsService.trackShare(book.id, ch.name.toLowerCase())}
           >
             <i className={ch.icon} />
           </a>
@@ -122,7 +125,58 @@ const ShareButtons = ({ book }) => {
             <i className="fas fa-ellipsis" />
           </button>
         )}
+        <button
+          type="button"
+          className={`share-btn share-btn--qr ${showQR ? 'share-btn--qr-active' : ''}`}
+          onClick={() => setShowQR(q => !q)}
+          aria-label="QR Code"
+          title="QR Code"
+        >
+          <i className="fas fa-qrcode" />
+        </button>
       </div>
+      {showQR && (() => {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}&bgcolor=F7F5F0&color=A04A2A&margin=12&format=png`;
+        const handleDownload = async () => {
+          try {
+            const resp = await fetch(qrUrl);
+            const blob = await resp.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `frollot-qr-${(book.title || 'page').replace(/\s+/g, '-').slice(0, 30)}.png`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          } catch {
+            window.open(qrUrl, '_blank');
+          }
+        };
+        const handleShareQR = async () => {
+          if (navigator.share) {
+            try {
+              const resp = await fetch(qrUrl);
+              const blob = await resp.blob();
+              const file = new File([blob], 'frollot-qr.png', { type: 'image/png' });
+              await navigator.share({ title: `QR — ${title}`, files: [file] });
+            } catch { /* cancelled */ }
+          }
+        };
+        return (
+          <div className="share-qr">
+            <img src={qrUrl} alt={`QR Code — ${title}`} className="share-qr__img" width={200} height={200} />
+            <p className="share-qr__hint">{t('share.scanQR', 'Scannez pour accéder à cette page')}</p>
+            <div className="share-qr__actions">
+              <button type="button" className="share-qr__btn" onClick={handleDownload}>
+                <i className="fas fa-download" /> {t('share.downloadQR', 'Télécharger')}
+              </button>
+              {typeof navigator !== 'undefined' && navigator.share && (
+                <button type="button" className="share-qr__btn" onClick={handleShareQR}>
+                  <i className="fas fa-share-alt" /> {t('share.shareQR', 'Partager')}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

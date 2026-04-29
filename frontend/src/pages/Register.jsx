@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import SocialLoginButtons from '../components/SocialLoginButtons';
 import PasswordStrengthMeter from '../components/PasswordStrengthMeter';
+import PasswordBreachAlert from '../components/PasswordBreachAlert';
+import usePasswordCheck from '../hooks/usePasswordCheck';
 import PageHero from '../components/PageHero';
 import '../styles/Register.css';
 import SEO from '../components/SEO';
@@ -27,6 +29,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const { breachCount, checking: breachChecking, checkPassword } = usePasswordCheck();
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -44,6 +47,7 @@ const Register = () => {
       setFieldErrors(prev => ({ ...prev, [name]: '' }));
     }
     if (error) setError('');
+    if (name === 'password') checkPassword(value);
   };
 
   const validateForm = () => {
@@ -314,6 +318,7 @@ const Register = () => {
                 </div>
                 {fieldErrors.password && <span className="reg-err" aria-live="polite">{fieldErrors.password}</span>}
                 <PasswordStrengthMeter password={formData.password} />
+                <PasswordBreachAlert breachCount={breachCount} checking={breachChecking} />
               </div>
 
               <div className="reg-field">

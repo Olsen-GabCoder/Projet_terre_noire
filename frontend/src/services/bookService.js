@@ -2,8 +2,9 @@
 import api from './api';
 
 const bookService = {
-  // ============ ISBN LOOKUP ============
+  // ============ ISBN LOOKUP & ENRICHMENT ============
   isbnLookup: (isbn) => api.get(`/books/isbn-lookup/${isbn}/`).then(r => r.data),
+  wikipediaBio: (name) => api.get(`/authors/wikipedia-bio/${encodeURIComponent(name)}/`).then(r => r.data),
 
   // ============ BOOKS ============
   

@@ -6,6 +6,7 @@ from rest_framework.decorators import action, api_view, permission_classes as pe
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg, Sum, Q, F, Exists, OuterRef, Prefetch
@@ -848,9 +849,139 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-# ─── ISBN Lookup (Google Books + Open Library) ─────────────────────
+# ─── Wikipedia Author Bio ─────────────────────────────────────────
 
-from rest_framework.views import APIView
+class WikipediaAuthorView(APIView):
+    """Récupère bio + photo d'un auteur depuis Wikipedia FR/EN."""
+    permission_classes = [IsAuthenticated]
+
+    WIKI_HEADERS = {'User-Agent': 'Frollot/1.0 (contact@frollot.com)'}
+    SENTENCES = 10  # ~1000 caractères
+
+    def _search_wiki(self, lang, name):
+        """Cherche un auteur sur Wikipedia et retourne bio + photo."""
+        import requests as http_requests
+
+        base = f'https://{lang}.wikipedia.org/w/api.php'
+        try:
+            search = http_requests.get(base, headers=self.WIKI_HEADERS, params={
+                'action': 'query', 'list': 'search',
+                'srsearch': name, 'srlimit': 3, 'format': 'json',
+            }, timeout=8)
+            if search.status_code != 200:
+                return None, None
+
+            results = search.json().get('query', {}).get('search', [])
+            page_title = None
+            name_lower = name.lower()
+            for r in results:
+                if any(p in r.get('title', '').lower() for p in name_lower.split() if len(p) > 3):
+                    page_title = r['title']
+                    break
+            if not page_title and results:
+                page_title = results[0]['title']
+            if not page_title:
+                return None, None
+
+            detail = http_requests.get(base, headers=self.WIKI_HEADERS, params={
+                'action': 'query', 'titles': page_title,
+                'prop': 'extracts|pageimages',
+                'exintro': True, 'explaintext': True,
+                'exsentences': self.SENTENCES,
+                'piprop': 'original', 'format': 'json',
+            }, timeout=8)
+            if detail.status_code != 200:
+                return None, None
+
+            pages = detail.json().get('query', {}).get('pages', {})
+            for page in pages.values():
+                bio = page.get('extract', '')
+                photo = page.get('original', {}).get('source', '')
+                return bio[:1500] if bio else None, photo or None
+        except Exception:
+            pass
+        return None, None
+
+    def get(self, request, name):
+        cache_key = f"wiki_author:{name[:60].lower()}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        # Essayer FR d'abord, puis EN
+        bio, photo = self._search_wiki('fr', name)
+        if not bio:
+            bio_en, photo_en = self._search_wiki('en', name)
+            bio = bio_en or ''
+            photo = photo or photo_en or ''
+
+        result = {
+            'name': name,
+            'biography': bio or '',
+            'photo_url': photo or '',
+        }
+        cache.set(cache_key, result, timeout=604800)
+        return Response(result)
+
+
+# ─── Unsplash Image Search ─────────────────────────────────────────
+
+
+class UnsplashSearchView(APIView):
+    """Recherche d'images Unsplash (proxy pour cacher la clé API)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        import requests as http_requests
+
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({'error': 'Paramètre q requis'}, status=400)
+
+        access_key = getattr(settings, 'UNSPLASH_ACCESS_KEY', '')
+        if not access_key:
+            return Response({'error': 'Unsplash non configuré'}, status=503)
+
+        cache_key = f"unsplash:{query[:50].lower()}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        try:
+            resp = http_requests.get(
+                'https://api.unsplash.com/search/photos',
+                headers={'Authorization': f'Client-ID {access_key}'},
+                params={
+                    'query': query,
+                    'per_page': 12,
+                    'orientation': 'landscape',
+                },
+                timeout=10,
+            )
+            if resp.status_code != 200:
+                return Response({'error': 'Unsplash indisponible'}, status=502)
+
+            data = resp.json()
+            results = []
+            for photo in data.get('results', []):
+                results.append({
+                    'id': photo['id'],
+                    'thumb': photo['urls']['thumb'],
+                    'small': photo['urls']['small'],
+                    'regular': photo['urls']['regular'],
+                    'alt': photo.get('alt_description', ''),
+                    'author': photo['user']['name'],
+                    'author_url': photo['user']['links']['html'],
+                })
+
+            result = {'results': results, 'total': data.get('total', 0)}
+            cache.set(cache_key, result, timeout=3600)
+            return Response(result)
+        except Exception:
+            return Response({'error': 'Erreur Unsplash'}, status=502)
+
+
+# ─── ISBN Lookup (Google Books + Open Library) ─────────────────────
 
 
 class ISBNLookupView(APIView):

@@ -72,6 +72,54 @@
   --share-color: var(--color-gray-500);
 }
 
+/* QR Code */
+.share-btn--qr { --share-color: var(--fl-accent, #a04a2a); }
+.share-btn--qr-active {
+  background: var(--fl-accent, #a04a2a) !important;
+  color: #fff !important;
+}
+.share-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--fl-bg-subtle, #f7f5f0);
+  border: 1px solid var(--fl-border, #e5e2da);
+  border-radius: 10px;
+}
+.share-qr__img {
+  border-radius: 6px;
+}
+.share-qr__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--fl-text-muted, #8a857e);
+  text-align: center;
+}
+.share-qr__actions {
+  display: flex;
+  gap: 8px;
+}
+.share-qr__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid var(--fl-border-strong, #d5d0c8);
+  border-radius: 6px;
+  background: var(--fl-bg-elev, #fff);
+  color: var(--fl-accent, #a04a2a);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.share-qr__btn:hover {
+  background: var(--fl-bg-hover, #efe9e0);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .share-buttons {

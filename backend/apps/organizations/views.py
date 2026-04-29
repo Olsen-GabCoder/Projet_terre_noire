@@ -309,6 +309,7 @@ class OrganizationBookCreateView(APIView):
                     available_copies=total,
                     allows_digital_loan=request.data.get('allows_digital_loan', 'false').lower() == 'true',
                     max_loan_days=int(request.data.get('max_loan_days', 21)),
+                    consultation_only=request.data.get('consultation_only', 'false').lower() == 'true',
                 )
                 msg = f'Livre « {book.title} » ajouté au catalogue.'
 
@@ -662,6 +663,7 @@ class OrganizationCatalogView(APIView):
                     'in_stock': ci.available_copies > 0,
                     'allows_digital_loan': ci.allows_digital_loan,
                     'max_loan_days': ci.max_loan_days,
+                    'consultation_only': ci.consultation_only,
                 }
                 for ci in items
                 if ci.book.available
@@ -726,6 +728,7 @@ class OrganizationTeamView(APIView):
             {
                 'id': m.id,
                 'user_name': m.user.get_full_name(),
+                'user_slug': m.user.slug,
                 'role': m.role,
                 'role_display': m.get_role_display(),
                 'avatar': request.build_absolute_uri(m.user.profile_image.url) if m.user.profile_image else None,
@@ -1076,3 +1079,87 @@ class ServiceRecommendationsView(APIView):
             for item in qs
         ]
         return Response(data)
+
+
+class GeocodingView(APIView):
+    """Géocode une adresse via Nominatim (OpenStreetMap) — gratuit, sans clé API."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    NOMINATIM_HEADERS = {'User-Agent': 'Frollot/1.0 (contact@frollot.com)'}
+
+    def get(self, request):
+        import requests as http_requests
+        from django.core.cache import cache
+
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({'error': 'Paramètre q requis'}, status=400)
+
+        cache_key = f"geocode:{query[:80].lower()}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        try:
+            resp = http_requests.get(
+                'https://nominatim.openstreetmap.org/search',
+                headers=self.NOMINATIM_HEADERS,
+                params={
+                    'q': query,
+                    'format': 'json',
+                    'limit': 5,
+                    'addressdetails': 1,
+                },
+                timeout=10,
+            )
+            if resp.status_code != 200:
+                return Response({'error': 'Service de géocodage indisponible'}, status=502)
+
+            results = []
+            for r in resp.json():
+                results.append({
+                    'lat': float(r['lat']),
+                    'lon': float(r['lon']),
+                    'display_name': r.get('display_name', ''),
+                    'city': r.get('address', {}).get('city') or r.get('address', {}).get('town') or r.get('address', {}).get('village', ''),
+                    'country': r.get('address', {}).get('country', ''),
+                })
+
+            result = {'results': results}
+            cache.set(cache_key, result, timeout=604800)
+            return Response(result)
+        except Exception:
+            return Response({'error': 'Erreur de géocodage'}, status=502)
+
+
+class NearbyOrganizationsView(APIView):
+    """Trouve les organisations proches d'un point GPS."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from decimal import Decimal
+
+        try:
+            lat = Decimal(request.query_params.get('lat', '0'))
+            lon = Decimal(request.query_params.get('lon', '0'))
+        except Exception:
+            return Response({'error': 'lat/lon invalides'}, status=400)
+
+        if lat == 0 and lon == 0:
+            return Response({'error': 'lat/lon requis'}, status=400)
+
+        radius = Decimal(request.query_params.get('radius', '0.5'))
+        org_type = request.query_params.get('type', '')
+
+        qs = Organization.objects.filter(
+            is_active=True,
+            latitude__isnull=False, longitude__isnull=False,
+            latitude__gte=lat - radius, latitude__lte=lat + radius,
+            longitude__gte=lon - radius, longitude__lte=lon + radius,
+        )
+        if org_type:
+            qs = qs.filter(org_type=org_type)
+
+        from apps.organizations.serializers import OrganizationListSerializer
+        serializer = OrganizationListSerializer(qs[:20], many=True)
+        return Response(serializer.data)

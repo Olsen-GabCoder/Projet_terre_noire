@@ -34,6 +34,14 @@ class Organization(models.Model):
     address = models.TextField(blank=True, verbose_name="Adresse")
     city = models.CharField(max_length=100, blank=True, verbose_name="Ville")
     country = models.CharField(max_length=100, default="Gabon", verbose_name="Pays")
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        verbose_name="Latitude",
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+        verbose_name="Longitude",
+    )
 
     # Frollot Connect — Vitrine & Annuaire
     accepted_genres = models.JSONField(

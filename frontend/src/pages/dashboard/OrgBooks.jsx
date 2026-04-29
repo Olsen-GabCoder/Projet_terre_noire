@@ -64,6 +64,7 @@ const OrgBooks = () => {
   const [stockPrediction, setStockPrediction] = useState(null); // { bookId, data }
   const [stockPredicting, setStockPredicting] = useState(null); // bookId
   const [isbnLoading, setIsbnLoading] = useState(false);
+  const [wikiLoading, setWikiLoading] = useState(false);
 
   const canManage = hasOrgRole(Number(orgId), 'PROPRIETAIRE') || hasOrgRole(Number(orgId), 'ADMINISTRATEUR') || hasOrgRole(Number(orgId), 'EDITEUR');
 
@@ -210,6 +211,23 @@ const OrgBooks = () => {
 
   const handleCreateAuthor = async () => {
     if (!newAuthor.full_name.trim()) return;
+    // Vérification doublon avant création
+    const q = newAuthor.full_name.trim().toLowerCase();
+    const existing = authors.find(a => a.full_name?.toLowerCase() === q);
+    if (existing) {
+      const confirmed = window.confirm(
+        `Un auteur « ${existing.full_name} » existe déjà sur Frollot.\n\n` +
+        `Voulez-vous quand même créer un nouvel auteur ?\n` +
+        `(Cliquez "Annuler" pour utiliser l'auteur existant)`
+      );
+      if (!confirmed) {
+        setForm(f => ({ ...f, author: String(existing.id) }));
+        setAuthorSearch(existing.full_name);
+        closeAuthorModal();
+        toast.success(`Auteur « ${existing.full_name} » sélectionné`);
+        return;
+      }
+    }
     setCreatingAuthor(true);
     try {
       const fd = new FormData();
@@ -618,9 +636,84 @@ const OrgBooks = () => {
               <div className="ob-modal__field">
                 <label>{t('dashboard.orgBooks.authorName', 'Nom complet')} *</label>
                 <input type="text" name="full_name" value={newAuthor.full_name} onChange={handleAuthorFieldChange} autoFocus placeholder="Ex: Fatou Diome" />
+                {/* Détection de doublon */}
+                {newAuthor.full_name.trim().length >= 3 && (() => {
+                  const q = newAuthor.full_name.trim().toLowerCase();
+                  const matches = authors.filter(a => a.full_name?.toLowerCase().includes(q) || q.includes(a.full_name?.toLowerCase()));
+                  if (matches.length === 0) return null;
+                  return (
+                    <div className="ob-modal__duplicate-warn">
+                      <div className="ob-modal__duplicate-header">
+                        <i className="fas fa-exclamation-triangle" /> Auteur(s) similaire(s) déjà sur Frollot :
+                      </div>
+                      {matches.slice(0, 3).map(a => (
+                        <div key={a.id} className="ob-modal__duplicate-item">
+                          <div className="ob-modal__duplicate-info">
+                            {a.photo && <img src={a.photo} alt="" className="ob-modal__duplicate-photo" />}
+                            <div>
+                              <strong>{a.full_name}</strong>
+                              {a.biography && <p>{a.biography.slice(0, 80)}...</p>}
+                              <small>{a.books_count || 0} livre(s) sur Frollot</small>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="ob-modal__duplicate-use"
+                            onClick={() => {
+                              setForm(f => ({ ...f, author: String(a.id) }));
+                              setAuthorSearch(a.full_name);
+                              closeAuthorModal();
+                              toast.success(`Auteur « ${a.full_name} » sélectionné`);
+                            }}
+                          >
+                            <i className="fas fa-check" /> Utiliser
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
               <div className="ob-modal__field">
                 <label>{t('dashboard.orgBooks.authorBio', 'Biographie')}</label>
+                <button
+                  type="button"
+                  className="ob-ai-btn ob-wiki-btn"
+                  disabled={wikiLoading || !newAuthor.full_name.trim()}
+                  onClick={async () => {
+                    setWikiLoading(true);
+                    try {
+                      const wiki = await bookService.wikipediaBio(newAuthor.full_name.trim());
+                      if (wiki.biography) {
+                        setNewAuthor(a => ({ ...a, biography: wiki.biography }));
+                        toast.success('Biographie Wikipedia récupérée');
+                      } else {
+                        toast.error('Aucune bio trouvée sur Wikipedia');
+                      }
+                      if (wiki.photo_url && !newAuthor.photo) {
+                        try {
+                          const resp = await fetch(wiki.photo_url);
+                          if (resp.ok) {
+                            const blob = await resp.blob();
+                            if (blob.size > 2000) {
+                              const file = new File([blob], `${newAuthor.full_name.trim()}.jpg`, { type: blob.type || 'image/jpeg' });
+                              setNewAuthor(a => ({ ...a, photo: file }));
+                              setNewAuthorPhotoPreview(URL.createObjectURL(file));
+                            }
+                          }
+                        } catch { /* photo optionnelle */ }
+                      }
+                    } catch {
+                      toast.error('Erreur Wikipedia');
+                    }
+                    setWikiLoading(false);
+                  }}
+                >
+                  {wikiLoading
+                    ? <><i className="fas fa-spinner fa-spin" /> Wikipedia...</>
+                    : <><i className="fab fa-wikipedia-w" /> Enrichir via Wikipedia</>
+                  }
+                </button>
                 <textarea name="biography" value={newAuthor.biography} onChange={handleAuthorFieldChange} rows={4} placeholder="Quelques lignes sur l'auteur..." />
               </div>
               <div className="ob-modal__field">

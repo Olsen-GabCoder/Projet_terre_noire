@@ -38,6 +38,10 @@ urlpatterns = [
     # Vitrine publique des modèles de devis éditoriaux
     path('<int:org_id>/quote-templates/public/', PublicQuoteTemplateListView.as_view(), name='org-public-quote-templates'),
 
+    # Géocodage & carte
+    path('geocode/', views.GeocodingView.as_view(), name='geocode'),
+    path('nearby/', views.NearbyOrganizationsView.as_view(), name='nearby'),
+
     # CRUD organisations (router)
     path('', include(router.urls)),
 ]

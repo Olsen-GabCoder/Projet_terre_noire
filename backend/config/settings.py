@@ -53,6 +53,7 @@ except ImportError:
     pass
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -84,6 +85,8 @@ INSTALLED_APPS = [
     'apps.social',
     'apps.services',
     'apps.library',
+    'apps.analytics',
+    'apps.ai',
 
     # EXTENSIONS
     'django_extensions',
@@ -261,6 +264,24 @@ else:
 CACHE_DELIVERY_TTL = 600  # 10 min pour la config livraison
 CACHE_BOOKS_TTL = 300     # 5 min pour les listes de livres
 
+# ASGI + Django Channels (WebSocket)
+ASGI_APPLICATION = 'config.asgi.application'
+
+_channel_redis = os.getenv('CHANNEL_LAYERS_REDIS', _cache_url or '')
+if _channel_redis and _channel_redis.startswith('redis://'):
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [_channel_redis]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    }
+
 # Configuration Email (réinitialisation mot de passe, notifications, etc.)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 # Logo : frontend/public/images/ ou backend/assets/images/ (priorité au backend)
@@ -307,6 +328,35 @@ CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_SOFT_TIME_LIMIT = 120  # 2 minutes — warning
 CELERY_TASK_TIME_LIMIT = 300  # 5 minutes — hard kill
 
+# Web Push (VAPID)
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY', '')
+VAPID_CONTACT_EMAIL = os.getenv('VAPID_CONTACT_EMAIL', 'contact@frollot.com')
+
+# Jitsi Meet (video conferencing)
+JITSI_DOMAIN = os.getenv('JITSI_DOMAIN', 'meet.jit.si')
+JITSI_APP_ID = os.getenv('JITSI_APP_ID', '')  # JaaS App ID
+JITSI_API_KEY_ID = os.getenv('JITSI_API_KEY_ID', '')  # JaaS API Key ID (kid)
+_jitsi_pk_path = os.getenv('JITSI_PRIVATE_KEY_PATH', '')
+if _jitsi_pk_path:
+    _jitsi_pk_full = os.path.join(BASE_DIR, _jitsi_pk_path)
+    try:
+        with open(_jitsi_pk_full, 'r') as f:
+            JITSI_PRIVATE_KEY = f.read()
+    except FileNotFoundError:
+        JITSI_PRIVATE_KEY = ''
+else:
+    JITSI_PRIVATE_KEY = ''
+
+# ─── Intelligence Artificielle (Anthropic Claude) ─────────────────
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+AI_MODEL = os.getenv('AI_MODEL', 'claude-haiku-4-5-20251001')
+AI_DAILY_QUOTA = int(os.getenv('AI_DAILY_QUOTA', '50'))  # Requêtes IA par user par jour
+AI_CACHE_TTL = int(os.getenv('AI_CACHE_TTL', '3600'))  # Cache réponses IA (1h)
+
+# ─── Unsplash API ──────────────────────────────────────────────────
+UNSPLASH_ACCESS_KEY = os.getenv('UNSPLASH_ACCESS_KEY', '')
+
 # Celery Beat — tâches périodiques
 try:
     from celery.schedules import crontab
@@ -318,6 +368,51 @@ try:
         'expire-notified-reservations': {
             'task': 'apps.library.tasks.expire_notified_reservations',
             'schedule': crontab(hour=4, minute=30),
+        },
+        'send-club-session-reminders': {
+            'task': 'apps.social.tasks.send_session_reminders',
+            'schedule': crontab(minute=0),  # Every hour
+        },
+        'auto-start-sessions': {
+            'task': 'apps.social.tasks.auto_start_sessions',
+            'schedule': crontab(minute='*'),  # Every minute
+        },
+        'send-weekly-club-digests': {
+            'task': 'apps.social.tasks.send_weekly_club_digests',
+            'schedule': crontab(hour=8, minute=0, day_of_week=1),  # Monday 8am
+        },
+        'generate-recurring-sessions': {
+            'task': 'apps.social.tasks.generate_recurring_sessions',
+            'schedule': crontab(minute=0),  # Every hour
+        },
+        'close-expired-polls': {
+            'task': 'apps.social.tasks.close_expired_polls',
+            'schedule': crontab(minute='*/5'),  # Every 5 minutes
+        },
+        # send-loan-reminders configuré dans config/celery.py (8h UTC / 9h Libreville)
+        'send-membership-expiry-reminders': {
+            'task': 'apps.library.tasks.send_membership_expiry_reminders',
+            'schedule': crontab(hour=7, minute=30),  # Daily 7h30 UTC
+        },
+        'notify-expired-memberships': {
+            'task': 'apps.library.tasks.notify_expired_memberships',
+            'schedule': crontab(hour=8, minute=0),  # Daily 8h UTC
+        },
+        'escalate-overdue-fines': {
+            'task': 'apps.library.tasks.escalate_overdue_fines',
+            'schedule': crontab(hour=6, minute=0),  # Daily 6h UTC
+        },
+        'compute-trending-scores': {
+            'task': 'apps.analytics.tasks.compute_trending_scores_task',
+            'schedule': crontab(hour=3, minute=0),  # Daily 3h UTC
+        },
+        'cleanup-old-interactions': {
+            'task': 'apps.analytics.tasks.cleanup_old_interactions',
+            'schedule': crontab(hour=2, minute=0, day_of_month=1),  # 1er du mois
+        },
+        'cancel-stale-pending-orders': {
+            'task': 'apps.orders.tasks.cancel_stale_pending_orders',
+            'schedule': crontab(minute='*/15'),  # Every 15 minutes
         },
     }
 except ImportError:
@@ -372,6 +467,10 @@ REST_FRAMEWORK = {
         'anon_sustained': '30/hour',
         'login': '5/minute',
         'coupon_send': '5/hour',
+        'club_message_polling': '60/minute',
+        'club_typing': '30/minute',
+        'analytics': '120/minute',
+        'payment_initiate': '5/minute',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -387,6 +486,10 @@ if TESTING:
         'anon_sustained': '9999/hour',
         'login': '9999/minute',
         'coupon_send': '9999/hour',
+        'club_message_polling': '9999/minute',
+        'club_typing': '9999/minute',
+        'analytics': '9999/minute',
+        'payment_initiate': '9999/minute',
     }
 
 # Documentation API OpenAPI / Swagger

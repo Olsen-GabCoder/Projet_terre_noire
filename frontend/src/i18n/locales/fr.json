@@ -2009,6 +2009,21 @@
       "continueShopping": "Continuer mes achats",
       "supportText": "Une question ? Contactez notre service client au",
       "or": "ou"
+    },
+    "inquiryNew": {
+      "seoTitle": "Nouvelle demande de renseignement",
+      "title": "Nouvelle demande",
+      "to": "À :",
+      "subjectLabel": "Sujet *",
+      "subjectPlaceholder": "Ex: Question sur les soumissions de manuscrits",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Votre question ou demande...",
+      "attachmentLabel": "Pièce jointe (optionnel)",
+      "sending": "Envoi...",
+      "submit": "Envoyer la demande",
+      "cancel": "Annuler",
+      "successMessage": "Demande envoyée !",
+      "sendError": "Erreur lors de l'envoi."
     }
   },
   "dashboard": {

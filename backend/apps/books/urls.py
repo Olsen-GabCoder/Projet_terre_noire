@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookViewSet, AuthorViewSet, CategoryViewSet, serve_book_pdf, ISBNLookupView
+from .views import BookViewSet, AuthorViewSet, CategoryViewSet, serve_book_pdf, ISBNLookupView, WikipediaAuthorView, UnsplashSearchView
 from .author_views import (
     AuthorDashboardView,
     AuthorBookListCreateView,
@@ -27,7 +27,9 @@ urlpatterns = [
     path('authors/me/books/<int:book_id>/', AuthorBookDetailView.as_view(), name='author-book-detail'),
     path('authors/me/sales/', AuthorSalesView.as_view(), name='author-sales'),
     path('authors/me/reviews/', AuthorReviewsView.as_view(), name='author-reviews'),
+    path('authors/wikipedia-bio/<str:name>/', WikipediaAuthorView.as_view(), name='wikipedia-bio'),
     path('books/isbn-lookup/<str:isbn>/', ISBNLookupView.as_view(), name='isbn-lookup'),
+    path('books/unsplash-search/', UnsplashSearchView.as_view(), name='unsplash-search'),
     path('books/<int:book_id>/read-pdf/', serve_book_pdf),
     path('', include(router.urls)),
 ]

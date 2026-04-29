@@ -8,6 +8,8 @@ import AFRICAN_COUNTRIES, { matchCountryName, getDialCodeByCountry } from '../co
 import '../styles/SubmitManuscript.css';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
+import CountryFlag from '../components/CountryFlag';
+import useGeoIP, { ISO_TO_COUNTRY_NAME } from '../hooks/useGeoIP';
 
 const GENRE_OPTIONS = [
   { value: 'ROMAN', label: 'Roman' },
@@ -82,6 +84,24 @@ const SubmitManuscript = () => {
       phone_local: phoneLocal.replace(/\D/g, ''),
     }));
   }, [user]);
+
+  // Fallback géolocalisation IP si pays non renseigné
+  const geoIP = useGeoIP();
+  useEffect(() => {
+    if (geoIP && !formData.country) {
+      const countryName = ISO_TO_COUNTRY_NAME[geoIP.country] || '';
+      if (countryName) {
+        const matched = matchCountryName(countryName);
+        if (matched) {
+          setFormData(prev => ({
+            ...prev,
+            country: matched.name,
+            dial_code: prev.dial_code || matched.dialCode || '',
+          }));
+        }
+      }
+    }
+  }, [geoIP, formData.country]);
 
   // Charger la maison présélectionnée depuis l'URL
   useEffect(() => {
@@ -237,7 +257,7 @@ const SubmitManuscript = () => {
       </div>
       <div className="ms-org-card__body">
         <h4>{org.name} {org.is_verified && <i className="fas fa-check-circle ms-org-card__verified" />}</h4>
-        <p className="ms-org-card__location"><i className="fas fa-map-marker-alt" /> {org.city || org.country || t('pages.submitManuscript.notSpecified')}</p>
+        <p className="ms-org-card__location"><CountryFlag country={org.country} size={14} /> <i className="fas fa-map-marker-alt" /> {org.city || org.country || t('pages.submitManuscript.notSpecified')}</p>
         {org.description && <p className="ms-org-card__desc">{org.description.length > 120 ? org.description.slice(0, 120) + '...' : org.description}</p>}
         <div className="ms-org-card__meta">
           <span><i className="fas fa-star" /> {parseFloat(org.avg_rating || 0).toFixed(1)} ({org.review_count || 0})</span>

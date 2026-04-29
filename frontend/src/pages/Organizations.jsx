@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import organizationService from '../services/organizationService';
 import SEO from '../components/SEO';
+import CountryFlag from '../components/CountryFlag';
 import '../styles/Organizations.css';
 
 const GENRES = [
@@ -176,7 +177,7 @@ const Organizations = () => {
                   </div>
                   <span className="org-card__type">{org.org_type_display}</span>
                   <p className="org-card__location">
-                    <i className="fas fa-map-marker-alt" /> {org.city || org.country}
+                    <CountryFlag country={org.country} size={14} /> <i className="fas fa-map-marker-alt" /> {org.city || org.country}
                   </p>
                   {org.description && (
                     <p className="org-card__desc">{org.description.slice(0, 100)}{org.description.length > 100 ? '...' : ''}</p>

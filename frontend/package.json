@@ -18,6 +18,7 @@
     "dompurify": "^3.4.0",
     "fast-average-color": "^9.5.2",
     "i18next": "^26.0.3",
+    "leaflet": "^1.9.4",
     "pdfjs-dist": "^5.5.207",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
@@ -27,6 +28,7 @@
     "react-i18next": "^17.0.2",
     "react-intersection-observer": "^10.0.0",
     "react-is": "^19.2.5",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.7.0"
   },

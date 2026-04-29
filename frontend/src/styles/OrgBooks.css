@@ -417,6 +417,12 @@
 }
 .ob-isbn-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* ── Wikipedia Button ── */
+.ob-wiki-btn {
+  margin-bottom: 6px !important;
+}
+.ob-wiki-btn .fa-wikipedia-w { font-size: 0.8rem; }
+
 .ob-form__field label {
   font-size: 0.8rem;
   font-weight: 600;
@@ -754,6 +760,70 @@
   display: block;
   margin-bottom: 0.5rem;
 }
+
+/* ── Duplicate Author Warning ── */
+.ob-modal__duplicate-warn {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+}
+.ob-modal__duplicate-header {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+.ob-modal__duplicate-header i { color: #f59e0b; margin-right: 4px; }
+.ob-modal__duplicate-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+}
+.ob-modal__duplicate-item + .ob-modal__duplicate-item {
+  border-top: 1px solid rgba(245, 158, 11, 0.2);
+}
+.ob-modal__duplicate-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.ob-modal__duplicate-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.ob-modal__duplicate-info strong { font-size: 0.82rem; display: block; }
+.ob-modal__duplicate-info p {
+  margin: 0; font-size: 0.72rem; color: #78350f;
+  line-height: 1.3;
+}
+.ob-modal__duplicate-info small {
+  font-size: 0.68rem; color: #92400e;
+}
+.ob-modal__duplicate-use {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  background: #fff;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.ob-modal__duplicate-use:hover { background: #fef3c7; }
 .ob-modal__footer {
   display: flex;
   justify-content: flex-end;

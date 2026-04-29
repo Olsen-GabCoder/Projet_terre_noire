@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authAPI, handleApiError } from '../services/api';
 import PageHero from '../components/PageHero';
+import PasswordBreachAlert from '../components/PasswordBreachAlert';
+import usePasswordCheck from '../hooks/usePasswordCheck';
 import '../styles/Login.css';
 
 const ResetPassword = () => {
@@ -13,6 +15,7 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { breachCount, checking: breachChecking, checkPassword } = usePasswordCheck();
   const [success, setSuccess] = useState(false);
   const [invalidLink, setInvalidLink] = useState(false);
 
@@ -29,6 +32,7 @@ const ResetPassword = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (error) setError('');
+    if (name === 'new_password') checkPassword(value);
   };
 
   const handleSubmit = async (e) => {
@@ -150,6 +154,7 @@ const ResetPassword = () => {
                     <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
                   </button>
                 </div>
+                <PasswordBreachAlert breachCount={breachCount} checking={breachChecking} />
               </div>
 
               <div className="login-field">

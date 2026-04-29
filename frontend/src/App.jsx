@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useSearchParams, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { DeliveryConfigProvider } from './context/DeliveryConfigContext';
+import { CurrencyProvider } from './components/CurrencyToggle';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CosmosBackground from './components/CosmosBackground';
@@ -27,6 +28,8 @@ const LegalSidebar = lazy(() => import('./components/sidebar/content/LegalSideba
 import SessionTimeoutWarning from './components/SessionTimeoutWarning';
 import OnboardingModal from './components/OnboardingModal';
 import { Toaster } from 'react-hot-toast';
+import PushRegistrar from './components/PushRegistrar';
+import ChatbotWidget from './components/ChatbotWidget';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,7 +99,13 @@ const EditorialProjectDetail = lazy(() => import('./pages/dashboard/EditorialPro
 const MyLoans = lazy(() => import('./pages/dashboard/MyLoans'));
 const ServiceOrderDetail = lazy(() => import('./pages/dashboard/ServiceOrderDetail'));
 const DeliveryAssignmentDetail = lazy(() => import('./pages/dashboard/DeliveryAssignmentDetail'));
-const UserSocialProfile = lazy(() => import('./pages/UserSocialProfile'));
+const UnifiedProfile = lazy(() => import('./pages/UnifiedProfile'));
+import { ProfileByIdRedirect, ProfessionalRedirect, AuthorRedirect } from './components/ProfileRedirects';
+
+const LibraryRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/organizations/${slug}`} replace />;
+};
 const MyReservations = lazy(() => import('./pages/dashboard/MyReservations'));
 const LibraryAdmin = lazy(() => import('./pages/dashboard/LibraryAdmin'));
 const MyManuscripts = lazy(() => import('./pages/dashboard/MyManuscripts'));
@@ -159,13 +168,11 @@ const ServiceRequest = lazy(() => import('./pages/ServiceRequest'));
 const Organizations = lazy(() => import('./pages/Organizations'));
 const OrganizationDetail = lazy(() => import('./pages/OrganizationDetail'));
 const Professionals = lazy(() => import('./pages/Professionals'));
-const ProfessionalDetail = lazy(() => import('./pages/ProfessionalDetail'));
 const Inquiries = lazy(() => import('./pages/Inquiries'));
 const InquiryDetail = lazy(() => import('./pages/InquiryDetail'));
 const InquiryNew = lazy(() => import('./pages/InquiryNew'));
 
 // Page bibliothèque
-const LibraryPage = lazy(() => import('./pages/LibraryPage'));
 
 // Auth
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -177,6 +184,7 @@ const ReadingListDetail = lazy(() => import('./pages/ReadingListDetail'));
 const BookClubs = lazy(() => import('./pages/BookClubs'));
 const BookClubCreate = lazy(() => import('./pages/BookClubCreate'));
 const BookClubDetail = lazy(() => import('./pages/BookClubDetail'));
+const ClubInvite = lazy(() => import('./pages/ClubInvite'));
 
 import './App.css';
 
@@ -281,6 +289,7 @@ function AppContent() {
   return (
     <div className="app">
       <CosmosBackground />
+      <PushRegistrar />
       <a href="#main-content" className="skip-link">
         Aller au contenu principal
       </a>
@@ -326,7 +335,7 @@ function AppContent() {
                 <Route path="/organizations" element={<Organizations />} />
                 <Route path="/organizations/:slug" element={<OrganizationDetail />} />
                 <Route path="/professionals" element={<Professionals />} />
-                <Route path="/professionals/:slug" element={<ProfessionalDetail />} />
+                <Route path="/professionals/:slug" element={<ProfessionalRedirect />} />
 
                 {/* Frollot Connect — Demandes de renseignement */}
                 <Route path="/inquiries" element={<ProtectedRoute><Inquiries /></ProtectedRoute>} />
@@ -339,7 +348,7 @@ function AppContent() {
                 <Route path="/services/request/:listingId" element={<ProtectedRoute><ServiceRequest /></ProtectedRoute>} />
 
                 {/* Route bibliothèque */}
-                <Route path="/library/:slug" element={<LibraryPage />} />
+                <Route path="/library/:slug" element={<LibraryRedirect />} />
 
                 {/* Routes sociales */}
                 <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
@@ -347,6 +356,7 @@ function AppContent() {
                 <Route path="/lists/:slug" element={<ReadingListDetail />} />
                 <Route path="/clubs" element={<BookClubs />} />
                 <Route path="/clubs/create" element={<ProtectedRoute><BookClubCreate /></ProtectedRoute>} />
+                <Route path="/clubs/invite/:token" element={<ClubInvite />} />
                 <Route path="/clubs/:slug" element={<BookClubDetail />} />
 
                 {/* ══════ Dashboard — route parent unique ══════ */}
@@ -438,8 +448,9 @@ function AppContent() {
                 
                 {/* Routes informatives */}
                 <Route path="/authors" element={<Authors />} />
-                <Route path="/authors/:id" element={<AuthorDetail />} />
-                <Route path="/profile/:id" element={<UserSocialProfile />} />
+                <Route path="/authors/:id" element={<AuthorRedirect fallback={AuthorDetail} />} />
+                <Route path="/u/:slug" element={<UnifiedProfile />} />
+                <Route path="/profile/:id" element={<ProfileByIdRedirect />} />
                 <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
@@ -464,6 +475,7 @@ function AppContent() {
       {showFooter && <div className={showAppSidebar ? 'app-footer-shifted' : ''}><Footer /></div>}
       <SessionTimeoutWarning />
       <OnboardingModal />
+      {!isReaderPage && <ChatbotWidget />}
       <Toaster
         position="top-right"
         toastOptions={{
@@ -496,7 +508,9 @@ function App() {
             <CartProvider>
               <WishlistProvider>
                 <DeliveryConfigProvider>
-                  <AppContent />
+                  <CurrencyProvider>
+                    <AppContent />
+                  </CurrencyProvider>
                 </DeliveryConfigProvider>
               </WishlistProvider>
             </CartProvider>

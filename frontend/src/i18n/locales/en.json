@@ -2029,6 +2029,21 @@
       "continueShopping": "Continue shopping",
       "supportText": "Have a question? Contact our customer service at",
       "or": "or"
+    },
+    "inquiryNew": {
+      "seoTitle": "New inquiry",
+      "title": "New inquiry",
+      "to": "To:",
+      "subjectLabel": "Subject *",
+      "subjectPlaceholder": "e.g. Question about manuscript submissions",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Your question or request...",
+      "attachmentLabel": "Attachment (optional)",
+      "sending": "Sending...",
+      "submit": "Send inquiry",
+      "cancel": "Cancel",
+      "successMessage": "Inquiry sent!",
+      "sendError": "Error sending the message."
     }
   },
   "dashboard": {

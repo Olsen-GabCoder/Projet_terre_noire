@@ -601,6 +601,14 @@
 }
 
 /* ═══ CATALOGUE BIBLIOTHÈQUE — cartes dédiées ═══ */
+/* ── Location Map ── */
+.od-map {
+  margin-top: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--fl-border, #e5e2da);
+}
+
 /* ── AI Library Recommendations ── */
 .od-lib-recs { margin-bottom: 1.25rem; }
 .od-lib-recs__btn {
