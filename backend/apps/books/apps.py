@@ -8,5 +8,6 @@ class BooksConfig(AppConfig):
     verbose_name = 'Gestion des Livres'
 
     def ready(self):
-        import apps.books.signals  # noqa: F401
+        from apps.books import signals  # noqa: F401
+        signals.connect_order_signals()
 

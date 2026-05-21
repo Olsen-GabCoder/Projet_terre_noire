@@ -1,594 +1,403 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { AdminTopbar } from '../../components/admin/AdminLayout';
+import {
+  AdminCard, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
+  AdminActionBtn, AdminLoading, AdminError, AdminEmpty, StatusBadge,
+  AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
+} from '../../components/admin/AdminPrimitives';
+import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
-import '../../styles/AdminBooks.css';
+
+const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null };
 
 const AdminBooks = () => {
+  const { toast, confirm } = useToast();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [authors, setAuthors] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loadingAuthors, setLoadingAuthors] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [addingCategory, setAddingCategory] = useState(false);
-  const [addCategoryError, setAddCategoryError] = useState(null);
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
-  const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    description: '',
-    price: '',
-    original_price: '',
-    reference: '',
-    format: 'PAPIER',
-    available: true,
-    is_bestseller: false,
-    category: '',
-    cover_image: null,
-    back_cover_image: null,
-    pdf_file: null,
-  });
+  useEffect(() => { fetchBooks(); fetchAuthors(); fetchCategories(); }, []);
 
-  useEffect(() => {
-    fetchBooks();
-    fetchAuthors();
-    fetchCategories();
-  }, []);
+  const fetchBooks = async () => { try { setLoading(true); setError(null); const r = await api.get('/books/', { params: { page_size: 100 } }); setBooks(r.data.results || r.data); } catch(e){ setError('Impossible de charger les livres'); console.error(e); } finally{setLoading(false);} };
+  const fetchAuthors = async () => { try { const r = await api.get('/authors/', { params: { page_size: 100 } }); setAuthors(r.data.results || r.data); } catch(e){console.error(e);} };
+  const fetchCategories = async () => { try { const r = await api.get('/categories/', { params: { page_size: 100 } }); setCategories(r.data.results || r.data || []); } catch(e){setCategories([]);} };
 
-  const fetchBooks = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/books/');
-      setBooks(res.data.results || res.data);
-    } catch (err) {
-      console.error('Erreur chargement livres:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleInputChange = (e) => { const { name, value, type, checked } = e.target; setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value })); };
+  const handleFileChange = (e) => setFormData(p => ({ ...p, cover_image: e.target.files[0] }));
+  const handleBackCoverChange = (e) => setFormData(p => ({ ...p, back_cover_image: e.target.files[0] || null }));
+  const handlePdfChange = (e) => setFormData(p => ({ ...p, pdf_file: e.target.files[0] || null }));
 
-  const fetchAuthors = async () => {
-    try {
-      setLoadingAuthors(true);
-      const res = await api.get('/authors/');
-      setAuthors(res.data.results || res.data);
-    } catch (err) {
-      console.error('Erreur chargement auteurs:', err);
-    } finally {
-      setLoadingAuthors(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      setLoadingCategories(true);
-      const res = await api.get('/categories/', { params: { page_size: 100 } });
-      setCategories(res.data.results || res.data || []);
-    } catch (err) {
-      console.error('Erreur chargement catégories:', err);
-      setCategories([]);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      cover_image: e.target.files[0]
-    }));
-  };
-
-  const handleBackCoverChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      back_cover_image: e.target.files[0] || null
-    }));
-  };
-
-  const handlePdfChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      pdf_file: e.target.files[0] || null
-    }));
-  };
-
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
+  const handleAddCategory = async () => {
     const name = newCategoryName.trim();
     if (!name) return;
-    setAddCategoryError(null);
-    setAddingCategory(true);
-    try {
-      const res = await api.post('/categories/', { name });
-      const created = res.data;
-      await fetchCategories();
-      setFormData(prev => ({ ...prev, category: String(created.id) }));
-      setNewCategoryName('');
-    } catch (err) {
-      const msg = err.response?.data?.name?.[0] || err.response?.data?.detail || err.message;
-      setAddCategoryError(msg || 'Erreur lors de l\'ajout de la catégorie.');
-    } finally {
-      setAddingCategory(false);
-    }
+    try { const r = await api.post('/categories/', { name }); await fetchCategories(); setFormData(p => ({ ...p, category: String(r.data.id) })); setNewCategoryName(''); }
+    catch(e){ toast.error(e.response?.data?.name?.[0] || 'Erreur lors de la creation de la categorie'); }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const buildFormData = () => {
     const data = new FormData();
     Object.keys(formData).forEach(key => {
-      const value = formData[key];
-      if ((key === 'cover_image' || key === 'back_cover_image' || key === 'pdf_file') && value === null) return;
-      if (typeof value === 'boolean') {
-        data.append(key, value.toString());
-      } else if (value !== '' && value !== null && value !== undefined) {
-        data.append(key, value);
-      }
+      const v = formData[key];
+      if (['cover_image','back_cover_image','pdf_file'].includes(key) && v === null) return;
+      if (typeof v === 'boolean') data.append(key, v.toString());
+      else if (v !== '' && v !== null && v !== undefined) data.append(key, v);
     });
-
-    try {
-      if (editingBook) {
-        await api.patch(`/books/${editingBook.id}/`, data);
-      } else {
-        await api.post('/books/', data);
-      }
-      fetchBooks();
-      resetForm();
-    } catch (err) {
-      console.error('Erreur sauvegarde livre:', err);
-      const data = err.response?.data;
-      let message = err.message;
-      if (data) {
-        if (data.detail) message = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
-        else if (typeof data === 'object' && Object.keys(data).length) {
-          const parts = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`);
-          message = parts.join('\n');
-        }
-      }
-      alert(`Erreur lors de la sauvegarde:\n${message}`);
-    }
+    return data;
   };
 
+  /* ── CREATE ── */
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/books/', buildFormData());
+      fetchBooks(); resetCreateForm();
+      toast.success('Livre cree avec succes');
+    } catch(e){ toast.error(e.response?.data?.detail || JSON.stringify(e.response?.data) || e.message); }
+  };
+
+  /* ── EDIT (modal) ── */
   const handleEdit = (book) => {
     setEditingBook(book);
     setFormData({
-      title: book.title || '',
-      author: book.author?.id || book.author || '',
-      description: book.description || '',
-      price: book.price || '',
-      original_price: book.original_price || '',
-      reference: book.reference || '',
-      format: book.format || 'PAPIER',
-      available: book.available ?? true,
-      is_bestseller: book.is_bestseller || false,
-      category: book.category?.id || book.category || '',
-      cover_image: null,
-      back_cover_image: null,
-      pdf_file: null,
+      title: book.title||'', author: book.author?.id||book.author||'',
+      description: book.description||'', price: book.price||'',
+      original_price: book.original_price||'', reference: book.reference||'',
+      format: book.format||'PAPIER', available: book.available??true,
+      is_bestseller: book.is_bestseller||false,
+      category: book.category?.id||book.category||'',
+      cover_image: null, back_cover_image: null, pdf_file: null,
     });
-    setShowForm(true);
+    setNewCategoryName('');
   };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.patch(`/books/${editingBook.id}/`, buildFormData());
+      fetchBooks(); closeEditModal();
+      toast.success('Livre mis a jour avec succes');
+    } catch(e){ toast.error(e.response?.data?.detail || JSON.stringify(e.response?.data) || e.message); }
+  };
+
+  const closeEditModal = () => { setEditingBook(null); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce livre ?')) return;
-    try {
-      await api.delete(`/books/${id}/`);
-      fetchBooks();
-    } catch (err) {
-      console.error('Erreur suppression:', err);
-      alert('Erreur lors de la suppression');
-    }
+    const ok = await confirm({ title: 'Supprimer ce livre ?', message: 'Cette action est irreversible. Le livre sera retire du catalogue.', confirmLabel: 'Supprimer', tone: 'danger' });
+    if (!ok) return;
+    try { await api.delete(`/books/${id}/`); fetchBooks(); toast.success('Livre supprime'); } catch(e){ toast.error('Echec de la suppression'); }
   };
 
-  const resetForm = () => {
-    setShowForm(false);
-    setEditingBook(null);
-    setFormData({
-      title: '',
-      author: '',
-      description: '',
-      price: '',
-      original_price: '',
-      reference: '',
-      format: 'PAPIER',
-      available: true,
-      is_bestseller: false,
-      category: '',
-      cover_image: null,
-      back_cover_image: null,
-      pdf_file: null,
-    });
-  };
+  const resetCreateForm = () => { setShowForm(false); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); };
 
-  const formatPrice = (price) => {
-    return Number(price || 0).toLocaleString('fr-FR') + ' FCFA';
-  };
+  const filtered = React.useMemo(() => {
+    let list = books;
+    if (filter === 'available') list = list.filter(b => b.available);
+    else if (filter === 'promo') list = list.filter(b => b.original_price && Number(b.original_price) > Number(b.price));
+    else if (filter === 'bestseller') list = list.filter(b => b.is_bestseller);
+    else if (filter === 'ebook') list = list.filter(b => b.format === 'EBOOK');
+    if (search.trim()) { const q = search.toLowerCase(); list = list.filter(b => (b.title||'').toLowerCase().includes(q) || (b.author?.full_name||'').toLowerCase().includes(q) || (b.reference||'').toLowerCase().includes(q)); }
+    return list;
+  }, [books, filter, search]);
 
-  const getAuthorName = (book) => {
-    return book.author?.full_name || book.author?.name || 'N/A';
-  };
-
-  const getCategoryName = (book) => {
-    return book.category?.name || 'N/A';
-  };
-
-  if (loading || loadingAuthors || loadingCategories) {
-    return (
-      <div className="admin-books-loading">
-        Chargement...
-      </div>
-    );
-  }
+  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement du catalogue..." /></div>;
+  if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => { setError(null); fetchBooks(); fetchAuthors(); fetchCategories(); }} /></div>;
 
   return (
-    <div className="admin-books-page">
-      <section className="admin-books-hero">
-        <div className="admin-books-hero__orb admin-books-hero__orb--1" />
-        <div className="admin-books-hero__orb admin-books-hero__orb--2" />
-        <div className="admin-books-hero__grid-bg" />
-        <div className="admin-books-hero__inner">
-          <div className="admin-books-hero__line" />
-          <h1 className="admin-books-hero__title">Gestion des Livres</h1>
-          <p className="admin-books-hero__sub">
-            Créez et modifiez les ouvrages de votre catalogue. Gérez les prix, promotions et disponibilités.
-          </p>
-          <div className="admin-books-hero__actions">
-            <Link to="/admin-dashboard" className="admin-books-hero__back">
-              <i className="fas fa-arrow-left" />
-              Retour
-            </Link>
-            <button
-              type="button"
-              className={`admin-books-hero__btn admin-books-hero__btn--primary ${showForm ? 'outline' : ''}`}
-              onClick={() => setShowForm(!showForm)}
-            >
-              <i className="fas fa-plus" />
-              {showForm ? 'Annuler' : 'Ajouter un livre'}
-            </button>
-          </div>
+    <>
+      <AdminTopbar
+        breadcrumb={['Admin', 'Catalogue']}
+        title="Gestion des livres"
+        subtitle="Creez et modifiez les ouvrages de votre catalogue. Gerez les prix, promotions et disponibilites."
+        actions={<>
+          <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>
+          <button onClick={() => { if (showForm) resetCreateForm(); else setShowForm(true); }} className="tn-btn tn-btn--primary" style={{ fontSize: 13, padding: '8px 14px' }}>
+            <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'}`} /> {showForm ? 'Fermer' : 'Ajouter un livre'}
+          </button>
+        </>}
+      />
+
+      <div className="adm-page-body">
+
+        {/* ── TOOLBAR ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <AdminSearch placeholder="Rechercher titre, auteur, ref..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
+          <AdminFilterPills
+            active={filter}
+            onChange={setFilter}
+            items={[
+              ['all', 'Tous', books.length],
+              ['available', 'Disponibles', books.filter(b => b.available).length],
+              ['promo', 'En promo', books.filter(b => b.original_price && Number(b.original_price) > Number(b.price)).length],
+              ['bestseller', 'Best-sellers', books.filter(b => b.is_bestseller).length],
+              ['ebook', 'Ebooks', books.filter(b => b.format === 'EBOOK').length],
+            ]}
+          />
         </div>
-      </section>
 
-      <div className="admin-books-hero-fade" />
+        {/* ── EMPTY ── */}
+        {filtered.length === 0 && (
+          <AdminEmpty icon="fa-book" title="Aucun livre trouve" subtitle={search ? 'Essayez avec d\'autres termes.' : 'Ajoutez votre premier livre au catalogue.'} />
+        )}
 
-      <section className="admin-books-content">
-        <div className="admin-books-inner">
-          {showForm && (
-            <form className="admin-books-form" onSubmit={handleSubmit}>
-              <h2>{editingBook ? 'Modifier le livre' : 'Nouveau livre'}</h2>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Titre *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Auteur *</label>
-                  <select
-                    name="author"
-                    value={formData.author}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Sélectionner un auteur</option>
-                    {authors.map(author => (
-                      <option key={author.id} value={author.id}>
-                        {author.full_name || `${author.first_name || ''} ${author.last_name || ''}`.trim() || author.id}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Catégorie *</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Sélectionner une catégorie</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <div className="form-add-category">
-                    <span className="form-add-category-label">Ou ajouter une catégorie :</span>
-                    <input
-                      type="text"
-                      value={newCategoryName}
-                      onChange={(e) => { setNewCategoryName(e.target.value); setAddCategoryError(null); }}
-                      placeholder="Ex: Roman graphique"
-                      className="form-add-category-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCategory}
-                      disabled={addingCategory || !newCategoryName.trim()}
-                      className="form-add-category-btn"
-                    >
-                      {addingCategory ? 'Ajout…' : 'Ajouter'}
-                    </button>
+        {/* ── TABLE ── */}
+        {filtered.length > 0 && (
+          <AdminTable columns={[
+            { label: 'Couverture', width: 80 },
+            { label: 'Titre' },
+            { label: 'Auteur' },
+            { label: 'Categorie' },
+            { label: 'Prix', align: 'right' },
+            { label: 'Stock', width: 130 },
+            { label: 'Promo', width: 90 },
+            { label: '', width: 90, align: 'right' },
+          ]}>
+            {filtered.map((b, i) => (
+              <AdminRow key={b.id} last={i === filtered.length - 1}>
+                <AdminCell>
+                  {b.cover_image
+                    ? <img src={b.cover_image} alt={b.title} style={{ width: 44, height: 60, borderRadius: 4, objectFit: 'cover', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }} />
+                    : <div style={{ width: 44, height: 60, borderRadius: 4, background: 'var(--tn-cream-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tn-gray-400)', fontSize: 16 }}><i className="fas fa-book" /></div>
+                  }
+                </AdminCell>
+                <AdminCell>
+                  <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 14, fontWeight: 600, color: 'var(--tn-gray-900)' }}>{b.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    {b.reference && <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, color: 'var(--tn-gray-500)' }}>{b.reference}</span>}
+                    {b.is_bestseller && <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 9, padding: '2px 6px', background: 'var(--tn-black)', color: 'var(--tn-gold-light)', borderRadius: 3, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700 }}>BEST</span>}
                   </div>
-                  {addCategoryError && <p className="form-hint form-hint--error">{addCategoryError}</p>}
-                  {!loadingCategories && categories.length === 0 && (
-                    <p className="form-hint">Aucune catégorie. Créez-en une dans l’admin Django (Catégories) ou via l’API.</p>
-                  )}
-                </div>
-                <div className="form-group">
-                  <label>Format</label>
-                  <select name="format" value={formData.format} onChange={handleInputChange}>
-                    <option value="PAPIER">Papier</option>
-                    <option value="EBOOK">Ebook</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Prix (FCFA) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Référence (ISBN)</label>
-                  <input
-                    type="text"
-                    name="reference"
-                    value={formData.reference}
-                    onChange={handleInputChange}
-                    placeholder="Ex: 978-2-1234-5678-9"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows="4"
-                    placeholder="Description du livre..."
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <div className="promo-section">
-                    <h4>Options de promotion et disponibilité</h4>
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        name="available"
-                        id="available"
-                        checked={formData.available}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="available">Disponible à la vente</label>
-                    </div>
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        name="is_bestseller"
-                        id="is_bestseller"
-                        checked={formData.is_bestseller}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="is_bestseller">Marquer comme Best-seller</label>
-                    </div>
-                    <div className="form-group form-group--promo-price">
-                      <label>Prix original (pour promotion)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        name="original_price"
-                        value={formData.original_price}
-                        onChange={handleInputChange}
-                        placeholder="Laisser vide si pas de promotion"
-                      />
-                      <span className="form-hint">
-                        Si rempli, ce prix barré sera affiché à côté du prix actuel
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group full-width">
-                  <label>Image de couverture</label>
-                  <input type="file" accept="image/*" onChange={handleFileChange} />
-                  <span className="form-hint">
-                    {editingBook ? "Laisser vide pour conserver l'image actuelle" : 'Image recommandée: 400x600px, JPG ou PNG'}
-                  </span>
-                </div>
-                <div className="form-group full-width">
-                  <label>Couverture arrière (4e de couverture)</label>
-                  <input type="file" accept="image/*" onChange={handleBackCoverChange} />
-                  <span className="form-hint">
-                    {editingBook ? 'Laisser vide pour conserver la couverture arrière actuelle' : 'Optionnel. Même format que la couverture avant.'}
-                  </span>
-                  {editingBook?.back_cover_image && (
-                    <span className="form-hint" style={{ display: 'block', marginTop: '0.25rem' }}>
-                      <i className="fas fa-image" /> Couverture arrière actuellement jointe
+                </AdminCell>
+                <AdminCell>{b.author?.full_name || 'N/A'}</AdminCell>
+                <AdminCell>
+                  <span style={{ padding: '4px 10px', borderRadius: 999, background: 'var(--tn-cream-2)', color: 'var(--tn-gray-700)', fontSize: 11, fontWeight: 600 }}>{b.category?.name || 'N/A'}</span>
+                </AdminCell>
+                <AdminCell align="right">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <span style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, color: b.original_price && Number(b.original_price) > Number(b.price) ? 'var(--tn-orange)' : 'var(--tn-gray-900)', fontSize: 15 }}>
+                      {fmtPrice(b.price)} <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, fontWeight: 500, color: 'var(--tn-gray-500)' }}>FCFA</span>
                     </span>
-                  )}
-                </div>
-                <div className="form-group full-width">
-                  <label>Fichier PDF (ebook)</label>
-                  <input
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={handlePdfChange}
-                  />
-                  <span className="form-hint">
-                    {editingBook ? 'Laisser vide pour conserver le PDF actuel' : 'Optionnel. Pour lecture en ligne ou achat ebook.'}
-                  </span>
-                  {editingBook?.pdf_file && (
-                    <span className="form-hint" style={{ display: 'block', marginTop: '0.25rem' }}>
-                      <i className="fas fa-file-pdf" /> PDF actuellement joint
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="form-actions">
-                <button type="button" onClick={resetForm} className="btn-secondary">
-                  Annuler
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editingBook ? 'Mettre à jour' : 'Créer le livre'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Vue tableau — desktop */}
-          <div className="admin-books-table admin-books-table--desktop">
-            <table>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Titre</th>
-                  <th>Auteur</th>
-                  <th>Catégorie</th>
-                  <th>Prix</th>
-                  <th>Disponible</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {books.map(book => (
-                  <tr key={book.id}>
-                    <td>
-                      {book.cover_image ? (
-                        <img src={book.cover_image} alt={book.title} className="book-thumb" />
-                      ) : (
-                        <div className="book-thumb-placeholder">
-                          <i className="fas fa-book" />
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <strong>{book.title}</strong>
-                      {book.is_bestseller && (
-                        <div style={{ marginTop: '0.35rem' }}>
-                          <span className="status-badge status-bestseller">Best-seller</span>
-                        </div>
-                      )}
-                      {book.reference && (
-                        <div className="admin-books-ref">
-                          Ref: {book.reference}
-                        </div>
-                      )}
-                    </td>
-                    <td>{getAuthorName(book)}</td>
-                    <td>{getCategoryName(book)}</td>
-                    <td>
-                      <div>
-                        {book.original_price && Number(book.original_price) > 0 ? (
-                          <>
-                            <span className="price-original">{formatPrice(book.original_price)}</span>
-                            <br />
-                            <span className="price-current">{formatPrice(book.price)}</span>
-                          </>
-                        ) : (
-                          <span>{formatPrice(book.price)}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${book.available ? 'status-available' : 'status-unavailable'}`}>
-                        {book.available ? 'Disponible' : 'Indisponible'}
-                      </span>
-                    </td>
-                    <td>
-                      {book.original_price && book.original_price > book.price && (
-                        <span style={{ fontSize: '0.8125rem', color: 'var(--color-success)' }}>
-                          Promo: -{Math.round((1 - book.price / book.original_price) * 100)}%
-                        </span>
-                      )}
-                    </td>
-                    <td className="actions">
-                      <button onClick={() => handleEdit(book)} className="btn-edit" title="Modifier">
-                        <i className="fas fa-pen" />
-                      </button>
-                      <button onClick={() => handleDelete(book.id)} className="btn-delete" title="Supprimer">
-                        <i className="fas fa-trash-alt" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Vue cartes — mobile */}
-          <div className="admin-books-mobile">
-            {books.map(book => (
-              <div key={book.id} className="admin-books-mobile-card">
-                <div className="admin-books-mobile-card__top">
-                  <div className="admin-books-mobile-card__cover">
-                    {book.cover_image ? (
-                      <img src={book.cover_image} alt={book.title} />
-                    ) : (
-                      <i className="fas fa-book" />
+                    {b.original_price && Number(b.original_price) > Number(b.price) && (
+                      <span style={{ fontSize: 11, color: 'var(--tn-gray-400)', textDecoration: 'line-through', marginTop: 2 }}>{fmtPrice(b.original_price)}</span>
                     )}
                   </div>
-                  <div className="admin-books-mobile-card__info">
-                    <strong>{book.title}</strong>
-                    <span className="admin-books-mobile-card__meta">{getAuthorName(book)} • {getCategoryName(book)}</span>
-                    <span className="admin-books-mobile-card__price">
-                      {book.original_price && Number(book.original_price) > 0 ? (
-                        <>
-                          <span className="admin-books-mobile-card__price-old">{formatPrice(book.original_price)}</span>
-                          {' '}{formatPrice(book.price)}
-                        </>
-                      ) : (
-                        formatPrice(book.price)
-                      )}
-                    </span>
-                    <div className="admin-books-mobile-card__badges">
-                      <span className={`status-badge ${book.available ? 'status-available' : 'status-unavailable'}`}>
-                        {book.available ? 'Disponible' : 'Indisponible'}
-                      </span>
-                      {book.is_bestseller && (
-                        <span className="status-badge status-bestseller">Best-seller</span>
-                      )}
-                    </div>
+                </AdminCell>
+                <AdminCell>
+                  <StatusBadge value={b.available ? 'active' : 'inactive'} />
+                </AdminCell>
+                <AdminCell>
+                  {b.original_price && Number(b.original_price) > Number(b.price)
+                    ? <span style={{ color: 'var(--tn-success)', fontWeight: 700, fontSize: 13, fontFamily: 'var(--tn-mono)' }}>-{Math.round((1 - b.price / b.original_price) * 100)}%</span>
+                    : <span style={{ color: 'var(--tn-gray-400)' }}>—</span>
+                  }
+                </AdminCell>
+                <AdminCell align="right">
+                  <div style={{ display: 'inline-flex', gap: 6 }}>
+                    <AdminActionBtn icon="fa-pen-to-square" tone="orange" title="Modifier" onClick={() => handleEdit(b)} />
+                    <AdminActionBtn icon="fa-trash-can" tone="red" title="Supprimer" onClick={() => handleDelete(b.id)} />
                   </div>
+                </AdminCell>
+              </AdminRow>
+            ))}
+          </AdminTable>
+        )}
+      </div>
+
+      {/* ── CREATE MODAL ── */}
+      {showForm && (
+        <AdminModalOverlay onClose={resetCreateForm}>
+          <AdminModalHeader onClose={resetCreateForm}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{
+                width: 50, height: 68, borderRadius: 6, flexShrink: 0,
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.3)', fontSize: 18,
+              }}>
+                <i className="fas fa-plus" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--tn-gold-light)', marginBottom: 4 }}>
+                  Nouveau livre
                 </div>
-                <div className="admin-books-mobile-card__actions">
-                  <button type="button" onClick={() => handleEdit(book)} className="admin-books-mobile-card__btn admin-books-mobile-card__btn--edit">
-                    <i className="fas fa-pen" />
-                    Modifier
-                  </button>
-                  <button type="button" onClick={() => handleDelete(book.id)} className="admin-books-mobile-card__btn admin-books-mobile-card__btn--delete">
-                    <i className="fas fa-trash-alt" />
-                    Supprimer
-                  </button>
+                <h2 style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22, margin: 0, letterSpacing: '-0.01em' }}>
+                  Ajouter au catalogue
+                </h2>
+              </div>
+            </div>
+          </AdminModalHeader>
+          <AdminModalBody>
+            <BookForm
+              formData={formData} onInputChange={handleInputChange}
+              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange}
+              onSubmit={handleCreateSubmit} onCancel={resetCreateForm}
+              authors={authors} categories={categories}
+              newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
+              submitLabel="Creer le livre" editingBook={null}
+            />
+          </AdminModalBody>
+        </AdminModalOverlay>
+      )}
+
+      {/* ── EDIT MODAL ── */}
+      {editingBook && (
+        <AdminModalOverlay onClose={closeEditModal}>
+          <AdminModalHeader onClose={closeEditModal}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              {/* Cover thumbnail */}
+              <div style={{
+                width: 50, height: 68, borderRadius: 6, flexShrink: 0, overflow: 'hidden',
+                background: editingBook.cover_image ? `url(${editingBook.cover_image}) center/cover` : 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.3)', fontSize: 18,
+              }}>
+                {!editingBook.cover_image && <i className="fas fa-book" />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--tn-gold-light)', marginBottom: 4 }}>
+                  Modifier · {editingBook.reference || `#${editingBook.id}`}
+                </div>
+                <h2 style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22, margin: 0, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {editingBook.title}
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                  <span style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: 'var(--tn-gold-light)', fontSize: 11, fontWeight: 600, border: '1px solid rgba(200,149,108,0.3)' }}>
+                    {editingBook.format || 'PAPIER'}
+                  </span>
+                  <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                    {fmtPrice(editingBook.price)} FCFA
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
+            </div>
+          </AdminModalHeader>
+
+          <AdminModalBody>
+            <BookForm
+              formData={formData} onInputChange={handleInputChange}
+              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange}
+              onSubmit={handleEditSubmit} onCancel={closeEditModal}
+              authors={authors} categories={categories}
+              newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
+              submitLabel="Mettre a jour" editingBook={editingBook}
+            />
+          </AdminModalBody>
+        </AdminModalOverlay>
+      )}
+    </>
   );
 };
+
+/* ─────────────────────────────────────────────
+   SHARED BOOK FORM (used for create + edit modal)
+   ───────────────────────────────────────────── */
+function BookForm({
+  formData, onInputChange, onFileChange, onBackCoverChange, onPdfChange,
+  onSubmit, onCancel, authors, categories,
+  newCategoryName, onNewCategoryNameChange, onAddCategory,
+  submitLabel, editingBook,
+}) {
+  return (
+    <form onSubmit={onSubmit}>
+      <AdminModalSection icon="fa-pen" title="Informations generales">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <FieldWrap label="Titre" required><input className="tn-input" name="title" value={formData.title} onChange={onInputChange} required /></FieldWrap>
+          <FieldWrap label="Auteur" required>
+            <select className="tn-input" name="author" value={formData.author} onChange={onInputChange} required style={{ cursor: 'pointer' }}>
+              <option value="">Selectionner</option>
+              {authors.map(a => <option key={a.id} value={a.id}>{a.full_name}</option>)}
+            </select>
+          </FieldWrap>
+          <div>
+            <FieldWrap label="Categorie" required>
+              <select className="tn-input" name="category" value={formData.category} onChange={onInputChange} required style={{ cursor: 'pointer' }}>
+                <option value="">Selectionner</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </FieldWrap>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--tn-cream-2)', border: '1px dashed var(--tn-gray-300)' }}>
+              <i className="fas fa-plus" style={{ color: 'var(--tn-orange)', fontSize: 11 }} />
+              <input type="text" placeholder="Nouvelle categorie..." value={newCategoryName} onChange={e => onNewCategoryNameChange(e.target.value)} style={{ flex: 1, background: '#fff', padding: '6px 10px', border: '1px solid var(--tn-gray-200)', borderRadius: 6, fontSize: 12, outline: 0 }} />
+              <button type="button" onClick={onAddCategory} disabled={!newCategoryName.trim()} style={{ fontSize: 11, fontWeight: 600, color: 'var(--tn-orange)', background: 'none', border: 0, cursor: 'pointer' }}>Ajouter</button>
+            </div>
+          </div>
+          <FieldWrap label="Format">
+            <select className="tn-input" name="format" value={formData.format} onChange={onInputChange} style={{ cursor: 'pointer' }}>
+              <option value="PAPIER">Papier</option>
+              <option value="EBOOK">Ebook</option>
+            </select>
+          </FieldWrap>
+          <FieldWrap label="Prix FCFA" required><input className="tn-input" name="price" type="number" min="0" step="1" value={formData.price} onChange={onInputChange} required /></FieldWrap>
+          <FieldWrap label="Reference ISBN"><input className="tn-input" name="reference" value={formData.reference} onChange={onInputChange} placeholder="978-2-1234-5678-9" style={{ fontFamily: 'var(--tn-mono)' }} /></FieldWrap>
+        </div>
+      </AdminModalSection>
+
+      <AdminModalSection icon="fa-align-left" title="Description">
+        <textarea className="tn-input" name="description" value={formData.description} onChange={onInputChange} rows="4" placeholder="Description du livre..." style={{ fontFamily: 'var(--tn-serif)', fontSize: 14, lineHeight: 1.55, minHeight: 100, resize: 'vertical' }} />
+      </AdminModalSection>
+
+      <AdminModalSection icon="fa-tag" title="Promotion & disponibilite">
+        <div style={{ padding: 18, borderRadius: 12, background: 'var(--tn-orange-50)', border: '1px solid var(--tn-orange-100)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, alignItems: 'flex-end' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+              <input type="checkbox" name="available" checked={formData.available} onChange={onInputChange} style={{ width: 18, height: 18, accentColor: 'var(--tn-orange)' }} />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Disponible</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+              <input type="checkbox" name="is_bestseller" checked={formData.is_bestseller} onChange={onInputChange} style={{ width: 18, height: 18, accentColor: 'var(--tn-orange)' }} />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Best-seller</span>
+            </label>
+            <FieldWrap label="Prix original (promo)">
+              <input className="tn-input" name="original_price" type="number" min="0" value={formData.original_price} onChange={onInputChange} placeholder="Vide = pas de promo" style={{ fontFamily: 'var(--tn-mono)' }} />
+            </FieldWrap>
+          </div>
+        </div>
+      </AdminModalSection>
+
+      <AdminModalSection icon="fa-paperclip" title="Fichiers">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+          <FieldWrap label="Couverture (recto)">
+            <input type="file" accept="image/*" onChange={onFileChange} style={{ fontSize: 12 }} />
+            <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>{editingBook ? 'Vide = conserver' : '400x600px'}</div>
+          </FieldWrap>
+          <FieldWrap label="4e de couverture">
+            <input type="file" accept="image/*" onChange={onBackCoverChange} style={{ fontSize: 12 }} />
+            {editingBook?.back_cover_image && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Jointe</div>}
+          </FieldWrap>
+          <FieldWrap label="PDF ebook">
+            <input type="file" accept=".pdf" onChange={onPdfChange} style={{ fontSize: 12 }} />
+            {editingBook?.pdf_file && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Joint</div>}
+          </FieldWrap>
+        </div>
+      </AdminModalSection>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
+        <button type="button" onClick={onCancel} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
+        <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {submitLabel}</button>
+      </div>
+    </form>
+  );
+}
+
+function FieldWrap({ label, required, children }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tn-gray-700)', marginBottom: 6 }}>
+        {label} {required && <span style={{ color: 'var(--tn-orange)' }}>*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 export default AdminBooks;

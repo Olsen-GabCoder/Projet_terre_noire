@@ -4,6 +4,6 @@
 
 /* Styles globaux personnalisés (si nécessaire plus tard) */
 body {
-  background-color: #f3f4f6; /* gris très clair */
-  color: #1f2937; /* gris foncé */
+  background-color: var(--tn-cream, #FAFAF5);
+  color: var(--tn-gray-900, #2D2D2D);
 }

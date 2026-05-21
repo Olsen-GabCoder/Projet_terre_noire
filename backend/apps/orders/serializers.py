@@ -5,6 +5,7 @@ from apps.books.models import Book
 from apps.coupons.models import Coupon
 from apps.core.models import SiteConfig
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from decimal import Decimal
 
@@ -31,7 +32,7 @@ class OrderCreateSerializer(serializers.Serializer):
     shipping_address = serializers.CharField(max_length=500)
     shipping_phone = serializers.CharField(max_length=20)
     shipping_city = serializers.CharField(max_length=100)
-    coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True, min_length=0)
     
     def validate_items(self, value):
         if not value:
@@ -44,6 +45,26 @@ class OrderCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError("La quantité doit être au moins 1.")
         
         return value
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if not user.has_complete_profile:
+            missing = []
+            if not user.first_name:
+                missing.append('prenom')
+            if not user.last_name:
+                missing.append('nom')
+            if not user.phone_number:
+                missing.append('telephone')
+            if not user.address:
+                missing.append('adresse')
+            if not user.city:
+                missing.append('ville')
+            raise serializers.ValidationError(
+                f"Veuillez completer votre profil avant de commander. "
+                f"Champs manquants : {', '.join(missing)}."
+            )
+        return attrs
 
     @transaction.atomic
     def create(self, validated_data):
@@ -90,8 +111,7 @@ class OrderCreateSerializer(serializers.Serializer):
                                 discount_amount = subtotal * (coupon.discount_percent / 100)
                             elif coupon.discount_amount:
                                 discount_amount = min(coupon.discount_amount, subtotal)
-                            coupon.usage_count += 1
-                            coupon.save()
+                            Coupon.objects.filter(pk=coupon.pk).update(usage_count=F('usage_count') + 1)
             except Coupon.DoesNotExist:
                 pass
 
@@ -115,9 +135,14 @@ class OrderCreateSerializer(serializers.Serializer):
         # Envoi email de confirmation
         try:
             from apps.core.email import send_order_confirmation
-            send_order_confirmation(order)
-        except Exception:
-            pass  # Ne pas bloquer la commande si l'email échoue
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"[EMAIL] Envoi confirmation commande #{order.id} a {order.user.email}...")
+            result = send_order_confirmation(order)
+            logger.info(f"[EMAIL] Resultat: {result}")
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"[EMAIL] ECHEC envoi email commande #{order.id}: {e}", exc_info=True)
 
         return order
 

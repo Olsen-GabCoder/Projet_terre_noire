@@ -1,482 +1,231 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { AdminTopbar } from '../../components/admin/AdminLayout';
+import {
+  AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
+  AdminActionBtn, AdminAvatar, StatusBadge, GenrePill, AdminLoading, AdminError, AdminEmpty,
+  AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection, StatusBtn,
+} from '../../components/admin/AdminPrimitives';
+import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
-import '../../styles/AdminManuscripts.css';
+
+const GENRE_LABELS = { ROMAN:'Roman', NOUVELLE:'Nouvelle', POESIE:'Poesie', ESSAI:'Essai', THEATRE:'Theatre', JEUNESSE:'Jeunesse', BD:'BD', AUTRE:'Autre' };
+const LANG_LABELS = { FR:'Francais', EN:'Anglais', AR:'Arabe', PT:'Portugais', ES:'Espagnol', AUTRE:'Autre' };
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '--';
+const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '--';
 
 const AdminManuscripts = () => {
+  const { toast, confirm } = useToast();
   const [manuscripts, setManuscripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedManuscript, setSelectedManuscript] = useState(null);
+  const [sel, setSel] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchManuscripts();
-  }, []);
+  useEffect(() => { fetch_(); }, []);
+  const fetch_ = async () => { try { setLoading(true); setError(null); const r = await api.get('/manuscripts/'); setManuscripts(r.data.results || r.data); } catch(e){ setError('Impossible de charger les manuscrits'); } finally { setLoading(false); } };
 
-  const fetchManuscripts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get('/manuscripts/');
-      setManuscripts(response.data.results || response.data);
-    } catch (err) {
-      console.error('Erreur chargement manuscrits:', err);
-      setError('Impossible de charger la liste des manuscrits');
-    } finally {
-      setLoading(false);
-    }
+  const updateStatus = async (id, s) => { try { await api.patch(`/manuscripts/${id}/update-status/`, { status: s }); fetch_(); setSel(null); toast.success('Statut mis a jour'); } catch(e){ toast.error('Echec de la mise a jour du statut'); } };
+  const deleteMs = async (id) => {
+    const ok = await confirm({ title: 'Supprimer ce manuscrit ?', message: 'Cette action est irreversible. Le manuscrit et ses fichiers seront supprimes.', confirmLabel: 'Supprimer', tone: 'danger' });
+    if (!ok) return;
+    try { await api.delete(`/manuscripts/${id}/`); fetch_(); setSel(null); toast.success('Manuscrit supprime'); } catch(e){ toast.error('Echec de la suppression'); }
   };
 
-  const updateManuscriptStatus = async (id, newStatus) => {
-    try {
-      await api.patch(`/manuscripts/${id}/update-status/`, { status: newStatus });
-      fetchManuscripts();
-      setSelectedManuscript(null);
-    } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
-      alert('Erreur lors de la mise à jour du statut');
-    }
-  };
+  const counts = useMemo(() => ({
+    all: manuscripts.length,
+    PENDING: manuscripts.filter(m => m.status === 'PENDING').length,
+    REVIEWING: manuscripts.filter(m => m.status === 'REVIEWING').length,
+    ACCEPTED: manuscripts.filter(m => m.status === 'ACCEPTED').length,
+    REJECTED: manuscripts.filter(m => m.status === 'REJECTED').length,
+  }), [manuscripts]);
 
-  const deleteManuscript = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce manuscrit ?')) return;
-    try {
-      await api.delete(`/manuscripts/${id}/`);
-      fetchManuscripts();
-      setSelectedManuscript(null);
-    } catch (err) {
-      console.error('Erreur suppression manuscrit:', err);
-      alert('Erreur lors de la suppression');
-    }
-  };
+  const filtered = useMemo(() => {
+    let list = filter === 'all' ? manuscripts : manuscripts.filter(m => m.status === filter);
+    if (search.trim()) { const q = search.toLowerCase(); list = list.filter(m => (m.title||'').toLowerCase().includes(q) || (m.author_name||'').toLowerCase().includes(q) || (m.email||'').toLowerCase().includes(q)); }
+    return list;
+  }, [manuscripts, filter, search]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusConfig = (status) => {
-    const s = (status || '').toUpperCase();
-    const configs = {
-      PENDING: { label: 'En attente', class: 'admin-manuscripts-status-badge--pending' },
-      UNDER_REVIEW: { label: 'En lecture', class: 'admin-manuscripts-status-badge--review' },
-      REVIEWING: { label: 'En examen', class: 'admin-manuscripts-status-badge--review' },
-      ACCEPTED: { label: 'Accepté', class: 'admin-manuscripts-status-badge--accepted' },
-      REJECTED: { label: 'Refusé', class: 'admin-manuscripts-status-badge--rejected' },
-    };
-    return configs[s] || { label: status || '—', class: 'admin-manuscripts-status-badge--unknown' };
-  };
-
-  const GENRE_LABELS = {
-    ROMAN: 'Roman',
-    NOUVELLE: 'Nouvelle / Recueil',
-    POESIE: 'Poésie',
-    ESSAI: 'Essai',
-    THEATRE: 'Théâtre',
-    JEUNESSE: 'Jeunesse',
-    BD: 'Bande dessinée',
-    AUTRE: 'Autre',
-  };
-
-  const LANGUAGE_LABELS = {
-    FR: 'Français',
-    EN: 'Anglais',
-    AR: 'Arabe',
-    PT: 'Portugais',
-    ES: 'Espagnol',
-    AUTRE: 'Autre',
-  };
-
-  const getGenreLabel = (genre) => GENRE_LABELS[genre] || genre || '—';
-  const getLanguageLabel = (lang) => LANGUAGE_LABELS[lang] || lang || '—';
-  const getFileUrl = (m) => m.file_url || m.file;
-
-  const getFilteredManuscripts = () => {
-    if (filter === 'all') return manuscripts;
-    return manuscripts.filter(m => m.status === filter);
-  };
-
-  const pendingCount = manuscripts.filter(m => m.status === 'PENDING').length;
-  const reviewCount = manuscripts.filter(m => m.status === 'REVIEWING').length;
-  const acceptedCount = manuscripts.filter(m => m.status === 'ACCEPTED').length;
-  const rejectedCount = manuscripts.filter(m => m.status === 'REJECTED').length;
-
-  if (loading) {
-    return (
-      <div className="admin-manuscripts-loading">
-        Chargement des manuscrits...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="admin-manuscripts-error">
-        {error}
-      </div>
-    );
-  }
-
-  const filteredManuscripts = getFilteredManuscripts();
+  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des manuscrits..." /></div>;
+  if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => window.location.reload()} /></div>;
 
   return (
-    <div className="admin-manuscripts-page">
-      <section className="admin-manuscripts-hero">
-        <div className="admin-manuscripts-hero__orb admin-manuscripts-hero__orb--1" />
-        <div className="admin-manuscripts-hero__orb admin-manuscripts-hero__orb--2" />
-        <div className="admin-manuscripts-hero__grid-bg" />
-        <div className="admin-manuscripts-hero__inner">
-          <div className="admin-manuscripts-hero__line" />
-          <h1 className="admin-manuscripts-hero__title">Gestion des Manuscrits</h1>
-          <p className="admin-manuscripts-hero__sub">
-            Consultez et gérez les manuscrits soumis par les auteurs. Changez les statuts et téléchargez les fichiers.
-          </p>
-          <Link to="/admin-dashboard" className="admin-manuscripts-hero__back">
-            <i className="fas fa-arrow-left" />
-            Retour
-          </Link>
+    <>
+      <AdminTopbar
+        breadcrumb={['Admin', 'Manuscrits']}
+        title="Gestion des manuscrits"
+        subtitle="Examinez les soumissions, changez les statuts et telechargez les fichiers des auteurs."
+        actions={<Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>}
+      />
+
+      <div className="adm-page-body">
+        {/* Stats */}
+        <div className="adm-grid-5" style={{ marginBottom: 28 }}>
+          <AdminStat icon="fa-layer-group" label="Total" value={counts.all} color="var(--tn-gray-700)" />
+          <AdminStat icon="fa-clock" label="En attente" value={counts.PENDING} meta={counts.PENDING > 0 ? 'a examiner' : ''} metaTone="alert" color="var(--tn-warning)" />
+          <AdminStat icon="fa-magnifying-glass" label="En examen" value={counts.REVIEWING} color="#1c2a4a" />
+          <AdminStat icon="fa-circle-check" label="Acceptes" value={counts.ACCEPTED} color="var(--tn-success)" />
+          <AdminStat icon="fa-circle-xmark" label="Refuses" value={counts.REJECTED} color="var(--tn-error)" />
         </div>
-      </section>
 
-      <div className="admin-manuscripts-hero-fade" />
+        {/* Toolbar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+          <AdminFilterPills active={filter} onChange={setFilter} items={[
+            ['all','Tous',counts.all], ['PENDING','En attente',counts.PENDING], ['REVIEWING','En examen',counts.REVIEWING],
+            ['ACCEPTED','Acceptes',counts.ACCEPTED], ['REJECTED','Refuses',counts.REJECTED],
+          ]} />
+          <AdminSearch placeholder="Rechercher titre, auteur, email..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
+        </div>
 
-      <section className="admin-manuscripts-content">
-        <div className="admin-manuscripts-inner">
-          {/* Statistiques */}
-          <div className="admin-manuscripts-stats">
-            <div className="admin-manuscripts-stat">
-              <div className="admin-manuscripts-stat__number admin-manuscripts-stat__number--pending">{pendingCount}</div>
-              <div className="admin-manuscripts-stat__label">En attente</div>
-            </div>
-            <div className="admin-manuscripts-stat">
-              <div className="admin-manuscripts-stat__number admin-manuscripts-stat__number--review">{reviewCount}</div>
-              <div className="admin-manuscripts-stat__label">En lecture</div>
-            </div>
-            <div className="admin-manuscripts-stat">
-              <div className="admin-manuscripts-stat__number admin-manuscripts-stat__number--accepted">{acceptedCount}</div>
-              <div className="admin-manuscripts-stat__label">Acceptés</div>
-            </div>
-            <div className="admin-manuscripts-stat">
-              <div className="admin-manuscripts-stat__number admin-manuscripts-stat__number--rejected">{rejectedCount}</div>
-              <div className="admin-manuscripts-stat__label">Refusés</div>
-            </div>
-          </div>
+        {filtered.length === 0 && <AdminEmpty icon="fa-file-circle-question" title="Aucun manuscrit trouve" subtitle={search ? 'Essayez d\'autres termes.' : 'Aucun manuscrit ne correspond.'} />}
 
-          {/* Filtres */}
-          <div className="admin-manuscripts-filter">
-            <span className="admin-manuscripts-filter__label">Filtrer par statut :</span>
-            <div className="admin-manuscripts-filter__btns">
-              <button
-                className={`admin-manuscripts-filter__btn ${filter === 'all' ? 'active' : ''}`}
-                onClick={() => setFilter('all')}
-              >
-                Tous ({manuscripts.length})
-              </button>
-              <button
-                className={`admin-manuscripts-filter__btn ${filter === 'PENDING' ? 'active' : ''}`}
-                onClick={() => setFilter('PENDING')}
-              >
-                En attente ({pendingCount})
-              </button>
-              <button
-                className={`admin-manuscripts-filter__btn ${filter === 'REVIEWING' ? 'active' : ''}`}
-                onClick={() => setFilter('REVIEWING')}
-              >
-                En examen ({reviewCount})
-              </button>
-              <button
-                className={`admin-manuscripts-filter__btn ${filter === 'ACCEPTED' ? 'active' : ''}`}
-                onClick={() => setFilter('ACCEPTED')}
-              >
-                Acceptés ({acceptedCount})
-              </button>
-              <button
-                className={`admin-manuscripts-filter__btn ${filter === 'REJECTED' ? 'active' : ''}`}
-                onClick={() => setFilter('REJECTED')}
-              >
-                Refusés ({rejectedCount})
-              </button>
-            </div>
-          </div>
-
-          {/* Vue tableau — desktop */}
-          <div className="admin-manuscripts-table admin-manuscripts-table--desktop">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Titre</th>
-                  <th>Genre</th>
-                  <th>Auteur</th>
-                  <th>Email</th>
-                  <th>Date</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredManuscripts.map(manuscript => {
-                  const statusConfig = getStatusConfig(manuscript.status);
-                  return (
-                    <tr key={manuscript.id}>
-                      <td><strong>#{manuscript.id}</strong></td>
-                      <td className="manuscript-title-cell">
-                        <strong>{manuscript.title}</strong>
-                      </td>
-                      <td>{getGenreLabel(manuscript.genre)}</td>
-                      <td className="manuscript-author-cell">
-                        {manuscript.author_name}
-                        {manuscript.pen_name && (
-                          <small> ({manuscript.pen_name})</small>
-                        )}
-                      </td>
-                      <td>{manuscript.email}</td>
-                      <td>{formatDate(manuscript.submitted_at)}</td>
-                      <td>
-                        <span className={`admin-manuscripts-status-badge ${statusConfig.class}`}>
-                          {statusConfig.label}
-                        </span>
-                      </td>
-                      <td className="actions">
-                        <button
-                          onClick={() => setSelectedManuscript(manuscript)}
-                          className="btn-view"
-                        >
-                          <i className="fas fa-eye" />
-                          Détails
-                        </button>
-                        {getFileUrl(manuscript) && (
-                          <button
-                            onClick={() => window.open(getFileUrl(manuscript), '_blank')}
-                            className="btn-download"
-                          >
-                            <i className="fas fa-download" />
-                            Télécharger
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Vue cartes — mobile */}
-          <div className="admin-manuscripts-mobile">
-            {filteredManuscripts.map(manuscript => {
-              const statusConfig = getStatusConfig(manuscript.status);
-              return (
-                <div key={manuscript.id} className="admin-manuscripts-mobile-card">
-                  <div className="admin-manuscripts-mobile-card__header">
-                    <span className="admin-manuscripts-mobile-card__id">#{manuscript.id}</span>
-                    <span className={`admin-manuscripts-status-badge ${statusConfig.class}`}>
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                  <div className="admin-manuscripts-mobile-card__title">{manuscript.title}</div>
-                  {manuscript.genre && (
-                    <div className="admin-manuscripts-mobile-card__genre">{getGenreLabel(manuscript.genre)}</div>
-                  )}
-                  <div className="admin-manuscripts-mobile-card__meta">
-                    {manuscript.author_name}
-                    {manuscript.pen_name && ` (${manuscript.pen_name})`}
-                  </div>
-                  <div className="admin-manuscripts-mobile-card__meta">{formatDate(manuscript.submitted_at)}</div>
-                  <div className="admin-manuscripts-mobile-card__footer">
-                    <div className="admin-manuscripts-mobile-card__btns">
-                      <button
-                        onClick={() => setSelectedManuscript(manuscript)}
-                        className="btn-view"
-                      >
-                        <i className="fas fa-eye" />
-                        Détails
-                      </button>
-                      {getFileUrl(manuscript) && (
-                        <button
-                          onClick={() => window.open(getFileUrl(manuscript), '_blank')}
-                          className="btn-download"
-                        >
-                          <i className="fas fa-download" />
-                          Télécharger
-                        </button>
-                      )}
+        {/* Table */}
+        {filtered.length > 0 && (
+          <AdminTable columns={[
+            { label: 'Manuscrit', width: 300 }, { label: 'Genre', width: 120 }, { label: 'Auteur' },
+            { label: 'Soumis le', width: 120 }, { label: 'Statut', width: 130 }, { label: '', align: 'right', width: 100 },
+          ]}>
+            {filtered.map((m, i) => (
+              <AdminRow key={m.id} last={i === filtered.length - 1}>
+                <AdminCell>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 38, height: 50, borderRadius: 4, background: 'var(--tn-cream-2)', border: '1px solid var(--tn-gray-200)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tn-orange)', fontSize: 16, flexShrink: 0 }}>
+                      <i className="fas fa-scroll" />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 14, fontWeight: 600, color: 'var(--tn-gray-900)', lineHeight: 1.3 }}>{m.title}</div>
+                      <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, color: 'var(--tn-gray-500)', marginTop: 4, letterSpacing: '0.08em' }}>#{m.id}</div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                </AdminCell>
+                <AdminCell><GenrePill value={m.genre} /></AdminCell>
+                <AdminCell>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <AdminAvatar name={m.author_name} size={30} />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--tn-gray-900)' }}>{m.author_name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--tn-gray-500)' }}>{m.email}</div>
+                    </div>
+                  </div>
+                </AdminCell>
+                <AdminCell muted mono>{fmtDate(m.submitted_at)}</AdminCell>
+                <AdminCell><StatusBadge value={(m.status||'').toLowerCase()} /></AdminCell>
+                <AdminCell align="right">
+                  <div style={{ display: 'inline-flex', gap: 6 }}>
+                    <AdminActionBtn icon="fa-eye" tone="orange" title="Details" onClick={() => setSel(m)} />
+                    {(m.file_url || m.file) && <AdminActionBtn icon="fa-download" tone="gray" title="Telecharger" onClick={() => window.open(m.file_url || m.file, '_blank')} />}
+                  </div>
+                </AdminCell>
+              </AdminRow>
+            ))}
+          </AdminTable>
+        )}
+      </div>
 
-      {/* Modal de détails */}
-      {selectedManuscript && (
-        <div
-          className="admin-manuscripts-modal-overlay"
-          onClick={() => setSelectedManuscript(null)}
-        >
-          <div
-            className="admin-manuscripts-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-manuscripts-modal__header">
-              <h2>Manuscrit #{selectedManuscript.id}</h2>
-              <button
-                onClick={() => setSelectedManuscript(null)}
-                className="admin-manuscripts-modal__close"
-                aria-label="Fermer"
-              >
-                ×
-              </button>
+      {/* ── MODAL ── */}
+      {sel && (
+        <AdminModalOverlay onClose={() => setSel(null)}>
+          <AdminModalHeader onClose={() => setSel(null)}>
+            <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--tn-gold-light)', marginBottom: 6 }}>Manuscrit · #{sel.id}</div>
+            <h2 style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 26, margin: 0, letterSpacing: '-0.01em' }}>{sel.title}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+              <StatusBadge value={(sel.status||'').toLowerCase()} />
+              <GenrePill value={sel.genre} />
+              <span style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: 'var(--tn-gold-light)', fontSize: 11, fontWeight: 600, border: '1px solid rgba(200,149,108,0.3)' }}>
+                {LANG_LABELS[sel.language] || sel.language || 'FR'}{sel.page_count ? ` · ${sel.page_count} pages` : ''}
+              </span>
             </div>
+          </AdminModalHeader>
 
-            <div className="admin-manuscripts-modal__body">
-              <div className="admin-manuscripts-modal__section">
-                <h3>Informations générales</h3>
-                <div className="admin-manuscripts-modal__grid">
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Titre</strong>
-                    <span>{selectedManuscript.title}</span>
+          <AdminModalBody>
+            {/* Auteur */}
+            <AdminModalSection icon="fa-user-pen" title="Auteur">
+              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <AdminAvatar name={sel.author_name} size={48} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)' }}>
+                    {sel.author_name}
+                    {sel.pen_name && <span style={{ fontStyle: 'italic', color: 'var(--tn-gray-500)', fontWeight: 400, fontSize: 14 }}> · « {sel.pen_name} »</span>}
                   </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Genre</strong>
-                    <span>{getGenreLabel(selectedManuscript.genre)}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Langue</strong>
-                    <span>{getLanguageLabel(selectedManuscript.language)}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Nombre de pages</strong>
-                    <span>{selectedManuscript.page_count ?? '—'}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Date de soumission</strong>
-                    <span>{formatDate(selectedManuscript.submitted_at)}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Statut</strong>
-                    <span>
-                      <span className={`admin-manuscripts-status-badge ${getStatusConfig(selectedManuscript.status).class}`}>
-                        {getStatusConfig(selectedManuscript.status).label}
-                      </span>
-                    </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 8, fontSize: 12, color: 'var(--tn-gray-700)' }}>
+                    <span><i className="fas fa-envelope" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.email}</span>
+                    {sel.phone_number && <span><i className="fas fa-phone" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.phone_number}</span>}
+                    {sel.country && <span style={{ gridColumn: '1 / -1' }}><i className="fas fa-flag" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.country}</span>}
                   </div>
                 </div>
               </div>
+            </AdminModalSection>
 
-              <div className="admin-manuscripts-modal__section">
-                <h3>Informations auteur</h3>
-                <div className="admin-manuscripts-modal__grid">
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Nom</strong>
-                    <span>{selectedManuscript.author_name}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Pseudonyme</strong>
-                    <span>{selectedManuscript.pen_name || '—'}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Email</strong>
-                    <span>{selectedManuscript.email}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Téléphone</strong>
-                    <span>{selectedManuscript.phone_number || '—'}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Pays / Nationalité</strong>
-                    <span>{selectedManuscript.country || '—'}</span>
-                  </div>
-                  <div className="admin-manuscripts-modal__item">
-                    <strong>Conditions acceptées</strong>
-                    <span>{selectedManuscript.terms_accepted ? 'Oui' : 'Non'}</span>
-                  </div>
-                </div>
+            {/* Details */}
+            <AdminModalSection icon="fa-book" title="Details">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <DetailTile label="Soumis le" value={fmtDate(sel.submitted_at)} />
+                <DetailTile label="Pages" value={sel.page_count ?? '--'} />
+                <DetailTile label="Conditions" value={sel.terms_accepted ? 'Oui' : 'Non'} tone={sel.terms_accepted ? 'good' : 'bad'} icon={sel.terms_accepted ? 'fa-check' : 'fa-times'} />
               </div>
+            </AdminModalSection>
 
-              {getFileUrl(selectedManuscript) && (
-                <div className="admin-manuscripts-modal__section">
-                  <h3>Fichier du manuscrit</h3>
-                  <div className="admin-manuscripts-modal__file-info">
+            {/* Fichier */}
+            {(sel.file_url || sel.file) && (
+              <AdminModalSection icon="fa-file-pdf" title="Fichier">
+                <div style={{ background: '#fff', borderRadius: 12, padding: 16, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 42, height: 50, borderRadius: 6, background: 'rgba(198,40,40,0.1)', color: 'var(--tn-error)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                     <i className="fas fa-file-pdf" />
-                    <div className="admin-manuscripts-modal__file-details">
-                      <h4>{(selectedManuscript.file_url || selectedManuscript.file || '').split('/').pop() || 'Fichier manuscrit'}</h4>
-                      <p>Soumis le {formatDate(selectedManuscript.submitted_at)}</p>
-                    </div>
-                    <div className="admin-manuscripts-modal__file-download">
-                      <button
-                        onClick={() => window.open(getFileUrl(selectedManuscript), '_blank')}
-                        className="btn-download"
-                      >
-                        <i className="fas fa-download" />
-                        Télécharger
-                      </button>
-                    </div>
                   </div>
-                </div>
-              )}
-
-              <div className="admin-manuscripts-modal__section">
-                <h3>Description</h3>
-                <div className="admin-manuscripts-modal__description">
-                  <p>{selectedManuscript.description || 'Aucune description fournie.'}</p>
-                </div>
-              </div>
-
-              <div className="admin-manuscripts-modal__section">
-                <h3>Changer le statut</h3>
-                <div className="admin-manuscripts-modal__status-actions">
-                  <button
-                    onClick={() => updateManuscriptStatus(selectedManuscript.id, 'PENDING')}
-                    className="admin-manuscripts-modal__status-btn pending"
-                  >
-                    En attente
-                  </button>
-                  <button
-                    onClick={() => updateManuscriptStatus(selectedManuscript.id, 'REVIEWING')}
-                    className="admin-manuscripts-modal__status-btn review"
-                  >
-                    En examen
-                  </button>
-                  <button
-                    onClick={() => updateManuscriptStatus(selectedManuscript.id, 'ACCEPTED')}
-                    className="admin-manuscripts-modal__status-btn accepted"
-                  >
-                    Accepter
-                  </button>
-                  <button
-                    onClick={() => updateManuscriptStatus(selectedManuscript.id, 'REJECTED')}
-                    className="admin-manuscripts-modal__status-btn rejected"
-                  >
-                    Refuser
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 12, color: 'var(--tn-gray-900)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {(sel.file_url || sel.file || '').split('/').pop() || 'manuscrit.pdf'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>Soumis le {fmtDate(sel.submitted_at)}</div>
+                  </div>
+                  <button onClick={() => window.open(sel.file_url || sel.file, '_blank')} className="tn-btn tn-btn--primary tn-btn--sm">
+                    <i className="fas fa-download" /> Telecharger
                   </button>
                 </div>
-              </div>
+              </AdminModalSection>
+            )}
 
-              <div className="admin-manuscripts-modal__actions">
-                <button
-                  onClick={() => deleteManuscript(selectedManuscript.id)}
-                  className="admin-manuscripts-modal__btn-delete"
-                >
-                  <i className="fas fa-trash-alt" />
-                  Supprimer ce manuscrit
-                </button>
+            {/* Description */}
+            <AdminModalSection icon="fa-align-left" title="Description">
+              <div style={{ padding: '14px 18px', borderRadius: 10, background: '#fff', borderLeft: '4px solid var(--tn-orange)', border: '1px solid var(--tn-gray-200)', fontFamily: 'var(--tn-serif)', fontSize: 14, fontStyle: 'italic', lineHeight: 1.65, color: 'var(--tn-gray-700)' }}>
+                {sel.description ? `« ${sel.description} »` : 'Aucune description fournie.'}
               </div>
+            </AdminModalSection>
+
+            {/* Statut */}
+            <AdminModalSection icon="fa-rotate" title="Changer le statut">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {[['PENDING','En attente','fa-clock'],['REVIEWING','En examen','fa-magnifying-glass'],['ACCEPTED','Accepter','fa-check'],['REJECTED','Refuser','fa-times']].map(([s,l,ic]) => (
+                  <StatusBtn key={s} statusKey={s.toLowerCase()} label={l} icon={ic} isCurrent={(sel.status||'').toUpperCase() === s} onClick={() => updateStatus(sel.id, s)} />
+                ))}
+              </div>
+            </AdminModalSection>
+
+            {/* Danger */}
+            <div style={{ borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
+              <button onClick={() => deleteMs(sel.id)} style={{ padding: '10px 16px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(198,40,40,0.3)', color: 'var(--tn-error)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                <i className="fas fa-trash-can" style={{ marginRight: 8 }} /> Supprimer ce manuscrit
+              </button>
             </div>
-          </div>
-        </div>
+          </AdminModalBody>
+        </AdminModalOverlay>
       )}
-    </div>
+    </>
   );
 };
+
+function DetailTile({ label, value, tone, icon }) {
+  const fg = tone === 'good' ? 'var(--tn-success)' : tone === 'bad' ? 'var(--tn-error)' : 'var(--tn-gray-900)';
+  return (
+    <div style={{ background: '#fff', borderRadius: 10, padding: 14, border: '1px solid var(--tn-gray-200)' }}>
+      <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--tn-gray-500)' }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+        {icon && <i className={`fas ${icon}`} style={{ color: fg, fontSize: 13 }} />}
+        <span style={{ fontFamily: 'var(--tn-serif)', fontSize: 18, fontWeight: 700, color: fg, letterSpacing: '-0.01em' }}>{value}</span>
+      </div>
+    </div>
+  );
+}
 
 export default AdminManuscripts;

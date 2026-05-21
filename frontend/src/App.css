@@ -42,6 +42,33 @@ body {
   outline-offset: 2px;
 }
 
+/* ── Scroll progress bar ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 10000;
+  pointer-events: none;
+  background: transparent;
+}
+
+.scroll-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tn-orange, #E8601C), var(--tn-gold-light, #D4A574));
+  border-radius: 0 2px 2px 0;
+  transition: width 60ms linear;
+  box-shadow: 0 0 8px rgba(232, 96, 28, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress__bar {
+    transition: none;
+    box-shadow: none;
+  }
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -53,15 +80,27 @@ body {
 .main-content {
   flex: 1;
   background: var(--color-bg-page);
+  padding-top: 90px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 60px;
+  }
 }
 
 .main-content--admin {
   padding: 0;
-  min-height: 100vh;
+  padding-top: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content--reader {
   padding: 0;
+  padding-top: 0;
   min-height: 100vh;
 }
 
@@ -69,6 +108,12 @@ body {
   max-width: none;
   width: 100%;
   padding: 0;
+  padding-top: 90px;
+}
+@media (max-width: 768px) {
+  .main-content--full {
+    padding-top: 60px;
+  }
 }
 
 /* Placeholder pour les pages non encore créées */

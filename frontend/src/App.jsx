@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -6,6 +6,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { DeliveryConfigProvider } from './context/DeliveryConfigContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import SeparatorDefs from './components/SeparatorDefs';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import BookDetail from './pages/BookDetail';
@@ -34,6 +35,8 @@ import Settings from './pages/Settings';
 import AuthorDetail from './pages/AuthorDetail';
 import Wishlist from './pages/Wishlist';
 import Orders from './pages/Orders';
+import NewsletterConfirm from './pages/NewsletterConfirm';
+import NewsletterUnsubscribe from './pages/NewsletterUnsubscribe';
 
 // Import des pages admin
 import AdminLayout from './components/admin/AdminLayout';
@@ -43,21 +46,63 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminManuscripts from "./pages/admin/AdminManuscripts";
 import AdminAuthors from './pages/admin/AdminAuthors';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminNewsletter from './pages/admin/AdminNewsletter';
+import AdminCoupons from './pages/admin/AdminCoupons';
+import AdminContact from './pages/admin/AdminContact';
+import AdminConfig from './pages/admin/AdminConfig';
 
+import BottomNav from './components/BottomNav';
+import { ToastProvider } from './components/ui/ToastProvider';
 import './App.css';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+function ScrollProgressBar() {
+  const [progress, setProgress] = useState(0);
+  const location = useLocation();
+  const hidden = location.pathname.startsWith('/admin') || location.pathname.match(/\/read$/);
+
+  useEffect(() => {
+    if (hidden) return;
+    const onScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [hidden, location.pathname]);
+
+  if (hidden || progress === 0) return null;
+
+  return (
+    <div className="scroll-progress" aria-hidden="true">
+      <div className="scroll-progress__bar" style={{ width: `${progress}%` }} />
+    </div>
+  );
+}
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
-  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/');
+  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/newsletter/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
 
   return (
     <div className="app">
+      <SeparatorDefs />
+      <ScrollToTop />
+      <ScrollProgressBar />
       <a href="#main-content" className="skip-link">
         Aller au contenu principal
       </a>
-      {!isReaderPage && <Header />}
+      {!isReaderPage && !isAdminRoute && <Header />}
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
               <Routes>
                 {/* Routes principales */}
@@ -78,15 +123,21 @@ function AppContent() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/newsletter/confirm/:status" element={<NewsletterConfirm />} />
+                <Route path="/newsletter/unsubscribe/:status" element={<NewsletterUnsubscribe />} />
                 
                 {/* Routes Admin — protégées, layout sidebar */}
                 <Route path="/admin-dashboard" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
-                  <Route index element={<Navigate to="/admin-dashboard/books" replace />} />
+                  <Route index element={<AdminDashboard />} />
                   <Route path="books" element={<AdminBooks />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="manuscripts" element={<AdminManuscripts />} />
                   <Route path="authors" element={<AdminAuthors />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="newsletter" element={<AdminNewsletter />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
+                  <Route path="contact" element={<AdminContact />} />
+                  <Route path="config" element={<AdminConfig />} />
                 </Route>
                 
                 {/* Routes informatives */}
@@ -110,6 +161,7 @@ function AppContent() {
               </Routes>
       </main>
       {!isAdminRoute && !isReaderPage && <Footer />}
+      {!isAdminRoute && !isReaderPage && <BottomNav />}
     </div>
   );
 }
@@ -121,7 +173,9 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <DeliveryConfigProvider>
-              <AppContent />
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
             </DeliveryConfigProvider>
           </WishlistProvider>
         </CartProvider>

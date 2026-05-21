@@ -11,7 +11,7 @@
 .cgv-hero {
   flex-shrink: 0;
   padding: 6rem 1.5rem 3rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  background: linear-gradient(170deg, var(--tn-black) 0%, var(--tn-black) 40%, var(--tn-black) 100%);
   color: #fff;
   position: relative;
   overflow: hidden;
@@ -36,7 +36,7 @@
   height: 450px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.1) 0%, transparent 65%);
   filter: blur(60px);
   top: -20%;
   right: -8%;
@@ -60,7 +60,7 @@
   height: 3px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
+  background: linear-gradient(90deg, var(--color-primary), var(--tn-orange-light));
 }
 
 .cgv-hero__title {
@@ -81,7 +81,7 @@
 .cgv-hero-fade {
   flex-shrink: 0;
   height: 60px;
-  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  background: linear-gradient(to bottom, var(--tn-black), var(--tn-gray-700) 50%, var(--color-bg-page));
   margin-top: -1px;
 }
 
@@ -136,6 +136,88 @@
   text-decoration: underline;
 }
 
+/* Table des matieres */
+.cgv-toc {
+  padding-left: 1.25rem;
+  columns: 2;
+  column-gap: 2rem;
+  margin: 0;
+}
+
+.cgv-toc li {
+  font-size: 0.8125rem;
+  line-height: 2;
+  color: var(--color-gray-600);
+  break-inside: avoid;
+}
+
+.cgv-toc li a {
+  color: var(--color-gray-700);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.cgv-toc li a:hover {
+  color: var(--color-primary);
+}
+
+/* Grille identification vendeur */
+.cgv-info-grid {
+  background: var(--tn-cream-2, #F5F2EA);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0 16px;
+}
+
+.cgv-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  font-size: 0.875rem;
+}
+
+.cgv-info-row:last-child {
+  border-bottom: none;
+}
+
+.cgv-info-row span {
+  color: var(--color-gray-500);
+}
+
+.cgv-info-row strong {
+  color: var(--color-gray-900);
+  text-align: right;
+}
+
+/* Sous-titres h3 */
+.cgv-card h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 1.5rem 0 0.5rem;
+}
+
+/* Listes */
+.cgv-card ul, .cgv-card ol {
+  padding-left: 1.25rem;
+  margin: 0 0 1rem;
+}
+
+.cgv-card li {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--color-gray-600);
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 600px) {
+  .cgv-toc { columns: 1; }
+  .cgv-info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .cgv-info-row strong { text-align: left; }
+}
+
 .cgv-cta {
   display: flex;
   gap: 1rem;
@@ -176,7 +258,7 @@
 
 .cgv-btn--outline:hover {
   border-color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(232, 96, 28, 0.05);
 }
 
 .cgv-footer-fade {

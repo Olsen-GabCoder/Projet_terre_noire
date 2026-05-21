@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
+from django.utils import timezone
 
 from apps.core.throttling import PublicEndpointThrottle
 from .models import Manuscript
@@ -41,7 +42,7 @@ class ManuscriptListView(generics.ListAPIView):
     Vue pour lister tous les manuscrits (Admin seulement)
     Endpoint: GET /api/manuscripts/
     """
-    queryset = Manuscript.objects.all().order_by('-submitted_at')
+    queryset = Manuscript.objects.filter(is_deleted=False).order_by('-submitted_at')
     serializer_class = ManuscriptSerializer
     permission_classes = [IsAdminUser]
 
@@ -50,18 +51,18 @@ class ManuscriptDetailView(generics.RetrieveUpdateDestroyAPIView):
     Vue pour voir, modifier ou supprimer un manuscrit spécifique (Admin seulement)
     Endpoint: GET/PUT/PATCH/DELETE /api/manuscripts/{id}/
     """
-    queryset = Manuscript.objects.all()
+    queryset = Manuscript.objects.filter(is_deleted=False)
     serializer_class = ManuscriptSerializer
     permission_classes = [IsAdminUser]
     parser_classes = [MultiPartParser, FormParser]
-    
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
+
         return Response(
             {
                 'success': True,
@@ -69,10 +70,12 @@ class ManuscriptDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'data': serializer.data
             }
         )
-    
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.perform_destroy(instance)
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.save(update_fields=['is_deleted', 'deleted_at'])
         return Response(
             {
                 'success': True,
@@ -90,7 +93,7 @@ class ManuscriptStatusUpdateView(APIView):
     
     def patch(self, request, pk):
         try:
-            manuscript = Manuscript.objects.get(pk=pk)
+            manuscript = Manuscript.objects.get(pk=pk, is_deleted=False)
         except Manuscript.DoesNotExist:
             return Response(
                 {'error': 'Manuscrit non trouvé.'},
@@ -104,9 +107,19 @@ class ManuscriptStatusUpdateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        old_status = manuscript.status
         manuscript.status = status_value
         manuscript.save()
-        
+
+        # Notifier l'auteur du changement de statut
+        if old_status != status_value:
+            try:
+                from apps.core.email import send_manuscript_status_changed
+                send_manuscript_status_changed(manuscript, old_status, status_value)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"[EMAIL] Echec notification manuscrit #{manuscript.id}: {e}", exc_info=True)
+
         return Response(
             {
                 'success': True,

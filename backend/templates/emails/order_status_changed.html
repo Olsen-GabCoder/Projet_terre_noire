@@ -1,0 +1,28 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour {{ user.first_name|default:user.username }},</p>
+<p>Le statut de votre commande <strong>#{{ order.id|stringformat:"06d" }}</strong> a ete mis a jour.</p>
+
+<div class="highlight">
+  <strong>{{ old_status }}</strong> &rarr; <strong>{{ new_status }}</strong>
+</div>
+
+<h3>Contenu de la commande</h3>
+<table>
+  <thead>
+    <tr><th>Article</th><th>Qte</th></tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.quantity }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p>Pour toute question, n'hesitez pas a nous contacter par email ou par telephone.</p>
+<p><a href="{{ frontend_url }}/orders" class="btn">Voir mes commandes</a></p>
+<p>Merci pour votre confiance !</p>
+{% endblock %}

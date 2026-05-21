@@ -45,15 +45,25 @@ class ManuscriptSerializer(serializers.ModelSerializer):
         return None
     
     def validate_file(self, value):
-        """Validation personnalisée du fichier"""
-        # Limite de taille: 10 MB
-        max_size = 10 * 1024 * 1024  # 10 MB en bytes
-        
+        """Validation personnalisee du fichier (taille + type MIME)"""
+        max_size = 10 * 1024 * 1024  # 10 MB
+
         if value.size > max_size:
             raise serializers.ValidationError(
                 "Le fichier est trop volumineux. Taille maximale: 10 MB."
             )
-        
+
+        allowed_mime_types = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]
+        content_type = getattr(value, 'content_type', None)
+        if content_type and content_type not in allowed_mime_types:
+            raise serializers.ValidationError(
+                "Type de fichier non accepte. Seuls les fichiers PDF et Word (.doc, .docx) sont autorises."
+            )
+
         return value
     
     def validate_email(self, value):

@@ -10,11 +10,12 @@
    HERO — profondeur et raffinement
    ============================================= */
 .login-hero {
-  padding: 7.5rem 1.5rem 4rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 35%, #0c1631 70%, #0f172a 100%);
+  padding: 48px 56px 48px;
+  background: var(--tn-black);
   color: #fff;
   position: relative;
   overflow: hidden;
+  padding-top: 48px;
 }
 
 .login-hero__grid-bg {
@@ -51,7 +52,7 @@
   height: 500px;
   top: -22%;
   right: -10%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.15) 0%, transparent 60%);
   filter: blur(70px);
   animation: login-orb-1 16s ease-in-out infinite;
 }
@@ -61,7 +62,7 @@
   height: 380px;
   bottom: -12%;
   left: -8%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.12) 0%, transparent 60%);
   filter: blur(65px);
   animation: login-orb-2 20s ease-in-out infinite;
 }
@@ -120,8 +121,8 @@
   height: 4px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa, #93c5fd);
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(90deg, var(--color-primary), var(--tn-orange-light), #93c5fd);
+  box-shadow: 0 0 20px rgba(232, 96, 28, 0.4);
 }
 
 .login-hero__icon {
@@ -131,13 +132,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.35) 0%, rgba(96, 165, 250, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(232, 96, 28, 0.35) 0%, rgba(96, 165, 250, 0.2) 100%);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 1.75rem;
   color: #fff;
   box-shadow:
-    0 8px 32px rgba(37, 99, 235, 0.3),
+    0 8px 32px rgba(232, 96, 28, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   animation: login-icon-float 4s ease-in-out infinite;
 }
@@ -172,7 +173,7 @@
 
 .login-hero-fade {
   height: 90px;
-  background: linear-gradient(to bottom, #0c1631, #1e293b 40%, #f1f5f9);
+  background: linear-gradient(to bottom, var(--tn-black), #1e293b 40%, var(--tn-cream));
   margin-top: -1px;
 }
 
@@ -180,7 +181,7 @@
    CONTENU — fond enrichi avec orbes
    ============================================= */
 .login-content {
-  background: #f1f5f9;
+  background: var(--tn-cream);
   padding: 2.5rem 1.5rem 4rem;
   flex: 1;
   position: relative;
@@ -203,7 +204,7 @@
   height: 350px;
   top: -80px;
   left: -100px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.06) 0%, transparent 70%);
   filter: blur(50px);
 }
 
@@ -226,13 +227,11 @@
 /* ── CARTE PREMIUM ── */
 .login-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 14px;
   padding: 0 2rem 2.25rem;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px rgba(15, 23, 42, 0.06),
-    0 0 0 1px rgba(15, 23, 42, 0.02);
+  border: 1px solid var(--tn-gray-200);
+  border-top: 4px solid var(--tn-orange);
+  box-shadow: var(--tn-shadow-2);
   position: relative;
   overflow: hidden;
   animation: login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -256,7 +255,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa, #93c5fd);
+  background: linear-gradient(90deg, var(--color-primary), var(--tn-orange-light), #93c5fd);
   opacity: 0.9;
 }
 
@@ -344,7 +343,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  background: linear-gradient(to bottom, #f8fafc, var(--tn-cream));
   border: 1px solid var(--color-gray-200);
   border-radius: 12px;
   transition: all 0.25s ease;
@@ -356,7 +355,7 @@
 
 .login-input-wrap:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 4px rgba(232, 96, 28, 0.12);
   background: #fff;
 }
 
@@ -411,7 +410,7 @@
 
 .login-pwd-toggle:hover {
   color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(232, 96, 28, 0.08);
 }
 
 .login-options {
@@ -455,13 +454,13 @@
 
 .login-btn-submit {
   /* Fond bleu solide + gradient pour profondeur */
-  background-color: #2563eb;
-  background-image: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #1d4ed8 100%);
+  background-color: var(--tn-orange);
+  background-image: linear-gradient(135deg, var(--tn-orange) 0%, var(--tn-orange) 50%, var(--tn-orange-hover) 100%);
   color: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow:
-    0 1px 2px rgba(37, 99, 235, 0.3),
-    0 4px 12px rgba(37, 99, 235, 0.25);
+    0 1px 2px rgba(232, 96, 28, 0.3),
+    0 4px 12px rgba(232, 96, 28, 0.25);
 }
 
 .login-btn-submit::before {
@@ -478,12 +477,12 @@
 }
 
 .login-btn-submit:hover:not(:disabled) {
-  background-color: #1d4ed8;
-  background-image: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%);
+  background-color: var(--tn-orange-hover);
+  background-image: linear-gradient(135deg, var(--tn-orange-hover) 0%, var(--tn-orange) 50%, var(--tn-orange) 100%);
   transform: translateY(-2px);
   box-shadow:
-    0 4px 8px rgba(37, 99, 235, 0.4),
-    0 8px 24px rgba(37, 99, 235, 0.35);
+    0 4px 8px rgba(232, 96, 28, 0.4),
+    0 8px 24px rgba(232, 96, 28, 0.35);
 }
 
 .login-btn-submit:active:not(:disabled) {
@@ -493,8 +492,8 @@
 .login-btn-submit:disabled {
   opacity: 0.85;
   cursor: not-allowed;
-  background-color: #3b82f6;
-  background-image: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  background-color: var(--tn-orange);
+  background-image: linear-gradient(135deg, var(--tn-orange-light) 0%, var(--tn-orange) 100%);
 }
 
 .login-footer {
@@ -513,14 +512,14 @@
 }
 
 .login-link {
-  color: #2563eb !important;
+  color: var(--tn-orange) !important;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s ease, background 0.2s ease;
 }
 
 .login-link:hover {
-  color: #1d4ed8 !important;
+  color: var(--tn-orange-hover) !important;
   text-decoration: underline;
 }
 
@@ -531,23 +530,23 @@
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   margin-top: 0.5rem;
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--tn-orange) 0%, var(--tn-orange) 100%);
   color: #ffffff !important;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 8px rgba(232, 96, 28, 0.25);
 }
 
 .login-footer .login-link:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--tn-orange-hover) 0%, var(--tn-orange) 100%);
   color: #ffffff !important;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 12px rgba(232, 96, 28, 0.35);
 }
 
 .login-footer-fade {
   height: 100px;
-  background: linear-gradient(to bottom, #f1f5f9, #475569 50%, var(--color-bg-dark));
+  background: linear-gradient(to bottom, var(--tn-cream), #475569 50%, var(--color-bg-dark));
   margin-top: -1px;
 }
 

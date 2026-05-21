@@ -31,6 +31,8 @@ export const tokenStorage = {
 // --- INTERCEPTEURS ---
 
 let isRefreshing = false;
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 2;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
@@ -69,23 +71,28 @@ api.interceptors.response.use(
     const refreshToken = tokenStorage.getRefreshToken();
 
     if (!refreshToken) {
-      if (!originalRequest._retryAnon) {
-        originalRequest._retryAnon = true;
-        delete originalRequest.headers.Authorization;
-        tokenStorage.clearTokens();
-        return api(originalRequest);
-      }
+      tokenStorage.clearTokens();
+      refreshAttempts = 0;
+      return Promise.reject(error);
+    }
+
+    // Protection contre la boucle infinie de refresh
+    if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+      tokenStorage.clearTokens();
+      refreshAttempts = 0;
+      processQueue(error, null);
       return Promise.reject(error);
     }
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      }).then(() => api(originalRequest)).catch(() => api(originalRequest));
+      }).then(() => api(originalRequest)).catch(() => Promise.reject(error));
     }
 
     originalRequest._retry = true;
     isRefreshing = true;
+    refreshAttempts++;
 
     try {
       const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
@@ -95,6 +102,7 @@ api.interceptors.response.use(
       const newAccess = response.data.access;
       const newRefresh = response.data.refresh || refreshToken;
       tokenStorage.setTokens(newAccess, newRefresh);
+      refreshAttempts = 0;
       processQueue(null, newAccess);
 
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
@@ -102,13 +110,7 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
       tokenStorage.clearTokens();
-
-      if (!originalRequest._retryAnon) {
-        originalRequest._retryAnon = true;
-        delete originalRequest.headers.Authorization;
-        return api(originalRequest);
-      }
-
+      refreshAttempts = 0;
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
@@ -129,6 +131,7 @@ export const contactAPI = {
 // --- API CONFIG ---
 export const configAPI = {
   getDeliveryConfig: () => api.get('/config/delivery/'),
+  globalSearch: (query) => api.get('/config/search/', { params: { q: query } }),
 };
 
 // --- API COUPONS ---

@@ -1,367 +1,219 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { AdminTopbar } from '../../components/admin/AdminLayout';
+import {
+  AdminStat, AdminCard, AdminSearch, AdminTable, AdminRow, AdminCell,
+  AdminActionBtn, AdminAvatar, AdminLoading, AdminError, AdminEmpty,
+  AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
+} from '../../components/admin/AdminPrimitives';
+import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
-import '../../styles/AdminAuthors.css';
+
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
 
 const AdminAuthors = () => {
+  const { toast, confirm } = useToast();
   const [authors, setAuthors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingAuthor, setEditingAuthor] = useState(null);
-  const [formData, setFormData] = useState({
-    full_name: '',
-    biography: '',
-    photo: null,
-  });
+  const [search, setSearch] = useState('');
+  const [formData, setFormData] = useState({ full_name: '', biography: '', photo: null });
   const [previewImage, setPreviewImage] = useState(null);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchAuthors();
-  }, []);
+  useEffect(() => { fetchAuthors(); }, []);
 
-  const fetchAuthors = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get('/authors/');
-      setAuthors(response.data.results || response.data);
-    } catch (err) {
-      console.error('Erreur chargement auteurs:', err);
-      setError('Impossible de charger la liste des auteurs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFormData(prev => ({ ...prev, photo: file }));
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewImage(reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewImage(null);
-    }
-  };
+  const fetchAuthors = async () => { try { setLoading(true); setError(null); const r = await api.get('/authors/', { params: { page_size: 100 } }); setAuthors(r.data.results || r.data); } catch(e){ setError('Impossible de charger les auteurs'); } finally { setLoading(false); } };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.full_name.trim()) {
-      alert('Le nom de l\'auteur est obligatoire');
-      return;
-    }
-
+    if (!formData.full_name.trim()) { toast.warning('Le nom complet est obligatoire'); return; }
     const data = new FormData();
     if (formData.full_name) data.append('full_name', formData.full_name);
     if (formData.biography) data.append('biography', formData.biography);
     if (formData.photo) data.append('photo', formData.photo);
-
     try {
-      if (editingAuthor) {
-        await api.patch(`/authors/${editingAuthor.id}/`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      } else {
-        await api.post('/authors/', data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      }
-      fetchAuthors();
-      resetForm();
-    } catch (err) {
-      console.error('Erreur sauvegarde auteur:', err);
-      const errorMsg = err.response?.data?.detail ||
-        err.response?.data?.message ||
-        'Erreur lors de la sauvegarde';
-      alert(`Erreur: ${errorMsg}`);
-    }
+      if (editingAuthor) await api.patch(`/authors/${editingAuthor.id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      else await api.post('/authors/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      fetchAuthors(); resetForm();
+      toast.success(editingAuthor ? 'Auteur mis a jour' : 'Auteur cree avec succes');
+    } catch(e){ toast.error(e.response?.data?.detail || e.message); }
   };
 
-  const handleEdit = (author) => {
-    setEditingAuthor(author);
-    setFormData({
-      full_name: author.full_name || '',
-      biography: author.biography || '',
-      photo: null,
-    });
-    setPreviewImage(author.photo || null);
-    setShowForm(true);
-  };
-
+  const handleEdit = (a) => { setEditingAuthor(a); setFormData({ full_name: a.full_name||'', biography: a.biography||'', photo: null }); setPreviewImage(a.photo||null); setShowForm(true); };
   const handleDelete = async (id) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet auteur ?')) return;
-    try {
-      await api.delete(`/authors/${id}/`);
-      fetchAuthors();
-    } catch (err) {
-      console.error('Erreur suppression:', err);
-      alert('Erreur lors de la suppression');
-    }
+    const ok = await confirm({ title: 'Supprimer cet auteur ?', message: 'Cette action est irreversible. Les livres associes ne seront pas supprimes.', confirmLabel: 'Supprimer', tone: 'danger' });
+    if (!ok) return;
+    try { await api.delete(`/authors/${id}/`); fetchAuthors(); toast.success('Auteur supprime'); } catch(e){ toast.error('Echec de la suppression'); }
+  };
+  const resetForm = () => { setShowForm(false); setEditingAuthor(null); setFormData({ full_name:'', biography:'', photo:null }); setPreviewImage(null); };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setFormData(p => ({ ...p, photo: file }));
+    if (file) { const r = new FileReader(); r.onloadend = () => setPreviewImage(r.result); r.readAsDataURL(file); }
+    else setPreviewImage(null);
   };
 
-  const resetForm = () => {
-    setShowForm(false);
-    setEditingAuthor(null);
-    setFormData({ full_name: '', biography: '', photo: null });
-    setPreviewImage(null);
-  };
+  const totalBooks = useMemo(() => authors.reduce((s, a) => s + (a.books_count || 0), 0), [authors]);
+  const avgBooks = useMemo(() => authors.length > 0 ? (totalBooks / authors.length).toFixed(1) : '0', [authors, totalBooks]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  const filtered = useMemo(() => {
+    if (!search.trim()) return authors;
+    const q = search.toLowerCase();
+    return authors.filter(a => (a.full_name || '').toLowerCase().includes(q));
+  }, [authors, search]);
 
-  if (loading) {
-    return (
-      <div className="admin-authors-loading">
-        Chargement des auteurs...
-      </div>
-    );
-  }
+  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des auteurs..." /></div>;
+  if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => window.location.reload()} /></div>;
 
-  if (error) {
-    return (
-      <div className="admin-authors-error">
-        {error}
-      </div>
-    );
-  }
+  const formInitial = (formData.full_name || '?').charAt(0).toUpperCase();
 
   return (
-    <div className="admin-authors-page">
-      <section className="admin-authors-hero">
-        <div className="admin-authors-hero__orb admin-authors-hero__orb--1" />
-        <div className="admin-authors-hero__orb admin-authors-hero__orb--2" />
-        <div className="admin-authors-hero__grid-bg" />
-        <div className="admin-authors-hero__inner">
-          <div className="admin-authors-hero__line" />
-          <h1 className="admin-authors-hero__title">Gestion des Auteurs</h1>
-          <p className="admin-authors-hero__sub">
-            Créez et modifiez les auteurs de votre catalogue. Chaque auteur peut être associé à plusieurs ouvrages.
-          </p>
-          <div className="admin-authors-hero__actions">
-            <Link to="/admin-dashboard" className="admin-authors-hero__back">
-              <i className="fas fa-arrow-left" />
-              Retour
-            </Link>
-            <button
-              type="button"
-              className={`admin-authors-hero__btn admin-authors-hero__btn--primary ${showForm ? 'outline' : ''}`}
-              onClick={() => setShowForm(!showForm)}
-            >
-              <i className="fas fa-plus" />
-              {showForm ? 'Annuler' : 'Ajouter un auteur'}
-            </button>
-          </div>
+    <>
+      <AdminTopbar
+        breadcrumb={['Admin', 'Auteurs']}
+        title="Gestion des auteurs"
+        subtitle="Creez et modifiez les auteurs du catalogue. Chaque auteur peut etre associe a plusieurs ouvrages."
+        actions={<>
+          <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>
+          <button onClick={() => { if (showForm) resetForm(); else setShowForm(true); }} className="tn-btn tn-btn--primary" style={{ fontSize: 13, padding: '8px 14px' }}>
+            <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'}`} /> {showForm ? 'Fermer' : 'Ajouter un auteur'}
+          </button>
+        </>}
+      />
+
+      <div className="adm-page-body">
+        {/* Stats */}
+        <div className="adm-grid-3" style={{ marginBottom: 28 }}>
+          <AdminStat icon="fa-feather" label="Auteurs" value={authors.length} meta={`${authors.filter(a => (a.books_count||0) > 0).length} avec des livres`} color="var(--tn-orange)" />
+          <AdminStat icon="fa-book" label="Total livres" value={totalBooks} color="var(--tn-gold-dark)" />
+          <AdminStat icon="fa-chart-simple" label="Moy. livres / auteur" value={avgBooks} color="var(--tn-success)" />
         </div>
-      </section>
 
-      <div className="admin-authors-hero-fade" />
+        {/* Toolbar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 16 }}>
+          <AdminSearch placeholder="Rechercher un auteur..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
+          <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--tn-gray-500)', whiteSpace: 'nowrap' }}>
+            {filtered.length} auteur{filtered.length > 1 ? 's' : ''}
+          </span>
+        </div>
 
-      <section className="admin-authors-content">
-        <div className="admin-authors-inner">
-          {showForm && (
-            <form className="admin-authors-form" onSubmit={handleSubmit}>
-              <h2>{editingAuthor ? 'Modifier l\'auteur' : 'Nouvel auteur'}</h2>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Nom complet *</label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Victor Hugo"
-                    required
-                  />
+        {filtered.length === 0 && <AdminEmpty icon="fa-feather" title="Aucun auteur trouve" subtitle={search ? 'Essayez un autre nom.' : 'Commencez par ajouter un auteur.'} />}
+
+        {filtered.length > 0 && (
+          <AdminTable columns={[
+            { label: 'Photo', width: 76 }, { label: 'Auteur' }, { label: 'Biographie' },
+            { label: 'Livres', width: 90 }, { label: 'Ajout', width: 110 }, { label: '', align: 'right', width: 90 },
+          ]}>
+            {filtered.map((a, i) => (
+              <AdminRow key={a.id} last={i === filtered.length - 1}>
+                <AdminCell><AdminAvatar name={a.full_name} size={48} photo={a.photo} /></AdminCell>
+                <AdminCell>
+                  <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 15, fontWeight: 600, color: 'var(--tn-gray-900)' }}>{a.full_name}</div>
+                  {a.slug && <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, color: 'var(--tn-gray-500)', marginTop: 4 }}>{a.slug}</div>}
+                </AdminCell>
+                <AdminCell muted style={{ maxWidth: 320, overflow: 'hidden' }}>
+                  <div style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5, fontSize: 12 }}>
+                    {a.biography || 'Aucune biographie'}
+                  </div>
+                </AdminCell>
+                <AdminCell>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: 'var(--tn-cream-2)', color: 'var(--tn-gray-700)', fontFamily: 'var(--tn-mono)', fontSize: 12, fontWeight: 700 }}>
+                    <i className="fas fa-book" style={{ color: 'var(--tn-orange)', fontSize: 10 }} />{a.books_count || 0}
+                  </span>
+                </AdminCell>
+                <AdminCell muted mono>{fmtDate(a.created_at)}</AdminCell>
+                <AdminCell align="right">
+                  <div style={{ display: 'inline-flex', gap: 6 }}>
+                    <AdminActionBtn icon="fa-pen-to-square" tone="orange" title="Modifier" onClick={() => handleEdit(a)} />
+                    <AdminActionBtn icon="fa-trash-can" tone="red" title="Supprimer" onClick={() => handleDelete(a.id)} />
+                  </div>
+                </AdminCell>
+              </AdminRow>
+            ))}
+          </AdminTable>
+        )}
+      </div>
+
+      {/* ── CREATE / EDIT MODAL ── */}
+      {showForm && (
+        <AdminModalOverlay onClose={resetForm}>
+          <AdminModalHeader onClose={resetForm}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+                background: previewImage ? `url(${previewImage}) center/cover` : 'linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark))',
+                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22,
+                border: '2px solid rgba(255,255,255,0.15)',
+              }}>{previewImage ? null : formInitial}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--tn-gold-light)', marginBottom: 4 }}>
+                  {editingAuthor ? `Modifier · ${editingAuthor.full_name}` : 'Nouvel auteur'}
                 </div>
-                <div className="form-group full-width">
-                  <label>Biographie</label>
-                  <textarea
-                    name="biography"
-                    value={formData.biography}
-                    onChange={handleInputChange}
-                    placeholder="Biographie de l'auteur..."
-                    rows="5"
-                  />
-                </div>
-                <div className="form-group full-width">
-                  <label>Photo de l'auteur</label>
-                  <div className="image-upload-section">
-                    <div className="image-preview">
-                      {previewImage ? (
-                        <img src={previewImage} alt="Prévisualisation" />
-                      ) : (
-                        <div className="default-avatar">
-                          {(formData.full_name || '?').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <label className="file-upload-area">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                      <div className="upload-icon">📷</div>
-                      <div className="upload-text">
-                        {editingAuthor ? 'Changer la photo' : 'Ajouter une photo'}
-                      </div>
-                      <div className="upload-subtext">
-                        Cliquez pour téléverser (JPG, PNG, max 5MB)
-                      </div>
+                <h2 style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22, margin: 0, letterSpacing: '-0.01em' }}>
+                  {editingAuthor ? 'Modifier l\'auteur' : 'Ajouter un auteur'}
+                </h2>
+              </div>
+            </div>
+          </AdminModalHeader>
+
+          <AdminModalBody>
+            <form onSubmit={handleSubmit}>
+              <AdminModalSection icon="fa-camera" title="Photo">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                    background: previewImage ? `url(${previewImage}) center/cover` : 'linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark))',
+                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 32,
+                    boxShadow: '0 8px 20px rgba(232,96,28,0.25)',
+                  }}>{previewImage ? null : formInitial}</div>
+                  <div>
+                    <label style={{
+                      padding: '10px 16px', borderRadius: 8, cursor: 'pointer',
+                      background: 'var(--tn-cream-2)', border: '1.5px dashed var(--tn-gray-300)',
+                      color: 'var(--tn-gray-700)', fontWeight: 600, fontSize: 12,
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                    }}>
+                      <i className="fas fa-camera" style={{ color: 'var(--tn-orange)' }} />
+                      {editingAuthor ? 'Changer la photo' : 'Ajouter une photo'}
+                      <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
                     </label>
-                    {editingAuthor?.photo && !formData.photo && (
-                      <div className="upload-subtext">
-                        Photo actuelle conservée
-                      </div>
-                    )}
+                    <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 9, color: 'var(--tn-gray-500)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 8 }}>JPG · PNG · max 5 Mo</div>
                   </div>
                 </div>
-              </div>
-              <div className="form-actions">
-                <button type="button" onClick={resetForm} className="btn-secondary">
-                  Annuler
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editingAuthor ? 'Mettre à jour' : 'Créer l\'auteur'}
-                </button>
+              </AdminModalSection>
+
+              <AdminModalSection icon="fa-pen" title="Informations">
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tn-gray-700)', marginBottom: 6 }}>
+                    Nom complet <span style={{ color: 'var(--tn-orange)' }}>*</span>
+                  </label>
+                  <input className="tn-input" name="full_name" value={formData.full_name} onChange={e => setFormData(p => ({ ...p, full_name: e.target.value }))} placeholder="Ex : Aicha Mbadinga" required />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tn-gray-700)', marginBottom: 6 }}>
+                    Biographie <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.12em', color: 'var(--tn-gray-400)', marginLeft: 6 }}>OPTIONNEL</span>
+                  </label>
+                  <textarea className="tn-input" value={formData.biography} onChange={e => setFormData(p => ({ ...p, biography: e.target.value }))}
+                    placeholder="Quelques lignes sur l'auteur..."
+                    style={{ minHeight: 130, fontFamily: 'var(--tn-serif)', fontSize: 14, lineHeight: 1.55, resize: 'vertical' }}
+                  />
+                </div>
+              </AdminModalSection>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
+                <button type="button" onClick={resetForm} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
+                <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editingAuthor ? 'Mettre a jour' : 'Creer l\'auteur'}</button>
               </div>
             </form>
-          )}
-
-          {/* Vue tableau — desktop */}
-          <div className="admin-authors-table admin-authors-table--desktop">
-            <table>
-              <thead>
-                <tr>
-                  <th>Photo</th>
-                  <th>Nom</th>
-                  <th>Biographie</th>
-                  <th>Livres</th>
-                  <th>Date d'ajout</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {authors.map(author => (
-                  <tr key={author.id}>
-                    <td>
-                      {author.photo ? (
-                        <img
-                          src={author.photo}
-                          alt={author.full_name}
-                          className="author-photo"
-                        />
-                      ) : (
-                        <div className="author-photo-placeholder">
-                          {(author.full_name || '?').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <strong>{author.full_name}</strong>
-                      {author.slug && (
-                        <div className="author-slug">{author.slug}</div>
-                      )}
-                    </td>
-                    <td>
-                      <div className="bio-excerpt">
-                        {author.biography || 'Aucune biographie'}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="books-badge">
-                        <i className="fas fa-book" />
-                        {author.books_count || 0} livre{(author.books_count || 0) !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td>{formatDate(author.created_at)}</td>
-                    <td className="actions">
-                      <button
-                        onClick={() => handleEdit(author)}
-                        className="btn-edit"
-                        title="Modifier"
-                      >
-                        <i className="fas fa-pen" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(author.id)}
-                        className="btn-delete"
-                        title="Supprimer"
-                      >
-                        <i className="fas fa-trash-alt" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Vue cartes — mobile */}
-          <div className="admin-authors-mobile">
-            {authors.map(author => (
-              <div key={author.id} className="admin-authors-mobile-card">
-                <div className="admin-authors-mobile-card__top">
-                  <div className="admin-authors-mobile-card__avatar">
-                    {author.photo ? (
-                      <img src={author.photo} alt={author.full_name} />
-                    ) : (
-                      <span>{(author.full_name || '?').charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div className="admin-authors-mobile-card__info">
-                    <strong>{author.full_name}</strong>
-                    <span className="admin-authors-mobile-card__books">
-                      <i className="fas fa-book" />
-                      {author.books_count || 0} livre{(author.books_count || 0) !== 1 ? 's' : ''}
-                    </span>
-                    <span className="admin-authors-mobile-card__date">{formatDate(author.created_at)}</span>
-                  </div>
-                </div>
-                {(author.biography || '').trim() && (
-                  <p className="admin-authors-mobile-card__bio">
-                    {author.biography}
-                  </p>
-                )}
-                <div className="admin-authors-mobile-card__actions">
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(author)}
-                    className="admin-authors-mobile-card__btn admin-authors-mobile-card__btn--edit"
-                  >
-                    <i className="fas fa-pen" />
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(author.id)}
-                    className="admin-authors-mobile-card__btn admin-authors-mobile-card__btn--delete"
-                  >
-                    <i className="fas fa-trash-alt" />
-                    Supprimer
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
+          </AdminModalBody>
+        </AdminModalOverlay>
+      )}
+    </>
   );
 };
 

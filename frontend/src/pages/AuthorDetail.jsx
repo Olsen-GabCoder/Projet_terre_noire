@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import BookCard from '../components/BookCard';
+import { TnPlaceholder, TnDivider } from '../components/ui';
 import LoadingSpinner from '../components/LoadingSpinner';
 import bookService from '../services/bookService';
 import '../styles/AuthorDetail.css';
-import '../styles/Home.css';
 
 const AuthorDetail = () => {
   const { id } = useParams();
@@ -39,11 +39,11 @@ const AuthorDetail = () => {
   if (error || !author) {
     return (
       <div className="authd-page">
-        <section className="authd-hero authd-hero--error">
+        <section className="authd-hero">
           <div className="authd-hero__inner">
-            <h1 className="authd-hero__title">Auteur non trouvé</h1>
-            <p className="authd-hero__sub">{error || 'Cet auteur n\'existe pas.'}</p>
-            <Link to="/authors" className="authd-btn authd-btn--primary">
+            <h1 className="authd-hero__name">Auteur non trouvé</h1>
+            <p style={{ color: 'var(--tn-gray-400)', marginTop: 12 }}>{error || "Cet auteur n'existe pas."}</p>
+            <Link to="/authors" className="tn-btn tn-btn--outline-light" style={{ marginTop: 24 }}>
               <i className="fas fa-arrow-left" /> Retour aux auteurs
             </Link>
           </div>
@@ -52,81 +52,80 @@ const AuthorDetail = () => {
     );
   }
 
-  const handleAvatarError = (e) => {
-    e.target.style.display = 'none';
-    const next = e.target.nextElementSibling;
-    if (next) next.style.display = 'flex';
-  };
+  const initial = (author.full_name || '?').charAt(0).toUpperCase();
+  const nameParts = (author.full_name || '').split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
 
   return (
     <div className="authd-page">
+      {/* ── HERO ── */}
       <section className="authd-hero">
-        <div className="authd-hero__orb authd-hero__orb--1" />
-        <div className="authd-hero__grid-bg" />
+        <div className="tn-motif-bg authd-hero__motif" />
+        <div className="authd-hero__orb" />
+
         <div className="authd-hero__inner">
-          <Link to="/authors" className="authd-back">
-            <i className="fas fa-arrow-left" /> Retour aux auteurs
-          </Link>
-          <div className="authd-hero__profile">
-            <div className="authd-hero__avatar">
-              {author.photo ? (
-                <img src={author.photo} alt={author.full_name} loading="lazy" onError={handleAvatarError} />
-              ) : null}
-              <div className="authd-hero__initials" style={author.photo ? { display: 'none' } : undefined}>
-                {(author.full_name || '?').charAt(0).toUpperCase()}
-              </div>
+          {/* Portrait */}
+          <div className="authd-hero__portrait">
+            {author.photo ? (
+              <img src={author.photo} alt={author.full_name} loading="lazy" />
+            ) : (
+              <TnPlaceholder kind="cover" label="PORTRAIT AUTEUR" style={{ width: '100%', height: '100%' }}>
+                <span className="authd-hero__portrait-initial">{initial}</span>
+              </TnPlaceholder>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="authd-hero__info">
+            <div className="authd-hero__breadcrumb">
+              <Link to="/authors">Auteurs</Link> / {author.full_name}
             </div>
-            <div className="authd-hero__info">
-              <div className="authd-hero__line" />
-              <h1 className="authd-hero__title">{author.full_name || 'Auteur inconnu'}</h1>
-              {(author.books_count || 0) > 0 && (
-                <p className="authd-hero__count">
-                  <i className="fas fa-book" /> {author.books_count} ouvrage{(author.books_count || 0) > 1 ? 's' : ''} publié{(author.books_count || 0) > 1 ? 's' : ''}
-                </p>
-              )}
+            <h1 className="authd-hero__name">
+              {firstName}<br />
+              {lastName && <span className="authd-hero__name-accent">{lastName}</span>}
+            </h1>
+            <div className="authd-hero__pills">
+              {books.length > 0 && <span className="tn-pill tn-pill--solid">{books.length} ouvrage{books.length > 1 ? 's' : ''}</span>}
             </div>
           </div>
         </div>
+
+        <TnDivider dark style={{ marginTop: 40, opacity: 0.5 }} />
       </section>
 
-      <div className="authd-hero-fade" />
-
+      {/* ── BIO + SIDEBAR ── */}
       {author.biography && (
-        <div className="authd-content">
+        <section className="authd-bio-section">
           <div className="authd-bio">
-            <h2>Biographie</h2>
-            <p>{author.biography}</p>
+            <span className="authd-bio__label">Biographie</span>
+            <div className="authd-bio__text">
+              <p>
+                <span className="authd-bio__dropcap">{author.biography.charAt(0)}</span>
+                {author.biography.slice(1)}
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
       )}
 
-      <section className="home-books">
-        <div className="home-books-inner">
-          <div className="home-books-heading">
-            <span className="home-books-label">Publications</span>
-            <h2 className="home-books-title">
-              {books.length > 0 ? `Livres de ${author.full_name || 'cet auteur'}` : 'Aucun ouvrage'}
-            </h2>
-          </div>
-          {books.length === 0 ? (
-            <p className="authd-books__empty">Aucun ouvrage disponible pour le moment.</p>
-          ) : (
-            <>
-              <div className="home-books-grid">
-                {books.map((book) => (
-                  <BookCard key={book.id} book={book} />
-                ))}
-              </div>
-              <div className="home-books-more">
-                <Link to={`/catalog?author=${author.id}`} className="home-books-more-link">
-                  Voir tous ses livres dans le catalogue
-                </Link>
-              </div>
-            </>
-          )}
+      {/* ── BIBLIOGRAPHY ── */}
+      <section className="authd-books">
+        <div className="authd-books__header">
+          <h2 className="authd-books__title tn-section-title">Bibliographie</h2>
+          <span className="authd-books__count">{books.length} ouvrage{books.length > 1 ? 's' : ''}</span>
         </div>
+
+        {books.length === 0 ? (
+          <p className="authd-books__empty">Aucun ouvrage disponible pour le moment.</p>
+        ) : (
+          <div className="authd-books__grid">
+            {books.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        )}
       </section>
-      <div className="home-footer-fade" />
     </div>
   );
 };

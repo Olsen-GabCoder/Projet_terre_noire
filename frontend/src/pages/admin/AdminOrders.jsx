@@ -1,353 +1,240 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { AdminTopbar } from '../../components/admin/AdminLayout';
+import {
+  AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
+  AdminActionBtn, AdminAvatar, StatusBadge, AdminLoading, AdminError, AdminEmpty,
+  AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection, StatusBtn,
+} from '../../components/admin/AdminPrimitives';
+import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
-import '../../styles/AdminOrders.css';
+
+const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
+const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
 
 const AdminOrders = () => {
+  const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  useEffect(() => { fetchOrders(); }, []);
 
   const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/orders/', { params: { page_size: 50 } });
-      setOrders(res.data.results || res.data || []);
-    } catch (err) {
-      console.error('Erreur chargement commandes:', err);
-    } finally {
-      setLoading(false);
-    }
+    try { setLoading(true); setError(null); const r = await api.get('/orders/', { params: { page_size: 100 } }); setOrders(r.data.results || r.data || []); }
+    catch (e) { setError('Impossible de charger les commandes'); console.error(e); }
+    finally { setLoading(false); }
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const res = await api.patch(`/orders/${orderId}/`, { status: newStatus });
-      const updatedOrder = res.data;
-      // Mise à jour immédiate de la liste et du modal
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, ...updatedOrder } : o))
-      );
-      setSelectedOrder((prev) =>
-        prev && prev.id === orderId ? { ...prev, ...updatedOrder } : prev
-      );
-    } catch (err) {
-      console.error('Erreur mise à jour statut:', err);
-      alert('Erreur lors de la mise à jour');
+      const r = await api.patch(`/orders/${orderId}/`, { status: newStatus });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...r.data } : o));
+      setSelectedOrder(prev => prev && prev.id === orderId ? { ...prev, ...r.data } : prev);
+      toast.success('Statut de la commande mis a jour');
+    } catch (e) { toast.error('Erreur lors de la mise a jour du statut'); }
+  };
+
+  const counts = useMemo(() => ({
+    all: orders.length,
+    PENDING: orders.filter(o => (o.status||'').toUpperCase() === 'PENDING').length,
+    PAID: orders.filter(o => (o.status||'').toUpperCase() === 'PAID').length,
+    SHIPPED: orders.filter(o => (o.status||'').toUpperCase() === 'SHIPPED').length,
+    CANCELLED: orders.filter(o => (o.status||'').toUpperCase() === 'CANCELLED').length,
+    revenue: orders.filter(o => ['PAID','SHIPPED'].includes((o.status||'').toUpperCase())).reduce((s,o) => s + Number(o.total_amount||0), 0),
+  }), [orders]);
+
+  const filtered = useMemo(() => {
+    let list = filter === 'all' ? orders : orders.filter(o => (o.status||'').toUpperCase() === filter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(o => (o.user?.full_name||o.user?.username||'').toLowerCase().includes(q) || (o.shipping_city||'').toLowerCase().includes(q) || String(o.id).includes(q));
     }
-  };
+    return list;
+  }, [orders, filter, search]);
 
-  const getStatusConfig = (status) => {
-    const s = (status || '').toUpperCase();
-    const configs = {
-      PENDING: { label: 'En attente', class: 'order-status-badge--pending' },
-      PAID: { label: 'Payé', class: 'order-status-badge--paid' },
-      SHIPPED: { label: 'Expédié', class: 'order-status-badge--shipped' },
-      CANCELLED: { label: 'Annulé', class: 'order-status-badge--cancelled' },
-    };
-    return configs[s] || { label: status || '—', class: 'order-status-badge--pending' };
-  };
+  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des commandes..." /></div>;
+  if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={fetchOrders} /></div>;
 
-  const formatPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-
-  if (loading) {
-    return (
-      <div className="admin-orders-loading">
-        Chargement...
-      </div>
-    );
-  }
+  const sel = selectedOrder;
 
   return (
-    <div className="admin-orders-page">
-      <section className="admin-orders-hero">
-        <div className="admin-orders-hero__orb admin-orders-hero__orb--1" />
-        <div className="admin-orders-hero__orb admin-orders-hero__orb--2" />
-        <div className="admin-orders-hero__grid-bg" />
-        <div className="admin-orders-hero__inner">
-          <div className="admin-orders-hero__line" />
-          <h1 className="admin-orders-hero__title">Gestion des Commandes</h1>
-          <p className="admin-orders-hero__sub">
-            Consultez et gérez les commandes de vos clients. Mettez à jour les statuts de livraison.
-          </p>
-          <Link to="/admin-dashboard" className="admin-orders-hero__back">
-            <i className="fas fa-arrow-left" />
-            Retour
+    <>
+      <AdminTopbar
+        breadcrumb={['Admin', 'Commandes']}
+        title="Gestion des commandes"
+        subtitle="Consultez et gerez les commandes. Mettez a jour les statuts de livraison."
+        actions={
+          <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}>
+            <i className="fas fa-arrow-left" /> Retour
           </Link>
+        }
+      />
+
+      <div className="adm-page-body">
+        {/* Stats */}
+        <div className="adm-grid-3" style={{ marginBottom: 28 }}>
+          <AdminStat icon="fa-layer-group" label="Total" value={counts.all} color="var(--tn-gray-700)" />
+          <AdminStat icon="fa-coins" label="Chiffre d'affaires" value={fmtPrice(counts.revenue)} suffix="FCFA" color="var(--tn-success)" metaTone={counts.revenue > 0 ? 'good' : 'muted'} meta={counts.revenue > 0 ? 'Payees + expediees' : ''} />
+          <AdminStat icon="fa-clock" label="En attente" value={counts.PENDING} meta={counts.PENDING > 0 ? 'action requise' : ''} metaTone="alert" color="var(--tn-warning)" />
+          <AdminStat icon="fa-circle-check" label="Payees" value={counts.PAID} color="var(--tn-success)" />
+          <AdminStat icon="fa-truck" label="Expediees" value={counts.SHIPPED} color="#1c2a4a" />
+          <AdminStat icon="fa-circle-xmark" label="Annulees" value={counts.CANCELLED} color="var(--tn-error)" />
         </div>
-      </section>
 
-      <div className="admin-orders-hero-fade" />
+        {/* Toolbar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+          <AdminFilterPills active={filter} onChange={setFilter} items={[
+            ['all', 'Toutes', counts.all], ['PENDING', 'En attente', counts.PENDING],
+            ['PAID', 'Payees', counts.PAID], ['SHIPPED', 'Expediees', counts.SHIPPED],
+            ['CANCELLED', 'Annulees', counts.CANCELLED],
+          ]} />
+          <AdminSearch placeholder="Rechercher client, ville, n..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
+        </div>
 
-      <section className="admin-orders-content">
-        <div className="admin-orders-inner">
-          {/* Stats rapides */}
-          <div className="admin-orders-stats">
-            <div className="admin-orders-stat">
-              <span className="admin-orders-stat__value">{orders.length}</span>
-              <span className="admin-orders-stat__label">Commande{orders.length > 1 ? 's' : ''}</span>
-            </div>
-            <div className="admin-orders-stat admin-orders-stat--highlight">
-              <span className="admin-orders-stat__value">
-                {formatPrice(orders.reduce((s, o) => s + Number(o.total_amount || 0), 0))}
-              </span>
-              <span className="admin-orders-stat__label">Total FCFA</span>
-            </div>
-            <div className="admin-orders-stat">
-              <span className="admin-orders-stat__value">
-                {orders.filter((o) => (o.status || '').toUpperCase() === 'PENDING').length}
-              </span>
-              <span className="admin-orders-stat__label">En attente</span>
-            </div>
-          </div>
+        {/* Empty */}
+        {filtered.length === 0 && <AdminEmpty icon="fa-inbox" title="Aucune commande trouvee" subtitle={search ? 'Essayez d\'autres termes.' : 'Aucune commande ne correspond a ce filtre.'} />}
 
-          {/* Vue tableau — desktop */}
-          <div className="admin-orders-table admin-orders-table--desktop">
-            {orders.length === 0 ? (
-              <div className="admin-orders-empty">
-                <i className="fas fa-inbox" />
-                <p>Aucune commande pour le moment</p>
-              </div>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>N°</th>
-                    <th>Client</th>
-                    <th>Ville</th>
-                    <th>Date</th>
-                    <th>Sous-total</th>
-                    <th>Livraison</th>
-                    <th>Total</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order) => {
-                    const statusConfig = getStatusConfig(order.status);
-                    const subtotal = Number(order.subtotal ?? order.total_amount ?? 0);
-                    const shipping = Number(order.shipping_cost ?? 0);
-                    const total = Number(order.total_amount ?? 0);
-                    return (
-                      <tr key={order.id}>
-                        <td className="admin-orders-td-id"><strong>#{order.id}</strong></td>
-                        <td>
-                          <div className="order-client-name">{order.user?.full_name || order.user?.username || 'N/A'}</div>
-                          <div className="order-client-email">{order.user?.email}</div>
-                        </td>
-                        <td>{order.shipping_city || '—'}</td>
-                        <td>{new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td>{formatPrice(subtotal)}</td>
-                        <td>{shipping === 0 ? 'Gratuit' : formatPrice(shipping)}</td>
-                        <td className="admin-orders-td-total"><strong>{formatPrice(total)}</strong></td>
-                        <td>
-                          <span className={`order-status-badge ${statusConfig.class}`}>
-                            {statusConfig.label}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => setSelectedOrder(order)}
-                            className="btn-view"
-                          >
-                            <i className="fas fa-eye" /> Voir
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* Vue cartes — mobile ultra premium */}
-          <div className="admin-orders-mobile">
-            {orders.length === 0 ? (
-              <div className="admin-orders-empty admin-orders-empty--mobile">
-                <i className="fas fa-inbox" />
-                <p>Aucune commande pour le moment</p>
-              </div>
-            ) : (
-              orders.map((order) => {
-                const statusConfig = getStatusConfig(order.status);
-                const subtotal = Number(order.subtotal ?? order.total_amount ?? 0);
-                const shipping = Number(order.shipping_cost ?? 0);
-                const total = Number(order.total_amount ?? 0);
-                const itemCount = (order.items || []).reduce((s, i) => s + (i.quantity || 1), 0);
-                return (
-                  <article key={order.id} className="admin-orders-mobile-card">
-                    <div className="admin-orders-mobile-card__accent" />
-                    <header className="admin-orders-mobile-card__header">
-                      <div className="admin-orders-mobile-card__id-wrap">
-                        <span className="admin-orders-mobile-card__id">Commande #{order.id}</span>
-                        <span className="admin-orders-mobile-card__items">{itemCount} article{itemCount > 1 ? 's' : ''}</span>
+        {/* Table */}
+        {filtered.length > 0 && (
+          <AdminTable columns={[
+            { label: 'Commande', width: 200 }, { label: 'Client' }, { label: 'Ville', width: 140 },
+            { label: 'Date', width: 110 }, { label: 'Total', align: 'right', width: 130 },
+            { label: 'Statut', width: 130 }, { label: '', align: 'right', width: 60 },
+          ]}>
+            {filtered.map((o, i) => {
+              const itemCount = (o.items || []).reduce((s, it) => s + (it.quantity || 1), 0);
+              return (
+                <AdminRow key={o.id} last={i === filtered.length - 1}>
+                  <AdminCell>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--tn-orange-50)', color: 'var(--tn-orange)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+                        <i className="fas fa-bag-shopping" />
                       </div>
-                      <span className={`order-status-badge ${statusConfig.class}`}>
-                        {statusConfig.label}
-                      </span>
-                    </header>
-                    <div className="admin-orders-mobile-card__body">
-                      {(order.items || []).length > 0 && (
-                        <div className="admin-orders-mobile-card__covers">
-                          {(order.items || []).map((item) => (
-                            <img
-                              key={item.id}
-                              src={item.book?.cover_image || '/images/default-book-cover.jpg'}
-                              alt={item.book?.title}
-                              className="admin-orders-mobile-card__cover"
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => { e.target.src = '/images/default-book-cover.jpg'; }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <div className="admin-orders-mobile-card__infos">
-                        <div className="admin-orders-mobile-card__info-row">
-                          <span className="admin-orders-mobile-card__info-label">Client</span>
-                          <span className="admin-orders-mobile-card__info-value">{order.user?.full_name || order.user?.username || 'N/A'}</span>
-                        </div>
-                        <div className="admin-orders-mobile-card__info-row">
-                          <span className="admin-orders-mobile-card__info-label">Ville</span>
-                          <span className="admin-orders-mobile-card__info-value">{order.shipping_city || '—'}</span>
-                        </div>
-                        <div className="admin-orders-mobile-card__info-row">
-                          <span className="admin-orders-mobile-card__info-label">Date</span>
-                          <span className="admin-orders-mobile-card__info-value">{new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
-                        </div>
+                      <div>
+                        <div style={{ fontFamily: 'var(--tn-mono)', fontWeight: 700, color: 'var(--tn-gray-900)', fontSize: 12 }}>#{o.id}</div>
+                        <div style={{ fontSize: 10, color: 'var(--tn-gray-500)', fontFamily: 'var(--tn-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{itemCount} article{itemCount > 1 ? 's' : ''}</div>
                       </div>
                     </div>
-                    <div className="admin-orders-mobile-card__totals-box">
-                      {order.subtotal != null && (
-                        <div className="admin-orders-mobile-card__total-row">
-                          <span>Sous-total</span>
-                          <span>{formatPrice(subtotal)} FCFA</span>
-                        </div>
-                      )}
-                      {order.shipping_cost != null && (
-                        <div className="admin-orders-mobile-card__total-row">
-                          <span>Livraison</span>
-                          <span>{shipping === 0 ? 'Gratuit' : `${formatPrice(shipping)} FCFA`}</span>
-                        </div>
-                      )}
-                      <div className="admin-orders-mobile-card__total-row admin-orders-mobile-card__total-row--main">
-                        <span>Total</span>
-                        <span>{formatPrice(total)} FCFA</span>
+                  </AdminCell>
+                  <AdminCell>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <AdminAvatar name={o.user?.full_name || o.user?.username || '?'} size={32} />
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--tn-gray-900)', fontSize: 13 }}>{o.user?.full_name || o.user?.username || 'N/A'}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tn-gray-500)' }}>{o.user?.email || ''}</div>
                       </div>
                     </div>
-                    <footer className="admin-orders-mobile-card__footer">
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="admin-orders-mobile-card__btn-view"
-                      >
-                        <i className="fas fa-arrow-right" />
-                        Voir le détail
-                      </button>
-                    </footer>
-                  </article>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </section>
+                  </AdminCell>
+                  <AdminCell muted>{o.shipping_city || '--'}</AdminCell>
+                  <AdminCell muted mono>{fmtDate(o.created_at)}</AdminCell>
+                  <AdminCell align="right" bold mono>
+                    {fmtPrice(o.total_amount)} <span style={{ color: 'var(--tn-gray-500)', fontWeight: 500, fontSize: 10 }}>FCFA</span>
+                  </AdminCell>
+                  <AdminCell><StatusBadge value={(o.status || '').toLowerCase()} /></AdminCell>
+                  <AdminCell align="right">
+                    <AdminActionBtn icon="fa-eye" tone="orange" title="Detail" onClick={() => setSelectedOrder(o)} />
+                  </AdminCell>
+                </AdminRow>
+              );
+            })}
+          </AdminTable>
+        )}
+      </div>
 
-      {/* Modal détail commande */}
-      {selectedOrder && (
-        <div
-          className="admin-orders-modal-overlay"
-          onClick={() => setSelectedOrder(null)}
-        >
-          <div
-            className="admin-orders-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-orders-modal__header">
-              <h2>Commande #{selectedOrder.id}</h2>
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="admin-orders-modal__close"
-                aria-label="Fermer"
-              >
-                ×
-              </button>
+      {/* ── MODAL ── */}
+      {sel && (
+        <AdminModalOverlay onClose={() => setSelectedOrder(null)}>
+          <AdminModalHeader onClose={() => setSelectedOrder(null)}>
+            <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--tn-gold-light)', marginBottom: 6 }}>Commande</div>
+            <h2 style={{ fontFamily: 'var(--tn-mono)', fontWeight: 700, fontSize: 22, margin: 0, letterSpacing: '0.02em' }}>#{sel.id}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+              <StatusBadge value={(sel.status || '').toLowerCase()} />
+              <span style={{ color: 'var(--tn-gray-400)', fontSize: 12 }}>{fmtDateTime(sel.created_at)}</span>
             </div>
-            <div className="admin-orders-modal__body">
-              <div className="admin-orders-modal__section">
-                <h3>Informations client</h3>
-                <p><strong>Nom :</strong> {selectedOrder.user?.full_name || 'N/A'}</p>
-                <p><strong>Email :</strong> {selectedOrder.user?.email || 'N/A'}</p>
-                <p><strong>Téléphone :</strong> {selectedOrder.user?.phone_number || selectedOrder.shipping_phone || 'N/A'}</p>
-                <p><strong>Adresse :</strong> {selectedOrder.shipping_address || 'N/A'}</p>
+          </AdminModalHeader>
+
+          <AdminModalBody>
+            {/* Client */}
+            <AdminModalSection icon="fa-user" title="Client">
+              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <AdminAvatar name={sel.user?.full_name || sel.user?.username || '?'} size={48} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)' }}>{sel.user?.full_name || sel.user?.username || 'N/A'}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 8, fontSize: 12, color: 'var(--tn-gray-700)' }}>
+                    <span><i className="fas fa-envelope" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.user?.email || 'N/A'}</span>
+                    {(sel.user?.phone_number || sel.shipping_phone) && <span><i className="fas fa-phone" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.user?.phone_number || sel.shipping_phone}</span>}
+                    {sel.shipping_address && <span style={{ gridColumn: '1 / -1' }}><i className="fas fa-location-dot" style={{ color: 'var(--tn-orange)', width: 16, marginRight: 4 }} />{sel.shipping_address}{sel.shipping_city ? `, ${sel.shipping_city}` : ''}</span>}
+                  </div>
+                </div>
               </div>
-              <div className="admin-orders-modal__section">
-                <h3>Articles</h3>
-                {(selectedOrder.items || []).map((item, idx) => (
-                  <div key={item.id || idx} className="admin-orders-modal__item">
-                    <img
-                      src={item.book?.cover_image || '/images/default-book-cover.jpg'}
-                      alt={item.book?.title}
-                      className="admin-orders-modal__item-cover"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => { e.target.src = '/images/default-book-cover.jpg'; }}
-                    />
-                    <div className="admin-orders-modal__item-info">
-                      <strong>{item.book?.title || item.book_title}</strong>
-                      <small>Quantité : {item.quantity} × {formatPrice(item.price)} FCFA</small>
+            </AdminModalSection>
+
+            {/* Articles */}
+            <AdminModalSection icon="fa-book" title="Articles" rightLabel={`${(sel.items || []).length} titre${(sel.items || []).length > 1 ? 's' : ''}`}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {(sel.items || []).map((item, idx) => (
+                  <div key={item.id || idx} style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {item.book?.cover_image
+                      ? <img src={item.book.cover_image} alt="" style={{ width: 36, height: 50, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />
+                      : <div style={{ width: 36, height: 50, borderRadius: 4, background: 'var(--tn-cream-2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tn-gray-400)', fontSize: 12 }}><i className="fas fa-book" /></div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--tn-serif)', fontWeight: 600, fontSize: 14, color: 'var(--tn-gray-900)' }}>{item.book?.title || 'Article'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 2 }}>{item.quantity} x {fmtPrice(item.price)} FCFA</div>
+                    </div>
+                    <div style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, color: 'var(--tn-orange)', fontSize: 14, flexShrink: 0 }}>
+                      {fmtPrice(item.quantity * item.price)} <span style={{ fontSize: 9, color: 'var(--tn-gray-500)', fontWeight: 500 }}>FCFA</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="admin-orders-modal__section">
-                <h3>Montant total</h3>
-                <p className="admin-orders-modal__total">{formatPrice(selectedOrder.total_amount)} FCFA</p>
-              </div>
-              <div className="admin-orders-modal__section">
-                <h3>Changer le statut</h3>
-                <div className="admin-orders-modal__status-actions">
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus(selectedOrder.id, 'PENDING')}
-                    className="admin-orders-modal__status-btn pending"
-                  >
-                    En attente
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus(selectedOrder.id, 'PAID')}
-                    className="admin-orders-modal__status-btn paid"
-                  >
-                    Payé
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus(selectedOrder.id, 'SHIPPED')}
-                    className="admin-orders-modal__status-btn shipped"
-                  >
-                    Expédié
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus(selectedOrder.id, 'CANCELLED')}
-                    className="admin-orders-modal__status-btn cancelled"
-                  >
-                    Annulé
-                  </button>
+            </AdminModalSection>
+
+            {/* Amounts */}
+            <AdminModalSection icon="fa-calculator" title="Montants">
+              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)' }}>
+                {[
+                  ['Sous-total', `${fmtPrice(sel.subtotal || sel.total_amount)} FCFA`],
+                  ['Livraison', Number(sel.shipping_cost || 0) === 0 ? 'Gratuit' : `${fmtPrice(sel.shipping_cost)} FCFA`],
+                  ...(sel.discount_amount > 0 ? [['Remise', `-${fmtPrice(sel.discount_amount)} FCFA`, true]] : []),
+                ].map(([l, v, green]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: green ? 'var(--tn-success)' : 'var(--tn-gray-700)' }}>
+                    <span>{l}</span>
+                    <span style={{ fontFamily: 'var(--tn-mono)', fontWeight: 600 }}>{v}</span>
+                  </div>
+                ))}
+                <div className="tn-motif-divider" style={{ margin: '10px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 16 }}>Total TTC</span>
+                  <span style={{ fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22, color: 'var(--tn-orange)' }}>
+                    {fmtPrice(sel.total_amount)} <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 11, color: 'var(--tn-gray-500)', fontWeight: 500 }}>FCFA</span>
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </AdminModalSection>
+
+            {/* Status change */}
+            <AdminModalSection icon="fa-rotate" title="Changer le statut">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {[
+                  ['PENDING', 'En attente', 'fa-clock'],
+                  ['PAID', 'Payee', 'fa-check'],
+                  ['SHIPPED', 'Expediee', 'fa-truck'],
+                  ['CANCELLED', 'Annulee', 'fa-times'],
+                ].map(([s, l, ic]) => (
+                  <StatusBtn key={s} statusKey={s.toLowerCase()} label={l} icon={ic} isCurrent={(sel.status || '').toUpperCase() === s} onClick={() => updateOrderStatus(sel.id, s)} />
+                ))}
+              </div>
+            </AdminModalSection>
+          </AdminModalBody>
+        </AdminModalOverlay>
       )}
-    </div>
+    </>
   );
 };
 

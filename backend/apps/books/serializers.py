@@ -83,7 +83,13 @@ class BookListSerializer(serializers.ModelSerializer):
     
     # Formatage de la note (ex: "4.5/5")
     rating_display = serializers.SerializerMethodField()
-    
+
+    # Scoring & curation
+    is_featured = serializers.BooleanField(read_only=True)
+    published_date = serializers.DateField(read_only=True, allow_null=True)
+    popularity_score = serializers.FloatField(read_only=True)
+    trending_score = serializers.FloatField(read_only=True)
+
     class Meta:
         model = Book
         fields = [
@@ -102,14 +108,19 @@ class BookListSerializer(serializers.ModelSerializer):
             'category',
             'author',
             'created_at',
-            # Nouveaux champs
+            # Promotions
             'has_discount',
             'discount_percentage',
             'discount_amount',
+            # Popularite
             'is_bestseller',
+            'is_featured',
             'rating',
             'rating_count',
             'rating_display',
+            'published_date',
+            'popularity_score',
+            'trending_score',
             'pdf_file',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
@@ -246,6 +257,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
     
     def validate_reference(self, value):
         """Validation personnalisée de la référence"""
+        if not value:
+            return value
         if len(value) < 3:
             raise serializers.ValidationError("La référence doit contenir au moins 3 caractères.")
         return value.upper()
@@ -260,6 +273,8 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
     cover_image = serializers.ImageField(required=False, allow_null=True)
     back_cover_image = serializers.ImageField(required=False, allow_null=True)
     pdf_file = serializers.FileField(required=False, allow_null=True)
+    reference = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
+    description = serializers.CharField(required=False, allow_blank=True, default='')
 
     class Meta:
         model = Book

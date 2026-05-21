@@ -21,8 +21,11 @@ const Checkout = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [orderPlaced, setOrderPlaced] = useState(false);
 
   useEffect(() => {
+    if (orderPlaced) return;
+
     if (!isAuthenticated) {
       navigate('/login', { state: { from: '/checkout' } });
       return;
@@ -84,6 +87,7 @@ const Checkout = () => {
 
       const response = await orderService.createOrder(orderData);
 
+      setOrderPlaced(true);
       clearCart();
 
       navigate('/order-success', {
@@ -206,6 +210,9 @@ const Checkout = () => {
                     <span className="chk-item-qty">Qté: {item.quantity}</span>
                   </div>
                   <div className="chk-item-price">
+                    {item.original_price && Number(item.original_price) > Number(item.price) && (
+                      <span className="chk-item-old-price">{formatPrice(item.original_price)}</span>
+                    )}
                     {formatPrice(item.price * item.quantity)}
                   </div>
                 </div>

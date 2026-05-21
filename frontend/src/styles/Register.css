@@ -10,11 +10,12 @@
    HERO
    ============================================= */
 .reg-hero {
-  padding: 7.5rem 1.5rem 4rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 35%, #0c1631 70%, #0f172a 100%);
+  padding: 48px 56px 48px;
+  background: var(--tn-black);
   color: #fff;
   position: relative;
   overflow: hidden;
+  padding-top: 48px;
 }
 
 .reg-hero__grid-bg {
@@ -51,7 +52,7 @@
   height: 500px;
   top: -22%;
   right: -10%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.15) 0%, transparent 60%);
   filter: blur(70px);
   animation: reg-orb-1 16s ease-in-out infinite;
 }
@@ -61,7 +62,7 @@
   height: 380px;
   bottom: -12%;
   left: -8%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.12) 0%, transparent 60%);
   filter: blur(65px);
   animation: reg-orb-2 20s ease-in-out infinite;
 }
@@ -120,8 +121,8 @@
   height: 4px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa, #93c5fd);
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(90deg, var(--color-primary), var(--tn-orange-light), #93c5fd);
+  box-shadow: 0 0 20px rgba(232, 96, 28, 0.4);
 }
 
 .reg-hero__icon {
@@ -131,13 +132,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.35) 0%, rgba(96, 165, 250, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(232, 96, 28, 0.35) 0%, rgba(96, 165, 250, 0.2) 100%);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 1.75rem;
   color: #fff;
   box-shadow:
-    0 8px 32px rgba(37, 99, 235, 0.3),
+    0 8px 32px rgba(232, 96, 28, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   animation: reg-icon-float 4s ease-in-out infinite;
 }
@@ -172,7 +173,7 @@
 
 .reg-hero-fade {
   height: 90px;
-  background: linear-gradient(to bottom, #0c1631, #1e293b 40%, #f1f5f9);
+  background: linear-gradient(to bottom, var(--tn-black), #1e293b 40%, var(--tn-cream));
   margin-top: -1px;
 }
 
@@ -180,7 +181,7 @@
    CONTENU
    ============================================= */
 .reg-content {
-  background: #f1f5f9;
+  background: var(--tn-cream);
   padding: 2.5rem 1.5rem 4rem;
   flex: 1;
   position: relative;
@@ -203,7 +204,7 @@
   height: 350px;
   top: -80px;
   left: -100px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.06) 0%, transparent 70%);
   filter: blur(50px);
 }
 
@@ -226,13 +227,11 @@
 /* ── CARTE ── */
 .reg-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 14px;
   padding: 0 2rem 2.25rem;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px rgba(15, 23, 42, 0.06),
-    0 0 0 1px rgba(15, 23, 42, 0.02);
+  border: 1px solid var(--tn-gray-200);
+  border-top: 4px solid var(--tn-orange);
+  box-shadow: var(--tn-shadow-2);
   position: relative;
   overflow: hidden;
   animation: reg-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -256,7 +255,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa, #93c5fd);
+  background: linear-gradient(90deg, var(--color-primary), var(--tn-orange-light), #93c5fd);
   opacity: 0.9;
 }
 
@@ -355,7 +354,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  background: linear-gradient(to bottom, #f8fafc, var(--tn-cream));
   border: 1px solid var(--color-gray-200);
   border-radius: 12px;
   transition: all 0.25s ease;
@@ -367,7 +366,7 @@
 
 .reg-input-wrap:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 4px rgba(232, 96, 28, 0.12);
   background: #fff;
 }
 
@@ -431,12 +430,12 @@
 
 .reg-pwd-toggle:hover {
   color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(232, 96, 28, 0.08);
 }
 
 .reg-err {
   font-size: 0.8125rem;
-  color: #dc2626;
+  color: var(--tn-error);
   font-weight: 500;
 }
 
@@ -457,7 +456,7 @@
 }
 
 .reg-match.err {
-  color: #dc2626;
+  color: var(--tn-error);
   background: #fef2f2;
   border: 1px solid #fecaca;
 }
@@ -512,11 +511,11 @@
 }
 
 .reg-btn-submit {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #3b82f6 50%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--tn-orange) 50%, var(--tn-orange) 100%);
   color: #fff;
   box-shadow:
-    0 1px 2px rgba(37, 99, 235, 0.3),
-    0 4px 12px rgba(37, 99, 235, 0.25);
+    0 1px 2px rgba(232, 96, 28, 0.3),
+    0 4px 12px rgba(232, 96, 28, 0.25);
 }
 
 .reg-btn-submit::before {
@@ -534,8 +533,8 @@
 .reg-btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow:
-    0 4px 8px rgba(37, 99, 235, 0.3),
-    0 8px 24px rgba(37, 99, 235, 0.35);
+    0 4px 8px rgba(232, 96, 28, 0.3),
+    0 8px 24px rgba(232, 96, 28, 0.35);
 }
 
 .reg-btn-submit:active:not(:disabled) {
@@ -593,7 +592,7 @@
 
 .reg-footer-fade {
   height: 100px;
-  background: linear-gradient(to bottom, #f1f5f9, #475569 50%, var(--color-bg-dark));
+  background: linear-gradient(to bottom, var(--tn-cream), #475569 50%, var(--color-bg-dark));
   margin-top: -1px;
 }
 

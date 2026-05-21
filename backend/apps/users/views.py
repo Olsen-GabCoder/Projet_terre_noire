@@ -9,6 +9,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework_simplejwt.views import TokenObtainPairView
+from apps.core.throttling import RegisterThrottle, PasswordResetThrottle
 from .serializers import (
     UserRegistrationSerializer,
     UserDetailSerializer,
@@ -36,6 +37,7 @@ class UserRegistrationView(generics.CreateAPIView):
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegisterThrottle]
 
     def create(self, request, *args, **kwargs):
         """
@@ -180,6 +182,7 @@ class ForgotPasswordView(APIView):
     Envoie un email avec un lien de réinitialisation (même réponse si email inexistant, pour éviter l'enumération).
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [PasswordResetThrottle]
 
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)

@@ -1,84 +1,333 @@
-/**
- * Charte graphique — couleurs du footer + succès / erreur uniquement.
- * Une seule source pour toute l'application.
- */
+/* ============================================================
+   TERRE NOIRE EDITIONS — Design Tokens
+   Refonte visuelle 2026 · "Demain s'ecrit aujourd'hui"
+   ============================================================ */
 
 :root {
-  /* Couleurs principales (footer) */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-accent: #e63946;
+  /* ─────────── Brand colors ─────────── */
+  /* Orange Terracotta — couleur signature */
+  --tn-orange:        #E8601C;
+  --tn-orange-hover:  #C94E15;
+  --tn-orange-light:  #F4863F;
+  --tn-orange-50:     #FCEFE6;
+  --tn-orange-100:    #F9DCC8;
+
+  /* Noir profond — "Terre Noire" */
+  --tn-black:         #0A0A0A;
+  --tn-black-2:       #141414;
+  --tn-black-3:       #1A1A1A;
+  --tn-black-4:       #242424;
+
+  /* Creme / blanc */
+  --tn-cream:         #FAFAF5;
+  --tn-cream-2:       #F5F2EA;
+  --tn-cream-3:       #ECE7DA;
+  --tn-white:         #FFFFFF;
+
+  /* Or / sable */
+  --tn-gold:          #C8956C;
+  --tn-gold-light:    #D4A574;
+  --tn-gold-dark:     #A77648;
+
+  /* Gris chauds */
+  --tn-gray-900:      #2D2D2D;
+  --tn-gray-700:      #4F4F4F;
+  --tn-gray-500:      #6B6B6B;
+  --tn-gray-400:      #9A9A9A;
+  --tn-gray-300:      #D4D4D4;
+  --tn-gray-200:      #E5E2DA;
+  --tn-gray-100:      #F1EEE6;
+
+  /* Semantique */
+  --tn-success:       #2E7D32;
+  --tn-success-bg:    #E6F1E6;
+  --tn-error:         #C62828;
+  --tn-error-bg:      #FBE8E8;
+  --tn-warning:       #F4863F;
+  --tn-info:          #E8601C;
+
+  /* ─────────── Typography ─────────── */
+  --tn-serif:  "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --tn-sans:   "Inter", "DM Sans", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --tn-mono:   "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* ─────────── Spacing ─────────── */
+  --tn-s-1: 4px;
+  --tn-s-2: 8px;
+  --tn-s-3: 12px;
+  --tn-s-4: 16px;
+  --tn-s-5: 24px;
+  --tn-s-6: 32px;
+  --tn-s-7: 48px;
+  --tn-s-8: 64px;
+  --tn-s-9: 96px;
+
+  /* ─────────── Radii ─────────── */
+  --tn-r-1: 4px;
+  --tn-r-2: 8px;
+  --tn-r-3: 12px;
+  --tn-r-4: 16px;
+  --tn-r-pill: 999px;
+
+  /* ─────────── Shadows ─────────── */
+  --tn-shadow-1: 0 1px 2px rgba(20, 14, 8, 0.04), 0 1px 3px rgba(20, 14, 8, 0.06);
+  --tn-shadow-2: 0 4px 12px rgba(20, 14, 8, 0.06), 0 2px 4px rgba(20, 14, 8, 0.05);
+  --tn-shadow-3: 0 12px 32px rgba(20, 14, 8, 0.10), 0 4px 8px rgba(20, 14, 8, 0.06);
+  --tn-shadow-orange: 0 6px 20px rgba(232, 96, 28, 0.28);
+
+  /* ─────────── Motion ─────────── */
+  --tn-ease: cubic-bezier(.2,.7,.3,1);
+  --tn-dur-fast: 140ms;
+  --tn-dur:      220ms;
+  --tn-dur-slow: 360ms;
+
+  /* ─────────── Legacy aliases (ancien design) ─────────── */
+  /* Couleurs principales */
+  --color-primary:      var(--tn-orange);
+  --color-primary-dark:  var(--tn-orange-hover);
+  --color-accent:       var(--tn-gold);
 
   /* Fonds et texte */
-  --color-bg-dark: #0f172a;
-  --color-bg-darker: #020617;
-  --color-text-light: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-border: rgba(255, 255, 255, 0.1);
+  --color-bg-dark:      var(--tn-black);
+  --color-bg-darker:    var(--tn-black);
+  --color-text-light:   var(--tn-cream);
+  --color-text-muted:   var(--tn-gray-400);
+  --color-border:       rgba(255, 255, 255, 0.1);
 
-  /* Sémantiques */
-  --color-success: #10b981;
-  --color-error: #ef4444;
+  /* Semantiques */
+  --color-success:      var(--tn-success);
+  --color-error:        var(--tn-error);
 
-  /* Neutres (texte, bordures, fonds clairs) */
-  --color-gray-100: #f8fafc;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e1;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #64748b;
-  --color-gray-600: #475569;
-  --color-gray-700: #334155;
-  --color-gray-800: #1e293b;
-  --color-gray-900: #0f172a;
+  /* Neutres (gris chauds au lieu de gris bleu) */
+  --color-gray-100:     var(--tn-gray-100);
+  --color-gray-200:     var(--tn-gray-200);
+  --color-gray-300:     var(--tn-gray-300);
+  --color-gray-400:     var(--tn-gray-400);
+  --color-gray-500:     var(--tn-gray-500);
+  --color-gray-600:     var(--tn-gray-700);
+  --color-gray-700:     var(--tn-gray-700);
+  --color-gray-800:     var(--tn-gray-900);
+  --color-gray-900:     var(--tn-gray-900);
 
-  /* Dégradés (basés sur la charte) */
-  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  --gradient-bg-dark: linear-gradient(135deg, var(--color-bg-darker) 0%, var(--color-bg-dark) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #c1121f 100%);
+  /* Degrades */
+  --gradient-primary:   linear-gradient(135deg, var(--tn-orange) 0%, var(--tn-orange-hover) 100%);
+  --gradient-bg-dark:   linear-gradient(135deg, var(--tn-black) 0%, var(--tn-black-3) 100%);
+  --gradient-accent:    linear-gradient(135deg, var(--tn-gold) 0%, var(--tn-gold-dark) 100%);
 
-  /* Fond de page (unité visuelle header → contenu → footer) */
-  --color-bg-page: #ffffff;
+  /* Fond de page */
+  --color-bg-page:      var(--tn-cream);
 
   /* Ombres */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  /* Cartes : multicouche pour profondeur, survol avec accent primaire */
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(37, 99, 235, 0.12);
-  --shadow-btn: 0 1px 2px rgba(37, 99, 235, 0.2);
-  --shadow-btn-hover: 0 4px 12px rgba(37, 99, 235, 0.25);
+  --shadow-sm:          var(--tn-shadow-1);
+  --shadow-md:          var(--tn-shadow-2);
+  --shadow-lg:          var(--tn-shadow-3);
+  --shadow-card:        var(--tn-shadow-1);
+  --shadow-card-hover:  0 8px 24px rgba(20, 14, 8, 0.08), 0 2px 8px rgba(20, 14, 8, 0.04), 0 0 0 1px rgba(232, 96, 28, 0.12);
+  --shadow-btn:         0 1px 2px rgba(232, 96, 28, 0.2);
+  --shadow-btn-hover:   var(--tn-shadow-orange);
 
   /* Rayons */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs:          var(--tn-r-1);
+  --radius-sm:          var(--tn-r-1);
+  --radius-md:          var(--tn-r-2);
+  --radius-lg:          var(--tn-r-3);
+  --radius-xl:          var(--tn-r-4);
 
   /* Transitions */
-  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --duration-fast: 0.2s;
-  --duration-normal: 0.28s;
+  --ease-out:           var(--tn-ease);
+  --duration-fast:      var(--tn-dur-fast);
+  --duration-normal:    var(--tn-dur);
 
   /* Typo */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Poppins', var(--font-sans);
+  --font-sans:          var(--tn-sans);
+  --font-heading:       var(--tn-serif);
 
   /* Espacements */
-  --container-max: 1200px;
+  --container-max:      1200px;
+
+  /* Anciens alias supplementaires */
+  --primary-color:      var(--tn-orange);
+  --secondary-color:    var(--tn-gold);
+  --success-color:      var(--tn-success);
+  --danger-color:       var(--tn-error);
+  --dark-color:         var(--tn-black);
+  --light-color:        var(--tn-cream);
+  --gray-light:         var(--tn-gray-200);
+  --gray-medium:        var(--tn-gray-500);
+  --gray-dark:          var(--tn-gray-700);
+  --font-primary:       var(--tn-sans);
 }
 
-/* Alias pour compatibilité */
-:root {
-  --primary-color: var(--color-primary);
-  --secondary-color: var(--color-accent);
-  --success-color: var(--color-success);
-  --danger-color: var(--color-error);
-  --dark-color: var(--color-bg-dark);
-  --light-color: var(--color-text-light);
-  --gray-light: var(--color-gray-200);
-  --gray-medium: var(--color-gray-500);
-  --gray-dark: var(--color-gray-700);
-  --font-primary: var(--font-sans);
+/* ============================================================
+   African geometric motif — decorative borders/strips (SVG data URIs)
+   ============================================================ */
+.tn-motif-strip {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'><path d='M0 6 L6 0 L12 6 L18 0 L24 6 L30 0 L36 6 L40 4 L40 8 L36 10 L30 4 L24 10 L18 4 L12 10 L6 4 L0 8 Z' fill='%23E8601C'/></svg>");
+  background-repeat: repeat-x;
+  background-size: auto 8px;
+  height: 8px;
 }
+.tn-motif-strip--gold {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'><path d='M0 6 L6 0 L12 6 L18 0 L24 6 L30 0 L36 6 L40 4 L40 8 L36 10 L30 4 L24 10 L18 4 L12 10 L6 4 L0 8 Z' fill='%23C8956C'/></svg>");
+}
+.tn-motif-divider {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='8' viewBox='0 0 24 8'><path d='M0 4 L4 0 L8 4 L12 0 L16 4 L20 0 L24 4' stroke='%23C8956C' stroke-width='1' fill='none'/></svg>");
+  background-repeat: repeat-x;
+  background-size: auto 6px;
+  background-position: center;
+  height: 6px;
+}
+.tn-motif-bg {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='%23E8601C' stroke-width='0.6' opacity='0.5'><path d='M40 0 L80 40 L40 80 L0 40 Z'/><path d='M40 20 L60 40 L40 60 L20 40 Z'/><circle cx='40' cy='40' r='3' fill='%23E8601C'/></g></svg>");
+  background-repeat: repeat;
+  background-size: 80px 80px;
+}
+
+/* ============================================================
+   Image placeholder (book cover / hero photo)
+   Subtly-striped with a monospace label
+   ============================================================ */
+.tn-placeholder {
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      var(--tn-cream-2) 0,
+      var(--tn-cream-2) 8px,
+      var(--tn-cream-3) 8px,
+      var(--tn-cream-3) 16px
+    );
+  border: 1px solid var(--tn-gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tn-gray-500);
+  font-family: var(--tn-mono);
+  font-size: 11px;
+  text-align: center;
+  overflow: hidden;
+}
+.tn-placeholder--dark {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      #1f1f1f 0,
+      #1f1f1f 8px,
+      #161616 8px,
+      #161616 16px
+    );
+  border-color: #2c2c2c;
+  color: var(--tn-gray-400);
+}
+.tn-placeholder--cover {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      #2a1f17 0,
+      #2a1f17 6px,
+      #3a2a1d 6px,
+      #3a2a1d 12px
+    );
+  border: 1px solid var(--tn-gold-dark);
+  color: var(--tn-gold-light);
+}
+.tn-placeholder__label {
+  font-family: var(--tn-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 3px;
+  color: var(--tn-cream);
+}
+
+/* ============================================================
+   Utility components
+   ============================================================ */
+.tn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--tn-r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tn-pill--orange  { background: var(--tn-orange-50); color: var(--tn-orange-hover); }
+.tn-pill--gray    { background: var(--tn-gray-100); color: var(--tn-gray-700); }
+.tn-pill--dark    { background: var(--tn-black-3); color: var(--tn-gold-light); }
+.tn-pill--solid   { background: var(--tn-orange); color: #fff; }
+.tn-pill--success { background: var(--tn-success-bg); color: var(--tn-success); }
+.tn-pill--gold    { background: rgba(200,149,108,0.15); color: var(--tn-gold-dark); }
+
+.tn-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--tn-r-2);
+  font-family: var(--tn-sans);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all var(--tn-dur) var(--tn-ease);
+  white-space: nowrap;
+}
+.tn-btn--primary       { background: var(--tn-orange); color: #fff; }
+.tn-btn--primary:hover { background: var(--tn-orange-hover); box-shadow: var(--tn-shadow-orange); }
+.tn-btn--dark          { background: var(--tn-black); color: #fff; }
+.tn-btn--dark:hover    { background: var(--tn-black-3); }
+.tn-btn--outline       { background: transparent; color: var(--tn-orange); border-color: var(--tn-orange); }
+.tn-btn--outline:hover { background: var(--tn-orange); color: #fff; }
+.tn-btn--outline-light { background: transparent; color: var(--tn-cream); border-color: rgba(255,255,255,0.4); }
+.tn-btn--ghost         { background: transparent; color: var(--tn-orange); }
+.tn-btn--lg   { padding: 16px 28px; font-size: 15px; }
+.tn-btn--sm   { padding: 8px 14px; font-size: 13px; }
+.tn-btn--block { width: 100%; }
+
+.tn-input {
+  width: 100%;
+  background: var(--tn-white);
+  border: 1.5px solid var(--tn-gray-200);
+  border-radius: var(--tn-r-2);
+  padding: 12px 14px;
+  font-family: var(--tn-sans);
+  font-size: 14px;
+  color: var(--tn-gray-900);
+  transition: border-color var(--tn-dur);
+}
+.tn-input:focus { outline: none; border-color: var(--tn-orange); box-shadow: 0 0 0 3px var(--tn-orange-50); }
+.tn-input--dark {
+  background: var(--tn-black-3);
+  border-color: rgba(255,255,255,0.12);
+  color: var(--tn-cream);
+}
+.tn-input--dark::placeholder { color: var(--tn-gray-400); }
+
+/* Section header accent — small orange bar under titles */
+.tn-section-title {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 14px;
+}
+.tn-section-title::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 56px; height: 3px;
+  background: var(--tn-orange);
+  border-radius: 2px;
+}
+
+/* Stars */
+.tn-stars { display: inline-flex; gap: 2px; color: var(--tn-orange); font-size: 12px; }
+.tn-stars--lg { font-size: 16px; }
+
+/* "FCFA" price typesetting */
+.tn-price { font-family: var(--tn-serif); font-weight: 700; color: var(--tn-orange); }
+.tn-price__currency { font-family: var(--tn-sans); font-size: 0.65em; font-weight: 500; color: var(--tn-gray-500); margin-left: 4px; letter-spacing: 0.04em; }
+.tn-price__strike { text-decoration: line-through; color: var(--tn-gray-400); font-family: var(--tn-sans); font-weight: 500; }

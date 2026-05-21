@@ -13,7 +13,7 @@ class WishlistListView(APIView):
 
     def get(self, request):
         items = WishlistItem.objects.filter(user=request.user).select_related('book', 'book__author', 'book__category')
-        serializer = WishlistItemSerializer(items, many=True)
+        serializer = WishlistItemSerializer(items, many=True, context={'request': request})
         books = [item['book'] for item in serializer.data]
         return Response({'results': books})
 

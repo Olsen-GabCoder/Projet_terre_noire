@@ -15,10 +15,12 @@ from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_GET
+from rest_framework.permissions import IsAuthenticated
 
 logger = logging.getLogger(__name__)
 
 from .models import Book, Author, Category, BookReview, ReviewLike
+from apps.orders.models import Order, OrderItem
 from .filters import BookFilter
 from .serializers import (
     BookListSerializer,
@@ -41,10 +43,45 @@ def serve_book_pdf(request, book_id):
     """
     Sert le PDF d'un livre pour affichage dans l'iframe de l'application.
     Exempt de X-Frame-Options pour autoriser l'embedding dans notre frontend.
+    Securise : seuls les admins ou les utilisateurs ayant achete le livre peuvent y acceder.
     """
+    from apps.users.jwt_cookie_auth import JWTCookieAuthentication
+
+    # Authentification JWT (header ou cookie)
+    auth = JWTCookieAuthentication()
+    try:
+        result = auth.authenticate(request)
+    except Exception:
+        result = None
+
+    if result is None:
+        from django.http import JsonResponse
+        return JsonResponse(
+            {'detail': 'Authentification requise pour lire ce livre.'},
+            status=401
+        )
+
+    user, _ = result
+
     book = get_object_or_404(Book, pk=book_id)
     if not book.pdf_file:
         raise Http404("PDF non disponible pour ce livre.")
+
+    # Les admins ont toujours acces
+    if not user.is_staff:
+        # Verifier que l'utilisateur a une commande payee contenant ce livre
+        has_purchased = OrderItem.objects.filter(
+            order__user=user,
+            order__status='PAID',
+            book=book,
+        ).exists()
+        if not has_purchased:
+            from django.http import JsonResponse
+            return JsonResponse(
+                {'detail': 'Vous devez acheter ce livre pour pouvoir le lire.'},
+                status=403
+            )
+
     try:
         f = book.pdf_file.open('rb')
     except Exception as e:
@@ -163,6 +200,43 @@ class BookViewSet(viewsets.ModelViewSet):
             )
         return super().create(request, *args, **kwargs)
 
+    def perform_create(self, serializer):
+        """Sauvegarde le livre puis notifie les abonnés newsletter en arrière-plan."""
+        import threading
+        book = serializer.save()
+        book = Book.objects.select_related('author', 'category').get(pk=book.pk)
+
+        def _notify(b):
+            try:
+                from apps.core.email import send_new_book_notification
+                send_new_book_notification(b)
+            except Exception as e:
+                logger.exception("Erreur notification newsletter nouveau livre: %s", e)
+        threading.Thread(target=_notify, args=(book,), daemon=True).start()
+
+    def perform_update(self, serializer):
+        """Détecte si un livre passe en promo et notifie les abonnés."""
+        import threading
+        old_original_price = serializer.instance.original_price
+        book = serializer.save()
+        book = Book.objects.select_related('author', 'category').get(pk=book.pk)
+
+        # Notifier seulement si le livre vient de passer en promo
+        # (original_price n'existait pas avant OU a augmenté → nouvelle promo)
+        is_new_promo = (
+            book.original_price
+            and book.original_price > book.price
+            and (not old_original_price or old_original_price <= book.price)
+        )
+        if is_new_promo:
+            def _notify_promo(b):
+                try:
+                    from apps.core.email import send_promo_notification
+                    send_promo_notification(b)
+                except Exception as e:
+                    logger.exception("Erreur notification promo: %s", e)
+            threading.Thread(target=_notify_promo, args=(book,), daemon=True).start()
+
     def get_queryset(self):
         """
         Optimisation des requêtes selon l'action
@@ -179,13 +253,17 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='featured')
     def featured_books(self, request):
         """
-        Endpoint personnalisé: /api/books/featured/
-        Retourne les livres mis en avant (les 6 plus récents et disponibles)
+        /api/books/featured/
+        Selection editoriale (is_featured=True).
+        Fallback : top popularite si aucun livre n'est marque featured.
         """
         cache_key = 'books_featured'
         data = cache.get(cache_key)
         if data is None:
-            featured = self.get_queryset().filter(available=True)[:6]
+            qs = self.get_queryset().filter(available=True, is_featured=True)
+            if not qs.exists():
+                qs = self.get_queryset().filter(available=True).order_by('-popularity_score')
+            featured = qs[:6]
             serializer = BookListSerializer(featured, many=True, context={'request': request})
             data = serializer.data
             cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
@@ -194,16 +272,37 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='bestsellers')
     def bestsellers(self, request):
         """
-        Endpoint personnalisé: /api/books/bestsellers/
-        Retourne les best-sellers (livres marqués comme bestseller)
+        /api/books/bestsellers/
+        Trie par popularity_score (ventes reelles + rating + wishlist + boost admin).
         """
         cache_key = 'books_bestsellers'
         data = cache.get(cache_key)
         if data is None:
-            bestsellers = self.get_queryset().filter(
-                available=True, is_bestseller=True
-            ).order_by('-rating', '-created_at')[:8]
+            bestsellers = (
+                self.get_queryset()
+                .filter(available=True)
+                .order_by('-popularity_score', '-rating')[:8]
+            )
             serializer = BookListSerializer(bestsellers, many=True, context={'request': request})
+            data = serializer.data
+            cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='trending')
+    def trending(self, request):
+        """
+        /api/books/trending/
+        Livres avec la plus forte velocite recente (trending_score).
+        """
+        cache_key = 'books_trending'
+        data = cache.get(cache_key)
+        if data is None:
+            books = (
+                self.get_queryset()
+                .filter(available=True)
+                .order_by('-trending_score', '-popularity_score')[:8]
+            )
+            serializer = BookListSerializer(books, many=True, context={'request': request})
             data = serializer.data
             cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
         return Response(data)
@@ -211,15 +310,43 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='new-releases')
     def new_releases(self, request):
         """
-        Endpoint personnalisé: /api/books/new-releases/
-        Retourne les nouveautés (10 derniers livres ajoutés)
+        /api/books/new-releases/
+        Nouveautes par published_date (fallback created_at).
         """
         cache_key = 'books_new_releases'
         data = cache.get(cache_key)
         if data is None:
-            new_books = self.get_queryset().filter(available=True).order_by('-created_at')[:10]
+            new_books = (
+                self.get_queryset()
+                .filter(available=True)
+                .order_by(F('published_date').desc(nulls_last=True), '-created_at')[:10]
+            )
             serializer = BookListSerializer(new_books, many=True, context={'request': request})
             data = serializer.data
+            cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='recommended')
+    def recommended(self, request):
+        """
+        /api/books/recommended/
+        Recommandations personnalisees (connecte) ou trending+qualite (anonyme).
+        """
+        from .scoring import get_personalized_recommendations, _anonymous_recommendations
+
+        cache_key = None
+        if not request.user.is_authenticated:
+            cache_key = 'books_recommended_anon'
+            data = cache.get(cache_key)
+            if data is not None:
+                return Response(data)
+            books = _anonymous_recommendations(limit=8)
+        else:
+            books = get_personalized_recommendations(request.user, limit=8)
+
+        serializer = BookListSerializer(books, many=True, context={'request': request})
+        data = serializer.data
+        if cache_key:
             cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
         return Response(data)
     

@@ -144,7 +144,7 @@ const OrderSuccess = () => {
           <p>
             <i className="fas fa-headset"></i>
             Une question ? Contactez notre service client au{' '}
-            <a href="tel:+24165348887">+241 65 34 88 87</a> ou <a href="tel:+24176593535">+241 76 59 35 35</a>
+            <a href="tel:+24165348887">+241 65 34 88 87</a> ou <a href="tel:+241076593535">+241 07 65 93 535</a>
           </p>
         </div>
         </div>

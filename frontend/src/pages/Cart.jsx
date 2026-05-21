@@ -113,7 +113,7 @@ const Cart = () => {
             </div>
             <div className="crt-empty__features">
               {[
-                { ico: 'fas fa-truck', t: 'Livraison rapide', d: '2-5 jours au Gabon' },
+                { ico: 'fas fa-truck', t: 'Livraison rapide', d: '5-10 jours au Gabon' },
                 { ico: 'fas fa-mobile-alt', t: 'Paiement', d: 'Mobicash, Airtel, Espèces, Visa' },
                 { ico: 'fas fa-lock', t: 'Paiement sécurisé', d: 'Transactions protégées' },
               ].map((f) => (
@@ -209,6 +209,9 @@ const Cart = () => {
                       >+</button>
                     </div>
                     <div className="crt-card__price">
+                      {item.original_price && Number(item.original_price) > Number(item.price) && (
+                        <span className="crt-card__old-price">{fmt(item.original_price)}</span>
+                      )}
                       <span className="crt-card__unit">{fmt(item.price)} × {item.quantity}</span>
                       <strong>{fmt(item.price * item.quantity)}</strong>
                     </div>

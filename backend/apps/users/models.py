@@ -12,10 +12,10 @@ class User(AbstractUser):
     (Mobile Money, adresse complète, etc.)
     """
     
-    # Validateur pour le numéro de téléphone - ASSOUPLI
+    # Validateur pour le numero de telephone
     phone_regex = RegexValidator(
-        regex=r'^\+?\d{8,15}$',
-        message="Le numéro de téléphone doit contenir entre 8 et 15 chiffres. Format accepté: +243123456789 ou 0123456789"
+        regex=r'^(\+[1-9]\d{7,14}|0\d{7,9})$',
+        message="Format accepte : +241XXXXXXXX (international) ou 0XXXXXXXX (local, 8-10 chiffres)."
     )
     
     # Champs supplémentaires - TÉLÉPHONE CORRIGÉ

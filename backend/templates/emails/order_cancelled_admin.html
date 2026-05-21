@@ -1,0 +1,37 @@
+{% extends "emails/base.html" %}
+{% block title %}Annulation commande{% endblock %}
+{% block content %}
+<p>Bonjour,</p>
+
+<div class="highlight">
+  <strong>Le client {{ client_name }}</strong> ({{ client_email }}) a annule sa commande <strong>#{{ order.id|stringformat:"06d" }}</strong>.
+</div>
+
+<h3>Details de la commande annulee</h3>
+<table>
+  <thead>
+    <tr><th>Article</th><th>Qte</th><th>Prix</th></tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>{{ item.price|floatformat:0 }} FCFA</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p><strong>Montant total :</strong> {{ total_amount|floatformat:0 }} FCFA</p>
+
+<h3>Informations client</h3>
+<p>
+  <strong>Nom :</strong> {{ client_name }}<br>
+  <strong>Email :</strong> {{ client_email }}<br>
+  <strong>Adresse :</strong> {{ order.shipping_address }}, {{ order.shipping_city }}<br>
+  <strong>Telephone :</strong> {{ order.shipping_phone }}
+</p>
+
+<p><a href="{{ frontend_url }}/admin-dashboard/orders" class="btn">Voir les commandes</a></p>
+{% endblock %}

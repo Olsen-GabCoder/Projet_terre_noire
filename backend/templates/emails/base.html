@@ -3,32 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Terre Noire Éditions{% endblock %}</title>
+  <title>{% block title %}Terre Noire Editions{% endblock %}</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f5f5; }
-    .wrapper { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .card { background: #fff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-    .header { text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid #1e3a5f; }
-    .brand { font-size: 20px; font-weight: 700; color: #1e3a5f; }
-    .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #F4F1EA; }
+    .wrapper { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+    .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header { background: #0A0A0A; padding: 28px 30px; text-align: center; }
+    .header-logo { max-height: 44px; margin-bottom: 10px; }
+    .brand { font-size: 18px; font-weight: 700; color: #FAFAF5; letter-spacing: 0.06em; display: block; }
+    .brand-sub { font-size: 11px; color: #C8956C; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; display: block; }
+    .motif-bar { height: 4px; background: linear-gradient(90deg, #E8601C 0%, #C8956C 50%, #E8601C 100%); }
+    .content { padding: 30px; }
+    .content h3 { font-size: 16px; color: #0A0A0A; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #E8601C; display: inline-block; }
+    .content p { margin: 0 0 12px; color: #444; }
+    .content strong { color: #0A0A0A; }
     table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #f8f9fa; font-weight: 600; }
-    .total-row { font-weight: 700; font-size: 1.1em; }
-    .btn { display: inline-block; padding: 12px 24px; background: #1e3a5f; color: #fff !important; text-decoration: none; border-radius: 6px; margin-top: 16px; }
+    th { background: #0A0A0A; color: #FAFAF5; padding: 10px 12px; text-align: left; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+    td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+    tr:nth-child(even) td { background: #FAFAF5; }
+    .total-row td { font-weight: 700; font-size: 1.1em; border-top: 2px solid #0A0A0A; background: #FAFAF5; }
+    .btn { display: inline-block; padding: 14px 28px; background: #E8601C; color: #fff !important; text-decoration: none; border-radius: 8px; margin-top: 16px; font-weight: 600; font-size: 14px; }
+    .btn:hover { background: #C94E15; }
+    .highlight { background: #FFF5F0; border-left: 4px solid #E8601C; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .footer { background: #0A0A0A; padding: 20px 30px; text-align: center; }
+    .footer p { font-size: 12px; color: #9A9A9A; margin: 0 0 4px; }
+    .footer a { color: #C8956C; text-decoration: none; }
+    .footer-brand { font-size: 13px; font-weight: 700; color: #FAFAF5; letter-spacing: 0.04em; margin-bottom: 8px; }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="card">
       <div class="header">
-        {% if logo_base64 %}<img src="{{ logo_base64 }}" alt="Terre Noire Éditions" style="max-height: 40px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto;" />{% endif %}
-        <span class="brand">Terre Noire Éditions</span>
+        {% if logo_url %}<img src="{{ logo_url }}" alt="Terre Noire Editions" class="header-logo" />{% endif %}
+        <span class="brand">TERRE NOIRE</span>
+        <span class="brand-sub">Editions &middot; Port-Gentil</span>
       </div>
-      {% block content %}{% endblock %}
+      <div class="motif-bar"></div>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+      <div class="motif-bar"></div>
       <div class="footer">
-        Terre Noire Éditions — Port-Gentil, Gabon<br>
-        terrenoireeditions@gmail.com — +241 65 34 88 87
+        <p class="footer-brand">TERRE NOIRE EDITIONS</p>
+        <p>Port-Gentil, Gabon</p>
+        <p><a href="mailto:olsenkampala@gmail.com">olsenkampala@gmail.com</a> &middot; +241 65 34 88 87</p>
+        <p style="margin-top: 10px; font-size: 11px; color: #666;">&laquo; Demain s'ecrit aujourd'hui &raquo;</p>
       </div>
     </div>
   </div>

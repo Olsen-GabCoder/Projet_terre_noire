@@ -22,7 +22,7 @@
 }
 
 .pro-card:hover {
-  border-color: rgba(37, 99, 235, 0.15);
+  border-color: rgba(232, 96, 28, 0.15);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(232, 96, 28, 0.08);
   color: var(--color-primary);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
@@ -128,5 +128,5 @@
 
 .pro-btn--outline:hover {
   border-color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(232, 96, 28, 0.05);
 }

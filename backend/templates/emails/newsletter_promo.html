@@ -1,0 +1,33 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Bonne nouvelle ! Un livre de notre catalogue est en <strong>promotion</strong> :</p>
+
+<div style="background: #FAFAF5; border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
+  {% if cover_image %}
+  <img src="{{ cover_image }}" alt="{{ title }}" style="max-height: 240px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-bottom: 16px;" />
+  {% endif %}
+  <h2 style="font-size: 20px; color: #0A0A0A; margin: 0 0 6px;">{{ title }}</h2>
+  <p style="font-size: 14px; color: #666; margin: 0;">par <strong>{{ author_name }}</strong></p>
+</div>
+
+<div style="background: #FFF5F0; border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center;">
+  <span style="display: inline-block; padding: 6px 16px; background: #E8601C; color: #fff; border-radius: 999px; font-size: 18px; font-weight: 700; margin-bottom: 12px;">-{{ discount_percentage }}%</span>
+  <div>
+    <span style="font-size: 16px; color: #999; text-decoration: line-through;">{{ original_price }} FCFA</span>
+    <span style="font-size: 28px; font-weight: 700; color: #E8601C; margin-left: 12px;">{{ price }} FCFA</span>
+  </div>
+  <p style="font-size: 13px; color: #666; margin: 8px 0 0;">Vous economisez <strong>{{ discount_amount }} FCFA</strong></p>
+</div>
+
+<p style="text-align: center;">
+  <a href="{{ book_url }}" class="btn">Profiter de l'offre</a>
+</p>
+
+{% if unsubscribe_url %}
+<p style="margin-top: 28px; font-size: 11px; color: #999; text-align: center;">
+  Vous ne souhaitez plus recevoir nos emails ?
+  <a href="{{ unsubscribe_url }}" style="color: #C8956C;">Se desinscrire</a>
+</p>
+{% endif %}
+{% endblock %}

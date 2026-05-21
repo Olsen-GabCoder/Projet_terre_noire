@@ -130,12 +130,134 @@ def send_order_paid(order):
     )
 
 
-def send_newsletter_welcome(email):
-    """Email de bienvenue après inscription à la newsletter."""
-    context = {'email': email, 'frontend_url': settings.FRONTEND_URL}
+def send_newsletter_welcome(email, token=None):
+    """Email de bienvenue après confirmation de la newsletter."""
+    context = {
+        'email': email,
+        'frontend_url': settings.FRONTEND_URL,
+        'unsubscribe_url': f"{settings.FRONTEND_URL}/newsletter/unsubscribe/{token}" if token else None,
+    }
     subject = "Bienvenue dans la newsletter — Terre Noire Éditions"
     return send_templated_email(
         subject, 'newsletter_welcome', context, [email]
+    )
+
+
+def send_new_book_notification(book):
+    """Envoie une notification à tous les abonnés confirmés et actifs pour un nouveau livre."""
+    from apps.newsletter.models import NewsletterSubscriber
+
+    subscribers = NewsletterSubscriber.objects.filter(is_active=True, confirmed=True)
+    if not subscribers.exists():
+        logger.info("Aucun abonné newsletter actif — notification nouveau livre ignorée.")
+        return 0
+
+    author_name = book.author.full_name if book.author else "Auteur inconnu"
+    category_name = book.category.name if book.category else None
+    price = f"{int(book.price):,}".replace(",", " ")
+    original_price = None
+    discount_percentage = None
+    if book.original_price and book.original_price > book.price:
+        original_price = f"{int(book.original_price):,}".replace(",", " ")
+        discount_percentage = round((1 - float(book.price) / float(book.original_price)) * 100)
+
+    cover_image = None
+    if book.cover_image:
+        cover_image = f"{settings.FRONTEND_URL.rstrip('/')}" \
+            .replace(':5173', ':8000') + book.cover_image.url
+
+    sent = 0
+    for subscriber in subscribers:
+        context = {
+            'title': book.title,
+            'author_name': author_name,
+            'category_name': category_name,
+            'description': book.description or "",
+            'price': price,
+            'original_price': original_price,
+            'discount_percentage': discount_percentage,
+            'cover_image': cover_image,
+            'book_url': f"{settings.FRONTEND_URL}/books/{book.id}",
+            'frontend_url': settings.FRONTEND_URL,
+            'unsubscribe_url': f"{settings.FRONTEND_URL}/newsletter/unsubscribe/{subscriber.confirmation_token}",
+        }
+        ok = send_templated_email(
+            f"Nouvelle parution : {book.title} — Terre Noire Éditions",
+            'newsletter_new_book',
+            context,
+            [subscriber.email],
+        )
+        if ok:
+            sent += 1
+    logger.info("Notification nouveau livre '%s' envoyée à %d/%d abonnés.", book.title, sent, subscribers.count())
+    return sent
+
+
+def send_promo_notification(book):
+    """Envoie une alerte promo à tous les abonnés confirmés et actifs."""
+    from apps.newsletter.models import NewsletterSubscriber
+
+    if not book.original_price or book.original_price <= book.price:
+        return 0
+
+    subscribers = NewsletterSubscriber.objects.filter(is_active=True, confirmed=True)
+    if not subscribers.exists():
+        return 0
+
+    author_name = book.author.full_name if book.author else "Auteur inconnu"
+    fmt = lambda v: f"{int(v):,}".replace(",", " ")
+    discount_pct = round((1 - float(book.price) / float(book.original_price)) * 100)
+    discount_amt = fmt(int(book.original_price - book.price))
+
+    cover_image = None
+    if book.cover_image:
+        cover_image = settings.FRONTEND_URL.rstrip('/').replace(':5173', ':8000') + book.cover_image.url
+
+    sent = 0
+    for subscriber in subscribers:
+        context = {
+            'title': book.title,
+            'author_name': author_name,
+            'price': fmt(book.price),
+            'original_price': fmt(book.original_price),
+            'discount_percentage': discount_pct,
+            'discount_amount': discount_amt,
+            'cover_image': cover_image,
+            'book_url': f"{settings.FRONTEND_URL}/books/{book.id}",
+            'frontend_url': settings.FRONTEND_URL,
+            'unsubscribe_url': f"{settings.FRONTEND_URL}/newsletter/unsubscribe/{subscriber.confirmation_token}",
+        }
+        ok = send_templated_email(
+            f"Promo : {book.title} à -{discount_pct}% — Terre Noire Éditions",
+            'newsletter_promo',
+            context,
+            [subscriber.email],
+        )
+        if ok:
+            sent += 1
+    logger.info("Notification promo '%s' (-%d%%) envoyée à %d/%d abonnés.", book.title, discount_pct, sent, subscribers.count())
+    return sent
+
+
+def send_coupon_email(coupon):
+    """Envoie un code promo par email à un destinataire spécifique."""
+    if not coupon.recipient_email:
+        return False
+    if coupon.discount_type == 'percent':
+        discount_label = f"{int(coupon.discount_value)}%"
+    else:
+        discount_label = f"{int(coupon.discount_value):,} FCFA".replace(",", " ")
+    context = {
+        'code': coupon.code,
+        'discount_label': discount_label,
+        'discount_type': coupon.discount_type,
+        'custom_message': coupon.custom_message or '',
+        'valid_until': coupon.valid_until.strftime('%d/%m/%Y') if coupon.valid_until else None,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Votre code promo -{discount_label} — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'coupon_gift', context, [coupon.recipient_email]
     )
 
 
@@ -169,6 +291,23 @@ def send_manuscript_acknowledgment(manuscript):
     subject = "Manuscrit reçu — Terre Noire Éditions"
     return send_templated_email(
         subject, 'manuscript_ack', context, [manuscript.email]
+    )
+
+
+def send_manuscript_status_changed(manuscript, old_status, new_status):
+    """Notifier l'auteur du changement de statut de son manuscrit."""
+    STATUS_LABELS = {'PENDING': 'En attente', 'REVIEWING': 'En cours d\'examen', 'ACCEPTED': 'Accepte', 'REJECTED': 'Refuse'}
+    context = {
+        'author_name': manuscript.author_name,
+        'title': manuscript.title,
+        'old_status': STATUS_LABELS.get(old_status, old_status),
+        'new_status': STATUS_LABELS.get(new_status, new_status),
+        'new_status_raw': new_status,
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Manuscrit « {manuscript.title} » — Mise à jour du statut — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'manuscript_status_changed', context, [manuscript.email]
     )
 
 
@@ -217,4 +356,45 @@ def send_order_shipped(order):
     subject = f"Votre commande #{order.id:06d} a été expédiée — Terre Noire Éditions"
     return send_templated_email(
         subject, 'order_shipped', context, [order.user.email]
+    )
+
+
+def send_order_status_changed(order, old_status, new_status):
+    """Email generique de changement de statut (fallback pour les statuts non geres individuellement)."""
+    from apps.orders.models import Order
+    order = Order.objects.prefetch_related('items__book').get(pk=order.pk)
+    items = [{'title': item.book.title, 'quantity': item.quantity} for item in order.items.all()]
+    STATUS_LABELS = {'PENDING': 'En attente', 'PAID': 'Payee', 'SHIPPED': 'Expediee', 'CANCELLED': 'Annulee'}
+    context = {
+        'order': order,
+        'user': order.user,
+        'items': items,
+        'old_status': STATUS_LABELS.get(old_status, old_status),
+        'new_status': STATUS_LABELS.get(new_status, new_status),
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"Commande #{order.id:06d} — Mise à jour du statut — Terre Noire Éditions"
+    return send_templated_email(
+        subject, 'order_status_changed', context, [order.user.email]
+    )
+
+
+def send_order_cancelled_admin(order):
+    """Notification a l'admin quand un client annule sa commande."""
+    from apps.orders.models import Order
+    order = Order.objects.prefetch_related('items__book').select_related('user').get(pk=order.pk)
+    items = [{'title': item.book.title, 'quantity': item.quantity, 'price': float(item.price)} for item in order.items.all()]
+    user = order.user
+    context = {
+        'order': order,
+        'user': user,
+        'client_name': user.get_full_name() or user.username,
+        'client_email': user.email,
+        'items': items,
+        'total_amount': float(order.total_amount),
+        'frontend_url': settings.FRONTEND_URL,
+    }
+    subject = f"[ANNULATION] Commande #{order.id:06d} annulée par {context['client_name']}"
+    return send_templated_email(
+        subject, 'order_cancelled_admin', context, [settings.ADMIN_EMAIL]
     )

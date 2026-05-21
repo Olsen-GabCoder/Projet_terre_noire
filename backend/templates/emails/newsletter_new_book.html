@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Une nouvelle parution vient d'arriver chez <strong>Terre Noire Editions</strong> !</p>
+
+<div style="background: #FAFAF5; border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
+  {% if cover_image %}
+  <img src="{{ cover_image }}" alt="{{ title }}" style="max-height: 260px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-bottom: 16px;" />
+  {% endif %}
+  <h2 style="font-size: 20px; color: #0A0A0A; margin: 0 0 6px;">{{ title }}</h2>
+  <p style="font-size: 14px; color: #666; margin: 0 0 12px;">par <strong>{{ author_name }}</strong></p>
+  {% if category_name %}
+  <span style="display: inline-block; padding: 4px 12px; background: #E8601C; color: #fff; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;">{{ category_name }}</span>
+  {% endif %}
+</div>
+
+{% if description %}
+<p style="font-size: 14px; color: #444; line-height: 1.6;">{{ description|truncatewords:60 }}</p>
+{% endif %}
+
+<div style="background: #FFF5F0; border-left: 4px solid #E8601C; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0;">
+  <span style="font-size: 22px; font-weight: 700; color: #E8601C;">{{ price }} FCFA</span>
+  {% if original_price %}
+  <span style="font-size: 14px; color: #999; text-decoration: line-through; margin-left: 10px;">{{ original_price }} FCFA</span>
+  <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #E8601C; color: #fff; border-radius: 4px; font-size: 12px; font-weight: 700;">-{{ discount_percentage }}%</span>
+  {% endif %}
+</div>
+
+<p style="text-align: center;">
+  <a href="{{ book_url }}" class="btn">Decouvrir ce livre</a>
+</p>
+
+{% if unsubscribe_url %}
+<p style="margin-top: 28px; font-size: 11px; color: #999; text-align: center;">
+  Vous ne souhaitez plus recevoir nos emails ?
+  <a href="{{ unsubscribe_url }}" style="color: #C8956C;">Se desinscrire</a>
+</p>
+{% endif %}
+{% endblock %}

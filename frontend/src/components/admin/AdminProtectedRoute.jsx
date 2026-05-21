@@ -9,9 +9,15 @@ const AdminProtectedRoute = ({ children }) => {
 
   if (!authChecked || loading) {
     return (
-      <div className="admin-loading-screen">
-        <div className="admin-spinner" />
-        <p>Chargement...</p>
+      <div className="adm-loading-screen">
+        <div style={{
+          width: 54, height: 54, borderRadius: '50%',
+          border: '3px solid var(--tn-cream-2)',
+          borderTopColor: 'var(--tn-orange)',
+          margin: '0 auto',
+          animation: 'tn-spin 1s linear infinite',
+        }} />
+        <p style={{ fontFamily: 'var(--tn-serif)', fontSize: 18, fontWeight: 600, marginTop: 22, color: 'var(--tn-gray-900)' }}>Chargement...</p>
       </div>
     );
   }

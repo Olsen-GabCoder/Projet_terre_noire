@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     # Bibliothèques tierces (Page 4 PDF)
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
@@ -274,6 +275,7 @@ if _email_host and _email_user:
     EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
     EMAIL_HOST_USER = _email_user
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    EMAIL_TIMEOUT = 10  # Timeout 10s pour ne pas bloquer si le port SMTP est inaccessible
 else:
     # Fallback : console en dev, échec silencieux en prod
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.dummy.EmailBackend'
@@ -302,6 +304,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon_burst': '10/minute',
         'anon_sustained': '30/hour',
+        'login': '5/minute',
+        'register': '3/hour',
+        'password_reset': '3/hour',
+        'contact': '5/hour',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -320,6 +326,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
@@ -338,6 +345,10 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True  # Requis pour les cookies HttpOnly
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in (os.getenv('CORS_ALLOWED_ORIGINS') or 'http://localhost:5173,http://127.0.0.1:5173').split(',')
+    if o.strip()
+]
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in (os.getenv('CSRF_TRUSTED_ORIGINS') or os.getenv('CORS_ALLOWED_ORIGINS') or 'http://localhost:5173,http://127.0.0.1:5173').split(',')
     if o.strip()
 ]
 

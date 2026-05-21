@@ -9,7 +9,7 @@ services:
     rootDir: backend
 
     buildCommand: >
-      pip install -r requirements.txt
+      pip install -r requirements-render.txt
       && python manage.py collectstatic --noinput
       && python manage.py migrate
       && python manage.py create_admin_user --no-update

@@ -58,7 +58,9 @@ class Manuscript(models.Model):
     )
     
     submitted_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de soumission")
-    
+    is_deleted = models.BooleanField(default=False, verbose_name="Supprime")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Date de suppression")
+
     class Meta:
         verbose_name = "Manuscrit"
         verbose_name_plural = "Manuscrits"

@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Bonjour,</p>
+<p>Vous avez demande a recevoir la newsletter de <strong>Terre Noire Editions</strong>.</p>
+<p>Pour confirmer votre inscription, cliquez sur le bouton ci-dessous :</p>
+<p style="text-align: center; margin: 28px 0;">
+  <a href="{{ confirm_url }}" class="btn">Confirmer mon inscription</a>
+</p>
+<div class="highlight">
+  <p style="margin: 0; font-size: 13px;">
+    Ce lien est valable <strong>72 heures</strong>. Si vous n'avez pas demande cette inscription, ignorez simplement cet email.
+  </p>
+</div>
+<p>A bientot !</p>
+{% endblock %}

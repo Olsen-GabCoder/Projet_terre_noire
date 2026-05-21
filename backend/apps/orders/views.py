@@ -74,12 +74,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        if old_status != 'SHIPPED' and instance.status == 'SHIPPED':
+        new_status = instance.status
+        if old_status != new_status:
             try:
-                from apps.core.email import send_order_shipped
-                send_order_shipped(instance)
-            except Exception:
-                pass
+                from apps.core.email import send_order_shipped, send_order_paid, send_order_cancelled, send_order_status_changed
+                if new_status == 'SHIPPED':
+                    send_order_shipped(instance)
+                elif new_status == 'PAID':
+                    send_order_paid(instance)
+                elif new_status == 'CANCELLED':
+                    send_order_cancelled(instance)
+                else:
+                    send_order_status_changed(instance, old_status, new_status)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"[EMAIL] Echec notification statut commande #{instance.id}: {e}", exc_info=True)
         response_serializer = OrderListSerializer(instance, context={'request': request})
         return Response(response_serializer.data)
     
@@ -101,10 +110,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
 
         try:
-            from apps.core.email import send_order_cancelled
+            from apps.core.email import send_order_cancelled, send_order_cancelled_admin
             send_order_cancelled(order)
-        except Exception:
-            pass
+            send_order_cancelled_admin(order)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"[EMAIL] Echec notification annulation commande #{order.id}: {e}", exc_info=True)
 
         serializer = OrderListSerializer(order, context={'request': request})
         return Response(serializer.data)

@@ -105,10 +105,14 @@ class Book(models.Model):
     reference = models.CharField(
         max_length=50,
         unique=True,
+        blank=True,
+        null=True,
         verbose_name="Référence (ISBN/Code)",
         help_text="ISBN ou code interne unique"
     )
     description = models.TextField(
+        blank=True,
+        default='',
         verbose_name="Description/Résumé"
     )
     price = models.DecimalField(
@@ -179,6 +183,33 @@ class Book(models.Model):
         verbose_name="Best-seller",
         help_text="Cocher pour mettre en avant ce livre"
     )
+
+    # Selection editoriale
+    is_featured = models.BooleanField(
+        default=False,
+        verbose_name="Selection de la maison",
+        help_text="Cocher pour afficher dans la selection editoriale sur la page d'accueil"
+    )
+
+    # Date de publication reelle
+    published_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date de publication",
+        help_text="Date reelle de publication du livre (pas la date d'ajout en BDD)"
+    )
+
+    # Scores calcules automatiquement
+    popularity_score = models.FloatField(
+        default=0,
+        verbose_name="Score de popularite",
+        help_text="Calcule automatiquement (ventes + notes + wishlist). Ne pas modifier."
+    )
+    trending_score = models.FloatField(
+        default=0,
+        verbose_name="Score tendance",
+        help_text="Velocite recente. Calcule automatiquement."
+    )
     
     # Note moyenne (ex: 4.5)
     rating = models.DecimalField(
@@ -196,8 +227,13 @@ class Book(models.Model):
         verbose_name="Nombre d'avis",
         help_text="Nombre total d'avis reçus"
     )
+    total_sales = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ventes totales",
+        help_text="Nombre total d'exemplaires vendus"
+    )
     # === FIN NOUVEAUX CHAMPS ===
-    
+
     # Métadonnées
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -210,14 +246,28 @@ class Book(models.Model):
             models.Index(fields=['slug']),
             models.Index(fields=['reference']),
             models.Index(fields=['available']),
-            models.Index(fields=['is_bestseller']),  # Nouvel index
-            models.Index(fields=['rating']),         # Nouvel index
+            models.Index(fields=['is_bestseller']),
+            models.Index(fields=['is_featured']),
+            models.Index(fields=['rating']),
+            models.Index(fields=['-popularity_score']),
+            models.Index(fields=['-trending_score']),
+            models.Index(fields=['-published_date']),
         ]
 
     def save(self, *args, **kwargs):
-        """Génération automatique du slug si non fourni"""
+        """Génération automatique du slug (dédupliqué) + nettoyage reference vide."""
+        # Convertir reference vide en NULL pour éviter les doublons unique
+        if not self.reference:
+            self.reference = None
+        # Slug auto-généré et dédupliqué
         if not self.slug:
-            self.slug = slugify(self.title)
+            base_slug = slugify(self.title)
+            slug = base_slug
+            n = 1
+            while Book.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{n}"
+                n += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):

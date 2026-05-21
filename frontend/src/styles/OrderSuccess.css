@@ -11,12 +11,13 @@
 /* Hero */
 .os-hero {
   flex-shrink: 0;
-  padding: 6rem 1.5rem 3rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  padding: 48px 56px 48px;
+  background: var(--tn-black);
   color: #fff;
   position: relative;
   overflow: hidden;
   text-align: center;
+  padding-top: 48px;
 }
 
 .os-hero__grid-bg {
@@ -37,7 +38,7 @@
   height: 450px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.1) 0%, transparent 65%);
   filter: blur(60px);
   top: -20%;
   right: -8%;
@@ -57,9 +58,17 @@
 }
 
 .os-hero__icon {
-  font-size: 4rem;
-  color: var(--color-success);
-  margin-bottom: 1rem;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--tn-orange);
+  color: #fff;
+  font-size: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 16px 40px rgba(232,96,28,0.4);
   animation: os-scale-in 0.5s ease-out;
 }
 
@@ -74,7 +83,7 @@
   height: 3px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-primary), #60a5fa);
+  background: var(--tn-orange);
 }
 
 .os-hero__title {
@@ -99,7 +108,7 @@
 .os-hero-fade {
   flex-shrink: 0;
   height: 80px;
-  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  background: linear-gradient(to bottom, var(--tn-black), var(--tn-gray-700) 50%, var(--color-bg-page));
   margin-top: -1px;
 }
 
@@ -116,13 +125,14 @@
 }
 
 .os-card {
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
   background: #fff;
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--tn-gray-200);
+  border-top: 4px solid var(--tn-orange);
+  border-radius: 14px;
   padding: 2rem 2.5rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--tn-shadow-2);
 }
 
 .os-info {
@@ -269,7 +279,7 @@
 
 .os-btn--outline:hover {
   border-color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(232, 96, 28, 0.05);
 }
 
 .os-support {

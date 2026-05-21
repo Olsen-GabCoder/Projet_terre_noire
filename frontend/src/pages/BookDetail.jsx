@@ -39,8 +39,6 @@ const BookDetail = () => {
     previous: null,
     page: 1,
   });
-  const menuRef = useRef(null);
-
   const isRepliesExpanded = (reviewId) => expandedReplies[reviewId] !== false;
   const toggleReplies = (reviewId) => {
     setExpandedReplies((prev) => ({ ...prev, [reviewId]: prev[reviewId] === false }));
@@ -48,13 +46,13 @@ const BookDetail = () => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (openMenuId && !e.target.closest('.bd-review-card__menu')) {
         setOpenMenuId(null);
       }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  }, [openMenuId]);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -654,7 +652,7 @@ const BookDetail = () => {
                                   })}
                                 </span>
                                 {!r.parent && isMyReview(r) && (
-                                  <div className="bd-review-card__menu" ref={openMenuId === r.id ? menuRef : null}>
+                                  <div className="bd-review-card__menu" >
                                     <button
                                       type="button"
                                       className="bd-review-card__menu-btn"
@@ -803,7 +801,7 @@ const BookDetail = () => {
                                               })}
                                             </span>
                                             {isMyReview(reply) && (
-                                              <div className="bd-review-card__menu" ref={openMenuId === reply.id ? menuRef : null}>
+                                              <div className="bd-review-card__menu" >
                                                 <button
                                                   type="button"
                                                   className="bd-review-card__menu-btn"

@@ -10,7 +10,7 @@
 
 .wishlist-hero {
   padding: 6rem 1.5rem 3rem;
-  background: linear-gradient(170deg, #020617 0%, #0f172a 40%, #0c1631 100%);
+  background: linear-gradient(170deg, var(--tn-black) 0%, var(--tn-black) 40%, var(--tn-black) 100%);
   color: #fff;
   position: relative;
   overflow: hidden;
@@ -35,7 +35,7 @@
   height: 450px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(230, 57, 70, 0.08) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(232, 96, 28, 0.08) 0%, transparent 65%);
   filter: blur(60px);
   top: -20%;
   right: -8%;
@@ -53,7 +53,7 @@
   height: 3px;
   margin: 0 auto 1.5rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, #e63946, #f87171);
+  background: linear-gradient(90deg, var(--tn-orange), #f87171);
 }
 
 .wishlist-hero__title {
@@ -73,7 +73,7 @@
 
 .wishlist-hero-fade {
   height: 80px;
-  background: linear-gradient(to bottom, #0c1631, #334155 50%, var(--color-bg-page));
+  background: linear-gradient(to bottom, var(--tn-black), var(--tn-gray-700) 50%, var(--color-bg-page));
   margin-top: -1px;
 }
 
@@ -186,12 +186,12 @@
 }
 
 .wishlist-remove {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(198, 40, 40, 0.08);
   color: var(--color-error);
 }
 
 .wishlist-remove:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(198, 40, 40, 0.15);
 }
 
 .wishlist-add-cart {

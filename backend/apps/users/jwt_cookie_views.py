@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken
 from django.conf import settings
 
+from apps.core.throttling import LoginThrottle
 from .token_serializers import EmailTokenObtainPairSerializer
 from .serializers import UserDetailSerializer
 
@@ -55,6 +56,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     problèmes de cookies cross-origin en dev si localhost ≠ 127.0.0.1).
     """
     serializer_class = EmailTokenObtainPairSerializer
+    throttle_classes = [LoginThrottle]
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
