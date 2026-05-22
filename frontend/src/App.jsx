@@ -57,6 +57,11 @@ const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminContact = lazy(() => import('./pages/admin/AdminContact'));
 const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
 
+// Dev-only routes (tree-shaken in production)
+const ButtonShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/ButtonShowcase')) : null;
+const InputShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/InputShowcase')) : null;
+const BadgeShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/BadgeShowcase')) : null;
+
 import BottomNav from './components/BottomNav';
 import { ToastProvider } from './components/ui/ToastProvider';
 import './App.css';
@@ -160,6 +165,11 @@ function AppContent() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<Cookies />} />
                 
+                {/* Dev-only routes */}
+                {ButtonShowcase && <Route path="/dev/buttons" element={<ButtonShowcase />} />}
+                {InputShowcase && <Route path="/dev/inputs" element={<InputShowcase />} />}
+                {BadgeShowcase && <Route path="/dev/badges" element={<BadgeShowcase />} />}
+
                 {/* Redirections et 404 */}
                 <Route path="/catalogue" element={<Navigate to="/catalog" replace />} />
                 <Route path="/livres" element={<Navigate to="/catalog" replace />} />

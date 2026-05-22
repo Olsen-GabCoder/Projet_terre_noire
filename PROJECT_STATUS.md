@@ -9,7 +9,16 @@ Django 5 + DRF (backend).
 
 ## Statut actuel
 
-Vague 1 -- Foundations : Terminee (commit 6f4fa9c)
+Vague 1 -- Foundations : Terminee
+Vague 2 -- Composants atomiques : Terminee
+
+### Realisations Vague 2
+
+- Elevation Button : 7 variantes, 6 etats (hover lift, active press, disabled, loading), ombres warm
+- Elevation Input : focus glow warm, etats error/valid/disabled, labels eyebrow mono
+- Creation Badge centralise : 8 variantes semantiques, 3 styles (solid/soft/outline), animation pop
+- 5 composants React reutilisables : TnButton, TnInput, TnTextarea, TnSelect, TnBadge
+- 0 regression visuelle, bundle CSS +7 KB (121 vers 128 KB)
 
 ### Realisations Vague 1
 
@@ -21,7 +30,7 @@ Vague 1 -- Foundations : Terminee (commit 6f4fa9c)
 
 ## Roadmap
 
-- Vague 2 : Composants atomiques (Buttons, Inputs, Links, Badges)
+- ~~Vague 2 : Composants atomiques (Buttons, Inputs, Badges)~~ Terminee
 - Vague 3 : Composants moleculaires (BookCard, Modals, Forms, Toast)
 - Vague 4 : Layouts et Pages
 - Vague 5 : Etats et micro-narrations
