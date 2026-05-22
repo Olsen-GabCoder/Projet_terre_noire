@@ -537,6 +537,90 @@
   .tn-badge--pop { animation: none; }
 }
 
+/* ──────────────────────────────────────────────────────────────────
+ * .tn-link — Created in Vague 2.5 P1
+ *
+ * Underline animation technique:
+ * Uses background-image gradient + background-size 0→100% on hover
+ * for smooth left-to-right reveal. text-decoration is not properly
+ * animatable, so this is the preferred approach.
+ *
+ * Note: on multi-line wrapped links, the animation reveals on the
+ * last line only. Previous lines transition opacity-style. This is
+ * a known limitation of the technique and accepted for Terre Noire.
+ * ──────────────────────────────────────────────────────────────── */
+.tn-link {
+  color: var(--ds-orange);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  display: inline;
+  background-image: linear-gradient(var(--ds-orange), var(--ds-orange));
+  background-size: 0% 1.5px;
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  transition:
+    color var(--ds-dur-fast) var(--ds-ease-out),
+    background-size var(--ds-dur) var(--ds-ease-out);
+}
+.tn-link:hover {
+  color: var(--ds-orange-hover);
+  background-size: 100% 1.5px;
+}
+.tn-link:focus-visible {
+  outline: var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-offset);
+  box-shadow: var(--ds-focus-shadow);
+  border-radius: 2px;
+}
+
+/* Muted — discret (footer, mentions) */
+.tn-link--muted {
+  color: var(--ds-gray-500);
+  font-weight: 400;
+  background-image: linear-gradient(var(--ds-gray-400), var(--ds-gray-400));
+}
+.tn-link--muted:hover {
+  color: var(--ds-orange);
+  background-image: linear-gradient(var(--ds-orange), var(--ds-orange));
+  background-size: 100% 1px;
+}
+
+/* Strong — CTA texte proéminent */
+.tn-link--strong { font-weight: 700; background-size: 100% 2px; }
+.tn-link--strong:hover { background-size: 100% 2px; color: var(--ds-orange-hover); }
+
+/* Ghost — pas d'underline */
+.tn-link--ghost { background-image: none; }
+.tn-link--ghost:hover { color: var(--ds-orange-hover); background-image: none; }
+
+/* On-dark — fond sombre */
+.tn-link--on-dark {
+  color: var(--ds-cream);
+  background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
+}
+.tn-link--on-dark:hover {
+  color: var(--ds-orange);
+  background-image: linear-gradient(var(--ds-orange), var(--ds-orange));
+  background-size: 100% 1.5px;
+}
+
+/* External — auto-icon */
+.tn-link--external::after {
+  content: '\f08e';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 0.7em;
+  margin-left: 0.35em;
+  vertical-align: baseline;
+  opacity: 0.7;
+}
+
+/* Icon slots */
+.tn-link__icon { display: inline; margin-right: 0.3em; font-size: 0.85em; vertical-align: baseline; }
+.tn-link__icon--right { margin-right: 0; margin-left: 0.3em; }
+
 /* Section header accent — small orange bar under titles */
 .tn-section-title {
   position: relative;
@@ -552,11 +636,172 @@
   border-radius: 2px;
 }
 
-/* Stars */
-.tn-stars { display: inline-flex; gap: 2px; color: var(--tn-orange); font-size: 12px; }
-.tn-stars--lg { font-size: 16px; }
+/* ──────────────────────────────────────────────────────────────────
+ * .tn-stars — Elevated in Vague 2.5 P3
+ *
+ * Star rating display + interactive mode.
+ * Orange color (Terre Noire identity). 4 sizes: xs/sm/md/lg.
+ * Half-star technique: via fa-star-half-stroke icon.
+ * Interactive: hover scales individual stars + click to select.
+ * Compact mode: numeric value + single star.
+ *
+ * Backward compat: font-size 12px preserved on base .tn-stars
+ * for existing BookCard usage (no --sm class applied).
+ * ─────────────────────────────────────────────────────────────────*/
+.tn-stars {
+  display: inline-flex; align-items: center; gap: 2px;
+  color: var(--ds-orange); font-size: 12px; line-height: 1;
+}
+.tn-stars i { transition: transform var(--ds-dur-fast) var(--ds-ease-out); }
+.tn-stars .far,
+.tn-stars .tn-stars__star--empty { opacity: 0.3; }
 
-/* "FCFA" price typesetting */
-.tn-price { font-family: var(--tn-serif); font-weight: 700; color: var(--tn-orange); }
-.tn-price__currency { font-family: var(--tn-sans); font-size: 0.65em; font-weight: 500; color: var(--tn-gray-500); margin-left: 4px; letter-spacing: 0.04em; }
-.tn-price__strike { text-decoration: line-through; color: var(--tn-gray-400); font-family: var(--tn-sans); font-weight: 500; }
+/* Sizes */
+.tn-stars--xs { font-size: 10px; }
+.tn-stars--sm { font-size: 12px; }
+.tn-stars--md { font-size: 16px; }
+.tn-stars--lg { font-size: 22px; }
+
+/* Stars group: stars + meta */
+.tn-stars-group { display: inline-flex; align-items: center; gap: 8px; }
+.tn-stars__value {
+  font-family: var(--ds-mono); font-weight: 700;
+  font-size: 0.9em; color: var(--ds-gray-900);
+  margin-left: 6px;
+}
+.tn-stars__count {
+  font-size: 0.85em; color: var(--ds-gray-400); font-weight: 500;
+}
+
+/* Interactive */
+.tn-stars--interactive { cursor: pointer; }
+.tn-stars--interactive i,
+.tn-stars--interactive button { cursor: pointer; }
+.tn-stars--interactive i:hover,
+.tn-stars--interactive button:hover i { transform: scale(1.2); }
+
+/* Compact: "★ 4.5" */
+.tn-stars--compact {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--ds-mono); font-weight: 600;
+  font-size: 13px; color: var(--ds-gray-700);
+}
+.tn-stars--compact .tn-stars__star { color: var(--ds-orange); font-size: 11px; }
+.tn-stars--compact .tn-stars__value { font-size: inherit; margin-left: 0; }
+
+/* Gold variant */
+.tn-stars--gold { color: var(--ds-gold); }
+
+/* ──────────────────────────────────────────────────────────────────
+ * .tn-price — Elevated in Vague 2.5 P2
+ *
+ * Playfair Display serif for values (editorial identity).
+ * Inter sans for FCFA suffix (lighter, gray-500).
+ * 5 sizes: xs(14) sm(18) md(24) lg(32) xl(42).
+ * Variants: default (orange), --muted (gray-900), --free (success italic).
+ * Promo: use .tn-price-group with .tn-price--strike + .tn-price__discount.
+ * Range: use .tn-price__range-sep between two values.
+ *
+ * Backward compat: .tn-price__strike alias preserved for legacy BookCard
+ * usage (deprecated, prefer .tn-price--strike going forward).
+ * ─────────────────────────────────────────────────────────────────*/
+.tn-price {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  font-family: var(--ds-serif); font-weight: 700;
+  color: var(--ds-orange); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.tn-price__currency {
+  font-family: var(--ds-sans); font-size: 0.55em; font-weight: 500;
+  color: var(--ds-gray-500); letter-spacing: 0.04em;
+}
+
+/* Sizes */
+.tn-price--xs { font-size: 14px; }
+.tn-price--sm { font-size: 18px; }
+.tn-price--md { font-size: 24px; }
+.tn-price--lg { font-size: 32px; }
+.tn-price--xl { font-size: 42px; }
+
+/* Group wrapper for promo/range */
+.tn-price-group { display: inline-flex; align-items: baseline; gap: 10px; }
+.tn-price-group--vertical { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+/* Strike (old price) */
+.tn-price--strike,
+.tn-price__strike /* legacy alias */ {
+  text-decoration: line-through; color: var(--ds-gray-400);
+  font-family: var(--ds-sans); font-weight: 500;
+}
+
+/* Discount badge */
+.tn-price__discount {
+  display: inline-flex; align-items: center; padding: 2px 6px;
+  border-radius: 4px; background: rgba(232, 96, 28, 0.12);
+  color: var(--ds-orange); font-family: var(--ds-mono);
+  font-weight: 700; font-size: 11px; letter-spacing: 0.04em;
+}
+
+/* Free variant */
+.tn-price--free { color: var(--ds-success); font-style: italic; }
+.tn-price--free .tn-price__currency { display: none; }
+
+/* Range separator */
+.tn-price__range-sep {
+  font-family: var(--ds-sans); font-weight: 400;
+  color: var(--ds-gray-400); font-size: 0.6em; margin: 0 2px;
+}
+
+/* Muted (non-promo, gray-900) */
+.tn-price--muted { color: var(--ds-gray-900); }
+
+/* ──────────────────────────────────────────────────────────────────
+ * .tn-divider — Created in Vague 2.5 P4
+ *
+ * Visual separator with multiple styles + ornament center.
+ * Default: thin gray-300 line, opacity 0.6.
+ * Variants: thick (2px), dashed, gradient (fade ends), ornament
+ * (SVG diamond center), warm (subtle orange).
+ * Spacings: sm/md/lg margins.
+ * On-dark mode: white 20% line + golden ornament.
+ * ─────────────────────────────────────────────────────────────────*/
+.tn-divider {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; color: var(--ds-gray-300);
+}
+.tn-divider__line {
+  flex: 1; height: 1px; background: currentColor; opacity: 0.6;
+}
+
+/* Variants */
+.tn-divider--thick .tn-divider__line { height: 2px; }
+
+.tn-divider--dashed .tn-divider__line {
+  height: 0; border-top: 1px dashed currentColor; background: none;
+}
+
+.tn-divider--gradient .tn-divider__line {
+  background: linear-gradient(90deg, transparent, currentColor 30%, currentColor 70%, transparent);
+  opacity: 0.4;
+}
+
+.tn-divider--ornament { color: var(--ds-gold); }
+.tn-divider__ornament { flex-shrink: 0; color: inherit; opacity: 0.7; }
+
+.tn-divider--warm { color: var(--ds-orange); }
+.tn-divider--warm .tn-divider__line { opacity: 0.2; }
+
+/* Spacings */
+.tn-divider--sm { margin: 12px 0; }
+.tn-divider--md { margin: 24px 0; }
+.tn-divider--lg { margin: 48px 0; }
+
+/* On-dark */
+.tn-divider--dark { color: rgba(255, 255, 255, 0.2); }
+
+/* Label (text in center) */
+.tn-divider__label {
+  flex-shrink: 0; font-family: var(--ds-mono);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ds-gray-400); padding: 0 4px;
+}

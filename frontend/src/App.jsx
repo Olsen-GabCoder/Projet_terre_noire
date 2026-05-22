@@ -61,6 +61,7 @@ const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
 const ButtonShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/ButtonShowcase')) : null;
 const InputShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/InputShowcase')) : null;
 const BadgeShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/BadgeShowcase')) : null;
+const AtomicsShowcase = import.meta.env.DEV ? lazy(() => import('./pages/_dev/AtomicsShowcase')) : null;
 
 import BottomNav from './components/BottomNav';
 import { ToastProvider } from './components/ui/ToastProvider';
@@ -169,6 +170,7 @@ function AppContent() {
                 {ButtonShowcase && <Route path="/dev/buttons" element={<ButtonShowcase />} />}
                 {InputShowcase && <Route path="/dev/inputs" element={<InputShowcase />} />}
                 {BadgeShowcase && <Route path="/dev/badges" element={<BadgeShowcase />} />}
+                {AtomicsShowcase && <Route path="/dev/atomics-2-5" element={<AtomicsShowcase />} />}
 
                 {/* Redirections et 404 */}
                 <Route path="/catalogue" element={<Navigate to="/catalog" replace />} />

@@ -11,6 +11,16 @@ Django 5 + DRF (backend).
 
 Vague 1 -- Foundations : Terminee
 Vague 2 -- Composants atomiques : Terminee
+Vague 2.5 -- Composants atomiques (suite) : Terminee
+
+### Realisations Vague 2.5
+
+- Link : 4 variantes + on-dark + external auto-icon, underline slide-in animation
+- TnPrice : elevation Playfair serif, 5 tailles, promo (strike + discount badge), gratuit, range
+- TnStars : elevation 4 tailles, mode interactif (click-to-rate), compact, demi-etoiles
+- TnDivider : 6 variantes (ornement diamant dore, gradient, dashed, warm), label central
+- 4 composants React enrichis avec compatibilite ascendante BookCard/Footer/AuthorDetail
+- Bundle CSS +4.5 KB (128 vers 132.5 KB), 68 nouveaux tests Playwright
 
 ### Realisations Vague 2
 
@@ -31,6 +41,7 @@ Vague 2 -- Composants atomiques : Terminee
 ## Roadmap
 
 - ~~Vague 2 : Composants atomiques (Buttons, Inputs, Badges)~~ Terminee
+- ~~Vague 2.5 : Composants atomiques (Link, TnPrice, TnStars, TnDivider)~~ Terminee
 - Vague 3 : Composants moleculaires (BookCard, Modals, Forms, Toast)
 - Vague 4 : Layouts et Pages
 - Vague 5 : Etats et micro-narrations
