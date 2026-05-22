@@ -11,22 +11,19 @@ export const useCart = () => {
   return context;
 };
 
-export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+function loadCartFromStorage() {
+  try {
+    const saved = localStorage.getItem('cart');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    localStorage.removeItem('cart');
+    return [];
+  }
+}
 
-  // Charger le panier depuis localStorage au montage
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Erreur lors du chargement du panier:', error);
-        localStorage.removeItem('cart');
-      }
-    }
-  }, []);
+export const CartProvider = ({ children }) => {
+  const [cartItems, setCartItems] = useState(loadCartFromStorage);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Sauvegarder le panier dans localStorage à chaque modification
   useEffect(() => {

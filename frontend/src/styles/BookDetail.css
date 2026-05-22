@@ -11,7 +11,7 @@
 .bd-hero {
   padding: 36px 56px 28px;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   padding-top: 36px;
@@ -84,7 +84,7 @@
 }
 
 .bd-breadcrumb__link:hover {
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .bd-breadcrumb__sep {
@@ -92,7 +92,7 @@
 }
 
 .bd-breadcrumb__current {
-  color: #fff;
+  color: var(--ds-white);
   font-weight: 600;
   max-width: 60ch;
   overflow: hidden;
@@ -115,7 +115,7 @@
   letter-spacing: -0.015em;
   line-height: 1.1;
   margin: 0 0 0.5rem;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .bd-hero__sub {
@@ -251,12 +251,12 @@
 
 .bd-wishlist:hover {
   color: var(--tn-orange);
-  background: #fff;
+  background: var(--ds-white);
   transform: scale(1.02);
 }
 
 .bd-wishlist--active {
-  color: #fff;
+  color: var(--ds-white);
   background: var(--tn-orange);
 }
 
@@ -272,7 +272,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: var(--radius-xs);
-  color: #fff;
+  color: var(--ds-white);
   box-shadow: var(--shadow-sm);
 }
 
@@ -342,7 +342,7 @@
   font-family: var(--tn-mono);
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-xs);
   width: fit-content;
@@ -350,7 +350,7 @@
 
 .bd-price-block {
   padding: 1.5rem;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200);
   border-top: 4px solid var(--tn-orange);
   border-radius: var(--tn-r-3);
@@ -423,7 +423,7 @@
   border: none;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   font-size: 1.25rem;
   font-weight: 700;
   cursor: pointer;
@@ -521,7 +521,7 @@
   flex: 1;
   min-width: 160px;
   background: var(--color-success);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .bd-btn--buy:hover {
@@ -540,7 +540,7 @@
   padding: 0.75rem 1.25rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ds-white);
   background: var(--tn-orange);
   border: none;
   border-radius: var(--tn-r-2);
@@ -988,7 +988,7 @@
   right: 0;
   margin-top: 4px;
   min-width: 160px;
-  background: #fff;
+  background: var(--ds-white);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   border: 1px solid var(--color-gray-200);
@@ -1246,10 +1246,15 @@
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
+    gap: 18px;
   }
 
   .bd-tabs__btn {
     white-space: nowrap;
+  }
+
+  .bd-review-card--reply {
+    margin-left: 1.25rem;
   }
 
   .bd-author-panel .bd-author {

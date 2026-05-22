@@ -1,0 +1,172 @@
+/* ============================================================
+   TERRE NOIRE ÉDITIONS — Design System Compatibility Layer
+   Vague 1 · Aliases ancien système → nouveau système
+
+   Ce fichier prépare la migration progressive. Pour l'instant,
+   design-tokens.css définit encore les --tn-* directement.
+   Quand design-tokens.css sera retiré (Vague 2+), ces aliases
+   prendront le relais automatiquement.
+
+   IMPORTANT : Les --color-gray-* legacy pointent DÉJÀ vers les
+   --tn-gray-* chauds dans design-tokens.css (lignes 101-110).
+   Les fallbacks froids Tailwind dans les JSX (ex: #64748b) ne
+   s'activent jamais. Pas de correctif nécessaire en V1.
+   ============================================================ */
+
+:root {
+  /* ─────────── --tn-* → --ds-* (couleurs brand) ─────────── */
+  /* NOTE : Ces définitions sont actuellement SURCHARGÉES par
+     design-tokens.css (qui est importé après via @import dans
+     les fichiers CSS individuels). Elles prendront effet quand
+     design-tokens.css sera retiré. */
+
+  /* Orange */
+  --tn-orange:        var(--ds-orange);
+  --tn-orange-hover:  var(--ds-orange-hover);
+  --tn-orange-light:  var(--ds-orange-light);
+  --tn-orange-50:     var(--ds-orange-50);
+  --tn-orange-100:    var(--ds-orange-100);
+
+  /* Noir */
+  --tn-black:         var(--ds-black);
+  --tn-black-2:       var(--ds-black-2);
+  --tn-black-3:       var(--ds-black-3);
+  /* --tn-black-4 n'a pas d'équivalent --ds-* mais garde sa valeur
+     depuis design-tokens.css (#242424). Alias ajouté ici pour
+     cohérence si design-tokens.css est retiré. */
+
+  /* Crème / blanc */
+  --tn-cream:         var(--ds-cream);
+  --tn-cream-2:       var(--ds-cream-2);
+  --tn-cream-3:       var(--ds-cream-3);
+  --tn-white:         var(--ds-white);
+
+  /* Or */
+  --tn-gold:          var(--ds-gold);
+  --tn-gold-light:    var(--ds-gold-light);
+  --tn-gold-dark:     var(--ds-gold-dark);
+
+  /* Gris chauds */
+  --tn-gray-900:      var(--ds-gray-900);
+  --tn-gray-700:      var(--ds-gray-700);
+  --tn-gray-500:      var(--ds-gray-500);
+  --tn-gray-400:      var(--ds-gray-400);
+  --tn-gray-300:      var(--ds-gray-300);
+  --tn-gray-200:      var(--ds-gray-200);
+  --tn-gray-100:      var(--ds-gray-100);
+  /* --tn-gray-600 et --tn-gray-800 sont utilisés dans des JSX
+     mais non définis dans design-tokens.css. Ils utilisent des
+     fallbacks inline. On les définit ici pour cohérence : */
+  --tn-gray-600:      var(--ds-gray-700);  /* pas de gray-600 dans la palette */
+  --tn-gray-800:      var(--ds-gray-900);  /* pas de gray-800 dans la palette */
+
+  /* Sémantique */
+  --tn-success:       var(--ds-success);
+  --tn-success-bg:    var(--ds-success-bg);
+  --tn-error:         var(--ds-error);
+  --tn-error-bg:      var(--ds-error-bg);
+  --tn-warning:       var(--ds-warning);
+
+  /* Typographie */
+  --tn-serif:         var(--ds-serif);
+  --tn-sans:          var(--ds-sans);
+  --tn-mono:          var(--ds-mono);
+
+  /* Espacement (inchangé, même valeurs) */
+  --tn-s-1: var(--ds-s-1);
+  --tn-s-2: var(--ds-s-2);
+  --tn-s-3: var(--ds-s-3);
+  --tn-s-4: var(--ds-s-4);
+  --tn-s-5: var(--ds-s-5);
+  --tn-s-6: var(--ds-s-6);
+  --tn-s-7: var(--ds-s-7);
+  --tn-s-8: var(--ds-s-8);
+  --tn-s-9: var(--ds-s-9);
+
+  /* Rayons */
+  --tn-r-1:    var(--ds-r-xs);
+  --tn-r-2:    var(--ds-r-sm);
+  --tn-r-3:    var(--ds-r-md);
+  --tn-r-4:    var(--ds-r-lg);
+  --tn-r-pill: var(--ds-r-pill);
+
+  /* Ombres */
+  --tn-shadow-1:      var(--ds-shadow-xs);
+  --tn-shadow-2:      var(--ds-shadow-md);
+  --tn-shadow-3:      var(--ds-shadow-lg);
+  --tn-shadow-orange: var(--ds-shadow-orange);
+
+  /* Motion */
+  --tn-ease:     var(--ds-ease);
+  --tn-dur-fast: var(--ds-dur-fast);
+  --tn-dur:      var(--ds-dur);
+  --tn-dur-slow: var(--ds-dur-slow);
+
+  /* ─────────── --color-* legacy → conservation iso-rendu ─────────── */
+  /* Ces aliases existent dans design-tokens.css et pointent déjà vers
+     les --tn-* chauds. On les re-déclare ici pour que la suppression
+     future de design-tokens.css ne casse rien. */
+
+  --color-primary:      var(--ds-orange);
+  --color-primary-dark:  var(--ds-orange-hover);
+  --color-bg-dark:      var(--ds-black);
+  --color-text-light:   var(--ds-cream);
+  --color-bg-page:      var(--ds-cream);
+  --color-border:       rgba(255, 255, 255, 0.1);
+  --color-success:      var(--ds-success);
+  --color-error:        var(--ds-error);
+
+  /* Gris legacy — gardent les valeurs chaudes (identiques à --tn-gray-*).
+     Migration vers --ds-gray-* directe confirmée : les valeurs dans
+     design-tokens.css lignes 101-110 pointent déjà vers --tn-gray-*. */
+  --color-gray-50:      var(--ds-cream);      /* approximation */
+  --color-gray-100:     var(--ds-gray-100);
+  --color-gray-200:     var(--ds-gray-200);
+  --color-gray-300:     var(--ds-gray-300);
+  --color-gray-400:     var(--ds-gray-400);
+  --color-gray-500:     var(--ds-gray-500);
+  --color-gray-600:     var(--ds-gray-700);   /* mapping 600→700 (pas de 600) */
+  --color-gray-700:     var(--ds-gray-700);
+  --color-gray-800:     var(--ds-gray-900);   /* mapping 800→900 (pas de 800) */
+  --color-gray-900:     var(--ds-gray-900);
+
+  /* ─────────── --shadow-* legacy ─────────── */
+  --shadow-sm:          var(--ds-shadow-xs);
+  --shadow-md:          var(--ds-shadow-md);
+  --shadow-lg:          var(--ds-shadow-lg);
+  --shadow-card:        var(--ds-shadow-xs);
+  --shadow-card-hover:  0 8px 24px rgba(20, 14, 8, 0.08), 0 2px 8px rgba(20, 14, 8, 0.04), 0 0 0 1px rgba(232, 96, 28, 0.12);
+  --shadow-btn:         0 1px 2px rgba(232, 96, 28, 0.2);
+  --shadow-btn-hover:   var(--ds-shadow-orange);
+
+  /* ─────────── --radius-* legacy ─────────── */
+  --radius-xs:          var(--ds-r-xs);
+  --radius-sm:          var(--ds-r-xs);   /* legacy --radius-sm = 4px = --tn-r-1 */
+  --radius-md:          var(--ds-r-sm);   /* legacy --radius-md = 8px = --tn-r-2 */
+  --radius-lg:          var(--ds-r-md);   /* legacy --radius-lg = 12px = --tn-r-3 */
+  --radius-xl:          var(--ds-r-lg);   /* legacy --radius-xl = 16px = --tn-r-4 */
+
+  /* ─────────── --ease/duration/font/gradient legacy ─────────── */
+  --ease-out:           var(--ds-ease);
+  --duration-fast:      var(--ds-dur-fast);
+  --duration-normal:    var(--ds-dur);
+  --animation-timing:   var(--ds-ease);
+  --font-sans:          var(--ds-sans);
+  --font-heading:       var(--ds-serif);
+  --gradient-primary:   linear-gradient(135deg, var(--ds-orange) 0%, var(--ds-orange-hover) 100%);
+
+  /* Container */
+  --container-max:      1200px;
+
+  /* Anciens aliases supplementaires */
+  --primary-color:      var(--ds-orange);
+  --secondary-color:    var(--ds-gold);
+  --success-color:      var(--ds-success);
+  --danger-color:       var(--ds-error);
+  --dark-color:         var(--ds-black);
+  --light-color:        var(--ds-cream);
+  --gray-light:         var(--ds-gray-200);
+  --gray-medium:        var(--ds-gray-500);
+  --gray-dark:          var(--ds-gray-700);
+  --font-primary:       var(--ds-sans);
+}

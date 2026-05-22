@@ -12,7 +12,7 @@
 .reg-hero {
   padding: 48px 56px 48px;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   padding-top: 48px;
@@ -136,7 +136,7 @@
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 1.75rem;
-  color: #fff;
+  color: var(--ds-white);
   box-shadow:
     0 8px 32px rgba(232, 96, 28, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -157,7 +157,7 @@
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.85) 50%, rgba(148, 163, 184, 0.9) 100%);
+  background: linear-gradient(135deg, var(--ds-white) 0%, rgba(255, 255, 255, 0.85) 50%, rgba(148, 163, 184, 0.9) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -226,7 +226,7 @@
 
 /* ── CARTE ── */
 .reg-card {
-  background: #fff;
+  background: var(--ds-white);
   border-radius: 14px;
   padding: 0 2rem 2.25rem;
   border: 1px solid var(--tn-gray-200);
@@ -367,7 +367,7 @@
 .reg-input-wrap:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(232, 96, 28, 0.12);
-  background: #fff;
+  background: var(--ds-white);
 }
 
 .reg-input-wrap.has-error {
@@ -423,9 +423,14 @@
   color: var(--color-gray-400);
   font-size: 0.9375rem;
   cursor: pointer;
-  padding: 0.35rem 0.5rem;
+  padding: 0.75rem;
   border-radius: 8px;
   transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .reg-pwd-toggle:hover {
@@ -512,7 +517,7 @@
 
 .reg-btn-submit {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--tn-orange) 50%, var(--tn-orange) 100%);
-  color: #fff;
+  color: var(--ds-white);
   box-shadow:
     0 1px 2px rgba(232, 96, 28, 0.3),
     0 4px 12px rgba(232, 96, 28, 0.25);

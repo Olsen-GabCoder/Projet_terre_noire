@@ -14,7 +14,7 @@
   flex-shrink: 0;
   padding: 48px 56px 48px;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -77,7 +77,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   margin: 0 0 1rem;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .submit-manuscript-hero__sub {
@@ -113,7 +113,7 @@
 }
 
 .success-card {
-  background: #fff;
+  background: var(--ds-white);
   padding: 2.5rem;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -192,7 +192,7 @@
 }
 
 .info-card {
-  background: #fff;
+  background: var(--ds-white);
   padding: 1.5rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-gray-200);
@@ -314,7 +314,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--ds-white);
   font-family: var(--tn-serif);
   font-weight: 700;
   font-size: 0.75rem;
@@ -336,7 +336,7 @@
 
 /* Form section */
 .form-section {
-  background: #fff;
+  background: var(--ds-white);
   padding: 2rem;
   border-radius: 14px;
   border: 1px solid var(--tn-gray-200);
@@ -361,7 +361,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--ds-white);
   flex-shrink: 0;
 }
 
@@ -458,7 +458,7 @@
 .form-section .input-group {
   display: flex;
   align-items: stretch;
-  background: #fff;
+  background: var(--ds-white);
   border: 1.5px solid var(--color-gray-200);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -539,6 +539,12 @@
 .form-section .input-group textarea:focus {
   outline: none;
 }
+.form-section .input-group input:focus-visible,
+.form-section .input-group textarea:focus-visible {
+  outline: var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-offset);
+  box-shadow: var(--ds-focus-shadow);
+}
 
 .form-section .input-group--textarea textarea {
   min-height: 120px;
@@ -588,7 +594,7 @@
   min-width: 20px;
   border: 2px solid var(--color-gray-300);
   border-radius: var(--radius-sm);
-  background: #fff;
+  background: var(--ds-white);
   transition: border-color 0.2s, background 0.2s;
   margin-top: 0.15rem;
 }
@@ -643,7 +649,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--ds-white);
   flex-shrink: 0;
 }
 
@@ -669,7 +675,7 @@
   gap: 0.5rem;
   padding: 0.6rem 1rem;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 0.8125rem;
@@ -753,7 +759,7 @@
 
 .submit-btn {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -771,7 +777,7 @@
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+  border-top-color: var(--ds-white);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -781,7 +787,7 @@
 }
 
 .cancel-btn {
-  background: #fff;
+  background: var(--ds-white);
   color: var(--color-primary);
   border: 1px solid var(--color-gray-300);
 }

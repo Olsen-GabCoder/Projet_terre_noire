@@ -13,7 +13,7 @@
   flex-shrink: 0;
   padding: 48px 56px 48px;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -70,7 +70,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   margin: 0 0 1rem;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .chk-hero__sub {
@@ -109,7 +109,7 @@
 
 /* Section formulaire */
 .chk-section {
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem 1.75rem;
@@ -187,7 +187,7 @@
 
 /* Sidebar récap */
 .chk-summary {
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200);
   border-top: 4px solid var(--tn-orange);
   border-radius: 14px;
@@ -305,7 +305,7 @@
   width: 100%;
   padding: 0.85rem 1.5rem;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 1rem;
@@ -357,7 +357,7 @@
 .chk-payment-methods span {
   font-size: 0.8125rem;
   padding: 0.35rem 0.6rem;
-  background: #fff;
+  background: var(--ds-white);
   border-radius: var(--radius-xs);
   color: var(--color-gray-600);
   border: 1px solid var(--color-gray-200);

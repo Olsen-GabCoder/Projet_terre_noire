@@ -286,7 +286,7 @@
 .tn-btn--outline-light { background: transparent; color: var(--tn-cream); border-color: rgba(255,255,255,0.4); }
 .tn-btn--ghost         { background: transparent; color: var(--tn-orange); }
 .tn-btn--lg   { padding: 16px 28px; font-size: 15px; }
-.tn-btn--sm   { padding: 8px 14px; font-size: 13px; }
+.tn-btn--sm   { padding: 10px 16px; font-size: 13px; min-height: 44px; }
 .tn-btn--block { width: 100%; }
 
 .tn-input {

@@ -26,5 +26,8 @@ PROMPT_*.md
 RETOUR_*.md
 A_FAIRE.md
 
+# Audit et documentation interne (hors repo public)
+docs/audit-premium/
+
 # Claude Code
 .claude/

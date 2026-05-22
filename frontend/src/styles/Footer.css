@@ -9,6 +9,7 @@
   background: var(--tn-black);
   color: var(--tn-cream);
   overflow: hidden;
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
 }
 
 .ft__motif-bg {
@@ -66,7 +67,7 @@
   font-weight: 700;
   font-size: 22px;
   letter-spacing: 0.08em;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .ft-brand__edition {
@@ -119,7 +120,7 @@
 .ft-social__link:hover {
   background: var(--tn-orange);
   border-color: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   transform: translateY(-2px);
 }
 
@@ -476,7 +477,7 @@
 
 .dev-modal__close:hover {
   background: rgba(255,255,255,0.2);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 /* Header noir */
@@ -532,7 +533,7 @@
   font-family: var(--tn-serif);
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
+  color: var(--ds-white);
   margin: 4px 0 6px;
   letter-spacing: -0.01em;
 }
@@ -577,7 +578,7 @@
   gap: 14px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200, #E0E0E0);
 }
 
@@ -632,7 +633,7 @@
 .dev-modal__tag {
   padding: 5px 12px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200, #E0E0E0);
   color: var(--tn-gray-900, #1A1A1A);
   font-family: var(--tn-mono);
@@ -668,7 +669,7 @@
   gap: 12px;
   padding: 11px 16px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200, #E0E0E0);
   color: var(--tn-gray-900, #1A1A1A);
   text-decoration: none;
@@ -695,23 +696,23 @@
 
 .dev-modal__link--wa {
   background: #25D366;
-  color: #fff;
+  color: var(--ds-white);
   border-color: #25D366;
   font-weight: 600;
 }
 
 .dev-modal__link--wa i {
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .dev-modal__link--wa:hover {
   background: #1fb855;
   border-color: #1fb855;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .dev-modal__link--wa:hover i {
-  color: #fff;
+  color: var(--ds-white);
 }
 
 /* Footer */
@@ -761,7 +762,7 @@
   border-radius: 50%;
   z-index: 9999;
   background: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(232,96,28,0.4);
   z-index: 1000;
@@ -813,7 +814,7 @@
 /* FAB above bottom nav on mobile */
 @media (max-width: 768px) {
   .ft-top-btn {
-    bottom: 76px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     right: 16px;
   }
 }

@@ -13,7 +13,7 @@
 .crt-hero {
   padding: 48px 56px 48px;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -147,7 +147,7 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
@@ -167,7 +167,7 @@
   display: grid;
   grid-template-columns: 110px 1fr;
   gap: 1.25rem;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200);
   border-top: 4px solid var(--tn-orange);
   border-radius: 14px;
@@ -279,8 +279,8 @@
 }
 
 .crt-qty button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   background: #f8fafc;
   border: none;
   font-size: 1rem;
@@ -341,7 +341,7 @@
 }
 
 .crt-sum-card {
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200);
   border-top: 4px solid var(--tn-orange);
   border-radius: 14px;
@@ -397,7 +397,7 @@
 .crt-coupon__row button {
   padding: 0.625rem 1rem;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -575,7 +575,7 @@
 
 .crt-btn--primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   box-shadow: var(--shadow-btn);
 }
 
@@ -597,7 +597,7 @@
 }
 
 .crt-btn--outline {
-  background: #fff;
+  background: var(--ds-white);
   color: var(--color-gray-700);
   border: 1px solid var(--color-gray-200);
 }
@@ -683,7 +683,7 @@
 }
 
 .crt-feat {
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem 1rem;

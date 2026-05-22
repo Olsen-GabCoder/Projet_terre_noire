@@ -1,0 +1,255 @@
+/* ============================================================
+   TERRE NOIRE ÉDITIONS — Design System v2
+   Vague 1 · Tokens consolidés · Mai 2026
+
+   Ce fichier AJOUTE les tokens --ds-* en parallèle du système
+   existant --tn-*. Aucune variable existante n'est supprimée.
+   ============================================================ */
+
+:root {
+  /* ══════════════════════════════════════════════════════════════
+     COULEURS — Brand
+     ══════════════════════════════════════════════════════════════ */
+
+  /* Orange Terracotta — couleur signature */
+  --ds-orange:         #E8601C;
+  --ds-orange-hover:   #C94E15;
+  --ds-orange-light:   #F4863F;
+  --ds-orange-50:      #FCEFE6;
+  --ds-orange-100:     #F9DCC8;
+
+  /* Noir profond — "Terre Noire" */
+  --ds-black:          #0A0A0A;
+  --ds-black-2:        #141414;
+  --ds-black-3:        #1A1A1A;
+  --ds-black-4:        #242424;
+  --ds-black-warm:     #0F0A07;   /* gradient warm (SeparatorDefs) */
+
+  /* Crème / blanc */
+  --ds-cream:          #FAFAF5;
+  --ds-cream-2:        #F5F2EA;
+  --ds-cream-3:        #ECE7DA;
+  --ds-cream-warm:     #F4ECDD;   /* transition warm (SeparatorDefs) */
+  --ds-white:          #FFFFFF;
+
+  /* Or / sable */
+  --ds-gold:           #C8956C;
+  --ds-gold-light:     #D4A574;
+  --ds-gold-dark:      #A77648;
+  --ds-gold-text:      #A77648;   /* WCAG AA safe sur fond crème (≥4.5:1) */
+
+  /* Gris chauds */
+  --ds-gray-900:       #2D2D2D;
+  --ds-gray-700:       #4F4F4F;
+  --ds-gray-500:       #6B6B6B;
+  --ds-gray-400:       #9A9A9A;
+  --ds-gray-300:       #D4D4D4;
+  --ds-gray-200:       #E5E2DA;
+  --ds-gray-100:       #F1EEE6;
+
+  /* Sémantique */
+  --ds-success:        #2E7D32;
+  --ds-success-bg:     #E6F1E6;
+  --ds-error:          #C62828;
+  --ds-error-bg:       #FBE8E8;
+  --ds-warning:        #F4863F;
+  --ds-info:           #E8601C;
+
+  /* ══════════════════════════════════════════════════════════════
+     TRANSPARENCES — Atmosphère
+     ══════════════════════════════════════════════════════════════ */
+
+  /* Orange (mist, glow, wash) */
+  --ds-orange-4:       rgba(232, 96, 28, 0.04);
+  --ds-orange-8:       rgba(232, 96, 28, 0.08);
+  --ds-orange-12:      rgba(232, 96, 28, 0.12);
+  --ds-orange-20:      rgba(232, 96, 28, 0.20);
+  --ds-orange-28:      rgba(232, 96, 28, 0.28);
+
+  /* Or (borders warm, tint) */
+  --ds-gold-10:        rgba(200, 149, 108, 0.10);
+  --ds-gold-18:        rgba(200, 149, 108, 0.18);
+
+  /* Blanc (overlays sur fond sombre) */
+  --ds-white-5:        rgba(255, 255, 255, 0.05);
+  --ds-white-10:       rgba(255, 255, 255, 0.10);
+  --ds-white-15:       rgba(255, 255, 255, 0.15);
+  --ds-white-50:       rgba(255, 255, 255, 0.50);
+  --ds-white-80:       rgba(255, 255, 255, 0.80);
+
+  /* ══════════════════════════════════════════════════════════════
+     TYPOGRAPHIE — Familles + Échelle modulaire ratio 1.25
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-serif:          "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --ds-sans:           "Inter", "DM Sans", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --ds-mono:           "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Tailles fluides (mobile → desktop) */
+  --ds-font-display-xl: clamp(2.5rem, 6vw, 4rem);
+  --ds-font-display:    clamp(2rem, 5vw, 3.5rem);
+  --ds-font-h1:         clamp(1.75rem, 4vw, 2.5rem);
+  --ds-font-h2:         clamp(1.5rem, 3.5vw, 2rem);
+  --ds-font-h3:         clamp(1.25rem, 3vw, 1.5rem);
+  --ds-font-h4:         1.25rem;
+  --ds-font-h5:         1.125rem;
+  --ds-font-h6:         1rem;
+  --ds-font-body-lg:    1.125rem;
+  --ds-font-body:       1rem;
+  --ds-font-body-sm:    0.9375rem;
+  --ds-font-small:      0.875rem;
+  --ds-font-micro:      0.8125rem;
+  --ds-font-eyebrow:    0.75rem;
+
+  /* Line-heights */
+  --ds-lh-tight:       1.1;
+  --ds-lh-snug:        1.2;
+  --ds-lh-normal:      1.5;
+  --ds-lh-relaxed:     1.6;
+  --ds-lh-loose:       1.75;
+
+  /* ══════════════════════════════════════════════════════════════
+     ESPACEMENTS — Grille 4px / 8px
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-s-1:  4px;
+  --ds-s-2:  8px;
+  --ds-s-3:  12px;
+  --ds-s-4:  16px;
+  --ds-s-5:  24px;
+  --ds-s-6:  32px;
+  --ds-s-7:  48px;
+  --ds-s-8:  64px;
+  --ds-s-9:  96px;
+  --ds-s-10: 128px;
+
+  /* ══════════════════════════════════════════════════════════════
+     RAYONS
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-r-xs:   4px;
+  --ds-r-sm:   8px;
+  --ds-r-md:   12px;
+  --ds-r-lg:   16px;
+  --ds-r-full: 50%;
+  --ds-r-pill: 999px;
+
+  /* ══════════════════════════════════════════════════════════════
+     OMBRES — Toujours chaudes : rgba(20,14,8,x)
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-shadow-xs:         0 1px 2px rgba(20, 14, 8, 0.04), 0 1px 3px rgba(20, 14, 8, 0.06);
+  --ds-shadow-sm:         0 2px 8px rgba(20, 14, 8, 0.08);
+  --ds-shadow-md:         0 4px 12px rgba(20, 14, 8, 0.06), 0 2px 4px rgba(20, 14, 8, 0.05);
+  --ds-shadow-lg:         0 12px 32px rgba(20, 14, 8, 0.10), 0 4px 8px rgba(20, 14, 8, 0.06);
+  --ds-shadow-xl:         0 20px 60px rgba(20, 14, 8, 0.18);
+  --ds-shadow-orange:     0 6px 20px rgba(232, 96, 28, 0.28);
+  --ds-shadow-card-hover: 0 16px 40px rgba(20, 14, 8, 0.12), 0 4px 12px rgba(232, 96, 28, 0.08);
+  --ds-shadow-warm-inset: inset 0 0 12px rgba(232, 96, 28, 0.02);
+
+  /* ══════════════════════════════════════════════════════════════
+     TRANSITIONS — Easings premium
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-ease:        cubic-bezier(.2, .7, .3, 1);
+  --ds-ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ds-ease-bounce: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ds-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --ds-dur-fast:    140ms;
+  --ds-dur:         220ms;
+  --ds-dur-slow:    360ms;
+  --ds-dur-slower:  500ms;
+
+  /* ══════════════════════════════════════════════════════════════
+     Z-INDEX — Hiérarchie claire
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-z-dropdown:       100;
+  --ds-z-sticky:         200;
+  --ds-z-fixed:          300;
+  --ds-z-modal-backdrop: 900;
+  --ds-z-modal:          1000;
+  --ds-z-popover:        1100;
+  --ds-z-tooltip:        1200;
+  --ds-z-toast:          1300;
+  --ds-z-bottom-nav:     9998;
+  --ds-z-header:         9999;
+  --ds-z-skip-link:      10000;
+
+  /* ══════════════════════════════════════════════════════════════
+     BREAKPOINTS (référence documentaire — CSS ne supporte pas
+     var() dans @media, mais ces valeurs servent de référence)
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-bp-sm:  480px;
+  --ds-bp-md:  768px;
+  --ds-bp-lg:  1024px;
+  --ds-bp-xl:  1200px;
+  --ds-bp-2xl: 1440px;
+
+  /* ══════════════════════════════════════════════════════════════
+     ACCESSIBILITÉ — Focus
+     ══════════════════════════════════════════════════════════════ */
+
+  --ds-focus-ring:    2px solid var(--ds-orange);
+  --ds-focus-offset:  2px;
+  --ds-focus-shadow:  0 0 0 3px var(--ds-orange-50);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PREFERS-REDUCED-MOTION
+   Désactive toutes les animations et transitions pour les
+   utilisateurs ayant activé "Reduce motion" dans leur OS.
+   Les durées de tokens passent à quasi-zéro (0.01ms).
+   La règle * !important couvre les animations hardcodées.
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-dur-fast:   0.01ms;
+    --ds-dur:        0.01ms;
+    --ds-dur-slow:   0.01ms;
+    --ds-dur-slower: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FOCUS-VISIBLE GLOBAL
+   Mouse click → :focus fires → no outline (clean UX)
+   Keyboard tab → :focus-visible fires → orange ring (accessible)
+   ══════════════════════════════════════════════════════════════ */
+
+*:focus-visible {
+  outline: var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-offset);
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-offset);
+  box-shadow: var(--ds-focus-shadow);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: var(--ds-focus-ring);
+  outline-offset: var(--ds-focus-offset);
+  box-shadow: var(--ds-focus-shadow);
+}

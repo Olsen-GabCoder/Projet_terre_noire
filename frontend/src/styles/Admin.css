@@ -145,18 +145,18 @@
 
 .adm-sidebar__nav-item:hover {
   background: rgba(255,255,255,0.06);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .adm-sidebar__nav-item.active {
   background: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   font-weight: 700;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
 }
 
 .adm-sidebar__nav-item.active i {
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .adm-sidebar__nav-item-label {
@@ -180,7 +180,7 @@
   height: 18px;
   border-radius: 999px;
   background: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   font-size: 10px;
   font-weight: 700;
   display: inline-flex;
@@ -237,7 +237,7 @@
   height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark));
-  color: #fff;
+  color: var(--ds-white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,7 +256,7 @@
 .adm-sidebar__user-name {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--ds-white);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -280,7 +280,7 @@
    TOPBAR (used by each admin page)
    ============================================= */
 .adm-topbar {
-  background: #fff;
+  background: var(--ds-white);
   border-bottom: 1px solid var(--tn-gray-200);
   padding: 24px 36px;
   display: flex;
@@ -347,7 +347,7 @@
   text-align: center;
   padding: 2rem;
   background: var(--tn-black);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
 }
 
@@ -472,7 +472,7 @@
   height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark));
-  color: #fff;
+  color: var(--ds-white);
   font-family: var(--tn-serif);
   font-weight: 700;
   font-size: 13px;
@@ -576,7 +576,7 @@
   height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark));
-  color: #fff;
+  color: var(--ds-white);
   font-family: var(--tn-serif);
   font-weight: 700;
   font-size: 16px;
@@ -589,7 +589,7 @@
 .adm-drawer__user-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .adm-drawer__user-email {
@@ -637,12 +637,12 @@
 
 .adm-drawer__link.active {
   background: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   font-weight: 700;
 }
 
 .adm-drawer__link.active i {
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .adm-drawer__link:active {
@@ -773,5 +773,13 @@
 
   .adm-page-body {
     padding: 12px;
+  }
+}
+
+/* Force admin modal form grids to 1 column on mobile */
+@media (max-width: 768px) {
+  .adm-page-body div[style*="grid-template-columns: 1fr 1fr"],
+  .adm-page-body div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
   }
 }

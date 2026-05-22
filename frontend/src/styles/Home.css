@@ -191,7 +191,7 @@
   width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -344,7 +344,7 @@
   box-shadow: 0 10px 24px rgba(232,96,28,0.5);
   font-family: var(--tn-mono);
   font-size: 10px;
-  color: #fff;
+  color: var(--ds-white);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 700;
@@ -427,7 +427,7 @@
    ============================================================ */
 .home-genres {
   padding: 64px 56px 48px;
-  background: #fff;
+  background: var(--ds-white);
 }
 .home-genres__inner {
   max-width: 1400px;
@@ -465,7 +465,7 @@
 .home-genres__tab--active {
   background: var(--tn-orange);
   border-color: var(--tn-orange);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 /* Progress bar */
@@ -517,7 +517,7 @@
   background: var(--tn-cream);
 }
 .home-books--alt {
-  background: #fff;
+  background: var(--ds-white);
 }
 .home-books-inner {
   max-width: 1400px;
@@ -567,7 +567,7 @@
 .home-author-card {
   flex-shrink: 0;
   width: 240px;
-  background: #fff;
+  background: var(--ds-white);
   border: 1px solid var(--tn-gray-200);
   border-radius: 14px;
   padding: 28px;
@@ -608,7 +608,7 @@
   font-family: var(--tn-serif);
   font-size: 32px;
   font-weight: 700;
-  color: #fff;
+  color: var(--ds-white);
 }
 .home-author-card__name {
   font-family: var(--tn-serif);
@@ -869,6 +869,10 @@
   .home-hero { padding: 32px 16px 40px; }
   .home-hero-actions { flex-direction: column; width: 100%; }
   .home-hero-actions .tn-btn { width: 100%; justify-content: center; }
+  .home-hero-stats { gap: 10px; }
+  .home-hero-stat__value { font-size: 24px; }
+  .home-hero-stat__label { font-size: 10px; }
+  .home-section-label { font-size: 9px; }
   .home-genres__content { min-height: 220px; }
   .home-books-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .home-author-card { width: 170px; padding: 16px; }
@@ -902,4 +906,8 @@
   .home-author-card--3d:hover .home-author-card__inner {
     transform: none !important;
   }
+}
+
+@media (hover: none) {
+  .home-author-card:hover { transform: none; }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { newsletterAPI } from '../services/api';
@@ -6,6 +6,41 @@ import { TnDivider } from './ui';
 import '../styles/Footer.css';
 
 const LOGO_SRC = '/images/logo_terre_noire.png';
+
+function DevModalContent({ onClose, children }) {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const getFocusables = () => modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const focusables = getFocusables();
+    if (focusables.length > 0) focusables[0].focus();
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const els = getFocusables();
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  return (
+    <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Developpeur" className="dev-modal" onClick={e => e.stopPropagation()}>
+      {children}
+    </div>
+  );
+}
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -222,8 +257,8 @@ const Footer = () => {
 
       {/* Developer modal */}
       {showDevModal && createPortal(
-        <div className="dev-modal-overlay" onClick={() => setShowDevModal(false)}>
-          <div className="dev-modal" onClick={e => e.stopPropagation()}>
+        <div className="dev-modal-overlay" onClick={() => setShowDevModal(false)} onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setShowDevModal(false); } }}>
+          <DevModalContent onClose={() => setShowDevModal(false)}>
             <button className="dev-modal__close" onClick={() => setShowDevModal(false)} aria-label="Fermer">
               <i className="fas fa-times" />
             </button>
@@ -297,7 +332,7 @@ const Footer = () => {
             <div className="dev-modal__footer">
               Terre Noire Editions &middot; v1.0
             </div>
-          </div>
+          </DevModalContent>
         </div>,
         document.body
       )}

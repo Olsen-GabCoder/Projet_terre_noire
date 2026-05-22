@@ -145,7 +145,7 @@ const AdminAuthors = () => {
               <div style={{
                 width: 56, height: 56, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                 background: previewImage ? `url(${previewImage}) center/cover` : 'linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark))',
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--ds-white)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 22,
                 border: '2px solid rgba(255,255,255,0.15)',
               }}>{previewImage ? null : formInitial}</div>
@@ -167,7 +167,7 @@ const AdminAuthors = () => {
                   <div style={{
                     width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
                     background: previewImage ? `url(${previewImage}) center/cover` : 'linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark))',
-                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'var(--ds-white)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: 32,
                     boxShadow: '0 8px 20px rgba(232,96,28,0.25)',
                   }}>{previewImage ? null : formInitial}</div>
@@ -206,7 +206,7 @@ const AdminAuthors = () => {
               </AdminModalSection>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
-                <button type="button" onClick={resetForm} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
+                <button type="button" onClick={resetForm} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
                 <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editingAuthor ? 'Mettre a jour' : 'Creer l\'auteur'}</button>
               </div>
             </form>

@@ -169,6 +169,7 @@ function Toast({ id, type, message, onDismiss }) {
    ───────────────────────────────────────────── */
 function ConfirmModal({ config, onResult }) {
   const [state, setState] = useState('entering');
+  const modalRef = useRef(null);
   const {
     title = 'Confirmer',
     message = 'Etes-vous sur ?',
@@ -188,6 +189,31 @@ function ConfirmModal({ config, onResult }) {
   useEffect(() => {
     setTimeout(() => setState('visible'), 10);
   }, []);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const getFocusables = () => modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const focusables = getFocusables();
+    if (focusables.length > 0) focusables[0].focus();
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onResult(false); return; }
+      if (e.key !== 'Tab') return;
+      const els = getFocusables();
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onResult]);
 
   const close = (result) => {
     setState('exiting');
@@ -214,9 +240,13 @@ function ConfirmModal({ config, onResult }) {
       }}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#fff', borderRadius: 20,
+          background: 'var(--ds-white)', borderRadius: 20,
           maxWidth: 440, width: '100%',
           boxShadow: '0 30px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06)',
           transform: modalTransform,
@@ -262,7 +292,7 @@ function ConfirmModal({ config, onResult }) {
               onClick={() => close(false)}
               style={{
                 flex: 1, padding: '12px 18px', borderRadius: 10,
-                background: '#fff', color: 'var(--tn-gray-700, #374151)',
+                background: 'var(--ds-white)', color: 'var(--tn-gray-700, #374151)',
                 border: '1.5px solid var(--tn-gray-200, #e5e7eb)',
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 transition: 'all 140ms ease',
@@ -273,7 +303,7 @@ function ConfirmModal({ config, onResult }) {
               onClick={() => close(true)}
               style={{
                 flex: 1, padding: '12px 18px', borderRadius: 10,
-                background: t.color, color: '#fff', border: 'none',
+                background: t.color, color: 'var(--ds-white)', border: 'none',
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 transition: 'all 140ms ease',
                 fontFamily: 'var(--tn-sans, sans-serif)',

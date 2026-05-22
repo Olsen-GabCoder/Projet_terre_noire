@@ -182,7 +182,7 @@ const Catalog = () => {
             </button>
           </div>
 
-          <div className="cat-filters__backdrop" onClick={() => setMobileFiltersOpen(false)} />
+          <div className="cat-filters__backdrop" role="button" tabIndex={0} aria-label="Fermer les filtres" onClick={() => setMobileFiltersOpen(false)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileFiltersOpen(false); } }} />
 
           <div className="cat-filters__drawer">
             <div className="cat-filters__drawer-header">

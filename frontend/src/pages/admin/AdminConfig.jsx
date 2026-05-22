@@ -58,7 +58,7 @@ const AdminConfig = () => {
       <div className="adm-page-body">
         <div style={{ maxWidth: 600 }}>
           <form onSubmit={handleSubmit}>
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid var(--tn-gray-200)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--ds-white)', borderRadius: 14, border: '1px solid var(--tn-gray-200)', overflow: 'hidden' }}>
               <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <i className="fas fa-truck" style={{ color: 'var(--tn-orange)', fontSize: 18 }} />
                 <div>

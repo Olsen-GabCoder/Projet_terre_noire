@@ -111,7 +111,7 @@
 
 .pro-btn--primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   border: none;
 }
 

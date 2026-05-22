@@ -11,7 +11,7 @@
 .wishlist-hero {
   padding: 6rem 1.5rem 3rem;
   background: linear-gradient(170deg, var(--tn-black) 0%, var(--tn-black) 40%, var(--tn-black) 100%);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -92,7 +92,7 @@
 
 /* État vide */
 .wishlist-empty {
-  background: #fff;
+  background: var(--ds-white);
   border-radius: var(--radius-lg);
   padding: 3rem 2rem;
   text-align: center;
@@ -139,7 +139,7 @@
 
 .wishlist-btn--primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
   border: none;
 }
 
@@ -196,7 +196,7 @@
 
 .wishlist-add-cart {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .wishlist-add-cart:hover {
@@ -204,6 +204,8 @@
 }
 
 @media (max-width: 768px) {
+  .wishlist-hero { padding: 5rem 1.25rem 2.5rem; }
+
   .wishlist-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
@@ -211,5 +213,15 @@
 
   .wishlist-card-actions {
     flex-direction: column;
+  }
+
+  .wishlist-remove,
+  .wishlist-add-cart {
+    padding: 0.65rem 0.75rem;
+    min-height: 44px;
+  }
+
+  .wishlist-empty {
+    padding: 2rem 1.5rem;
   }
 }

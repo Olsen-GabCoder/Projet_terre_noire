@@ -52,7 +52,7 @@ const NewsletterConfirm = () => {
 
   return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--tn-cream, #F4F1EA)' }}>
-      <div style={{ textAlign: 'center', maxWidth: 480, background: '#fff', borderRadius: 16, padding: '48px 36px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <div style={{ textAlign: 'center', maxWidth: 480, background: 'var(--ds-white)', borderRadius: 16, padding: '48px 36px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
         <i className={state.icon} style={{ fontSize: 56, color: state.color, marginBottom: 20, display: 'block' }} />
         <h1 style={{ fontFamily: 'var(--tn-serif, Georgia, serif)', fontSize: 26, fontWeight: 700, color: 'var(--tn-gray-900, #1a1a1a)', marginBottom: 12 }}>
           {state.title}

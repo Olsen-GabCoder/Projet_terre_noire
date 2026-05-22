@@ -9,7 +9,7 @@
  *   - Filters: pill 999 radius, orange active, white inactive
  *   - Orange #E8601C is the ONLY action color
  */
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 /* =============================================
    STATUS BADGE — used across orders, manuscripts, users
@@ -93,7 +93,7 @@ export function AdminStat({ icon, label, value, suffix, meta, metaTone = 'muted'
             {label}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontFamily: 'var(--tn-serif)', fontSize: 38, fontWeight: 700, color: '#fff' }}>{value}</span>
+            <span style={{ fontFamily: 'var(--tn-serif)', fontSize: 38, fontWeight: 700, color: 'var(--ds-white)' }}>{value}</span>
             {suffix && <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 11, color: 'var(--tn-gold-light)' }}>{suffix}</span>}
           </div>
           {meta && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--tn-gray-400)' }}>{meta}</div>}
@@ -110,7 +110,7 @@ export function AdminStat({ icon, label, value, suffix, meta, metaTone = 'muted'
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 14, padding: 20,
+      background: 'var(--ds-white)', borderRadius: 14, padding: 20,
       border: '1px solid var(--tn-gray-200)',
       position: 'relative', overflow: 'hidden',
     }}>
@@ -151,7 +151,7 @@ export function AdminStat({ icon, label, value, suffix, meta, metaTone = 'muted'
 export function AdminCard({ children, padding = 24, accent, style }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 14,
+      background: 'var(--ds-white)', borderRadius: 14,
       border: '1px solid var(--tn-gray-200)',
       borderTop: accent ? '4px solid var(--tn-orange)' : '1px solid var(--tn-gray-200)',
       padding,
@@ -171,8 +171,8 @@ export function AdminFilterPills({ items, active, onChange }) {
         return (
           <button key={key} onClick={() => onChange && onChange(key)} style={{
             padding: '8px 14px', borderRadius: 999,
-            background: isActive ? 'var(--tn-orange)' : '#fff',
-            color: isActive ? '#fff' : 'var(--tn-gray-700)',
+            background: isActive ? 'var(--tn-orange)' : 'var(--ds-white)',
+            color: isActive ? 'var(--ds-white)' : 'var(--tn-gray-700)',
             border: `1.5px solid ${isActive ? 'var(--tn-orange)' : 'var(--tn-gray-200)'}`,
             fontSize: 12, fontWeight: 600, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -183,7 +183,7 @@ export function AdminFilterPills({ items, active, onChange }) {
               <span style={{
                 minWidth: 20, padding: '0 6px', borderRadius: 999,
                 background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--tn-cream-2)',
-                color: isActive ? '#fff' : 'var(--tn-gray-700)',
+                color: isActive ? 'var(--ds-white)' : 'var(--tn-gray-700)',
                 fontSize: 10, fontWeight: 700, fontFamily: 'var(--tn-mono)',
               }}>{count}</span>
             )}
@@ -201,7 +201,7 @@ export function AdminSearch({ placeholder = 'Rechercher...', value, onChange, on
   return (
     <div style={{
       flex: 1, minWidth: 240, maxWidth: 380,
-      background: '#fff', borderRadius: 999,
+      background: 'var(--ds-white)', borderRadius: 999,
       padding: '4px 4px 4px 16px',
       display: 'flex', alignItems: 'center', gap: 10,
       border: '1px solid var(--tn-gray-200)',
@@ -234,7 +234,7 @@ export function AdminSearch({ placeholder = 'Rechercher...', value, onChange, on
 export function AdminTable({ columns, children }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 14,
+      background: 'var(--ds-white)', borderRadius: 14,
       border: '1px solid var(--tn-gray-200)',
       overflowX: 'auto', overflowY: 'hidden',
       WebkitOverflowScrolling: 'touch',
@@ -286,7 +286,7 @@ export function AdminAvatar({ name, size = 32, photo }) {
     <div style={{
       width: size, height: size, borderRadius: '50%',
       background: photo ? `url(${photo}) center/cover` : 'linear-gradient(135deg, var(--tn-orange), var(--tn-gold-dark))',
-      color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      color: 'var(--ds-white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--tn-serif)', fontWeight: 700, fontSize: Math.round(size * 0.42),
       flexShrink: 0,
     }}>{photo ? null : initial}</div>
@@ -324,7 +324,7 @@ export function AdminActionBtn({ icon, tone = 'gray', title, onClick }) {
 export function AdminEmpty({ icon, title, subtitle, action }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 14, border: '1px dashed var(--tn-gray-300)',
+      background: 'var(--ds-white)', borderRadius: 14, border: '1px dashed var(--tn-gray-300)',
       padding: '64px 28px', textAlign: 'center',
     }}>
       <div style={{
@@ -347,7 +347,7 @@ export function AdminEmpty({ icon, title, subtitle, action }) {
 export function AdminLoading({ label = 'Chargement...' }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 14, border: '1px solid var(--tn-gray-200)',
+      background: 'var(--ds-white)', borderRadius: 14, border: '1px solid var(--tn-gray-200)',
       padding: '72px 28px', textAlign: 'center',
     }}>
       <div style={{
@@ -372,7 +372,7 @@ export function AdminLoading({ label = 'Chargement...' }) {
 export function AdminError({ message, onRetry }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 14,
+      background: 'var(--ds-white)', borderRadius: 14,
       border: '1px solid rgba(198,40,40,0.25)',
       borderTop: '4px solid var(--tn-error)',
       padding: '56px 28px', textAlign: 'center',
@@ -433,7 +433,34 @@ export function GenrePill({ value }) {
 /* =============================================
    MODAL OVERLAY + SECTION
    ============================================= */
-export function AdminModalOverlay({ children, onClose }) {
+export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' }) {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const getFocusables = () => modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const focusables = getFocusables();
+    if (focusables.length > 0) focusables[0].focus();
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const els = getFocusables();
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <div
       onClick={onClose}
@@ -446,6 +473,10 @@ export function AdminModalOverlay({ children, onClose }) {
       }}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--tn-cream)', borderRadius: 16,
@@ -534,7 +565,7 @@ export function StatusBtn({ statusKey, label, icon, isCurrent, onClick }) {
       style={{
         flex: 1, padding: '10px 8px', borderRadius: 10,
         background: isCurrent ? c.activeBg : c.bg,
-        color: isCurrent ? '#fff' : c.fg,
+        color: isCurrent ? 'var(--ds-white)' : c.fg,
         border: isCurrent ? `2px solid ${c.border}` : '1.5px solid transparent',
         fontSize: 12, fontWeight: 700, cursor: isCurrent ? 'default' : 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

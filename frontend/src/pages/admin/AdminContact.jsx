@@ -144,7 +144,7 @@ const AdminContact = () => {
               </div>
             </AdminModalSection>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
-              <button onClick={() => handleToggleRead(selected)} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>
+              <button onClick={() => handleToggleRead(selected)} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>
                 <i className={`fas ${selected.is_read ? 'fa-envelope' : 'fa-envelope-open'}`} /> {selected.is_read ? 'Marquer non lu' : 'Marquer lu'}
               </button>
               <a href={`mailto:${selected.email}?subject=Re: ${selected.subject}`} className="tn-btn tn-btn--primary">

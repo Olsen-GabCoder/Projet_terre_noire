@@ -193,7 +193,7 @@ const AdminUsers = () => {
 
 function DetailTile({ label, value, sub }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 10, padding: 14, border: '1px solid var(--tn-gray-200)' }}>
+    <div style={{ background: 'var(--ds-white)', borderRadius: 10, padding: 14, border: '1px solid var(--tn-gray-200)' }}>
       <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--tn-gray-500)' }}>{label}</div>
       <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 18, fontWeight: 700, color: 'var(--tn-gray-900)', letterSpacing: '-0.01em', marginTop: 6 }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 2 }}>{sub}</div>}

@@ -228,7 +228,7 @@ const AdminCoupons = () => {
                 </label>
               </AdminModalSection>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
-                <button type="button" onClick={resetForm} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
+                <button type="button" onClick={resetForm} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
                 <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editing ? 'Mettre a jour' : 'Creer le coupon'}</button>
               </div>
             </form>

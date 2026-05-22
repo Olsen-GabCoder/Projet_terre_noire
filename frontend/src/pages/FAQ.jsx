@@ -179,12 +179,12 @@ const FAQ = () => {
                 const key = `${cat.id}-${i}`;
                 const isOpen = openKey === key;
                 return (
-                  <div key={key} className={`faq-item ${isOpen ? 'faq-item--open' : ''}`} onClick={() => setOpenKey(isOpen ? null : key)}>
-                    <div className="faq-item__header">
+                  <div key={key} className={`faq-item ${isOpen ? 'faq-item--open' : ''}`}>
+                    <button type="button" className="faq-item__header" aria-expanded={isOpen} aria-controls={`faq-content-${key}`} onClick={() => setOpenKey(isOpen ? null : key)}>
                       <h3 className="faq-item__q">{item.q}</h3>
                       <span className="faq-item__icon"><i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`} /></span>
-                    </div>
-                    <div className="faq-item__body"><p>{item.a}</p></div>
+                    </button>
+                    <div id={`faq-content-${key}`} className="faq-item__body" hidden={!isOpen}><p>{item.a}</p></div>
                   </div>
                 );
               })}

@@ -13,7 +13,7 @@
 .ord-hero {
   padding: 6rem 1.5rem 3rem;
   background: linear-gradient(170deg, var(--tn-black) 0%, var(--tn-black) 40%, var(--tn-black) 100%);
-  color: #fff;
+  color: var(--ds-white);
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -76,7 +76,7 @@
   line-height: 1.15;
   letter-spacing: -0.03em;
   margin: 0 0 0.75rem;
-  color: #fff;
+  color: var(--ds-white);
 }
 
 .ord-hero__sub {
@@ -131,7 +131,7 @@
 
 /* État vide */
 .ord-empty {
-  background: #fff;
+  background: var(--ds-white);
   border-radius: var(--radius-lg);
   padding: 3rem 2rem;
   text-align: center;
@@ -166,7 +166,7 @@
 }
 
 .ord-card {
-  background: #fff;
+  background: var(--ds-white);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-gray-200);
   box-shadow: var(--shadow-card);
@@ -303,7 +303,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: #fff;
+  background: var(--ds-white);
   border-top: 1px solid var(--color-gray-200);
 }
 
@@ -428,5 +428,14 @@
 
   .ord-card__total {
     align-items: flex-start;
+  }
+
+  .ord-card__actions {
+    flex-direction: column;
+    padding: 0 1rem 1rem;
+  }
+
+  .ord-btn {
+    width: 100%;
   }
 }

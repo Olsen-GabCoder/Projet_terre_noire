@@ -141,7 +141,7 @@ const AdminManuscripts = () => {
           <AdminModalBody>
             {/* Auteur */}
             <AdminModalSection icon="fa-user-pen" title="Auteur">
-              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+              <div style={{ background: 'var(--ds-white)', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <AdminAvatar name={sel.author_name} size={48} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)' }}>
@@ -169,7 +169,7 @@ const AdminManuscripts = () => {
             {/* Fichier */}
             {(sel.file_url || sel.file) && (
               <AdminModalSection icon="fa-file-pdf" title="Fichier">
-                <div style={{ background: '#fff', borderRadius: 12, padding: 16, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ background: 'var(--ds-white)', borderRadius: 12, padding: 16, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 42, height: 50, borderRadius: 6, background: 'rgba(198,40,40,0.1)', color: 'var(--tn-error)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                     <i className="fas fa-file-pdf" />
                   </div>
@@ -188,7 +188,7 @@ const AdminManuscripts = () => {
 
             {/* Description */}
             <AdminModalSection icon="fa-align-left" title="Description">
-              <div style={{ padding: '14px 18px', borderRadius: 10, background: '#fff', borderLeft: '4px solid var(--tn-orange)', border: '1px solid var(--tn-gray-200)', fontFamily: 'var(--tn-serif)', fontSize: 14, fontStyle: 'italic', lineHeight: 1.65, color: 'var(--tn-gray-700)' }}>
+              <div style={{ padding: '14px 18px', borderRadius: 10, background: 'var(--ds-white)', borderLeft: '4px solid var(--tn-orange)', border: '1px solid var(--tn-gray-200)', fontFamily: 'var(--tn-serif)', fontSize: 14, fontStyle: 'italic', lineHeight: 1.65, color: 'var(--tn-gray-700)' }}>
                 {sel.description ? `« ${sel.description} »` : 'Aucune description fournie.'}
               </div>
             </AdminModalSection>
@@ -218,7 +218,7 @@ const AdminManuscripts = () => {
 function DetailTile({ label, value, tone, icon }) {
   const fg = tone === 'good' ? 'var(--tn-success)' : tone === 'bad' ? 'var(--tn-error)' : 'var(--tn-gray-900)';
   return (
-    <div style={{ background: '#fff', borderRadius: 10, padding: 14, border: '1px solid var(--tn-gray-200)' }}>
+    <div style={{ background: 'var(--ds-white)', borderRadius: 10, padding: 14, border: '1px solid var(--tn-gray-200)' }}>
       <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--tn-gray-500)' }}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
         {icon && <i className={`fas ${icon}`} style={{ color: fg, fontSize: 13 }} />}

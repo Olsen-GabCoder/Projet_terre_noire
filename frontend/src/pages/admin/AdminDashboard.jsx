@@ -171,7 +171,7 @@ const AdminDashboard = () => {
             ['/admin-dashboard/config', 'fa-cog', 'Configuration', 'Frais de livraison et parametres', 'var(--tn-gray-600)'],
           ].map(([to, icon, label, desc, color]) => (
             <Link key={to} to={to} style={{
-              background: '#fff', border: '1px solid var(--tn-gray-200)',
+              background: 'var(--ds-white)', border: '1px solid var(--tn-gray-200)',
               borderRadius: 14, padding: 18,
               display: 'flex', flexDirection: 'column', gap: 10,
               textDecoration: 'none', cursor: 'pointer', position: 'relative',

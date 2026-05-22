@@ -120,7 +120,7 @@ const AdminLayout = () => {
 
       {/* ══════════ MOBILE DRAWER ══════════ */}
       {drawerOpen && (
-        <div className="adm-drawer-overlay" onClick={() => setDrawerOpen(false)}>
+        <div className="adm-drawer-overlay" role="button" tabIndex={0} aria-label="Fermer le menu" onClick={() => setDrawerOpen(false)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDrawerOpen(false); } }}>
           <nav className="adm-drawer" onClick={e => e.stopPropagation()}>
             {/* Drawer header */}
             <div className="adm-drawer__header">

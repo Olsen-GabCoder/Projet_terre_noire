@@ -184,7 +184,7 @@
      display: inline-flex;
      align-items: center;
      gap: 0.45rem;
-     color: #fff;
+     color: var(--ds-white);
      text-decoration: none;
      font-family: var(--br-font-body);
      font-size: 0.8125rem;
@@ -203,7 +203,7 @@
    }
    
    .br-header__back:hover {
-     color: #fff;
+     color: var(--ds-white);
      background: rgba(255, 255, 255, 0.12);
      border-color: rgba(255, 255, 255, 0.4);
    }
@@ -241,7 +241,7 @@
      font-weight: 600;
      letter-spacing: 0.18em;
      text-transform: uppercase;
-     color: #fff;
+     color: var(--ds-white);
      line-height: 1;
    }
    
@@ -250,7 +250,7 @@
      font-size: 1.125rem;
      font-weight: 500;
      font-style: italic;
-     color: #fff;
+     color: var(--ds-white);
      white-space: nowrap;
      overflow: hidden;
      text-overflow: ellipsis;
@@ -289,7 +289,7 @@
    .br-header__page-current {
      font-size: 1.0625rem;
      font-weight: 600;
-     color: #fff;
+     color: var(--ds-white);
      line-height: 1;
      letter-spacing: -0.02em;
      font-variant-numeric: tabular-nums;
@@ -322,7 +322,7 @@
      top: 0;
      left: 0;
      height: 100%;
-     background: #fff;
+     background: var(--ds-white);
      border-radius: 2px;
      transition: width 0.3s var(--br-ease-out);
      box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
@@ -333,7 +333,7 @@
      top: 50%;
      width: 8px;
      height: 8px;
-     background: #fff;
+     background: var(--ds-white);
      border-radius: 50%;
      transform: translate(-50%, -50%);
      transition: left 0.3s var(--br-ease-out);
@@ -349,7 +349,7 @@
      font-family: var(--br-font-body);
      font-size: 0.75rem;
      font-weight: 500;
-     color: #fff;
+     color: var(--ds-white);
      background: transparent;
      border: 1px solid rgba(255, 255, 255, 0.35);
      border-radius: var(--br-radius-sm);
@@ -358,7 +358,7 @@
    }
 
    .br-header__toggle-pages:hover {
-     color: #fff;
+     color: var(--ds-white);
      border-color: rgba(255, 255, 255, 0.6);
      background: rgba(255, 255, 255, 0.1);
    }
@@ -960,7 +960,7 @@
      font-weight: 600;
      letter-spacing: 0.12em;
      text-transform: uppercase;
-     color: #fff;
+     color: var(--ds-white);
    }
    
    .br-footer__logo {
@@ -988,12 +988,12 @@
    .br-footer__page-info {
      font-family: var(--br-font-body);
      font-size: 0.75rem;
-     color: #fff;
+     color: var(--ds-white);
      font-variant-numeric: tabular-nums;
    }
    
    .br-footer__page-info strong {
-     color: #fff;
+     color: var(--ds-white);
      font-weight: 600;
    }
    

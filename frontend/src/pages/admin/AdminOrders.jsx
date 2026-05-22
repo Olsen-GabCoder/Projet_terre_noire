@@ -161,7 +161,7 @@ const AdminOrders = () => {
           <AdminModalBody>
             {/* Client */}
             <AdminModalSection icon="fa-user" title="Client">
-              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+              <div style={{ background: 'var(--ds-white)', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <AdminAvatar name={sel.user?.full_name || sel.user?.username || '?'} size={48} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)' }}>{sel.user?.full_name || sel.user?.username || 'N/A'}</div>
@@ -178,7 +178,7 @@ const AdminOrders = () => {
             <AdminModalSection icon="fa-book" title="Articles" rightLabel={`${(sel.items || []).length} titre${(sel.items || []).length > 1 ? 's' : ''}`}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(sel.items || []).map((item, idx) => (
-                  <div key={item.id || idx} style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={item.id || idx} style={{ background: 'var(--ds-white)', borderRadius: 10, padding: 12, border: '1px solid var(--tn-gray-200)', display: 'flex', alignItems: 'center', gap: 12 }}>
                     {item.book?.cover_image
                       ? <img src={item.book.cover_image} alt="" style={{ width: 36, height: 50, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />
                       : <div style={{ width: 36, height: 50, borderRadius: 4, background: 'var(--tn-cream-2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tn-gray-400)', fontSize: 12 }}><i className="fas fa-book" /></div>
@@ -197,7 +197,7 @@ const AdminOrders = () => {
 
             {/* Amounts */}
             <AdminModalSection icon="fa-calculator" title="Montants">
-              <div style={{ background: '#fff', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)' }}>
+              <div style={{ background: 'var(--ds-white)', borderRadius: 12, padding: 18, border: '1px solid var(--tn-gray-200)' }}>
                 {[
                   ['Sous-total', `${fmtPrice(sel.subtotal || sel.total_amount)} FCFA`],
                   ['Livraison', Number(sel.shipping_cost || 0) === 0 ? 'Gratuit' : `${fmtPrice(sel.shipping_cost)} FCFA`],

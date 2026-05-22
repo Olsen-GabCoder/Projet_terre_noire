@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -7,50 +7,55 @@ import { DeliveryConfigProvider } from './context/DeliveryConfigContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SeparatorDefs from './components/SeparatorDefs';
+import RouteSuspenseFallback from './components/RouteSuspenseFallback';
+
+// Eager routes (critical path — always in initial bundle)
 import Home from './pages/Home';
-import Catalog from './pages/Catalog';
-import BookDetail from './pages/BookDetail';
-import BookReader from './pages/BookReader';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import OrderSuccess from './pages/OrderSuccess';
-import SubmitManuscript from './pages/SubmitManuscript';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Profile from './pages/Profile';
-import Authors from './pages/Authors';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Delivery from './pages/Delivery';
-import Privacy from './pages/Privacy';
-import CGV from './pages/CGV';
-import FAQ from './pages/FAQ';
-import Support from './pages/Support';
-import Terms from './pages/Terms';
-import Cookies from './pages/Cookies';
 import NotFound from './pages/NotFound';
-import Settings from './pages/Settings';
-import AuthorDetail from './pages/AuthorDetail';
-import Wishlist from './pages/Wishlist';
-import Orders from './pages/Orders';
-import NewsletterConfirm from './pages/NewsletterConfirm';
-import NewsletterUnsubscribe from './pages/NewsletterUnsubscribe';
 
-// Import des pages admin
+// Lazy routes (loaded on demand)
+const Catalog = lazy(() => import('./pages/Catalog'));
+const BookDetail = lazy(() => import('./pages/BookDetail'));
+const BookReader = lazy(() => import('./pages/BookReader'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const SubmitManuscript = lazy(() => import('./pages/SubmitManuscript'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Authors = lazy(() => import('./pages/Authors'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Delivery = lazy(() => import('./pages/Delivery'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const CGV = lazy(() => import('./pages/CGV'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Support = lazy(() => import('./pages/Support'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Cookies = lazy(() => import('./pages/Cookies'));
+const Settings = lazy(() => import('./pages/Settings'));
+const AuthorDetail = lazy(() => import('./pages/AuthorDetail'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const Orders = lazy(() => import('./pages/Orders'));
+const NewsletterConfirm = lazy(() => import('./pages/NewsletterConfirm'));
+const NewsletterUnsubscribe = lazy(() => import('./pages/NewsletterUnsubscribe'));
+
+// Lazy admin routes
 import AdminLayout from './components/admin/AdminLayout';
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
-import AdminBooks from './pages/admin/AdminBooks';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminManuscripts from "./pages/admin/AdminManuscripts";
-import AdminAuthors from './pages/admin/AdminAuthors';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminNewsletter from './pages/admin/AdminNewsletter';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminContact from './pages/admin/AdminContact';
-import AdminConfig from './pages/admin/AdminConfig';
+const AdminBooks = lazy(() => import('./pages/admin/AdminBooks'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminManuscripts = lazy(() => import('./pages/admin/AdminManuscripts'));
+const AdminAuthors = lazy(() => import('./pages/admin/AdminAuthors'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminNewsletter = lazy(() => import('./pages/admin/AdminNewsletter'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminContact = lazy(() => import('./pages/admin/AdminContact'));
+const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
 
 import BottomNav from './components/BottomNav';
 import { ToastProvider } from './components/ui/ToastProvider';
@@ -104,6 +109,7 @@ function AppContent() {
       </a>
       {!isReaderPage && !isAdminRoute && <Header />}
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
+        <Suspense fallback={<RouteSuspenseFallback />}>
               <Routes>
                 {/* Routes principales */}
                 <Route path="/" element={<Home />} />
@@ -159,6 +165,7 @@ function AppContent() {
                 <Route path="/livres" element={<Navigate to="/catalog" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+        </Suspense>
       </main>
       {!isAdminRoute && !isReaderPage && <Footer />}
       {!isAdminRoute && !isReaderPage && <BottomNav />}

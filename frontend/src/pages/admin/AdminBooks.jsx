@@ -327,7 +327,7 @@ function BookForm({
             </FieldWrap>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--tn-cream-2)', border: '1px dashed var(--tn-gray-300)' }}>
               <i className="fas fa-plus" style={{ color: 'var(--tn-orange)', fontSize: 11 }} />
-              <input type="text" placeholder="Nouvelle categorie..." value={newCategoryName} onChange={e => onNewCategoryNameChange(e.target.value)} style={{ flex: 1, background: '#fff', padding: '6px 10px', border: '1px solid var(--tn-gray-200)', borderRadius: 6, fontSize: 12, outline: 0 }} />
+              <input type="text" placeholder="Nouvelle categorie..." value={newCategoryName} onChange={e => onNewCategoryNameChange(e.target.value)} style={{ flex: 1, background: 'var(--ds-white)', padding: '6px 10px', border: '1px solid var(--tn-gray-200)', borderRadius: 6, fontSize: 12, outline: 0 }} />
               <button type="button" onClick={onAddCategory} disabled={!newCategoryName.trim()} style={{ fontSize: 11, fontWeight: 600, color: 'var(--tn-orange)', background: 'none', border: 0, cursor: 'pointer' }}>Ajouter</button>
             </div>
           </div>
@@ -382,7 +382,7 @@ function BookForm({
       </AdminModalSection>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
-        <button type="button" onClick={onCancel} className="tn-btn" style={{ background: '#fff', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
+        <button type="button" onClick={onCancel} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
         <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {submitLabel}</button>
       </div>
     </form>
