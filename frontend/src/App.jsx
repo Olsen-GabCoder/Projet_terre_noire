@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import SeparatorDefs from './components/SeparatorDefs';
 import RouteSuspenseFallback from './components/RouteSuspenseFallback';
+import SectionSeparator from './components/SectionSeparator';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Eager routes (critical path — always in initial bundle)
@@ -119,6 +120,7 @@ function AppContent() {
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
         <ErrorBoundary>
         <Suspense fallback={<RouteSuspenseFallback />}>
+          <div key={location.pathname} className={location.pathname.startsWith('/admin') || location.pathname.match(/\/read$/) || location.pathname === '/checkout' ? '' : 'tn-page-transition'}>
               <Routes>
                 {/* Routes principales */}
                 <Route path="/" element={<Home />} />
@@ -181,9 +183,11 @@ function AppContent() {
                 <Route path="/erreur-serveur" element={<ServerError />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+          </div>
         </Suspense>
         </ErrorBoundary>
       </main>
+      {!isAdminRoute && !isReaderPage && <SectionSeparator direction="cream-to-dark" variant={1} />}
       {!isAdminRoute && !isReaderPage && <Footer />}
       {!isAdminRoute && !isReaderPage && <BottomNav />}
     </div>

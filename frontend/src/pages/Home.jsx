@@ -5,49 +5,10 @@ import api from '../services/api';
 import BookCard from '../components/BookCard';
 import { TnBookCover } from '../components/ui';
 import SectionSeparator from '../components/SectionSeparator';
+import useReveal from '../hooks/useReveal';
+import useParallax from '../hooks/useParallax';
+import useCountUp from '../hooks/useCountUp';
 import '../styles/Home.css';
-
-/* ── Hook : animation au scroll ── */
-function useReveal(threshold = 0.15) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  // Masquer avant le premier paint (sans JS → contenu visible par defaut)
-  useLayoutEffect(() => {
-    ref.current?.classList.add('home-reveal--hidden');
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return [ref, visible];
-}
-
-/* ── Hook : compteur anime ── */
-function useCountUp(target, duration = 1800, active = false) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!active || !target) return;
-    const num = parseInt(target, 10);
-    if (isNaN(num)) { setValue(target); return; }
-    let start = 0;
-    const step = Math.max(1, Math.floor(num / (duration / 16)));
-    const id = setInterval(() => {
-      start += step;
-      if (start >= num) { setValue(num); clearInterval(id); }
-      else setValue(start);
-    }, 16);
-    return () => clearInterval(id);
-  }, [target, duration, active]);
-  return value;
-}
 
 /* ── Hook : mot qui alterne avec effet typing ── */
 const HERO_WORDS = ['monde', 'univers', 'horizon', 'voyage', 'recit', 'reve', 'destin', 'chemin', 'avenir', 'souffle', 'eveil', 'espoir'];
@@ -179,6 +140,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [heroReady, setHeroReady] = useState(false);
+  const { ref: heroParallaxRef } = useParallax({ speed: 0.15 });
   // Explorer par genre
   const [activeGenre, setActiveGenre] = useState(0);
   const [genreBooksCache, setGenreBooksCache] = useState({});
@@ -186,12 +148,12 @@ const Home = () => {
   const genrePaused = useRef(false);
 
   // Sections reveal
-  const [featuredRef, featuredVisible] = useReveal();
-  const [genresRef, genresVisible] = useReveal();
-  const [bestRef, bestVisible] = useReveal();
-  const [newRef, newVisible] = useReveal();
-  const [authorsRef, authorsVisible] = useReveal();
-  const [statsRef, statsVisible] = useReveal(0.3);
+  const { ref: featuredRef, isVisible: featuredVisible } = useReveal();
+  const { ref: genresRef, isVisible: genresVisible } = useReveal();
+  const { ref: bestRef, isVisible: bestVisible } = useReveal();
+  const { ref: newRef, isVisible: newVisible } = useReveal();
+  const { ref: authorsRef, isVisible: authorsVisible } = useReveal();
+  const { ref: statsRef, isVisible: statsVisible } = useReveal({ threshold: 0.3 });
 
   useLayoutEffect(() => {
     setHeroReady(true);
@@ -267,9 +229,11 @@ const Home = () => {
     <div className="home-page">
       {/* ══════════ HERO ══════════ */}
       <section className="home-hero">
-        <div className="home-hero-orb home-hero-orb--1" />
-        <div className="home-hero-orb home-hero-orb--2" />
-        <div className="home-hero-grid-bg tn-motif-bg" />
+        <div ref={heroParallaxRef} className="tn-parallax">
+          <div className="home-hero-orb home-hero-orb--1" />
+          <div className="home-hero-orb home-hero-orb--2" />
+          <div className="home-hero-grid-bg tn-motif-bg" />
+        </div>
 
         <div className={`home-hero-inner ${heroReady ? 'is-ready' : ''}`}>
           <div className="home-hero-left">

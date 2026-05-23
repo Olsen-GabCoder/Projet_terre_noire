@@ -464,10 +464,9 @@ export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' })
   return (
     <div
       onClick={onClose}
+      className="tn-modal-overlay"
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(10,10,10,0.55)',
-        backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 16,
       }}
@@ -478,12 +477,11 @@ export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' })
         aria-modal="true"
         aria-label={ariaLabel}
         onClick={e => e.stopPropagation()}
+        className="tn-mist-top tn-modal-content"
         style={{
           background: 'var(--tn-cream)', borderRadius: 16,
           maxWidth: 680, width: '100%', maxHeight: '92vh',
           overflow: 'hidden', display: 'flex', flexDirection: 'column',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
-          animation: 'adm-modal-in 0.25s cubic-bezier(.2,.7,.3,1)',
         }}
       >{children}</div>
     </div>

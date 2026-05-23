@@ -10,6 +10,8 @@ import TnStars from '../components/ui/TnStars';
 import TnTextarea from '../components/ui/TnTextarea';
 import TnButton from '../components/ui/TnButton';
 import TnAlert from '../components/ui/TnAlert';
+import useParallax from '../hooks/useParallax';
+import SectionSeparator from '../components/SectionSeparator';
 import '../styles/BookDetail.css';
 
 const BookDetail = () => {
@@ -37,6 +39,7 @@ const BookDetail = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editForm, setEditForm] = useState({ rating: 5, comment: '' });
   const [expandedReplies, setExpandedReplies] = useState({});
+  const { ref: bdHeroParallaxRef } = useParallax({ speed: 0.15 });
   const [reviewsPagination, setReviewsPagination] = useState({
     count: 0,
     next: null,
@@ -289,9 +292,11 @@ const BookDetail = () => {
     <div className="bd-page">
       {/* Hero compact */}
       <section className="bd-hero">
-        <div className="bd-hero__orb bd-hero__orb--1" />
-        <div className="bd-hero__orb bd-hero__orb--2" />
-        <div className="bd-hero__grid-bg" />
+        <div ref={bdHeroParallaxRef} className="tn-parallax">
+          <div className="bd-hero__orb bd-hero__orb--1" />
+          <div className="bd-hero__orb bd-hero__orb--2" />
+          <div className="bd-hero__grid-bg" />
+        </div>
         <div className="bd-hero__inner">
           <nav className="bd-breadcrumb" aria-label="Fil d'Ariane">
             <Link to="/catalog" className="bd-breadcrumb__link">Catalogue</Link>
@@ -860,6 +865,7 @@ const BookDetail = () => {
           </div>
 
           {/* Livres similaires */}
+          {relatedBooks.length > 0 && <SectionSeparator direction="cream-to-cream" variant={1} />}
           {relatedBooks.length > 0 && (
             <section className="bd-related">
               <h2 className="bd-related__title">

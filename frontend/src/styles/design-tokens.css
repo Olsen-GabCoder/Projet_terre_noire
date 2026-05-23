@@ -1061,3 +1061,131 @@
     background: var(--ds-cream-3, #ECE7DA);
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   PAGE TRANSITIONS (Vague 6)
+   Fade + translateY on route change via location.key
+   ══════════════════════════════════════════════════════ */
+
+.tn-page-transition {
+  animation: tn-page-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes tn-page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-page-transition { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════
+   SCROLL REVEALS (Vague 6.B)
+   Generic class for useReveal hook
+   ══════════════════════════════════════════════════════ */
+
+.tn-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.tn-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ══════════════════════════════════════════════════════
+   PARALLAX (Vague 6.C)
+   GPU hint for smooth scroll parallax on decorative elements
+   ══════════════════════════════════════════════════════ */
+
+.tn-parallax {
+  will-change: transform;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-parallax { transform: none !important; will-change: auto; }
+}
+
+/* ══════════════════════════════════════════════════════
+   MIST WARM TOP (Vague 6.D)
+   Radial-gradient warm subtil en haut des surfaces
+   ══════════════════════════════════════════════════════ */
+
+.tn-mist-top { position: relative; }
+.tn-mist-top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 120px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(232,96,28,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.tn-mist-top--subtle::before { height: 80px; opacity: 0.6; }
+
+/* ══════════════════════════════════════════════════════
+   GRAIN TEXTURE (Vague 6.D)
+   SVG noise reusable (coherent BookCard V3)
+   ══════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════
+   MODAL REFINEMENT (Vague 6.G)
+   Overlay + content reusable patterns
+   ══════════════════════════════════════════════════════ */
+
+.tn-modal-overlay {
+  background: rgba(10, 10, 10, 0.5);
+  animation: tn-modal-overlay-in 0.2s ease-out;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .tn-modal-overlay {
+    background: rgba(10, 10, 10, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes tn-modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tn-modal-content {
+  box-shadow:
+    0 24px 64px -16px rgba(232, 96, 28, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  animation: tn-modal-content-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tn-modal-content-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-modal-overlay, .tn-modal-content { animation: none; }
+}
+
+.tn-grain { position: relative; }
+.tn-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}

@@ -288,6 +288,19 @@
   justify-content: space-between;
   gap: 24px;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mist warm subtle (V6.D) */
+.adm-topbar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(232,96,28,0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .adm-topbar__left {

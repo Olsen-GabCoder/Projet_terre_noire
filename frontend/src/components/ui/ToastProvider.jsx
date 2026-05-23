@@ -233,10 +233,9 @@ function ConfirmModal({ config, onResult }) {
   return (
     <div
       onClick={() => close(false)}
+      className="tn-modal-overlay"
       style={{
         position: 'fixed', inset: 0, zIndex: 10000,
-        background: 'rgba(10,10,10,0.6)',
-        backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
         opacity: overlayOpacity,
@@ -249,10 +248,11 @@ function ConfirmModal({ config, onResult }) {
         aria-modal="true"
         aria-label={title}
         onClick={e => e.stopPropagation()}
+        className="tn-mist-top"
         style={{
           background: 'var(--ds-white)', borderRadius: 20,
           maxWidth: 440, width: '100%',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06)',
+          boxShadow: '0 24px 64px -16px rgba(232,96,28,0.15), 0 8px 24px rgba(0,0,0,0.12)',
           transform: modalTransform,
           opacity: state === 'exiting' ? 0 : 1,
           transition: 'all 0.3s cubic-bezier(.2,.7,.3,1)',

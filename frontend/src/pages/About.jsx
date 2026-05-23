@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SectionSeparator from '../components/SectionSeparator';
 import '../styles/About.css';
 
 const About = () => {
@@ -85,6 +86,8 @@ const About = () => {
           </div>
         </div>
 
+        <SectionSeparator direction="cream-to-cream" variant={1} />
+
         {/* ══════════ NOS COLLECTIONS ══════════ */}
         <div className="abt-card">
           <div className="abt-section-header">
@@ -155,6 +158,8 @@ const About = () => {
             </div>
           </div>
         </div>
+
+        <SectionSeparator direction="cream-to-cream" variant={2} />
 
         {/* ══════════ NOS VALEURS ══════════ */}
         <div className="abt-card">
