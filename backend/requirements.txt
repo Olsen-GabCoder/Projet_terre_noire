@@ -12,6 +12,7 @@ reportlab
 cloudinary
 django-cloudinary-storage
 django-extensions
+requests
 # Production (Render)
 gunicorn
 whitenoise

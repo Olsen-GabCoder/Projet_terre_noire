@@ -51,19 +51,41 @@ class Payment(models.Model):
         ('CASH', 'Espèces'),
         ('VISA', 'Carte Visa'),
     ]
-    
+
+    # Mapping operateur Bamboo Pay -> provider
+    BAMBOO_OPERATOR_MAP = {
+        'moov_money': 'MOBICASH',
+        'airtel_money': 'AIRTEL',
+    }
+
     STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
         ('SUCCESS', 'Réussi'),
         ('FAILED', 'Échoué'),
-        ('PENDING', 'En attente'),
+        ('EXPIRED', 'Expiré'),
     ]
-    
+
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
-    transaction_id = models.CharField(max_length=100, unique=True)
+    transaction_id = models.CharField(max_length=128, unique=True, db_index=True,
+                                       help_text="Référence Bamboo Pay (bamboo_ref)")
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
+    phone_number = models.CharField(max_length=20, blank=True, default='')
+    bamboo_response = models.JSONField(default=dict, blank=True,
+                                        help_text="Dernière réponse brute Bamboo Pay")
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    updated_at = models.DateTimeField(auto_now=True)
+    finalized_at = models.DateTimeField(null=True, blank=True,
+                                         help_text="Date de finalisation (success/failed/expired)")
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def is_final(self):
+        """True si le statut est définitif (success/failed/expired)."""
+        return self.status in ('SUCCESS', 'FAILED', 'EXPIRED')
+
     def __str__(self):
         return f"Paiement {self.transaction_id} - {self.status}"

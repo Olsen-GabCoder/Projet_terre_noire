@@ -1,11 +1,16 @@
+import logging
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from rest_framework.throttling import UserRateThrottle
 
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse
+from django.utils import timezone
 
 from .models import Order, OrderItem, Payment
 from apps.core.invoice import generate_order_invoice_pdf
@@ -15,6 +20,9 @@ from .serializers import (
     OrderStatusUpdateSerializer,
     PaymentSerializer
 )
+from .services.bamboo_pay import get_bamboo_service, BambooPayError
+
+logger = logging.getLogger('bamboo_pay')
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -194,3 +202,190 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 pass
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# =============================================
+#  BAMBOO PAY — Paiement Mobile Money
+# =============================================
+
+class PaymentCheckStatusThrottle(UserRateThrottle):
+    rate = '12/min'
+
+
+class PaymentInitiateView(APIView):
+    """POST /api/payments/initiate/ — Initie un paiement Bamboo Pay."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('order_id')
+        operator = request.data.get('operator')  # moov_money | airtel_money
+        phone = request.data.get('phone')
+
+        # Validation
+        if not all([order_id, operator, phone]):
+            return Response(
+                {'error': 'order_id, operator et phone sont requis.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if operator not in ('moov_money', 'airtel_money'):
+            return Response(
+                {'error': "operator doit etre 'moov_money' ou 'airtel_money'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verifier la commande
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response(
+                {'error': 'Commande introuvable.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if order.status != 'PENDING':
+            return Response(
+                {'error': 'Cette commande ne peut plus etre payee.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if hasattr(order, 'payment') and order.payment.is_final:
+            return Response(
+                {'error': 'Cette commande a deja un paiement finalise.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Si paiement pending existe deja, le reutiliser
+        if hasattr(order, 'payment') and order.payment.status == 'PENDING':
+            existing = order.payment
+            return Response({
+                'bamboo_ref': existing.transaction_id,
+                'status': 'PENDING',
+                'message': 'Paiement deja initie. Verifiez votre telephone.',
+            })
+
+        # Appeler Bamboo Pay
+        try:
+            service = get_bamboo_service()
+            reference = f"TN-{order.id}"
+            payer_name = request.user.get_full_name() or request.user.username
+
+            result = service.initiate_instant_payment(
+                phone=phone,
+                amount=int(order.total_amount),
+                payer_name=payer_name,
+                reference=reference,
+                operator=operator,
+            )
+
+            # Creer le Payment en DB
+            bamboo_ref = result.get('reference_bp', reference)
+            provider = Payment.BAMBOO_OPERATOR_MAP.get(operator, 'MOBICASH')
+
+            payment = Payment.objects.create(
+                order=order,
+                transaction_id=bamboo_ref,
+                provider=provider,
+                status='PENDING',
+                amount=order.total_amount,
+                phone_number=phone,
+                bamboo_response=result,
+            )
+
+            logger.info(
+                "payment.created order=%d ref=%s provider=%s amount=%s",
+                order.id, bamboo_ref, provider, order.total_amount
+            )
+
+            return Response({
+                'bamboo_ref': bamboo_ref,
+                'merchant_ref': reference,
+                'status': 'PENDING',
+                'message': 'Paiement initie. Validez sur votre telephone.',
+            }, status=status.HTTP_202_ACCEPTED)
+
+        except BambooPayError as e:
+            logger.error("payment.initiate_failed order=%d err=%s", order.id, str(e))
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+
+class PaymentCheckStatusView(APIView):
+    """POST /api/payments/check-status/<bamboo_ref>/ — Verifie le statut."""
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [PaymentCheckStatusThrottle]
+
+    def post(self, request, bamboo_ref):
+        # Trouver le payment
+        try:
+            payment = Payment.objects.select_related('order').get(
+                transaction_id=bamboo_ref,
+                order__user=request.user
+            )
+        except Payment.DoesNotExist:
+            return Response(
+                {'error': 'Paiement introuvable.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Idempotence : si deja final, retourner sans re-appeler Bamboo
+        if payment.is_final:
+            return Response({
+                'bamboo_ref': payment.transaction_id,
+                'status': payment.status,
+                'finalized_at': payment.finalized_at,
+            })
+
+        # Appeler Bamboo Pay check-status
+        try:
+            service = get_bamboo_service()
+            result = service.check_status(bamboo_ref)
+
+            tx = result.get('transaction', {})
+            bamboo_status = tx.get('status', 'pending')
+
+            # Mapper le statut Bamboo -> statut Payment
+            status_map = {
+                'completed': 'SUCCESS',
+                'failed': 'FAILED',
+                'pending': 'PENDING',
+            }
+            new_status = status_map.get(bamboo_status, 'PENDING')
+
+            # Mettre a jour si le statut a change vers un etat final
+            if new_status != 'PENDING' and payment.status == 'PENDING':
+                with transaction.atomic():
+                    payment.status = new_status
+                    payment.bamboo_response = result
+                    payment.finalized_at = timezone.now()
+                    payment.save()
+
+                    if new_status == 'SUCCESS':
+                        payment.order.status = 'PAID'
+                        payment.order.save()
+                        # Email confirmation
+                        try:
+                            from apps.core.email import send_order_paid
+                            send_order_paid(payment.order)
+                        except Exception:
+                            pass
+
+                    logger.info(
+                        "payment.finalized ref=%s status=%s order=%d",
+                        bamboo_ref, new_status, payment.order.id
+                    )
+
+            return Response({
+                'bamboo_ref': payment.transaction_id,
+                'status': payment.status,
+                'finalized_at': payment.finalized_at,
+            })
+
+        except BambooPayError as e:
+            logger.error("payment.check_failed ref=%s err=%s", bamboo_ref, str(e))
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
