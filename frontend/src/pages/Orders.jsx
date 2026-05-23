@@ -215,18 +215,26 @@ const Orders = () => {
                         )}
                       </button>
                       {order.status === 'PENDING' && (
-                        <button
-                          type="button"
-                          className="ord-btn ord-btn--danger"
-                          onClick={() => handleCancelOrder(order.id)}
-                          disabled={cancellingId === order.id}
-                        >
-                          {cancellingId === order.id ? (
-                            <><i className="fas fa-spinner fa-spin" /> Annulation…</>
-                          ) : (
-                            <><i className="fas fa-times" /> Annuler la commande</>
-                          )}
-                        </button>
+                        <>
+                          <Link
+                            to={`/checkout?retry=${order.id}`}
+                            className="ord-btn ord-btn--primary"
+                          >
+                            <i className="fas fa-mobile-alt" /> Payer cette commande
+                          </Link>
+                          <button
+                            type="button"
+                            className="ord-btn ord-btn--danger"
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={cancellingId === order.id}
+                          >
+                            {cancellingId === order.id ? (
+                              <><i className="fas fa-spinner fa-spin" /> Annulation…</>
+                            ) : (
+                              <><i className="fas fa-times" /> Annuler la commande</>
+                            )}
+                          </button>
+                        </>
                       )}
                     </div>
                   </article>

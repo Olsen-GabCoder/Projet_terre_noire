@@ -93,6 +93,30 @@
   background: linear-gradient(to bottom, var(--color-bg-page), var(--color-gray-700) 60%, var(--color-bg-dark));
 }
 
+/* Retry banner */
+.chk-retry-banner {
+  display: flex; align-items: center; gap: 0.875rem;
+  max-width: var(--container-max); margin: 0 auto 1.25rem;
+  padding: 1rem 1.25rem;
+  background: var(--ds-white);
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+}
+.chk-retry-banner > i {
+  color: var(--color-primary); font-size: 1rem; flex-shrink: 0;
+}
+.chk-retry-banner__text {
+  display: flex; flex-direction: column; gap: 0.15rem;
+}
+.chk-retry-banner__text strong {
+  font-size: 0.875rem; color: var(--color-gray-900);
+}
+.chk-retry-banner__text span {
+  font-size: 0.8125rem; color: var(--color-gray-500);
+}
+
 /* Content */
 .chk-content {
   flex: 1;

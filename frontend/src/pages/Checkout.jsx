@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useDeliveryConfig } from '../context/DeliveryConfigContext';
@@ -9,6 +9,9 @@ import '../styles/Checkout.css';
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const retryOrderId = searchParams.get('retry');
+
   const { cartItems, appliedCoupon, clearCart, getTotalPrice, getTotalItems } = useCart();
   const { shippingFreeThreshold, shippingCost } = useDeliveryConfig();
   const { user, isAuthenticated } = useAuth();
@@ -25,6 +28,43 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('moov_money');
   const [phoneForPayment, setPhoneForPayment] = useState('');
 
+  // Retry mode state
+  const [retryOrder, setRetryOrder] = useState(null);
+  const [retryLoading, setRetryLoading] = useState(false);
+
+  // Load retry order if ?retry=N
+  useEffect(() => {
+    if (!retryOrderId || !isAuthenticated) return;
+    let cancelled = false;
+    setRetryLoading(true);
+
+    orderService.getOrderById(retryOrderId).then((order) => {
+      if (cancelled) return;
+      if (order.status !== 'PENDING') {
+        setError('Cette commande ne peut plus être payée.');
+        setRetryLoading(false);
+        return;
+      }
+      setRetryOrder(order);
+      setFormData({
+        shipping_address: order.shipping_address || '',
+        shipping_phone: order.shipping_phone || '',
+        shipping_city: order.shipping_city || '',
+      });
+      if (order.shipping_phone) {
+        const digits = order.shipping_phone.replace(/\D/g, '').slice(-8);
+        if (digits.length === 8) setPhoneForPayment(digits);
+      }
+      setRetryLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setError('Commande introuvable.');
+      setRetryLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [retryOrderId, isAuthenticated]);
+
   useEffect(() => {
     if (orderPlaced) return;
 
@@ -33,12 +73,13 @@ const Checkout = () => {
       return;
     }
 
-    if (cartItems.length === 0) {
+    // In retry mode, don't redirect if cart is empty
+    if (!retryOrderId && cartItems.length === 0) {
       navigate('/cart');
       return;
     }
 
-    if (user) {
+    if (user && !retryOrderId) {
       setFormData({
         shipping_address: user.address || '',
         shipping_phone: user.phone_number || '',
@@ -49,7 +90,7 @@ const Checkout = () => {
         if (digits.length === 8) setPhoneForPayment(digits);
       }
     }
-  }, [isAuthenticated, cartItems, user, navigate]);
+  }, [isAuthenticated, cartItems, user, navigate, retryOrderId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,18 +124,23 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      const orderData = {
-        items: cartItems.map((item) => ({
-          book_id: item.id,
-          quantity: item.quantity,
-        })),
-        shipping_address: formData.shipping_address,
-        shipping_phone: formData.shipping_phone,
-        shipping_city: formData.shipping_city,
-        ...(appliedCoupon?.code && { coupon_code: appliedCoupon.code }),
-      };
-
-      const order = await orderService.createOrder(orderData);
+      // In retry mode, reuse existing order; otherwise create new one
+      let order;
+      if (retryOrder) {
+        order = retryOrder;
+      } else {
+        const orderData = {
+          items: cartItems.map((item) => ({
+            book_id: item.id,
+            quantity: item.quantity,
+          })),
+          shipping_address: formData.shipping_address,
+          shipping_phone: formData.shipping_phone,
+          shipping_city: formData.shipping_city,
+          ...(appliedCoupon?.code && { coupon_code: appliedCoupon.code }),
+        };
+        order = await orderService.createOrder(orderData);
+      }
 
       if (isMobileMoney) {
         try {
@@ -107,8 +153,10 @@ const Checkout = () => {
           sessionStorage.setItem('current_payment_ref', result.bamboo_ref);
           sessionStorage.setItem('current_order_id', String(order.id));
 
-          setOrderPlaced(true);
-          clearCart();
+          if (!retryOrder) {
+            setOrderPlaced(true);
+            clearCart();
+          }
 
           navigate(`/checkout/paiement/${result.bamboo_ref}`, {
             state: {
@@ -127,8 +175,10 @@ const Checkout = () => {
           );
         }
       } else {
-        setOrderPlaced(true);
-        clearCart();
+        if (!retryOrder) {
+          setOrderPlaced(true);
+          clearCart();
+        }
         navigate('/order-success', {
           state: { orderId: order.id, orderData: order },
         });
@@ -145,7 +195,7 @@ const Checkout = () => {
     }
   };
 
-  if (!isAuthenticated || cartItems.length === 0) {
+  if (!isAuthenticated || (!retryOrderId && cartItems.length === 0) || retryLoading) {
     return <LoadingSpinner fullPage={true} />;
   }
 
@@ -165,6 +215,16 @@ const Checkout = () => {
       <div className="chk-hero-fade" />
 
       <form onSubmit={handleSubmit} className="chk-content">
+        {retryOrder && (
+          <div className="chk-retry-banner">
+            <i className="fas fa-redo" />
+            <div className="chk-retry-banner__text">
+              <strong>Retentative de paiement</strong>
+              <span>Commande #{retryOrder.id} — {formatPrice(retryOrder.total_amount)}</span>
+            </div>
+          </div>
+        )}
+
         <div className="chk-layout">
         <div className="chk-main">
           <div className="chk-section">
@@ -232,62 +292,78 @@ const Checkout = () => {
             <span className="chk-summary__tag">Récapitulatif</span>
             <h2>Votre commande</h2>
 
-            <div className="chk-summary-items">
-              {cartItems.map((item) => (
-                <div key={item.id} className="chk-summary-item">
-                  <img
-                    src={item.cover_image || '/images/default-book-cover.jpg'}
-                    alt={item.title}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="chk-item-info">
-                    <h4>{item.title}</h4>
-                    <p>{item.author?.full_name}</p>
-                    <span className="chk-item-qty">Qté: {item.quantity}</span>
-                  </div>
-                  <div className="chk-item-price">
-                    {item.original_price && Number(item.original_price) > Number(item.price) && (
-                      <span className="chk-item-old-price">{formatPrice(item.original_price)}</span>
-                    )}
-                    {formatPrice(item.price * item.quantity)}
-                  </div>
+            {retryOrder ? (
+              /* Retry mode: show order total only (cart is empty) */
+              <div className="chk-totals">
+                <div className="chk-total-row">
+                  <span>Commande #{retryOrder.id}</span>
+                  <span>{formatPrice(retryOrder.total_amount)}</span>
                 </div>
-              ))}
-            </div>
-
-            {(() => {
-              const subtotal = getTotalPrice();
-              const shipping = subtotal >= shippingFreeThreshold ? 0 : shippingCost;
-              const discountPercent = appliedCoupon?.discountPercent ?? 0;
-              const discountFixed = appliedCoupon?.discountAmount ?? 0;
-              const discountAmt = discountPercent > 0
-                ? (subtotal * discountPercent) / 100
-                : Math.min(discountFixed, subtotal);
-              const total = subtotal - discountAmt + shipping;
-              return (
-                <div className="chk-totals">
-                  <div className="chk-total-row">
-                    <span>Sous-total ({getTotalItems()} article{getTotalItems() > 1 ? 's' : ''})</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  {discountAmt > 0 && (
-                    <div className="chk-total-row" style={{ color: 'var(--color-success)' }}>
-                      <span>Réduction {appliedCoupon?.code && `(${appliedCoupon.code})`}</span>
-                      <span>-{formatPrice(discountAmt)}</span>
+                <div className="chk-total-row chk-total-row--final">
+                  <span>Total à payer</span>
+                  <span>{formatPrice(retryOrder.total_amount)}</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="chk-summary-items">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="chk-summary-item">
+                      <img
+                        src={item.cover_image || '/images/default-book-cover.jpg'}
+                        alt={item.title}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="chk-item-info">
+                        <h4>{item.title}</h4>
+                        <p>{item.author?.full_name}</p>
+                        <span className="chk-item-qty">Qté: {item.quantity}</span>
+                      </div>
+                      <div className="chk-item-price">
+                        {item.original_price && Number(item.original_price) > Number(item.price) && (
+                          <span className="chk-item-old-price">{formatPrice(item.original_price)}</span>
+                        )}
+                        {formatPrice(item.price * item.quantity)}
+                      </div>
                     </div>
-                  )}
-                  <div className="chk-total-row">
-                    <span>Livraison {shipping === 0 && <em style={{ color: 'var(--color-success)' }}>Gratuit</em>}</span>
-                    <span>{shipping === 0 ? 'Gratuit' : formatPrice(shipping)}</span>
-                  </div>
-                  <div className="chk-total-row chk-total-row--final">
-                    <span>Total</span>
-                    <span>{formatPrice(total)}</span>
-                  </div>
+                  ))}
                 </div>
-              );
-            })()}
+
+                {(() => {
+                  const subtotal = getTotalPrice();
+                  const shipping = subtotal >= shippingFreeThreshold ? 0 : shippingCost;
+                  const discountPercent = appliedCoupon?.discountPercent ?? 0;
+                  const discountFixed = appliedCoupon?.discountAmount ?? 0;
+                  const discountAmt = discountPercent > 0
+                    ? (subtotal * discountPercent) / 100
+                    : Math.min(discountFixed, subtotal);
+                  const total = subtotal - discountAmt + shipping;
+                  return (
+                    <div className="chk-totals">
+                      <div className="chk-total-row">
+                        <span>Sous-total ({getTotalItems()} article{getTotalItems() > 1 ? 's' : ''})</span>
+                        <span>{formatPrice(subtotal)}</span>
+                      </div>
+                      {discountAmt > 0 && (
+                        <div className="chk-total-row" style={{ color: 'var(--color-success)' }}>
+                          <span>Réduction {appliedCoupon?.code && `(${appliedCoupon.code})`}</span>
+                          <span>-{formatPrice(discountAmt)}</span>
+                        </div>
+                      )}
+                      <div className="chk-total-row">
+                        <span>Livraison {shipping === 0 && <em style={{ color: 'var(--color-success)' }}>Gratuit</em>}</span>
+                        <span>{shipping === 0 ? 'Gratuit' : formatPrice(shipping)}</span>
+                      </div>
+                      <div className="chk-total-row chk-total-row--final">
+                        <span>Total</span>
+                        <span>{formatPrice(total)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
+            )}
 
             {/* ═══ Section paiement ═══ */}
             <div className="chk-pay">
