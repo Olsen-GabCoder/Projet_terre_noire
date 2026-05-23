@@ -162,7 +162,7 @@ class BambooPayService:
         start = time.time()
 
         try:
-            response = requests.post(
+            response = requests.get(
                 f"{self.api_url}/api/check-status/{transaction_id}",
                 auth=self.auth,
                 timeout=15,
