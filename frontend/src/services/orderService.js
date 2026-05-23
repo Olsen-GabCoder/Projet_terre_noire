@@ -65,8 +65,8 @@ const orderService = {
   },
 
   // ============ PAYMENTS ============
-  
-  // Créer un paiement pour une commande
+
+  // Créer un paiement pour une commande (legacy)
   createPayment: async (paymentData) => {
     try {
       const response = await api.post('/payments/', paymentData);
@@ -86,6 +86,34 @@ const orderService = {
       console.error(`Erreur lors de la récupération du paiement ${id}:`, error);
       throw error;
     }
+  },
+
+  // ============ BAMBOO PAY ============
+
+  /**
+   * Initie un paiement mobile money via Bamboo Pay.
+   * @param {number} orderId
+   * @param {'moov_money'|'airtel_money'} operator
+   * @param {string} phone - Numéro gabonais (8 chiffres)
+   * @returns {Promise<{bamboo_ref: string, merchant_ref: string, status: string, message: string}>}
+   */
+  initiatePayment: async (orderId, operator, phone) => {
+    const response = await api.post('/payments/initiate/', {
+      order_id: orderId,
+      operator,
+      phone,
+    });
+    return response.data;
+  },
+
+  /**
+   * Vérifie le statut d'un paiement Bamboo Pay.
+   * @param {string} bambooRef - Référence Bamboo (TXN-...)
+   * @returns {Promise<{bamboo_ref: string, status: string, finalized_at?: string, message?: string}>}
+   */
+  checkPaymentStatus: async (bambooRef) => {
+    const response = await api.post(`/payments/check-status/${bambooRef}/`);
+    return response.data;
   },
 };
 

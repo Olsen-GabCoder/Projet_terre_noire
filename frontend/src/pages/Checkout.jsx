@@ -22,6 +22,8 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('moov_money');
+  const [phoneForPayment, setPhoneForPayment] = useState('');
 
   useEffect(() => {
     if (orderPlaced) return;
@@ -42,6 +44,10 @@ const Checkout = () => {
         shipping_phone: user.phone_number || '',
         shipping_city: user.city || '',
       });
+      if (user.phone_number) {
+        const digits = user.phone_number.replace(/\D/g, '').slice(-8);
+        if (digits.length === 8) setPhoneForPayment(digits);
+      }
     }
   }, [isAuthenticated, cartItems, user, navigate]);
 
@@ -60,20 +66,23 @@ const Checkout = () => {
     }).format(price) + ' FCFA';
   };
 
+  const isMobileMoney = paymentMethod === 'moov_money' || paymentMethod === 'airtel_money';
+  const phoneDigits = phoneForPayment.replace(/\D/g, '');
+  const isPhoneValid = phoneDigits.length === 8;
+  const canSubmit = !isProcessing && (!isMobileMoney || isPhoneValid);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (isMobileMoney && !isPhoneValid) {
+      setError('Veuillez saisir un numéro de téléphone valide (8 chiffres).');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      const subtotal = getTotalPrice();
-      const shipping = subtotal >= shippingFreeThreshold ? 0 : shippingCost;
-      const discountPercent = appliedCoupon?.discountPercent ?? 0;
-      const discountFixed = appliedCoupon?.discountAmount ?? 0;
-      const discountAmt = discountPercent > 0
-        ? (subtotal * discountPercent) / 100
-        : Math.min(discountFixed, subtotal);
-
       const orderData = {
         items: cartItems.map((item) => ({
           book_id: item.id,
@@ -85,17 +94,45 @@ const Checkout = () => {
         ...(appliedCoupon?.code && { coupon_code: appliedCoupon.code }),
       };
 
-      const response = await orderService.createOrder(orderData);
+      const order = await orderService.createOrder(orderData);
 
-      setOrderPlaced(true);
-      clearCart();
+      if (isMobileMoney) {
+        try {
+          const result = await orderService.initiatePayment(
+            order.id,
+            paymentMethod,
+            phoneDigits
+          );
 
-      navigate('/order-success', {
-        state: {
-          orderId: response.id,
-          orderData: response,
-        },
-      });
+          sessionStorage.setItem('current_payment_ref', result.bamboo_ref);
+          sessionStorage.setItem('current_order_id', String(order.id));
+
+          setOrderPlaced(true);
+          clearCart();
+
+          navigate(`/checkout/paiement/${result.bamboo_ref}`, {
+            state: {
+              orderId: order.id,
+              operator: paymentMethod,
+              phone: phoneDigits,
+              amount: order.total_amount,
+            },
+          });
+        } catch (payErr) {
+          console.error('initiatePayment failed:', payErr);
+          setError(
+            payErr.response?.data?.error ||
+              payErr.response?.data?.detail ||
+              'Impossible d\u2019initier le paiement. Veuillez réessayer.'
+          );
+        }
+      } else {
+        setOrderPlaced(true);
+        clearCart();
+        navigate('/order-success', {
+          state: { orderId: order.id, orderData: order },
+        });
+      }
     } catch (err) {
       console.error('Erreur lors de la création de la commande:', err);
       setError(
@@ -252,32 +289,91 @@ const Checkout = () => {
               );
             })()}
 
+            {/* ═══ Section paiement ═══ */}
+            <div className="chk-pay">
+              <span className="chk-pay__tag">Paiement</span>
+              <h3 className="chk-pay__title">Mode de paiement</h3>
+
+              <div className="chk-pay__options">
+                {[
+                  { value: 'moov_money', name: 'Moov Money', desc: 'Paiement mobile instantané', icon: 'fas fa-mobile-alt', iconClass: 'chk-pay__icon--moov', badge: 'Recommandé' },
+                  { value: 'airtel_money', name: 'Airtel Money', desc: 'Paiement mobile instantané', icon: 'fas fa-mobile-alt', iconClass: 'chk-pay__icon--airtel' },
+                  { value: 'cash', name: 'Espèces à la livraison', desc: 'Paiement en main propre', icon: 'fas fa-money-bill-wave', iconClass: 'chk-pay__icon--cash', disabled: true, badgeSoon: 'Bientôt' },
+                  { value: 'visa', name: 'Carte Visa', desc: 'Paiement par carte bancaire', icon: 'fab fa-cc-visa', iconClass: 'chk-pay__icon--visa', disabled: true, badgeSoon: 'Bientôt' },
+                ].map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`chk-pay__option${paymentMethod === opt.value ? ' chk-pay__option--selected' : ''}${opt.disabled ? ' chk-pay__option--disabled' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={opt.value}
+                      className="chk-pay__radio"
+                      checked={paymentMethod === opt.value}
+                      disabled={opt.disabled}
+                      onChange={() => setPaymentMethod(opt.value)}
+                    />
+                    <span className="chk-pay__indicator" />
+                    <span className={`chk-pay__icon ${opt.iconClass}`}>
+                      <i className={opt.icon} />
+                    </span>
+                    <span className="chk-pay__label">
+                      <span className="chk-pay__name">
+                        {opt.name}
+                        {opt.badge && <span className="chk-pay__badge">{opt.badge}</span>}
+                        {opt.badgeSoon && <span className="chk-pay__badge chk-pay__badge--soon">{opt.badgeSoon}</span>}
+                      </span>
+                      <span className="chk-pay__desc">{opt.desc}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              {isMobileMoney && (
+                <div className="chk-pay__phone">
+                  <label className="chk-pay__phone-label" htmlFor="phone_payment">
+                    Numéro de téléphone (mobile money) <span className="required">*</span>
+                  </label>
+                  <div className="chk-pay__phone-wrap">
+                    <span className="chk-pay__phone-prefix">+241</span>
+                    <input
+                      type="tel"
+                      id="phone_payment"
+                      className="chk-pay__phone-input"
+                      placeholder="07 XX XX XX"
+                      maxLength="11"
+                      value={phoneForPayment}
+                      onChange={(e) => setPhoneForPayment(e.target.value.replace(/[^\d\s]/g, ''))}
+                    />
+                  </div>
+                  <p className="chk-pay__phone-hint">
+                    {isPhoneValid
+                      ? 'Vous recevrez une demande de validation sur ce numéro.'
+                      : phoneForPayment.length > 0
+                        ? 'Le numéro doit comporter exactement 8 chiffres.'
+                        : 'Saisissez le numéro associé à votre compte mobile money.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
-              disabled={isProcessing}
+              disabled={!canSubmit}
               className="chk-btn"
             >
               {isProcessing ? (
                 <>
-                  <i className="fas fa-spinner fa-spin" /> Traitement...
+                  <i className="fas fa-spinner fa-spin" /> Traitement en cours…
                 </>
               ) : (
                 <>
-                  <span>Confirmer la Commande</span>
-                  <i className="fas fa-arrow-right"></i>
+                  <span>Confirmer et payer</span>
+                  <i className="fas fa-arrow-right" />
                 </>
               )}
             </button>
-
-            <div className="chk-payment-info">
-              <p className="chk-payment-title"><i className="fas fa-credit-card" /> Paiement après confirmation</p>
-              <div className="chk-payment-methods">
-                <span><i className="fas fa-mobile-alt" /> Mobicash</span>
-                <span><i className="fas fa-mobile-alt" /> Airtel Money</span>
-                <span><i className="fas fa-money-bill-wave" /> Espèces</span>
-                <span><i className="fab fa-cc-visa" /> Cartes Visa</span>
-              </div>
-            </div>
 
             <div className="chk-badges">
               <div className="chk-badge">
