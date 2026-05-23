@@ -23,6 +23,7 @@ const BookDetail = lazy(() => import('./pages/BookDetail'));
 const BookReader = lazy(() => import('./pages/BookReader'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+const CheckoutPayment = lazy(() => import('./pages/CheckoutPayment'));
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const SubmitManuscript = lazy(() => import('./pages/SubmitManuscript'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -105,7 +106,7 @@ function ScrollProgressBar() {
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
-  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/newsletter/');
+  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/newsletter/') || location.pathname.startsWith('/checkout/paiement/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
 
   return (
@@ -120,7 +121,7 @@ function AppContent() {
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
         <ErrorBoundary>
         <Suspense fallback={<RouteSuspenseFallback />}>
-          <div key={location.pathname} className={location.pathname.startsWith('/admin') || location.pathname.match(/\/read$/) || location.pathname === '/checkout' ? '' : 'tn-page-transition'}>
+          <div key={location.pathname} className={location.pathname.startsWith('/admin') || location.pathname.match(/\/read$/) || location.pathname.startsWith('/checkout') ? '' : 'tn-page-transition'}>
               <Routes>
                 {/* Routes principales */}
                 <Route path="/" element={<Home />} />
@@ -130,6 +131,7 @@ function AppContent() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout/paiement/:bambooRef" element={<CheckoutPayment />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/submit-manuscript" element={<SubmitManuscript />} />
                 

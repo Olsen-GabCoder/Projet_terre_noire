@@ -1,0 +1,281 @@
+/* CheckoutPayment — page polling paiement Bamboo Pay */
+@import './design-tokens.css';
+
+/* ═══ Page shell ═══ */
+.cpay-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-page);
+}
+
+/* ═══ Hero ═══ */
+.cpay-hero {
+  flex-shrink: 0;
+  background: var(--tn-black);
+  padding: 2rem 2rem 2.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cpay-hero__orb {
+  position: absolute;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,96,28,0.08) 0%, transparent 65%);
+  filter: blur(50px);
+  top: -40%; right: -10%;
+  pointer-events: none;
+}
+
+.cpay-hero__line {
+  width: 40px; height: 3px;
+  margin: 0 auto 1rem;
+  border-radius: 2px;
+  background: var(--tn-orange);
+}
+
+.cpay-hero__title {
+  font-family: var(--ds-serif);
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 700;
+  color: var(--ds-white);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.cpay-hero-fade {
+  flex-shrink: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--tn-black), var(--color-bg-page));
+}
+
+/* ═══ Body ═══ */
+.cpay-body {
+  flex: 1;
+  padding: 2rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ═══ Status icon ═══ */
+.cpay-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; margin-bottom: 1.25rem;
+}
+.cpay-icon--success { background: rgba(200,149,108,0.12); color: var(--tn-gold, #C8956C); }
+.cpay-icon--failed  { background: rgba(55,65,81,0.08); color: var(--color-gray-700); }
+.cpay-icon--expired { background: rgba(200,149,108,0.08); color: #D4AE8B; }
+
+/* ═══ Spinner wave ═══ */
+.cpay-spinner {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 4px; height: 40px; margin-bottom: 1.25rem;
+}
+.cpay-spinner__bar {
+  width: 4px; border-radius: 2px;
+  background: var(--tn-gold, #C8956C);
+  animation: cpay-wave 1.2s ease-in-out infinite;
+}
+.cpay-spinner__bar:nth-child(1) { height: 16px; animation-delay: 0s; }
+.cpay-spinner__bar:nth-child(2) { height: 28px; animation-delay: 0.15s; }
+.cpay-spinner__bar:nth-child(3) { height: 36px; animation-delay: 0.3s; }
+.cpay-spinner__bar:nth-child(4) { height: 28px; animation-delay: 0.45s; }
+.cpay-spinner__bar:nth-child(5) { height: 16px; animation-delay: 0.6s; }
+
+@keyframes cpay-wave {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
+  50%      { transform: scaleY(1);   opacity: 1; }
+}
+
+/* ═══ Tag ═══ */
+.cpay-tag {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 0.75rem; display: inline-block;
+  padding: 0.2rem 0.6rem; border-radius: 4px;
+}
+.cpay-tag--pending { background: rgba(232,96,28,0.08); color: var(--color-primary); }
+.cpay-tag--success { background: rgba(200,149,108,0.12); color: var(--tn-gold, #C8956C); }
+.cpay-tag--failed  { background: rgba(55,65,81,0.08); color: var(--color-gray-700); }
+.cpay-tag--expired { background: rgba(200,149,108,0.08); color: #D4AE8B; }
+
+/* ═══ Heading ═══ */
+.cpay-heading {
+  font-family: var(--ds-serif);
+  font-size: clamp(1.2rem, 3.5vw, 1.375rem);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+/* ═══ Description ═══ */
+.cpay-desc {
+  font-size: 0.9375rem;
+  color: var(--color-gray-600);
+  line-height: 1.65;
+  max-width: 420px;
+  margin-bottom: 1.5rem;
+}
+
+/* ═══ Info block ═══ */
+.cpay-info {
+  width: 100%; max-width: 400px;
+  background: var(--ds-white);
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.cpay-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.875rem;
+}
+.cpay-info-row + .cpay-info-row {
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.cpay-info-label { color: var(--color-gray-500); font-weight: 500; }
+.cpay-info-value {
+  color: var(--color-gray-900); font-weight: 600;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* Copy button */
+.cpay-copy {
+  background: none; border: none; cursor: pointer;
+  color: var(--color-gray-400); font-size: 0.8rem;
+  padding: 2px 4px; border-radius: 4px;
+  transition: all 0.2s;
+}
+.cpay-copy:hover { color: var(--color-primary); background: rgba(232,96,28,0.06); }
+
+/* ═══ Ref block (compact, for FAILED/EXPIRED) ═══ */
+.cpay-ref {
+  width: 100%; max-width: 400px;
+  background: var(--ds-white);
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  text-align: left;
+}
+.cpay-ref-label { font-size: 0.8125rem; color: var(--color-gray-500); }
+.cpay-ref-value {
+  font-size: 0.875rem; font-weight: 600; color: var(--color-gray-900);
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+.cpay-ref-note {
+  font-size: 0.75rem; color: var(--color-gray-500);
+  margin-bottom: 1.5rem;
+  text-align: left; width: 100%; max-width: 400px;
+}
+
+/* ═══ Timer ═══ */
+.cpay-timer {
+  font-size: 0.8125rem; color: var(--color-gray-500);
+  margin-bottom: 0.35rem;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.cpay-timer i { font-size: 0.75rem; }
+.cpay-timer-value {
+  font-weight: 600; color: var(--color-gray-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpay-expire-note {
+  font-size: 0.75rem; color: var(--color-gray-400);
+  margin-bottom: 1.5rem;
+}
+
+/* ═══ Redirect note ═══ */
+.cpay-redirect {
+  font-size: 0.8125rem; color: var(--color-gray-500);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* ═══ Causes list ═══ */
+.cpay-causes {
+  text-align: left; max-width: 400px; width: 100%;
+  margin-bottom: 1.5rem;
+}
+.cpay-causes-title {
+  font-size: 0.8125rem; font-weight: 600;
+  color: var(--color-gray-700); margin-bottom: 0.5rem;
+}
+.cpay-causes ul { list-style: none; padding: 0; }
+.cpay-causes li {
+  font-size: 0.8125rem; color: var(--color-gray-500);
+  padding: 0.25rem 0 0.25rem 1rem;
+  position: relative;
+}
+.cpay-causes li::before {
+  content: '\2022'; position: absolute; left: 0;
+  color: var(--color-gray-400);
+}
+
+/* ═══ Buttons ═══ */
+.cpay-actions {
+  display: flex; flex-direction: column;
+  gap: 0.625rem; width: 100%; max-width: 320px;
+}
+
+.cpay-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem; font-weight: 600;
+  font-family: inherit;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; text-decoration: none;
+}
+
+.cpay-btn--primary {
+  background: var(--color-primary);
+  color: var(--ds-white); border: none;
+}
+.cpay-btn--primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232,96,28,0.2);
+}
+
+.cpay-btn--ghost {
+  background: transparent;
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-200);
+}
+.cpay-btn--ghost:hover {
+  border-color: var(--color-gray-400);
+  color: var(--color-gray-800);
+}
+
+/* ═══ Responsive ═══ */
+@media (max-width: 480px) {
+  .cpay-hero { padding: 1.5rem 1.25rem 2rem; }
+  .cpay-body { padding: 1.5rem 1.25rem 2rem; }
+  .cpay-heading { font-size: 1.15rem; }
+  .cpay-desc { font-size: 0.875rem; }
+  .cpay-actions { max-width: 100%; }
+  .cpay-info { padding: 0.75rem 1rem; }
+  .cpay-ref { padding: 0.625rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpay-spinner__bar { animation: none !important; opacity: 0.6; }
+}
