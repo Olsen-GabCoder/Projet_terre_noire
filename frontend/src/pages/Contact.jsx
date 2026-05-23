@@ -31,7 +31,7 @@ const Contact = () => {
         setFormData({ name: '', email: '', subject: 'Commande', message: '' });
       } else {
         setSubmitStatus('error');
-        setErrorMessage(res.data?.message || 'Une erreur est survenue.');
+        setErrorMessage(res.data?.message || 'Une difficulté est survenue.');
       }
     } catch (err) {
       setSubmitStatus('error');
@@ -176,7 +176,7 @@ const Contact = () => {
               <TnAlert variant="success">Message envoye ! Nous vous repondrons tres bientot.</TnAlert>
             )}
             {submitStatus === 'error' && (
-              <TnAlert variant="error">{errorMessage || 'Une erreur est survenue.'}</TnAlert>
+              <TnAlert variant="error">{errorMessage || 'Une difficulté est survenue.'}</TnAlert>
             )}
           </form>
         </div>

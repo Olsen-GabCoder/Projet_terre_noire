@@ -29,7 +29,7 @@ const Orders = () => {
       const response = await orderService.getOrders({ page_size: 50 });
       setOrders(response.results || response);
     } catch (err) {
-      setError('Erreur lors du chargement de vos commandes.');
+      setError("Le chargement de vos commandes n'a pas abouti.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -42,7 +42,7 @@ const Orders = () => {
       await orderService.downloadInvoice(orderId);
     } catch (err) {
       console.error(err);
-      setError('Erreur lors du téléchargement de la facture.');
+      setError("La facture n'a pas pu être téléchargée.");
     } finally {
       setDownloadingId(null);
     }
@@ -128,10 +128,10 @@ const Orders = () => {
               <div className="ord-empty__ico">
                 <i className="fas fa-shopping-bag" />
               </div>
-              <h2>Aucune commande</h2>
-              <p>Vous n&apos;avez pas encore passé de commande.</p>
+              <h2>Aucun ouvrage n&apos;a encore quitté nos étagères pour vous</h2>
+              <p>Vos commandes apparaîtront ici dès qu&apos;une histoire prendra le chemin de votre bibliothèque.</p>
               <Link to="/catalog" className="ord-btn ord-btn--primary">
-                <i className="fas fa-book" /> Découvrir le catalogue
+                <i className="fas fa-book" /> Découvrir nos titres
               </Link>
             </div>
           ) : (

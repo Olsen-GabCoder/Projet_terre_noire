@@ -60,11 +60,11 @@ const Cart = () => {
         setCouponMsg({ ok: true, text: data.message });
       } else {
         clearCoupon();
-        setCouponMsg({ ok: false, text: data.message || 'Code promo invalide' });
+        setCouponMsg({ ok: false, text: data.message || "Ce code promo n'est pas valide" });
       }
     } catch (err) {
       clearCoupon();
-      const msg = err.response?.data?.message || 'Code promo invalide';
+      const msg = err.response?.data?.message || "Ce code promo n'est pas valide";
       setCouponMsg({ ok: false, text: msg });
     } finally {
       setApplying(false);

@@ -430,3 +430,81 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ═══════════════════════════════════════════════════
+   WAVE LOADER PREMIUM (Vague 5)
+   Vague doree animee + Playfair italique
+   ═══════════════════════════════════════════════════ */
+
+.tn-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.tn-loader__wave { overflow: visible; }
+
+.tn-loader__wave path {
+  fill: none;
+  stroke: var(--ds-gold, #C8956C);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: tn-wave-draw 1.5s ease-in-out infinite;
+}
+
+@keyframes tn-wave-draw {
+  0%   { stroke-dashoffset: 120; opacity: 0.3; }
+  50%  { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -120; opacity: 0.3; }
+}
+
+.tn-loader__text {
+  font-family: var(--ds-serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ds-gray-500, #6B6B6B);
+  letter-spacing: 0.02em;
+}
+
+/* Sizes */
+.tn-loader--sm { gap: 10px; }
+.tn-loader--sm .tn-loader__wave { width: 48px; height: 24px; }
+.tn-loader--sm .tn-loader__text { font-size: 0.8125rem; }
+
+.tn-loader--md .tn-loader__wave { width: 80px; height: 40px; }
+.tn-loader--md .tn-loader__text { font-size: 0.9375rem; }
+
+.tn-loader--lg { gap: 20px; }
+.tn-loader--lg .tn-loader__wave { width: 120px; height: 60px; }
+.tn-loader--lg .tn-loader__text { font-size: 1.0625rem; }
+
+/* Fullpage overlay */
+.tn-loader-fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tn-loader-fullpage .tn-loader__text,
+.tn-loader--on-dark .tn-loader__text {
+  color: var(--ds-cream-2, #F5F2EA);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tn-loader__wave path {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 0.7;
+  }
+}

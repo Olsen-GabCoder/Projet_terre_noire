@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import bookService from '../services/bookService';
 import LoadingSpinner from '../components/LoadingSpinner';
-import AuthorCard from '../components/AuthorCard';
+import AuthorCard, { AuthorCardSkeleton } from '../components/AuthorCard';
 import '../styles/Authors.css';
 
 const Authors = () => {
@@ -20,7 +20,7 @@ const Authors = () => {
       const data = await bookService.getAuthors();
       setAuthors(Array.isArray(data) ? data : data.results || []);
     } catch {
-      setError('Impossible de charger les auteurs.');
+      setError("Nous n'avons pas pu charger les auteurs.");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,15 @@ const Authors = () => {
     books: authors.reduce((s, a) => s + (a.books_count || 0), 0),
   }), [authors]);
 
-  if (loading) return <LoadingSpinner fullPage />;
+  if (loading) return (
+    <div className="auth-page">
+      <section className="auth-hero"><div className="auth-hero__inner"><h1 className="auth-hero__title">Nos <span>auteurs</span></h1></div></section>
+      <div className="auth-hero-fade" />
+      <div className="auth-content"><div className="auth-grid" aria-busy="true">
+        {Array.from({ length: 6 }).map((_, i) => <AuthorCardSkeleton key={i} />)}
+      </div></div>
+    </div>
+  );
 
   if (error) {
     return (

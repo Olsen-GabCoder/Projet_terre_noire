@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminAvatar, StatusBadge, GenrePill, AdminLoading, AdminError, AdminEmpty,
+  AdminActionBtn, AdminAvatar, StatusBadge, GenrePill, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection, StatusBtn,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -47,7 +47,7 @@ const AdminManuscripts = () => {
     return list;
   }, [manuscripts, filter, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des manuscrits..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={5} columns={5} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => window.location.reload()} /></div>;
 
   return (
@@ -78,7 +78,7 @@ const AdminManuscripts = () => {
           <AdminSearch placeholder="Rechercher titre, auteur, email..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
         </div>
 
-        {filtered.length === 0 && <AdminEmpty icon="fa-file-circle-question" title="Aucun manuscrit trouve" subtitle={search ? 'Essayez d\'autres termes.' : 'Aucun manuscrit ne correspond.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-file-circle-question" title="Aucun manuscrit soumis" subtitle={search ? 'Essayez d\'autres termes.' : 'Les manuscrits envoy\u00e9s par les auteurs appara\u00eetront ici, en attente de votre lecture.'} />}
 
         {/* Table */}
         {filtered.length > 0 && (

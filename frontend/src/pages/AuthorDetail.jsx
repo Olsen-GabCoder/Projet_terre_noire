@@ -117,7 +117,10 @@ const AuthorDetail = () => {
         </div>
 
         {books.length === 0 ? (
-          <p className="authd-books__empty">Aucun ouvrage disponible pour le moment.</p>
+          <div className="authd-books__empty">
+            <h3>Les œuvres de cet auteur sont encore en attente</h3>
+            <p>Cet auteur n&apos;a pas encore d&apos;ouvrage publié sur Terre Noire. Revenez bientôt — l&apos;écriture suit son cours.</p>
+          </div>
         ) : (
           <div className="authd-books__grid">
             {books.map((book) => (

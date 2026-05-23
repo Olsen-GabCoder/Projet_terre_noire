@@ -1035,3 +1035,29 @@
 @media (prefers-reduced-motion: reduce) {
   .tn-tooltip { transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════
+   SKELETON SHIMMER PATTERN (Vague 5)
+   Generic reusable class for all skeleton loaders
+   ══════════════════════════════════════════════════════ */
+
+.tn-skel-shimmer {
+  background: linear-gradient(90deg,
+    var(--ds-cream-2, #F5F2EA) 0%,
+    var(--ds-cream-3, #ECE7DA) 50%,
+    var(--ds-cream-2, #F5F2EA) 100%);
+  background-size: 200% 100%;
+  animation: tn-skel-shimmer-anim 1.5s ease infinite;
+}
+
+@keyframes tn-skel-shimmer-anim {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-skel-shimmer {
+    animation: none;
+    background: var(--ds-cream-3, #ECE7DA);
+  }
+}

@@ -579,3 +579,37 @@ export function StatusBtn({ statusKey, label, icon, isCurrent, onClick }) {
     </button>
   );
 }
+
+/* =============================================
+   TABLE SKELETON (Vague 5)
+   ============================================= */
+export function AdminTableSkeleton({ rows = 5, columns = 4 }) {
+  return (
+    <div style={{
+      background: 'var(--ds-white)', borderRadius: 14,
+      border: '1px solid var(--tn-gray-200)', overflow: 'hidden',
+    }} aria-busy="true" aria-label="Chargement">
+      <div style={{
+        display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap: 16, padding: '14px 20px',
+        background: 'var(--tn-cream-2, #F5F2EA)',
+        borderBottom: '1px solid var(--tn-gray-200)',
+      }}>
+        {Array.from({ length: columns }).map((_, i) => (
+          <div key={i} className="tn-skel-shimmer" style={{ height: 10, borderRadius: 4, width: '70%', opacity: 0.6 }} />
+        ))}
+      </div>
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} style={{
+          display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gap: 16, padding: '14px 20px',
+          borderBottom: r < rows - 1 ? '1px solid var(--tn-gray-200)' : 'none',
+        }}>
+          {Array.from({ length: columns }).map((_, c) => (
+            <div key={c} className="tn-skel-shimmer" style={{ height: 14, borderRadius: 4, width: c === 0 ? '50%' : '80%' }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}

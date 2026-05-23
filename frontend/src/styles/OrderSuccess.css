@@ -327,3 +327,52 @@
     animation: none;
   }
 }
+
+/* ── Vague 5 — Narrative additions ── */
+.os-intro {
+  font-family: var(--ds-serif, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--ds-gray-500, #6B6B6B);
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.os-quote {
+  margin: 32px auto;
+  max-width: 480px;
+  text-align: center;
+  font-family: var(--ds-serif, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  color: var(--ds-gray-700, #4F4F4F);
+  quotes: none;
+  border-left: none;
+  padding: 0 24px;
+}
+
+.os-quote::before,
+.os-quote::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  margin: 16px auto;
+  background: linear-gradient(to right, transparent, var(--ds-gold, #C8956C), transparent);
+}
+
+.os-quote cite {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--ds-sans, 'Inter', sans-serif);
+  font-style: normal;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-gold, #C8956C);
+}
+
+@media (max-width: 768px) {
+  .os-quote { font-size: 1rem; margin: 24px auto; }
+}

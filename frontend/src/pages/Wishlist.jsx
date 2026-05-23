@@ -27,8 +27,8 @@ const Wishlist = () => {
             <div className="wishlist-empty__ico">
               <i className="far fa-heart" />
             </div>
-            <h2>Aucun livre favori</h2>
-            <p>Cliquez sur le cœur sur un livre pour l&apos;ajouter à votre liste d&apos;envie.</p>
+            <h2>Pas encore de pages élues</h2>
+            <p>Les livres que vous aimez méritent un lieu à part. Cliquez sur le cœur d&apos;un ouvrage pour en faire l&apos;un de vos favoris.</p>
             <div className="wishlist-empty__actions">
               <Link to="/catalog" className="wishlist-btn wishlist-btn--primary">
                 <i className="fas fa-book" /> Explorer le catalogue

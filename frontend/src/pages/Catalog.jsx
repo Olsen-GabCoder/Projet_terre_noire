@@ -77,7 +77,7 @@ const Catalog = () => {
       const data = await bookService.getBooks(params);
       setBooks(data.results || data);
       setPagination({ count: data.count || data.length, next: data.next, previous: data.previous, currentPage: page });
-    } catch { setError('Erreur lors du chargement des livres'); }
+    } catch { setError("Le chargement des livres n'a pas abouti"); }
     finally { setLoading(false); }
   }, [filters]);
 
@@ -311,9 +311,9 @@ const Catalog = () => {
           ) : (
             <div className="cat-empty">
               <div className="cat-empty__icon"><i className="fas fa-book-open" /></div>
-              <h3 className="cat-empty__title">Aucun livre trouvé</h3>
-              <p className="cat-empty__text">Modifiez vos critères de recherche.</p>
-              <button type="button" className="tn-btn tn-btn--primary" onClick={resetFilters}><i className="fas fa-undo" /> Voir tout le catalogue</button>
+              <h3 className="cat-empty__title">Aucun ouvrage ne répond à cet appel</h3>
+              <p className="cat-empty__text">Affinons votre quête. Modifiez vos filtres pour découvrir d&apos;autres horizons littéraires.</p>
+              <button type="button" className="tn-btn tn-btn--primary" onClick={resetFilters}><i className="fas fa-undo" /> Réinitialiser les filtres</button>
             </div>
           )}
         </main>

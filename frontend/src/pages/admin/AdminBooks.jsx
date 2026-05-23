@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminCard, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminLoading, AdminError, AdminEmpty, StatusBadge,
+  AdminActionBtn, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty, StatusBadge,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -109,7 +109,7 @@ const AdminBooks = () => {
     return list;
   }, [books, filter, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement du catalogue..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={6} columns={5} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => { setError(null); fetchBooks(); fetchAuthors(); fetchCategories(); }} /></div>;
 
   return (
@@ -146,7 +146,7 @@ const AdminBooks = () => {
 
         {/* ── EMPTY ── */}
         {filtered.length === 0 && (
-          <AdminEmpty icon="fa-book" title="Aucun livre trouve" subtitle={search ? 'Essayez avec d\'autres termes.' : 'Ajoutez votre premier livre au catalogue.'} />
+          <AdminEmpty icon="fa-book" title="Aucun ouvrage dans le catalogue" subtitle={search ? 'Essayez avec d\'autres termes.' : 'Ajoutez votre premier livre pour d\u00e9marrer le catalogue Terre Noire.'} />
         )}
 
         {/* ── TABLE ── */}

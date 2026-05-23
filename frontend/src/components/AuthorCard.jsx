@@ -52,3 +52,17 @@ export default function AuthorCard({ author }) {
     </Link>
   );
 }
+
+export function AuthorCardSkeleton() {
+  return (
+    <div className="acard acard-skel" aria-hidden="true">
+      <div className="acard-skel__visual">
+        <div className="acard-skel__avatar tn-skel-shimmer" />
+      </div>
+      <div className="acard-skel__body">
+        <div className="acard-skel__name tn-skel-shimmer" />
+        <div className="acard-skel__bio tn-skel-shimmer" />
+      </div>
+    </div>
+  );
+}

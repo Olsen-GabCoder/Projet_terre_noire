@@ -126,7 +126,7 @@ const AdminCoupons = () => {
           <AdminFilterPills active={filter} onChange={setFilter} items={[['all', 'Tous', coupons.length], ['active', 'Actifs', stats.active], ['inactive', 'Inactifs', coupons.length - stats.active], ['expired', 'Expires', stats.expired]]} />
         </div>
 
-        {filtered.length === 0 && <AdminEmpty icon="fa-ticket" title="Aucun coupon" subtitle={search ? 'Aucun resultat.' : 'Creez votre premier code promo.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-ticket" title="Aucun coupon cr\u00e9\u00e9" subtitle={search ? 'Aucun resultat.' : 'Cr\u00e9ez votre premier code promotionnel pour r\u00e9compenser vos lecteurs fid\u00e8les.'} />}
 
         {filtered.length > 0 && (
           <AdminTable columns={[{ label: 'Code' }, { label: 'Reduction' }, { label: 'Destinataire' }, { label: 'Validite' }, { label: 'Utilisations', width: 100 }, { label: 'Statut', width: 90 }, { label: '', width: 90, align: 'right' }]}>

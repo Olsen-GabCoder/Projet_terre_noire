@@ -101,7 +101,7 @@ const Checkout = () => {
       setError(
         err.response?.data?.detail ||
           err.response?.data?.error ||
-          'Une erreur est survenue lors de la création de la commande'
+          'Une difficulté est survenue lors de la création de la commande'
       );
     } finally {
       setIsProcessing(false);

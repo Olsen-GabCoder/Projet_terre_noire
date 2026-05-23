@@ -150,3 +150,20 @@
   .acard__bio { -webkit-line-clamp: 2; }
   .acard__cta { min-height: 44px; padding-top: 1rem; }
 }
+
+/* ── AuthorCard Skeleton (V5.B) ── */
+.acard-skel { pointer-events: none; }
+.acard-skel__visual {
+  background: var(--ds-cream-2, #F5F2EA);
+  padding: 2.5rem 1rem 1.75rem;
+  display: flex;
+  justify-content: center;
+}
+.acard-skel__avatar { width: 88px; height: 88px; border-radius: 50%; }
+.acard-skel__body { padding: 1.125rem 1.25rem 1.5rem; }
+.acard-skel__name { height: 16px; width: 60%; border-radius: 4px; margin-bottom: 10px; }
+.acard-skel__bio { height: 12px; width: 85%; border-radius: 4px; }
+
+@media (max-width: 768px) {
+  .acard-skel__avatar { width: 72px; height: 72px; }
+}

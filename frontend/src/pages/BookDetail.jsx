@@ -69,7 +69,7 @@ const BookDetail = () => {
         setBook(bookData);
         setRelatedBooks(Array.isArray(relatedData) ? relatedData : []);
       } catch (err) {
-        setError('Livre non trouvé ou erreur de chargement');
+        setError('Livre non trouvé ou difficulté de chargement');
         console.error(err);
       } finally {
         setLoading(false);
@@ -175,7 +175,7 @@ const BookDetail = () => {
       const bookData = await bookService.getBookById(id);
       setBook(bookData);
     } catch (err) {
-      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || 'Erreur lors de la modification.');
+      setReviewError(err.response?.data?.detail || err.response?.data?.rating?.[0] || "Vos modifications n'ont pas pu être enregistrées.");
     } finally {
       setReviewSubmitting(false);
     }
@@ -203,7 +203,7 @@ const BookDetail = () => {
         setBook(bookData);
       }
     } catch (e) {
-      setReviewError('Erreur lors de la suppression.');
+      setReviewError("La suppression n'a pas abouti.");
     } finally {
       setReviewSubmitting(false);
     }
@@ -605,7 +605,8 @@ const BookDetail = () => {
                   <div className="bd-reviews-list">
                     {reviews.length === 0 ? (
                       <div className="bd-no-reviews">
-                        <p><i className="far fa-comment-dots" /> Soyez le premier à donner votre avis sur ce livre.</p>
+                        <h3 style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: '1.125rem', marginBottom: 8 }}>Aucune voix ne s&apos;est encore élevée</h3>
+                        <p><i className="far fa-comment-dots" /> Soyez le premier à partager votre lecture. Votre regard nous éclaire et guide d&apos;autres lecteurs.</p>
                       </div>
                     ) : (
                       reviews.map((r) => (

@@ -124,7 +124,7 @@ const AdminNewsletter = () => {
 
         {/* Empty */}
         {filtered.length === 0 && (
-          <AdminEmpty icon="fa-envelope" title="Aucun abonne" subtitle={search ? 'Aucun resultat pour cette recherche.' : 'Les inscriptions a la newsletter apparaitront ici.'} />
+          <AdminEmpty icon="fa-envelope" title="Aucun abonn\u00e9 pour le moment" subtitle={search ? 'Aucun resultat pour cette recherche.' : 'Les inscriptions \u00e0 la newsletter appara\u00eetront ici \u00e0 mesure que les lecteurs s\'inscriront.'} />
         )}
 
         {/* Table */}

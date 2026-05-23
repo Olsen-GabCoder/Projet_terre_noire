@@ -14,6 +14,17 @@ Vague 2 -- Composants atomiques : Terminee
 Vague 2.5 -- Composants atomiques (suite) : Terminee
 Vague 3 -- Frontend Premium V3 : Terminee
 Vague 4 -- Layouts & Pages : Terminee
+Vague 5 -- Etats & Micro-narrations : Terminee
+
+### Realisations Vague 5
+
+- LoadingSpinner refondu : wave doree SVG animee + Playfair italic, 4 variants, a11y
+- Skeletons : AuthorCardSkeleton + AdminTableSkeleton (8 pages admin), .tn-skel-shimmer
+- Empty states narratifs : 6 pages publiques + 8 pages admin (14 total)
+- ErrorBoundary global + page 500 narrative (Hampate Ba) + axios interceptor 5xx
+- Glossaire Terre Noire : artefact durable (5 categories, ~25 patterns), 31 messages migres (11 pages)
+- OrderSuccess narratif : boucle besace complete (Cart→Orders→OrderSuccess), citation signature
+- 7 commits, 33 fichiers, +625 lignes, 0 regression
 
 ### Realisations Vague 4
 
@@ -79,7 +90,7 @@ Vague 4 -- Layouts & Pages : Terminee
 - ~~Vague 2.5 : Composants atomiques (Link, TnPrice, TnStars, TnDivider)~~ Terminee
 - ~~Vague 3 : Frontend Premium (BookCard, AuthorCard, 7 Forms, Toast, Admin fix)~~ Terminee
 - ~~Vague 4 : Layouts & Pages (Header, Footer, Catalog, BookDetail, Cart, 404, Home epigraphes)~~ Terminee
-- Vague 5 : Etats et micro-narrations
+- ~~Vague 5 : Etats & Micro-narrations (Loader, Skeletons, Empty states, ErrorBoundary, Glossaire, OrderSuccess)~~ Terminee
 - Vague 6 : Animations et atmosphere
 - Vague 7 : Touches signees editoriales
 

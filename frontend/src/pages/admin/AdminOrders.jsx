@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminAvatar, StatusBadge, AdminLoading, AdminError, AdminEmpty,
+  AdminActionBtn, AdminAvatar, StatusBadge, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection, StatusBtn,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -57,7 +57,7 @@ const AdminOrders = () => {
     return list;
   }, [orders, filter, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des commandes..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={5} columns={6} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={fetchOrders} /></div>;
 
   const sel = selectedOrder;
@@ -97,7 +97,7 @@ const AdminOrders = () => {
         </div>
 
         {/* Empty */}
-        {filtered.length === 0 && <AdminEmpty icon="fa-inbox" title="Aucune commande trouvee" subtitle={search ? 'Essayez d\'autres termes.' : 'Aucune commande ne correspond a ce filtre.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-inbox" title="Aucune commande pour le moment" subtitle={search ? 'Essayez d\'autres termes.' : 'Les commandes appara\u00eetront ici d\u00e8s qu\'un client passera \u00e0 l\'acte.'} />}
 
         {/* Table */}
         {filtered.length > 0 && (

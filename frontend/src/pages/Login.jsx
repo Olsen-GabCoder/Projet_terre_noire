@@ -41,7 +41,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
-      setError("Veuillez remplir tous les champs.");
+      setError("Tous les champs sont nécessaires.");
       return;
     }
 
@@ -62,14 +62,14 @@ const Login = () => {
         if (typeof result.error === 'object' && result.error.detail) {
           setError(result.error.detail);
         } else if (result.error) {
-          setError("Email ou mot de passe incorrect.");
+          setError("Identifiants incorrects.");
         } else {
-          setError("Une erreur est survenue.");
+          setError("Une difficulté est survenue.");
         }
       }
     } catch (err) {
       console.error("Erreur Login Page:", err);
-      setError("Erreur de connexion au serveur.");
+      setError("Pas de connexion à nos archives.");
     } finally {
       setIsLoading(false);
     }

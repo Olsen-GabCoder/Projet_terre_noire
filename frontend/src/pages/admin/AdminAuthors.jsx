@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminStat, AdminCard, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminAvatar, AdminLoading, AdminError, AdminEmpty,
+  AdminActionBtn, AdminAvatar, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -65,7 +65,7 @@ const AdminAuthors = () => {
     return authors.filter(a => (a.full_name || '').toLowerCase().includes(q));
   }, [authors, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des auteurs..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={5} columns={4} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => window.location.reload()} /></div>;
 
   const formInitial = (formData.full_name || '?').charAt(0).toUpperCase();
@@ -100,7 +100,7 @@ const AdminAuthors = () => {
           </span>
         </div>
 
-        {filtered.length === 0 && <AdminEmpty icon="fa-feather" title="Aucun auteur trouve" subtitle={search ? 'Essayez un autre nom.' : 'Commencez par ajouter un auteur.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-feather" title="Aucun auteur enregistr\u00e9" subtitle={search ? 'Essayez un autre nom.' : 'Ajoutez les auteurs avant de publier leurs \u0153uvres.'} />}
 
         {filtered.length > 0 && (
           <AdminTable columns={[

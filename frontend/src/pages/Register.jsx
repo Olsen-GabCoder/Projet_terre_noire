@@ -129,12 +129,12 @@ const Register = () => {
           setFieldErrors(apiErrors);
           setError('Veuillez corriger les erreurs');
         } else {
-          setError(result.error || "Erreur lors de l'inscription");
+          setError(result.error || "L'inscription n'a pas abouti");
         }
       }
     } catch (err) {
       console.error('Erreur inscription:', err);
-      setError('Erreur de connexion au serveur.');
+      setError('Pas de connexion à nos archives.');
     } finally {
       setIsLoading(false);
     }

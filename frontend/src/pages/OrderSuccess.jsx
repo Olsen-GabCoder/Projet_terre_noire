@@ -48,9 +48,9 @@ const OrderSuccess = () => {
             <i className="fas fa-check-circle" />
           </div>
           <div className="os-hero__line" />
-          <h1 className="os-hero__title">Commande confirmée</h1>
+          <h1 className="os-hero__title">Votre commande a trouvé son chemin</h1>
           <p className="os-hero__sub">
-            Votre commande <strong>#{orderId}</strong> a été créée avec succès.
+            Merci pour votre confiance. Votre besace s&apos;apprête à recevoir ses compagnons — nous préparons votre commande <strong>#{orderId}</strong> avec soin.
           </p>
         </div>
       </section>
@@ -58,6 +58,8 @@ const OrderSuccess = () => {
 
       <div className="os-content">
         <div className="os-card">
+
+        <p className="os-intro">Voici le détail de votre commande, conservé dans nos archives.</p>
 
         <div className="os-info">
           <div className="os-info-row">
@@ -95,16 +97,16 @@ const OrderSuccess = () => {
         </div>
 
         <div className="os-steps">
-          <h2><i className="fas fa-list-check" /> Prochaines étapes</h2>
+          <h2><i className="fas fa-list-check" /> Et maintenant ?</h2>
           <ol>
             <li>
-              <strong>Paiement :</strong> Vous recevrez les instructions selon votre moyen de paiement (Mobicash, Airtel Money, espèces ou carte Visa)
+              <strong>Nous préparons votre commande</strong> — vous recevrez les instructions de paiement (Mobicash, Airtel Money, espèces ou carte Visa)
             </li>
             <li>
-              <strong>Confirmation :</strong> Une fois le paiement effectué, vous recevrez une confirmation
+              <strong>Votre commande prend la route</strong> — une fois le paiement confirmé, nous expédions sous 5-10 jours ouvrés
             </li>
             <li>
-              <strong>Livraison :</strong> Votre commande sera livrée sous 5-10 jours ouvrés
+              <strong>Vos livres rejoignent votre bibliothèque</strong> — livraison à l&apos;adresse indiquée
             </li>
           </ol>
         </div>
@@ -119,10 +121,21 @@ const OrderSuccess = () => {
           </div>
         </div>
 
+        <blockquote className="os-quote">
+          « Un livre offert ou choisi est un voyage qui commence. »
+          <cite>— Terre Noire Éditions</cite>
+        </blockquote>
+
         <div className="os-actions">
+          <Link to="/catalog" className="os-btn os-btn--primary">
+            <i className="fas fa-book" /> Découvrir d&apos;autres ouvrages
+          </Link>
+          <Link to="/orders" className="os-btn os-btn--primary">
+            <i className="fas fa-list" /> Voir mes commandes
+          </Link>
           <button
             type="button"
-            className="os-btn os-btn--primary"
+            className="os-btn os-btn--outline"
             onClick={handleDownloadInvoice}
             disabled={downloading}
           >
@@ -132,12 +145,6 @@ const OrderSuccess = () => {
               <><i className="fas fa-file-pdf" /> Télécharger la facture</>
             )}
           </button>
-          <Link to="/orders" className="os-btn os-btn--primary">
-            <i className="fas fa-list" /> Voir mes commandes
-          </Link>
-          <Link to="/catalog" className="os-btn os-btn--outline">
-            <i className="fas fa-book" /> Continuer mes achats
-          </Link>
         </div>
 
         <div className="os-support">

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminLoading, AdminError, AdminEmpty, StatusBadge,
+  AdminActionBtn, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty, StatusBadge,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -64,7 +64,7 @@ const AdminContact = () => {
     return list;
   }, [messages, filter, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des messages..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={5} columns={5} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={fetchMessages} /></div>;
 
   return (
@@ -93,7 +93,7 @@ const AdminContact = () => {
           ]} />
         </div>
 
-        {filtered.length === 0 && <AdminEmpty icon="fa-envelope" title="Aucun message" subtitle={search ? 'Aucun resultat.' : 'Les messages de contact apparaitront ici.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-envelope" title="Aucun message re\u00e7u" subtitle={search ? 'Aucun resultat.' : 'Les messages envoy\u00e9s via le formulaire de contact appara\u00eetront ici.'} />}
 
         {filtered.length > 0 && (
           <AdminTable columns={[{ label: '', width: 30 }, { label: 'Expediteur' }, { label: 'Sujet', width: 120 }, { label: 'Apercu' }, { label: 'Date', width: 150 }, { label: '', width: 90, align: 'right' }]}>

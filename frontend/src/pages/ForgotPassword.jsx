@@ -15,7 +15,7 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Veuillez saisir votre adresse email.');
+      setError('Indiquez votre adresse email.');
       return;
     }
     setIsLoading(true);

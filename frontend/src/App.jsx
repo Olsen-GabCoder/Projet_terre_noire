@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import SeparatorDefs from './components/SeparatorDefs';
 import RouteSuspenseFallback from './components/RouteSuspenseFallback';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Eager routes (critical path — always in initial bundle)
 import Home from './pages/Home';
@@ -37,6 +38,7 @@ const Support = lazy(() => import('./pages/Support'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Cookies = lazy(() => import('./pages/Cookies'));
 const Settings = lazy(() => import('./pages/Settings'));
+const ServerError = lazy(() => import('./pages/ServerError'));
 const AuthorDetail = lazy(() => import('./pages/AuthorDetail'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Orders = lazy(() => import('./pages/Orders'));
@@ -115,6 +117,7 @@ function AppContent() {
       </a>
       {!isReaderPage && !isAdminRoute && <Header />}
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
+        <ErrorBoundary>
         <Suspense fallback={<RouteSuspenseFallback />}>
               <Routes>
                 {/* Routes principales */}
@@ -175,9 +178,11 @@ function AppContent() {
                 {/* Redirections et 404 */}
                 <Route path="/catalogue" element={<Navigate to="/catalog" replace />} />
                 <Route path="/livres" element={<Navigate to="/catalog" replace />} />
+                <Route path="/erreur-serveur" element={<ServerError />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
         </Suspense>
+        </ErrorBoundary>
       </main>
       {!isAdminRoute && !isReaderPage && <Footer />}
       {!isAdminRoute && !isReaderPage && <BottomNav />}

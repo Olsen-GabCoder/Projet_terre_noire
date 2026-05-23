@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
   AdminStat, AdminFilterPills, AdminSearch, AdminTable, AdminRow, AdminCell,
-  AdminActionBtn, AdminAvatar, AdminLoading, AdminError, AdminEmpty,
+  AdminActionBtn, AdminAvatar, AdminLoading, AdminTableSkeleton, AdminError, AdminEmpty,
   AdminModalOverlay, AdminModalHeader, AdminModalBody, AdminModalSection,
 } from '../../components/admin/AdminPrimitives';
 import { useToast } from '../../components/ui/ToastProvider';
@@ -60,7 +60,7 @@ const AdminUsers = () => {
     return list;
   }, [users, filter, search]);
 
-  if (loading) return <div className="adm-page-body"><AdminLoading label="Chargement des utilisateurs..." /></div>;
+  if (loading) return <div className="adm-page-body"><AdminTableSkeleton rows={5} columns={5} /></div>;
   if (error) return <div className="adm-page-body"><AdminError message={error} onRetry={() => window.location.reload()} /></div>;
 
   return (
@@ -91,7 +91,7 @@ const AdminUsers = () => {
           <AdminSearch placeholder="Rechercher username, email, nom..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
         </div>
 
-        {filtered.length === 0 && <AdminEmpty icon="fa-user-slash" title="Aucun utilisateur trouve" subtitle={search ? 'Essayez d\'autres termes.' : 'Aucun utilisateur ne correspond.'} />}
+        {filtered.length === 0 && <AdminEmpty icon="fa-user-slash" title="Aucun utilisateur enregistr\u00e9" subtitle={search ? 'Essayez d\'autres termes.' : 'Les comptes cr\u00e9\u00e9s sur la plateforme appara\u00eetront ici.'} />}
 
         {/* Table */}
         {filtered.length > 0 && (
