@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import manuscriptService from '../services/manuscriptService';
+import TnInput from '../components/ui/TnInput';
+import TnSelect from '../components/ui/TnSelect';
+import TnTextarea from '../components/ui/TnTextarea';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
+import TnCheckbox from '../components/ui/TnCheckbox';
 import '../styles/SubmitManuscript.css';
 
 const GENRE_OPTIONS = [
@@ -341,240 +347,131 @@ const SubmitManuscript = () => {
               </div>
 
               {error && (
-                <div className="error-message">
-                  <div className="error-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  </div>
-                  <div className="error-content">
-                    <span className="error-text">{error}</span>
-                  </div>
-                </div>
+                <TnAlert variant="error">{error}</TnAlert>
               )}
 
               <div className="form-grid">
-                {/* Titre du Manuscrit */}
-                <div className="form-group">
-                  <label htmlFor="title" className="form-label">
-                    <span className="label-text">Titre du Manuscrit</span>
-                    <span className="required">*</span>
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      placeholder="Ex: Les Aventures de..."
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  <div className="field-hint">
-                    Le titre doit être clair et accrocheur
-                  </div>
-                </div>
+                <TnInput
+                  label="Titre du Manuscrit"
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Ex: Les Aventures de..."
+                  required
+                  error={fieldErrors.title}
+                  helper="Le titre doit être clair et accrocheur"
+                  leftIcon={<i className="fas fa-book" />}
+                />
 
-                {/* Nom Complet */}
-                <div className="form-group">
-                  <label htmlFor="author_name" className="form-label">
-                    <span className="label-text">Votre Nom Complet</span>
-                    <span className="required">*</span>
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="author_name"
-                      name="author_name"
-                      value={formData.author_name}
-                      onChange={handleChange}
-                      placeholder="Prénom Nom"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                </div>
+                <TnInput
+                  label="Votre Nom Complet"
+                  type="text"
+                  name="author_name"
+                  value={formData.author_name}
+                  onChange={handleChange}
+                  placeholder="Prénom Nom"
+                  required
+                  error={fieldErrors.author_name}
+                  leftIcon={<i className="fas fa-user" />}
+                />
 
-                {/* Pseudonyme */}
-                <div className="form-group">
-                  <label htmlFor="pen_name" className="form-label">
-                    <span className="label-text">Pseudonyme / Nom de plume</span>
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="pen_name"
-                      name="pen_name"
-                      value={formData.pen_name}
-                      onChange={handleChange}
-                      placeholder="Optionnel"
-                      className="form-input"
-                    />
-                  </div>
-                </div>
+                <TnInput
+                  label="Pseudonyme / Nom de plume"
+                  type="text"
+                  name="pen_name"
+                  value={formData.pen_name}
+                  onChange={handleChange}
+                  placeholder="Optionnel"
+                  helper="Optionnel"
+                  error={fieldErrors.pen_name}
+                  leftIcon={<i className="fas fa-user-pen" />}
+                />
 
-                {/* Email */}
-                <div className="form-group">
-                  <label htmlFor="email" className="form-label">
-                    <span className="label-text">Email</span>
-                    <span className="required">*</span>
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    </span>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="votre@email.com"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  <div className="field-hint">
-                    Nous communiquerons par email
-                  </div>
-                </div>
+                <TnInput
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="votre@email.com"
+                  required
+                  error={fieldErrors.email}
+                  helper="Nous communiquerons par email"
+                  leftIcon={<i className="fas fa-envelope" />}
+                />
 
-                {/* Téléphone */}
-                <div className="form-group">
-                  <label htmlFor="phone_number" className="form-label">
-                    <span className="label-text">Téléphone</span>
-                    <span className="required">*</span>
-                  </label>
-                  <div className={`input-group ${fieldErrors.phone_number ? 'input-group--error' : ''}`}>
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </span>
-                    <input
-                      type="tel"
-                      id="phone_number"
-                      name="phone_number"
-                      value={formData.phone_number}
-                      onChange={handleChange}
-                      placeholder="+241 XX XX XX XX"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  {fieldErrors.phone_number && <span className="field-error">{fieldErrors.phone_number}</span>}
-                </div>
+                <TnInput
+                  label="Téléphone"
+                  type="tel"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  placeholder="+241 XX XX XX XX"
+                  required
+                  error={fieldErrors.phone_number}
+                  leftIcon={<i className="fas fa-phone" />}
+                />
 
-                {/* Pays */}
-                <div className="form-group">
-                  <label htmlFor="country" className="form-label">
-                    <span className="label-text">Pays / Nationalité</span>
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group__icon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="country"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
-                      placeholder="Ex: Gabon, Cameroun..."
-                      className="form-input"
-                    />
-                  </div>
-                </div>
+                <TnInput
+                  label="Pays / Nationalité"
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  placeholder="Ex: Gabon, Cameroun..."
+                  error={fieldErrors.country}
+                  leftIcon={<i className="fas fa-globe" />}
+                />
 
-                {/* Genre, Langue, Nombre de pages */}
                 <div className="form-group full-width form-row-3">
-                  <div className="form-group">
-                    <label htmlFor="genre" className="form-label">
-                      <span className="label-text">Genre littéraire</span>
-                      <span className="required">*</span>
-                    </label>
-                    <div className="input-group input-group--select">
-                      <span className="input-group__icon" aria-hidden>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></svg>
-                      </span>
-                      <select id="genre" name="genre" value={formData.genre} onChange={handleChange} className="form-input" required>
-                        {GENRE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="language" className="form-label">
-                      <span className="label-text">Langue du manuscrit</span>
-                      <span className="required">*</span>
-                    </label>
-                    <div className="input-group input-group--select">
-                      <span className="input-group__icon" aria-hidden>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                      </span>
-                      <select id="language" name="language" value={formData.language} onChange={handleChange} className="form-input" required>
-                        {LANGUAGE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="page_count" className="form-label">
-                      <span className="label-text">Nombre de pages</span>
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group__icon" aria-hidden>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                      </span>
-                      <input
-                        type="number"
-                        id="page_count"
-                        name="page_count"
-                        value={formData.page_count}
-                        onChange={handleChange}
-                        placeholder="Ex: 250"
-                        className="form-input"
-                        min="1"
-                        max="10000"
-                      />
-                    </div>
-                  </div>
+                  <TnSelect
+                    label="Genre littéraire"
+                    name="genre"
+                    required
+                    value={formData.genre}
+                    onChange={handleChange}
+                    leftIcon={<i className="fas fa-book-open" />}
+                    options={GENRE_OPTIONS}
+                  />
+                  <TnSelect
+                    label="Langue du manuscrit"
+                    name="language"
+                    required
+                    value={formData.language}
+                    onChange={handleChange}
+                    leftIcon={<i className="fas fa-language" />}
+                    options={LANGUAGE_OPTIONS}
+                  />
+                  <TnInput
+                    label="Nombre de pages"
+                    type="number"
+                    name="page_count"
+                    value={formData.page_count}
+                    onChange={handleChange}
+                    placeholder="Ex: 250"
+                    min="1"
+                    max="10000"
+                    leftIcon={<i className="fas fa-file-lines" />}
+                  />
                 </div>
               </div>
 
               {/* Description */}
               <div className="form-group full-width">
-                <label htmlFor="description" className="form-label">
-                  <span className="label-text">Description du Manuscrit</span>
-                  <span className="required">*</span>
-                </label>
-                <div className={`input-group input-group--textarea ${fieldErrors.description ? 'input-group--error' : ''}`}>
-                  <span className="input-group__icon input-group__icon--top" aria-hidden>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  </span>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Résumé, thématique, public cible..."
-                    className="form-textarea"
-                    rows="5"
-                    minLength={50}
-                    required
-                  />
-                </div>
-                <div className="field-hint">
-                  {fieldErrors.description && <span className="field-error">{fieldErrors.description}</span>}
-                  {!fieldErrors.description && (
-                    <>{descWordCount} mot{descWordCount !== 1 ? 's' : ''} — minimum 50 caractères (200-500 mots recommandés)</>
-                  )}
-                </div>
+                <TnTextarea
+                  label="Description du Manuscrit"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Résumé, thématique, public cible..."
+                  rows={5}
+                  minLength={50}
+                  required
+                  error={fieldErrors.description}
+                  leftIcon={<i className="fas fa-align-left" />}
+                  helper={!fieldErrors.description ? `${descWordCount} mot${descWordCount !== 1 ? 's' : ''} — minimum 50 caractères (200-500 mots recommandés)` : undefined}
+                />
               </div>
 
               {/* File Upload */}
@@ -640,50 +537,41 @@ const SubmitManuscript = () => {
 
               {/* Acceptation des conditions */}
               <div className="form-group full-width form-terms">
-                <label className="terms-checkbox">
-                  <input
-                    type="checkbox"
-                    name="terms_accepted"
-                    checked={formData.terms_accepted}
-                    onChange={handleChange}
-                    required
-                  />
-                  <span className="terms-checkbox__box" />
-                  <span className="terms-checkbox__text">
-                    J'accepte les <Link to="/privacy" className="privacy-link" target="_blank" rel="noopener noreferrer">conditions de soumission</Link> et la politique de confidentialité de Terre Noire Éditions.
-                  </span>
-                </label>
+                <TnCheckbox
+                  checked={formData.terms_accepted}
+                  onChange={(checked) => setFormData(prev => ({ ...prev, terms_accepted: checked }))}
+                  required
+                  disabled={isSubmitting}
+                  label={<>
+                    J'accepte les{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ds-orange)' }}>conditions de soumission</a>
+                    {' '}et la politique de confidentialité de Terre Noire Éditions.
+                  </>}
+                />
               </div>
 
               {/* Form Actions */}
               <div className="form-actions">
-                <button
+                <TnButton
                   type="submit"
+                  variant="primary"
+                  block
+                  loading={isSubmitting}
                   disabled={isSubmitting || !file || !formData.terms_accepted}
-                  className="submit-btn"
+                  leftIcon={<i className="fas fa-paper-plane" />}
                 >
-                  <span className="btn-icon">
-                    {isSubmitting ? (
-                      <span className="btn-spinner" />
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    )}
-                  </span>
-                  <span className="btn-text">
-                    {isSubmitting ? 'Envoi en cours...' : 'Soumettre le Manuscrit'}
-                  </span>
-                </button>
+                  {isSubmitting ? 'Envoi en cours...' : 'Soumettre le Manuscrit'}
+                </TnButton>
 
-                <button
+                <TnButton
                   type="button"
+                  variant="outline"
+                  block
                   onClick={() => navigate(-1)}
-                  className="cancel-btn"
+                  leftIcon={<i className="fas fa-arrow-left" />}
                 >
-                  <span className="btn-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                  </span>
-                  <span className="btn-text">Retour</span>
-                </button>
+                  Retour
+                </TnButton>
               </div>
 
               {/* Form Note */}

@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { contactAPI, handleApiError } from '../services/api';
+import TnInput from '../components/ui/TnInput';
+import TnSelect from '../components/ui/TnSelect';
+import TnTextarea from '../components/ui/TnTextarea';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
 import '../styles/Contact.css';
 
 const Contact = () => {
@@ -108,61 +113,70 @@ const Contact = () => {
 
           <form onSubmit={handleSubmit} className="ct-form">
             <div className="ct-form__row">
-              <div className="ct-form__group">
-                <label htmlFor="ct-name">Nom complet <span>*</span></label>
-                <div className="ct-input-wrap">
-                  <i className="fas fa-user" />
-                  <input id="ct-name" type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Votre nom" required />
-                </div>
-              </div>
-              <div className="ct-form__group">
-                <label htmlFor="ct-email">Email <span>*</span></label>
-                <div className="ct-input-wrap">
-                  <i className="fas fa-envelope" />
-                  <input id="ct-email" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="votre@email.com" required />
-                </div>
-              </div>
+              <TnInput
+                label="Nom complet"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Votre nom"
+                required
+                leftIcon={<i className="fas fa-user" />}
+              />
+              <TnInput
+                label="Email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="votre@email.com"
+                required
+                leftIcon={<i className="fas fa-envelope" />}
+              />
             </div>
 
-            <div className="ct-form__group">
-              <label htmlFor="ct-subject">Sujet <span>*</span></label>
-              <div className="ct-input-wrap ct-input-wrap--select">
-                <i className="fas fa-tag" />
-                <select id="ct-subject" name="subject" value={formData.subject} onChange={handleChange}>
-                  <option value="Commande">Question commande</option>
-                  <option value="Manuscrit">Soumission manuscrit</option>
-                  <option value="Partenariat">Partenariat</option>
-                  <option value="Autre">Autre</option>
-                </select>
-                <i className="fas fa-chevron-down ct-select-arrow" />
-              </div>
-            </div>
+            <TnSelect
+              label="Sujet"
+              name="subject"
+              required
+              value={formData.subject}
+              onChange={handleChange}
+              leftIcon={<i className="fas fa-tag" />}
+              options={[
+                { value: 'Commande', label: 'Question commande' },
+                { value: 'Manuscrit', label: 'Soumission manuscrit' },
+                { value: 'Partenariat', label: 'Partenariat' },
+                { value: 'Autre', label: 'Autre' },
+              ]}
+            />
 
-            <div className="ct-form__group">
-              <label htmlFor="ct-message">Message <span>*</span></label>
-              <div className="ct-input-wrap ct-input-wrap--textarea">
-                <i className="fas fa-pen ct-icon-top" />
-                <textarea id="ct-message" name="message" rows="5" value={formData.message} onChange={handleChange} placeholder="Decrivez votre demande en detail..." required />
-              </div>
-            </div>
+            <TnTextarea
+              label="Message"
+              name="message"
+              rows={5}
+              required
+              value={formData.message}
+              onChange={handleChange}
+              placeholder="Decrivez votre demande en detail..."
+              leftIcon={<i className="fas fa-pen" />}
+            />
 
-            <button type="submit" className="ct-submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <><i className="fas fa-spinner fa-spin" /> Envoi en cours...</>
-              ) : (
-                <><i className="fas fa-paper-plane" /> Envoyer le message</>
-              )}
-            </button>
+            <TnButton
+              type="submit"
+              variant="primary"
+              block
+              loading={isSubmitting}
+              disabled={isSubmitting}
+              leftIcon={<i className="fas fa-paper-plane" />}
+            >
+              {isSubmitting ? 'Envoi en cours...' : 'Envoyer le message'}
+            </TnButton>
 
             {submitStatus === 'success' && (
-              <div className="ct-alert ct-alert--success">
-                <i className="fas fa-check-circle" /> Message envoye ! Nous vous repondrons tres bientot.
-              </div>
+              <TnAlert variant="success">Message envoye ! Nous vous repondrons tres bientot.</TnAlert>
             )}
             {submitStatus === 'error' && (
-              <div className="ct-alert ct-alert--error">
-                <i className="fas fa-exclamation-circle" /> {errorMessage || 'Une erreur est survenue.'}
-              </div>
+              <TnAlert variant="error">{errorMessage || 'Une erreur est survenue.'}</TnAlert>
             )}
           </form>
         </div>

@@ -18,12 +18,13 @@ React wrappers for the elevated `.tn-input` CSS classes (Vague 2 P2.3).
 | helper | string | — | Helper text (hidden when error shown) |
 | leftIcon | ReactNode | — | Icon positioned left |
 | rightIcon | ReactNode | — | Icon positioned right |
+| showToggle | boolean | `false` | Eye toggle for password visibility (type="password" only) |
 
 All other props are spread to the native `<input>`.
 
 ## TnTextarea API
 
-Same as TnInput plus:
+Same as TnInput plus `leftIcon` (top-aligned for multi-line) plus:
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
@@ -37,7 +38,7 @@ Same as TnInput plus:
 | options | array | `[]` | `[{ value, label }]` |
 | placeholder | string | — | First disabled option text |
 
-Same label/error/helper/size/variant props as TnInput.
+Same label/error/helper/size/variant/leftIcon props as TnInput.
 
 ## Examples
 
@@ -49,6 +50,14 @@ Same label/error/helper/size/variant props as TnInput.
   required
   error={errors.email}
   leftIcon={<i className="fas fa-envelope" />}
+/>
+
+// Password with toggle
+<TnInput
+  label="Mot de passe"
+  type="password"
+  showToggle
+  placeholder="********"
 />
 
 <TnTextarea

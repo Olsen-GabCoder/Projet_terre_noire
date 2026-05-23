@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { authAPI, handleApiError } from '../services/api';
+import TnInput from '../components/ui/TnInput';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
+import TnLink from '../components/ui/TnLink';
 import '../styles/Login.css';
 
 const ForgotPassword = () => {
@@ -68,61 +71,42 @@ const ForgotPassword = () => {
               </span>
             </div>
             {error && (
-              <div className="login-alert login-alert-error">
-                <i className="fas fa-exclamation-circle" />
-                <span>{error}</span>
-              </div>
+              <TnAlert variant="error">{error}</TnAlert>
             )}
             {message && (
-              <div className="login-alert login-alert-success">
-                <i className="fas fa-check-circle" />
-                <span>{message}</span>
-              </div>
+              <TnAlert variant="success">{message}</TnAlert>
             )}
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="login-field">
-                <label htmlFor="email">Adresse email</label>
-                <div className="login-input-wrap">
-                  <i className="fas fa-envelope login-input-ico" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    className="login-input"
-                    placeholder="votre@email.com"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="login-btn login-btn-submit"
+              <TnInput
+                label="Adresse email"
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                placeholder="votre@email.com"
+                required
                 disabled={isLoading}
+                leftIcon={<i className="fas fa-envelope" />}
+              />
+
+              <TnButton
+                type="submit"
+                variant="primary"
+                block
+                loading={isLoading}
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-paper-plane" />}
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" />
-                    Envoi en cours...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane" />
-                    Envoyer le lien
-                  </>
-                )}
-              </button>
+                {isLoading ? 'Envoi en cours...' : 'Envoyer le lien'}
+              </TnButton>
             </form>
 
             <div className="login-footer">
               <p>
-                <Link to="/login" className="login-link">
-                  <i className="fas fa-arrow-left" /> Retour à la connexion
-                </Link>
+                <TnLink to="/login" variant="strong" leftIcon={<i className="fas fa-arrow-left" />}>
+                  Retour à la connexion
+                </TnLink>
               </p>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { TnPrice, TnStars, TnBookCover } from './ui';
+import TnBadge from './ui/TnBadge';
+import TnButton from './ui/TnButton';
 import '../styles/BookCard.css';
 
 const BookCard = ({ book, featured = false }) => {
@@ -33,6 +35,7 @@ const BookCard = ({ book, featured = false }) => {
   const oos = !book.available;
   const hasCoverImage = book.cover_image && !imageError;
   const isNew = book.created_at && (Date.now() - new Date(book.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000;
+  const isValidIsbn = book.reference && /^(\d{10}|\d{13})$/.test(String(book.reference).replace(/[-\s]/g, ''));
 
   return (
     <Link
@@ -59,16 +62,18 @@ const BookCard = ({ book, featured = false }) => {
           <TnBookCover book={book} />
         )}
 
-        {/* Promo badge */}
+        {/* Promo badge (V2 TnBadge) */}
         {book.has_discount && book.discount_percentage && (
-          <span className="tn-book-card__badge tn-book-card__badge--promo">
-            -{book.discount_percentage}%
-          </span>
+          <div className="tn-book-card__badge-slot">
+            <TnBadge variant="promo" pop>-{book.discount_percentage}%</TnBadge>
+          </div>
         )}
 
-        {/* New badge (if no promo, added < 30 days) */}
+        {/* New badge (V2 TnBadge) */}
         {isNew && !book.has_discount && (
-          <span className="tn-book-card__badge tn-book-card__badge--new">Nouveau</span>
+          <div className="tn-book-card__badge-slot">
+            <TnBadge variant="new" pop>Nouveau</TnBadge>
+          </div>
         )}
 
         {/* Wishlist */}
@@ -108,29 +113,34 @@ const BookCard = ({ book, featured = false }) => {
           </p>
         )}
 
-        {/* Rating + ref */}
-        <div className="tn-book-card__rating-row">
-          {rating > 0 && <TnStars value={rating} count={book.rating_count} />}
-          {book.reference && <span className="tn-book-card__ref">{book.reference}</span>}
-        </div>
+        {/* Ref/ISBN — own line */}
+        {isValidIsbn && <p className="tn-book-card__ref">{book.reference}</p>}
+
+        {/* Rating */}
+        {rating > 0 && (
+          <div className="tn-book-card__rating-row">
+            <TnStars value={rating} count={book.rating_count} />
+          </div>
+        )}
 
         {/* Price + action */}
         <div className="tn-book-card__footer">
           <TnPrice amount={price} oldAmount={oldPrice} size="sm" />
           {oos ? (
-            <button className="tn-btn tn-btn--sm" disabled>Indisponible</button>
+            <TnButton size="sm" disabled>Indisponible</TnButton>
           ) : inCart ? (
-            <button className="tn-btn tn-btn--dark tn-btn--sm" disabled>
-              <i className="fas fa-check" /> Dans le panier
-            </button>
+            <TnButton variant="dark" size="sm" disabled leftIcon={<i className="fas fa-check" />}>
+              Dans le panier
+            </TnButton>
           ) : (
-            <button
-              type="button"
-              className="tn-btn tn-btn--primary tn-btn--sm"
+            <TnButton
+              variant="primary"
+              size="sm"
               onClick={handleAddToCart}
+              leftIcon={<i className="fas fa-bag-shopping" />}
             >
-              <i className="fas fa-bag-shopping" /> Ajouter
-            </button>
+              Ajouter
+            </TnButton>
           )}
         </div>
       </div>

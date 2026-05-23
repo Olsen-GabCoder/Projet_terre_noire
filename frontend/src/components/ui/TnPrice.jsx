@@ -11,7 +11,7 @@ import React from 'react';
 
 function formatPrice(amount, locale = 'fr-FR') {
   if (typeof amount !== 'number') return amount;
-  return amount.toLocaleString(locale).replace(/\s/g, '\u00A0');
+  return Math.round(amount).toLocaleString(locale).replace(/\s/g, '\u00A0');
 }
 
 function calculateDiscount(original, current) {
@@ -79,7 +79,8 @@ export default function TnPrice({
         </span>
         {original && (
           <span className="tn-price--strike">
-            {formatPrice(original, locale)} {currency}
+            {formatPrice(original, locale)}
+            <span className="tn-price__strike-currency">{currency}</span>
           </span>
         )}
         {effectiveShowDiscount && discount && (

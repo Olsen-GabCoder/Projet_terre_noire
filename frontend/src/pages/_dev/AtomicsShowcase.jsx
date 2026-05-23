@@ -7,6 +7,11 @@ import TnLink from '../../components/ui/TnLink';
 import TnPrice from '../../components/ui/TnPrice';
 import TnStars from '../../components/ui/TnStars';
 import TnDivider from '../../components/ui/TnDivider';
+import TnCheckbox from '../../components/ui/TnCheckbox';
+import TnAlert from '../../components/ui/TnAlert';
+import TnInput from '../../components/ui/TnInput';
+import TnTextarea from '../../components/ui/TnTextarea';
+import TnSelect from '../../components/ui/TnSelect';
 
 function Section({ title, children }) {
   return (
@@ -40,6 +45,82 @@ function InteractiveStarsDemo() {
   );
 }
 
+function CheckboxDemo() {
+  const [a, setA] = useState(false);
+  const [b, setB] = useState(true);
+  const [cgv, setCgv] = useState(false);
+  const [news, setNews] = useState(false);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 400 }}>
+      <TnCheckbox label="Option non cochee (cliquez)" checked={a} onChange={setA} />
+      <TnCheckbox label="Option cochee" checked={b} onChange={setB} />
+      <TnCheckbox label="Champ obligatoire" checked={false} onChange={() => {}} required />
+      <TnCheckbox label="Disabled non coche" checked={false} onChange={() => {}} disabled />
+      <TnCheckbox label="Disabled coche" checked={true} onChange={() => {}} disabled />
+      <TnCheckbox label="J'accepte les CGV" checked={cgv} onChange={setCgv} required
+        error={!cgv ? "Vous devez accepter les conditions generales" : ""} />
+      <TnCheckbox label="S'inscrire a la newsletter" checked={news} onChange={setNews}
+        helper="Recevez nos nouveautes et offres exclusives" />
+      <div style={{ background: 'var(--ds-white)', padding: 20, borderRadius: 12, border: '1px solid var(--ds-gray-200)', marginTop: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ds-gray-500)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Usage contextuel</div>
+        <TnCheckbox required checked={cgv} onChange={setCgv}
+          label={<>J'accepte les <a href="#" style={{ color: 'var(--ds-orange)' }}>conditions generales de vente</a></>} />
+      </div>
+    </div>
+  );
+}
+
+function AlertDemo() {
+  const [showDismissable, setShowDismissable] = useState(true);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600 }}>
+      <TnAlert variant="error">Email ou mot de passe incorrect.</TnAlert>
+      <TnAlert variant="success">Si un compte existe avec cet email, vous recevrez un lien de reinitialisation.</TnAlert>
+      <TnAlert variant="warning">Votre session expire dans 5 minutes.</TnAlert>
+      <TnAlert variant="info">Vous pouvez modifier vos informations dans votre espace personnel.</TnAlert>
+
+      <h3 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ds-gray-500)', margin: '16px 0 0' }}>
+        Avec titre + message
+      </h3>
+      <TnAlert variant="error" title="Erreur d'inscription">Veuillez corriger les erreurs dans le formulaire ci-dessous.</TnAlert>
+      <TnAlert variant="success" title="Mot de passe reinitialise">Vous allez etre redirige vers la page de connexion...</TnAlert>
+
+      <h3 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ds-gray-500)', margin: '16px 0 0' }}>
+        Avec bouton fermer
+      </h3>
+      {showDismissable ? (
+        <TnAlert variant="success" onClose={() => setShowDismissable(false)}>
+          Inscription reussie ! Bienvenue. (cliquez la croix)
+        </TnAlert>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowDismissable(true)}
+          style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--ds-gray-300)', background: 'var(--ds-white)', cursor: 'pointer', fontSize: 13, alignSelf: 'flex-start' }}
+        >
+          Remonter l'alerte
+        </button>
+      )}
+
+      <h3 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ds-gray-500)', margin: '16px 0 0' }}>
+        Sans icone
+      </h3>
+      <TnAlert variant="info" icon={false}>Un message sans icone, plus discret.</TnAlert>
+
+      <h3 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ds-gray-500)', margin: '16px 0 0' }}>
+        Usage contextuel (formulaire)
+      </h3>
+      <div style={{ background: 'var(--ds-white)', padding: 20, borderRadius: 12, border: '1px solid var(--ds-gray-200)', maxWidth: 440 }}>
+        <TnAlert variant="error">Email ou mot de passe incorrect.</TnAlert>
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <input type="text" placeholder="votre@email.com" style={{ padding: '0.75rem 1rem', border: '1px solid #D4D4D4', borderRadius: 12, fontSize: '0.9375rem' }} />
+          <input type="password" placeholder="********" style={{ padding: '0.75rem 1rem', border: '1px solid #D4D4D4', borderRadius: 12, fontSize: '0.9375rem' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Row({ children }) {
   return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', marginBottom: 16 }}>{children}</div>;
 }
@@ -51,7 +132,7 @@ export default function AtomicsShowcase() {
         Atomics 2.5 — Showcase
       </h1>
       <p style={{ color: 'var(--ds-gray-500)', marginBottom: 32, fontSize: 14 }}>
-        Vague 2.5 — Composants atomiques (4/4 complets)
+        Vague 2.5 — Composants atomiques (8/8 complets)
       </p>
 
       {/* ═══════════════════ LINKS ═══════════════════ */}
@@ -349,6 +430,51 @@ export default function AtomicsShowcase() {
           <p style={{ fontFamily: 'var(--ds-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ds-gray-700)', lineHeight: 1.7 }}>
             "Ce que nous trouvons change ce que nous cherchons."
           </p>
+        </div>
+      </Section>
+
+      {/* ═══════════════════ CHECKBOXES ═══════════════════ */}
+      <Section title="Checkboxes (TnCheckbox)">
+        <CheckboxDemo />
+      </Section>
+
+      {/* ═══════════════════ ALERTS ═══════════════════ */}
+      <Section title="Alerts (TnAlert)">
+        <AlertDemo />
+      </Section>
+
+      {/* ═══════════════════ INPUT PASSWORD TOGGLE ═══════════════════ */}
+      <Section title="Input — Password toggle (TnInput)">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 400 }}>
+          <TnInput label="Mot de passe" type="password" showToggle placeholder="********" />
+          <TnInput label="Mot de passe" type="password" showToggle helper="Min 8 caracteres" placeholder="********" />
+          <TnInput label="Mot de passe" type="password" showToggle error="Le mot de passe est trop court" placeholder="********" />
+          <TnInput label="Mot de passe" type="password" showToggle disabled placeholder="********" />
+          <h3 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ds-gray-500)', margin: '8px 0 0' }}>
+            Sans toggle (rightIcon custom)
+          </h3>
+          <TnInput label="Email" type="email" placeholder="votre@email.com" leftIcon={<i className="fas fa-envelope" />} />
+          <TnInput label="Recherche" type="text" placeholder="Rechercher..." rightIcon={<i className="fas fa-search" />} />
+        </div>
+      </Section>
+
+      {/* ═══════════════════ SELECT ═══════════════════ */}
+      <Section title="Select (TnSelect)">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 400 }}>
+          <TnSelect label="Categorie" name="cat" required options={[{ value: 'ROMAN', label: 'Roman' }, { value: 'POESIE', label: 'Poesie' }, { value: 'ESSAI', label: 'Essai' }]} placeholder="Choisir..." />
+          <TnSelect label="Sujet" name="subject" leftIcon={<i className="fas fa-tag" />} options={[{ value: 'Commande', label: 'Question commande' }, { value: 'Manuscrit', label: 'Soumission manuscrit' }, { value: 'Autre', label: 'Autre' }]} />
+          <TnSelect label="Langue" name="lang" leftIcon={<i className="fas fa-globe" />} required options={[{ value: 'FR', label: 'Francais' }, { value: 'EN', label: 'Anglais' }, { value: 'AR', label: 'Arabe' }]} />
+          <TnSelect label="Avec erreur" name="err" leftIcon={<i className="fas fa-book" />} error="Champ requis" options={[{ value: '', label: 'Choisir...' }]} />
+        </div>
+      </Section>
+
+      {/* ═══════════════════ TEXTAREA ═══════════════════ */}
+      <Section title="Textarea (TnTextarea)">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 500 }}>
+          <TnTextarea label="Message" name="message" rows={4} placeholder="Votre message..." required />
+          <TnTextarea label="Message" name="msg2" rows={5} leftIcon={<i className="fas fa-pen" />} placeholder="Decrivez votre demande en detail..." />
+          <TnTextarea label="Description" name="desc" rows={6} leftIcon={<i className="fas fa-align-left" />} helper="Decrivez votre projet en detail" placeholder="Resume, thematique, public cible..." />
+          <TnTextarea label="Avec erreur" name="err" rows={3} leftIcon={<i className="fas fa-pen" />} error="Minimum 50 caracteres" placeholder="Trop court..." />
         </div>
       </Section>
     </div>

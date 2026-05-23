@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TnInput from '../components/ui/TnInput';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
+import TnLink from '../components/ui/TnLink';
+import TnCheckbox from '../components/ui/TnCheckbox';
 import '../styles/Register.css';
 
 const Register = () => {
@@ -18,8 +23,6 @@ const Register = () => {
     phone_number: '',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -182,223 +185,156 @@ const Register = () => {
             </div>
 
             {error && (
-              <div className="reg-alert reg-alert-error">
-                <i className="fas fa-exclamation-circle" />
-                <span>{error}</span>
-              </div>
+              <TnAlert variant="error">{error}</TnAlert>
             )}
 
             {location.state?.message && (
-              <div className="reg-alert reg-alert-success">
-                <i className="fas fa-check-circle" />
-                <span>{location.state.message}</span>
-              </div>
+              <TnAlert variant="success">{location.state.message}</TnAlert>
             )}
 
             <form onSubmit={handleSubmit} className="reg-form">
               <div className="reg-row">
-                <div className="reg-field">
-                  <label htmlFor="username">Nom d'utilisateur *</label>
-                  <div className={`reg-input-wrap ${fieldErrors.username ? 'has-error' : ''}`}>
-                    <i className="fas fa-user reg-input-ico" />
-                    <input
-                      type="text"
-                      id="username"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      className="reg-input"
-                      placeholder="johndoe"
-                      autoComplete="username"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {fieldErrors.username && <span className="reg-err">{fieldErrors.username}</span>}
-                </div>
-
-                <div className="reg-field">
-                  <label htmlFor="email">Email *</label>
-                  <div className={`reg-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
-                    <i className="fas fa-envelope reg-input-ico" />
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="reg-input"
-                      placeholder="exemple@email.com"
-                      autoComplete="email"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {fieldErrors.email && <span className="reg-err">{fieldErrors.email}</span>}
-                </div>
+                <TnInput
+                  label="Nom d'utilisateur"
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="johndoe"
+                  autoComplete="username"
+                  required
+                  disabled={isLoading}
+                  leftIcon={<i className="fas fa-user" />}
+                  error={fieldErrors.username}
+                />
+                <TnInput
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="exemple@email.com"
+                  autoComplete="email"
+                  required
+                  disabled={isLoading}
+                  leftIcon={<i className="fas fa-envelope" />}
+                  error={fieldErrors.email}
+                />
               </div>
 
               <div className="reg-row">
-                <div className="reg-field">
-                  <label htmlFor="first_name">Prénom *</label>
-                  <div className={`reg-input-wrap ${fieldErrors.first_name ? 'has-error' : ''}`}>
-                    <i className="fas fa-user reg-input-ico" />
-                    <input
-                      type="text"
-                      id="first_name"
-                      name="first_name"
-                      value={formData.first_name}
-                      onChange={handleChange}
-                      className="reg-input"
-                      placeholder="Jean"
-                      autoComplete="given-name"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {fieldErrors.first_name && <span className="reg-err">{fieldErrors.first_name}</span>}
-                </div>
-
-                <div className="reg-field">
-                  <label htmlFor="last_name">Nom *</label>
-                  <div className={`reg-input-wrap ${fieldErrors.last_name ? 'has-error' : ''}`}>
-                    <i className="fas fa-user reg-input-ico" />
-                    <input
-                      type="text"
-                      id="last_name"
-                      name="last_name"
-                      value={formData.last_name}
-                      onChange={handleChange}
-                      className="reg-input"
-                      placeholder="Dupont"
-                      autoComplete="family-name"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {fieldErrors.last_name && <span className="reg-err">{fieldErrors.last_name}</span>}
-                </div>
+                <TnInput
+                  label="Prénom"
+                  type="text"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  placeholder="Jean"
+                  autoComplete="given-name"
+                  required
+                  disabled={isLoading}
+                  leftIcon={<i className="fas fa-user" />}
+                  error={fieldErrors.first_name}
+                />
+                <TnInput
+                  label="Nom"
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  placeholder="Dupont"
+                  autoComplete="family-name"
+                  required
+                  disabled={isLoading}
+                  leftIcon={<i className="fas fa-user" />}
+                  error={fieldErrors.last_name}
+                />
               </div>
 
-              <div className="reg-field">
-                <label htmlFor="phone_number">Téléphone <span className="reg-opt">(optionnel)</span></label>
-                <div className={`reg-input-wrap ${fieldErrors.phone_number ? 'has-error' : ''}`}>
-                  <i className="fas fa-phone reg-input-ico" />
-                  <input
-                    type="tel"
-                    id="phone_number"
-                    name="phone_number"
-                    value={formData.phone_number}
-                    onChange={handleChange}
-                    className="reg-input"
-                    placeholder="+241 XX XXX XXXX"
-                    autoComplete="tel"
-                    disabled={isLoading}
-                  />
-                </div>
-                {fieldErrors.phone_number && <span className="reg-err">{fieldErrors.phone_number}</span>}
-              </div>
+              <TnInput
+                label="Téléphone"
+                type="tel"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                placeholder="+241 XX XXX XXXX"
+                autoComplete="tel"
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-phone" />}
+                helper="Optionnel"
+                error={fieldErrors.phone_number}
+              />
 
-              <div className="reg-field">
-                <label htmlFor="password">Mot de passe *</label>
-                <div className={`reg-input-wrap reg-input-wrap--pwd ${fieldErrors.password ? 'has-error' : ''}`}>
-                  <i className="fas fa-lock reg-input-ico" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="reg-input"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    className="reg-pwd-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
-                  >
-                    <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
-                  </button>
-                </div>
-                {fieldErrors.password && <span className="reg-err">{fieldErrors.password}</span>}
-              </div>
+              <TnInput
+                label="Mot de passe"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                required
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-lock" />}
+                showToggle
+                error={fieldErrors.password}
+              />
 
-              <div className="reg-field">
-                <label htmlFor="confirmPassword">Confirmer le mot de passe *</label>
-                <div className={`reg-input-wrap reg-input-wrap--pwd ${fieldErrors.confirmPassword ? 'has-error' : ''}`}>
-                  <i className="fas fa-lock reg-input-ico" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="reg-input"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    className="reg-pwd-toggle"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    disabled={isLoading}
-                    aria-label={showConfirmPassword ? 'Masquer' : 'Afficher'}
-                  >
-                    <i className={`fas fa-${showConfirmPassword ? 'eye-slash' : 'eye'}`} />
-                  </button>
-                </div>
-                {fieldErrors.confirmPassword && <span className="reg-err">{fieldErrors.confirmPassword}</span>}
-                {formData.password && formData.confirmPassword && (
-                  <span className={`reg-match ${formData.password === formData.confirmPassword ? 'ok' : 'err'}`}>
-                    <i className={`fas fa-${formData.password === formData.confirmPassword ? 'check-circle' : 'times-circle'}`} />
-                    {formData.password === formData.confirmPassword ? 'Correspond' : 'Ne correspond pas'}
-                  </span>
-                )}
-              </div>
+              <TnInput
+                label="Confirmer le mot de passe"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                required
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-lock" />}
+                showToggle
+                error={fieldErrors.confirmPassword}
+              />
+              {formData.password && formData.confirmPassword && (
+                <span className={`reg-match ${formData.password === formData.confirmPassword ? 'ok' : 'err'}`}>
+                  <i className={`fas fa-${formData.password === formData.confirmPassword ? 'check-circle' : 'times-circle'}`} />
+                  {formData.password === formData.confirmPassword ? 'Correspond' : 'Ne correspond pas'}
+                </span>
+              )}
 
-              <div className="reg-field">
-                <label className="reg-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    disabled={isLoading}
-                  />
-                  <span>
-                    J'accepte les{' '}
-                    <Link to="/terms" target="_blank" rel="noopener noreferrer">conditions</Link>
-                    {' '}et la{' '}
-                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité</Link>
-                  </span>
-                </label>
-                {fieldErrors.terms && <span className="reg-err">{fieldErrors.terms}</span>}
-              </div>
+              <TnCheckbox
+                checked={termsAccepted}
+                onChange={setTermsAccepted}
+                required
+                disabled={isLoading}
+                error={fieldErrors.terms}
+                label={<>
+                  J'accepte les{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ds-orange)' }}>conditions</a>
+                  {' '}et la{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ds-orange)' }}>politique de confidentialité</a>
+                </>}
+              />
 
-              <button type="submit" className="reg-btn reg-btn-submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" />
-                    Inscription...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-user-plus" />
-                    Créer mon compte
-                  </>
-                )}
-              </button>
+              <TnButton
+                type="submit"
+                variant="primary"
+                block
+                loading={isLoading}
+                disabled={isLoading || !termsAccepted}
+                leftIcon={<i className="fas fa-user-plus" />}
+              >
+                {isLoading ? 'Inscription...' : 'Créer mon compte'}
+              </TnButton>
             </form>
 
             <div className="reg-footer">
               <p>
                 Vous avez déjà un compte ?{' '}
-                <Link to="/login" className="reg-link">Se connecter</Link>
+                <TnLink to="/login" variant="strong">Se connecter</TnLink>
               </p>
-              <Link to="/" className="reg-back">
-                <i className="fas fa-arrow-left" />
+              <TnLink to="/" leftIcon={<i className="fas fa-arrow-left" />}>
                 Retour à l'accueil
-              </Link>
+              </TnLink>
             </div>
           </div>
         </div>

@@ -462,6 +462,29 @@
 }
 .tn-field__icon--left { left: 14px; }
 .tn-field__icon--right { right: 14px; }
+.tn-field__icon--top { top: 14px; transform: none; }
+.tn-field__toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--ds-gray-500);
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+  border-radius: 4px;
+}
+.tn-field__toggle:hover { color: var(--ds-orange); }
+.tn-field__toggle:focus-visible {
+  outline: 2px solid var(--ds-orange);
+  outline-offset: 2px;
+}
 .tn-field__error {
   font-size: 0.8125rem;
   color: var(--ds-error);
@@ -733,6 +756,13 @@
   text-decoration: line-through; color: var(--ds-gray-400);
   font-family: var(--ds-sans); font-weight: 500;
 }
+.tn-price__strike-currency {
+  text-decoration: none;
+  display: inline-block;
+  font-size: 0.85em;
+  margin-left: 4px;
+  color: var(--ds-gray-500);
+}
 
 /* Discount badge */
 .tn-price__discount {
@@ -804,4 +834,148 @@
   flex-shrink: 0; font-family: var(--ds-mono);
   font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ds-gray-400); padding: 0 4px;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ * .tn-checkbox — Created in Vague 2.5 P5 (pre-requisite for Vague 3
+ * Phase 2 forms migration)
+ *
+ * Custom 18×18px checkbox with hidden native input + custom square.
+ * Orange when checked, scale-in SVG checkmark animation.
+ * Supports: disabled, error, required modifier, label, error/helper text.
+ * ─────────────────────────────────────────────────────────────────*/
+.tn-checkbox {
+  display: flex; align-items: flex-start; gap: 10px;
+  cursor: pointer; position: relative;
+}
+.tn-checkbox--disabled { cursor: not-allowed; opacity: 0.5; }
+
+.tn-checkbox__input {
+  position: absolute; width: 0; height: 0;
+  opacity: 0; pointer-events: none;
+}
+
+.tn-checkbox__box {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 1.5px solid var(--ds-gray-400); border-radius: 4px;
+  background: var(--ds-white);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+  transition:
+    background var(--ds-dur-fast) var(--ds-ease-out),
+    border-color var(--ds-dur-fast) var(--ds-ease-out),
+    transform var(--ds-dur-fast) var(--ds-ease-out);
+}
+
+.tn-checkbox__check {
+  width: 10px; height: 10px; color: var(--ds-white);
+  transform: scale(0);
+  transition: transform var(--ds-dur-fast) var(--ds-ease-out);
+}
+
+/* Checked */
+.tn-checkbox__input:checked + .tn-checkbox__box {
+  background: var(--ds-orange); border-color: var(--ds-orange);
+}
+.tn-checkbox__input:checked + .tn-checkbox__box .tn-checkbox__check {
+  transform: scale(1);
+}
+
+/* Hover */
+.tn-checkbox:not(.tn-checkbox--disabled):hover .tn-checkbox__box {
+  border-color: var(--ds-orange);
+}
+.tn-checkbox:not(.tn-checkbox--disabled):hover .tn-checkbox__input:checked + .tn-checkbox__box {
+  background: var(--ds-orange-hover); border-color: var(--ds-orange-hover);
+}
+
+/* Focus-visible */
+.tn-checkbox__input:focus-visible + .tn-checkbox__box {
+  outline: var(--ds-focus-ring); outline-offset: var(--ds-focus-offset);
+  box-shadow: var(--ds-focus-shadow);
+}
+
+/* Error */
+.tn-checkbox--error .tn-checkbox__box { border-color: var(--ds-error); }
+
+/* Label */
+.tn-checkbox__label {
+  font-size: 14px; font-weight: 500; color: var(--ds-gray-700);
+  line-height: 1.4; user-select: none;
+}
+.tn-checkbox__label--required::after { content: ' *'; color: var(--ds-orange); }
+
+/* Messages */
+.tn-checkbox__error {
+  font-size: 0.8125rem; color: var(--ds-error);
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 4px; margin-left: 28px;
+}
+.tn-checkbox__helper {
+  font-size: 0.8125rem; color: var(--ds-gray-500);
+  margin-top: 2px; margin-left: 28px;
+}
+
+/* ══════════════════════════════════════════════════════
+   ALERT  (.tn-alert)
+   Feedback contextuel inline — 4 variants
+   ══════════════════════════════════════════════════════ */
+
+.tn-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--ds-r-md);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  position: relative;
+  animation: tn-alert-in 0.3s ease-out;
+}
+
+@keyframes tn-alert-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Variants ── */
+.tn-alert--error   { background: var(--ds-error-bg);   border-color: #F5C6CB; color: var(--ds-error); }
+.tn-alert--success { background: var(--ds-success-bg); border-color: #B2DFBC; color: var(--ds-success); }
+.tn-alert--warning { background: var(--ds-warning-bg); border-color: #FFE0B2; color: var(--ds-warning); }
+.tn-alert--info    { background: var(--ds-info-bg);    border-color: #BBDEFB; color: var(--ds-info); }
+
+/* ── Icon ── */
+.tn-alert__icon { flex-shrink: 0; font-size: 1rem; line-height: 1.3125; display: flex; align-items: center; }
+
+/* ── Content ── */
+.tn-alert__content { flex: 1; min-width: 0; }
+.tn-alert__title   { font-weight: 700; margin-bottom: 0.125rem; }
+.tn-alert__message { font-weight: 500; }
+
+/* ── Close button ── */
+.tn-alert__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin: -0.125rem -0.25rem -0.125rem 0;
+  border-radius: 6px;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.tn-alert__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.06); }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .tn-alert { animation: none; }
 }

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import '../styles/Login.css'; 
+import TnInput from '../components/ui/TnInput';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
+import TnLink from '../components/ui/TnLink';
+import '../styles/Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +17,6 @@ const Login = () => {
     email: '',
     password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -116,89 +119,59 @@ const Login = () => {
               </span>
             </div>
             {error && (
-              <div className="login-alert login-alert-error">
-                <i className="fas fa-exclamation-circle" />
-                <span>{error}</span>
-              </div>
+              <TnAlert variant="error">{error}</TnAlert>
             )}
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="login-field">
-                <label htmlFor="email">Email ou Nom d'utilisateur</label>
-                <div className="login-input-wrap">
-                  <i className="fas fa-envelope login-input-ico" />
-                  <input
-                    type="text"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="login-input"
-                    placeholder="votre@email.com"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
+              <TnInput
+                label="Email ou Nom d'utilisateur"
+                type="text"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="votre@email.com"
+                required
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-envelope" />}
+              />
 
-              <div className="login-field">
-                <label htmlFor="password">Mot de passe</label>
-                <div className="login-input-wrap login-input-wrap--pwd">
-                  <i className="fas fa-lock login-input-ico" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="login-input"
-                    placeholder="••••••••"
-                    required
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    className="login-pwd-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                  >
-                    <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
-                  </button>
-                </div>
-              </div>
+              <TnInput
+                label="Mot de passe"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-lock" />}
+                showToggle
+              />
 
               <div className="login-options">
-                <Link to="/forgot-password" className="login-forgot">
-                  <i className="fas fa-question-circle" />
+                <TnLink to="/forgot-password" variant="strong" leftIcon={<i className="fas fa-question-circle" />}>
                   Mot de passe oublié ?
-                </Link>
+                </TnLink>
               </div>
 
-              <button
+              <TnButton
                 type="submit"
-                className="login-btn login-btn-submit"
+                variant="primary"
+                block
+                loading={isLoading}
                 disabled={isLoading}
+                leftIcon={<i className="fas fa-sign-in-alt" />}
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" />
-                    Connexion...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-sign-in-alt" />
-                    Se connecter
-                  </>
-                )}
-              </button>
+                {isLoading ? 'Connexion...' : 'Se connecter'}
+              </TnButton>
             </form>
 
             <div className="login-footer">
               <p>
                 Pas encore de compte ?{' '}
-                <Link to="/register" className="login-link">
+                <TnLink to="/register" variant="strong">
                   S'inscrire
-                </Link>
+                </TnLink>
               </p>
             </div>
           </div>

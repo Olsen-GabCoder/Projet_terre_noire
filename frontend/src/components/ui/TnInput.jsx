@@ -5,7 +5,7 @@
  *   <TnInput label="Email" name="email" type="email" required
  *     error={errors.email} leftIcon={<i className="fas fa-envelope" />} />
  */
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
 
 export default function TnInput({
   label,
@@ -20,12 +20,16 @@ export default function TnInput({
   helper,
   leftIcon,
   rightIcon,
+  showToggle = false,
   className = '',
   ...rest
 }) {
   const autoId = useId();
   const inputId = rest.id || `tn-input-${autoId}`;
   const errorId = error ? `${inputId}-error` : undefined;
+  const [revealed, setRevealed] = useState(false);
+  const isPasswordToggle = showToggle && type === 'password';
+  const effectiveType = isPasswordToggle && revealed ? 'text' : type;
 
   const inputClasses = [
     'tn-input',
@@ -38,7 +42,7 @@ export default function TnInput({
   const wrapClasses = [
     'tn-field__wrap',
     leftIcon && 'tn-field__wrap--has-left',
-    rightIcon && 'tn-field__wrap--has-right',
+    (rightIcon || isPasswordToggle) && 'tn-field__wrap--has-right',
   ].filter(Boolean).join(' ');
 
   return (
@@ -53,7 +57,7 @@ export default function TnInput({
         <input
           id={inputId}
           name={name}
-          type={type}
+          type={effectiveType}
           className={inputClasses}
           disabled={disabled}
           readOnly={readOnly}
@@ -62,7 +66,18 @@ export default function TnInput({
           aria-describedby={errorId}
           {...rest}
         />
-        {rightIcon && <span className="tn-field__icon tn-field__icon--right" aria-hidden="true">{rightIcon}</span>}
+        {isPasswordToggle ? (
+          <button
+            type="button"
+            className="tn-field__toggle"
+            onClick={() => setRevealed(v => !v)}
+            aria-label={revealed ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          >
+            <i className={`fas ${revealed ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+          </button>
+        ) : rightIcon ? (
+          <span className="tn-field__icon tn-field__icon--right" aria-hidden="true">{rightIcon}</span>
+        ) : null}
       </div>
       {error && <span className="tn-field__error" id={errorId} role="alert"><i className="fas fa-circle-exclamation" /> {error}</span>}
       {helper && !error && <span className="tn-field__helper">{helper}</span>}

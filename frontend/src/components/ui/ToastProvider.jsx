@@ -41,16 +41,16 @@ const TOAST_TYPES = {
   warning: {
     icon: 'fa-triangle-exclamation',
     bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-    accent: '#E8601C',
-    accentLight: 'rgba(232,96,28,0.25)',
-    iconBg: 'rgba(232,96,28,0.15)',
+    accent: '#E65100',
+    accentLight: 'rgba(230,81,0,0.25)',
+    iconBg: 'rgba(230,81,0,0.15)',
   },
   info: {
     icon: 'fa-circle-info',
     bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-    accent: '#1c2a4a',
-    accentLight: 'rgba(28,42,74,0.25)',
-    iconBg: 'rgba(28,42,74,0.2)',
+    accent: '#1565C0',
+    accentLight: 'rgba(21,101,192,0.25)',
+    iconBg: 'rgba(21,101,192,0.2)',
   },
 };
 
@@ -60,25 +60,29 @@ let toastId = 0;
 /* ─────────────────────────────────────────────
    SINGLE TOAST
    ───────────────────────────────────────────── */
+const prefersReducedMotion = typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
 function Toast({ id, type, message, onDismiss }) {
   const cfg = TOAST_TYPES[type] || TOAST_TYPES.info;
-  const [state, setState] = useState('entering'); // entering | visible | exiting
+  const [state, setState] = useState(prefersReducedMotion ? 'visible' : 'entering');
   const timerRef = useRef(null);
 
   useEffect(() => {
     // Enter
-    const enterTimer = setTimeout(() => setState('visible'), 10);
+    const enterTimer = prefersReducedMotion ? null : setTimeout(() => setState('visible'), 10);
     // Auto-dismiss
     timerRef.current = setTimeout(() => dismiss(), DURATION);
-    return () => { clearTimeout(enterTimer); clearTimeout(timerRef.current); };
+    return () => { if (enterTimer) clearTimeout(enterTimer); clearTimeout(timerRef.current); };
   }, []);
 
   const dismiss = () => {
+    if (prefersReducedMotion) { onDismiss(id); return; }
     setState('exiting');
     setTimeout(() => onDismiss(id), 300);
   };
 
-  const transform =
+  const transform = prefersReducedMotion ? 'none' :
     state === 'entering' ? 'translateX(120%)' :
     state === 'exiting'  ? 'translateX(120%) scale(0.95)' :
                            'translateX(0)';
@@ -97,7 +101,7 @@ function Toast({ id, type, message, onDismiss }) {
         borderLeft: `4px solid ${cfg.accent}`,
         transform,
         opacity: state === 'exiting' ? 0 : 1,
-        transition: 'all 0.35s cubic-bezier(.2,.7,.3,1)',
+        transition: prefersReducedMotion ? 'none' : 'all 0.35s cubic-bezier(.2,.7,.3,1)',
         maxWidth: 420,
         width: '100%',
         position: 'relative',
@@ -181,8 +185,8 @@ function ConfirmModal({ config, onResult }) {
 
   const toneMap = {
     danger:  { color: '#C62828', bg: 'rgba(198,40,40,0.08)', iconBg: 'rgba(198,40,40,0.12)', icon: icon || 'fa-trash-can' },
-    warning: { color: '#E8601C', bg: 'rgba(232,96,28,0.08)', iconBg: 'rgba(232,96,28,0.12)', icon: icon || 'fa-triangle-exclamation' },
-    info:    { color: '#1c2a4a', bg: 'rgba(28,42,74,0.08)', iconBg: 'rgba(28,42,74,0.12)', icon: icon || 'fa-circle-info' },
+    warning: { color: '#E65100', bg: 'rgba(230,81,0,0.08)', iconBg: 'rgba(230,81,0,0.12)', icon: icon || 'fa-triangle-exclamation' },
+    info:    { color: '#1565C0', bg: 'rgba(21,101,192,0.08)', iconBg: 'rgba(21,101,192,0.12)', icon: icon || 'fa-circle-info' },
   };
   const t = toneMap[tone] || toneMap.danger;
 

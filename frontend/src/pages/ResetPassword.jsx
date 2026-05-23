@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authAPI, handleApiError } from '../services/api';
+import TnInput from '../components/ui/TnInput';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
+import TnLink from '../components/ui/TnLink';
 import '../styles/Login.css';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({ new_password: '', confirm_password: '' });
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -76,11 +79,11 @@ const ResetPassword = () => {
         <div className="login-content">
           <div className="login-wrap">
             <div className="login-card">
-              <Link to="/forgot-password" className="login-btn login-btn-submit">
-                <i className="fas fa-redo" /> Nouvelle demande
-              </Link>
+              <TnLink to="/forgot-password" variant="strong" leftIcon={<i className="fas fa-redo" />}>
+                Nouvelle demande
+              </TnLink>
               <div className="login-footer">
-                <Link to="/login" className="login-link">Retour à la connexion</Link>
+                <TnLink to="/login" variant="strong">Retour à la connexion</TnLink>
               </div>
             </div>
           </div>
@@ -141,82 +144,54 @@ const ResetPassword = () => {
         <div className="login-wrap">
           <div className="login-card">
             {error && (
-              <div className="login-alert login-alert-error">
-                <i className="fas fa-exclamation-circle" />
-                <span>{error}</span>
-              </div>
+              <TnAlert variant="error">{error}</TnAlert>
             )}
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="login-field">
-                <label htmlFor="new_password">Nouveau mot de passe</label>
-                <div className="login-input-wrap login-input-wrap--pwd">
-                  <i className="fas fa-lock login-input-ico" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="new_password"
-                    name="new_password"
-                    value={formData.new_password}
-                    onChange={handleChange}
-                    className="login-input"
-                    placeholder="••••••••"
-                    required
-                    minLength={8}
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    className="login-pwd-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
-                  >
-                    <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="login-field">
-                <label htmlFor="confirm_password">Confirmer le mot de passe</label>
-                <div className="login-input-wrap">
-                  <i className="fas fa-lock login-input-ico" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="confirm_password"
-                    name="confirm_password"
-                    value={formData.confirm_password}
-                    onChange={handleChange}
-                    className="login-input"
-                    placeholder="••••••••"
-                    required
-                    minLength={8}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="login-btn login-btn-submit"
+              <TnInput
+                label="Nouveau mot de passe"
+                type="password"
+                name="new_password"
+                value={formData.new_password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                minLength={8}
                 disabled={isLoading}
+                leftIcon={<i className="fas fa-lock" />}
+                showToggle
+              />
+
+              <TnInput
+                label="Confirmer le mot de passe"
+                type="password"
+                name="confirm_password"
+                value={formData.confirm_password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                minLength={8}
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-lock" />}
+                showToggle
+              />
+
+              <TnButton
+                type="submit"
+                variant="primary"
+                block
+                loading={isLoading}
+                disabled={isLoading}
+                leftIcon={<i className="fas fa-check" />}
               >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-check" />
-                    Réinitialiser le mot de passe
-                  </>
-                )}
-              </button>
+                {isLoading ? 'Enregistrement...' : 'Réinitialiser le mot de passe'}
+              </TnButton>
             </form>
 
             <div className="login-footer">
-              <Link to="/login" className="login-link">
-                <i className="fas fa-arrow-left" /> Retour à la connexion
-              </Link>
+              <TnLink to="/login" variant="strong" leftIcon={<i className="fas fa-arrow-left" />}>
+                Retour à la connexion
+              </TnLink>
             </div>
           </div>
         </div>

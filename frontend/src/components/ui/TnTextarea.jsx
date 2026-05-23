@@ -19,6 +19,7 @@ export default function TnTextarea({
   readOnly = false,
   error,
   helper,
+  leftIcon,
   className = '',
   onChange,
   ...rest
@@ -51,21 +52,42 @@ export default function TnTextarea({
           {label}
         </label>
       )}
-      <textarea
-        ref={ref}
-        id={inputId}
-        name={name}
-        rows={rows}
-        className={inputClasses}
-        disabled={disabled}
-        readOnly={readOnly}
-        required={required}
-        aria-invalid={!!error || undefined}
-        aria-describedby={errorId}
-        onChange={handleChange}
-        style={autoResize ? { resize: 'none', overflow: 'hidden' } : undefined}
-        {...rest}
-      />
+      {leftIcon ? (
+        <div className="tn-field__wrap tn-field__wrap--has-left">
+          <span className="tn-field__icon tn-field__icon--left tn-field__icon--top" aria-hidden="true">{leftIcon}</span>
+          <textarea
+            ref={ref}
+            id={inputId}
+            name={name}
+            rows={rows}
+            className={inputClasses}
+            disabled={disabled}
+            readOnly={readOnly}
+            required={required}
+            aria-invalid={!!error || undefined}
+            aria-describedby={errorId}
+            onChange={handleChange}
+            style={autoResize ? { resize: 'none', overflow: 'hidden' } : undefined}
+            {...rest}
+          />
+        </div>
+      ) : (
+        <textarea
+          ref={ref}
+          id={inputId}
+          name={name}
+          rows={rows}
+          className={inputClasses}
+          disabled={disabled}
+          readOnly={readOnly}
+          required={required}
+          aria-invalid={!!error || undefined}
+          aria-describedby={errorId}
+          onChange={handleChange}
+          style={autoResize ? { resize: 'none', overflow: 'hidden' } : undefined}
+          {...rest}
+        />
+      )}
       {error && <span className="tn-field__error" id={errorId} role="alert"><i className="fas fa-circle-exclamation" /> {error}</span>}
       {helper && !error && <span className="tn-field__helper">{helper}</span>}
     </div>

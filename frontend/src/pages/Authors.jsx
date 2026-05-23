@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import bookService from '../services/bookService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AuthorCard from '../components/AuthorCard';
 import '../styles/Authors.css';
 
 const Authors = () => {
@@ -141,46 +141,9 @@ const Authors = () => {
             ) : (
             <div className="auth-grid">
               {filtered.map((author) => (
-                <Link key={author.id} to={`/authors/${author.id}`} className="acard">
-                  {/* Zone visuelle haute */}
-                  <div className="acard__visual">
-                    <div className="acard__avatar">
-                          {author.photo ? (
-                            <img 
-                              src={author.photo} 
-                              alt={author.full_name}
-                              loading="lazy"
-                              decoding="async"
-                          onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
-                            />
-                          ) : null}
-                      <div className="acard__initials" style={author.photo ? { display: 'none' } : undefined}>
-                        {(author.full_name || '?').charAt(0).toUpperCase()}
-                          </div>
-                            </div>
-                    {(author.books_count || 0) > 0 && (
-                      <span className="acard__badge">
-                        <i className="fas fa-book" /> {author.books_count}
-                      </span>
-                          )}
-                        </div>
-                        
-                  {/* Infos */}
-                  <div className="acard__body">
-                    <h3 className="acard__name">{author.full_name || 'Auteur inconnu'}</h3>
-                    {author.biography ? (
-                      <p className="acard__bio">{author.biography}</p>
-                    ) : (
-                      <p className="acard__bio acard__bio--empty">Biographie à venir</p>
-                    )}
-                    <div className="acard__cta">
-                          <span>Voir sa fiche</span>
-                      <i className="fas fa-arrow-right" />
-                        </div>
-                            </div>
-                        </Link>
+                <AuthorCard key={author.id} author={author} />
               ))}
-                  </div>
+            </div>
             )}
           </div>
             </div>

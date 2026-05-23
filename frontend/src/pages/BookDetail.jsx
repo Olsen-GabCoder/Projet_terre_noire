@@ -6,6 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BookCard from '../components/BookCard';
 import bookService from '../services/bookService';
+import TnStars from '../components/ui/TnStars';
+import TnTextarea from '../components/ui/TnTextarea';
+import TnButton from '../components/ui/TnButton';
+import TnAlert from '../components/ui/TnAlert';
 import '../styles/BookDetail.css';
 
 const BookDetail = () => {
@@ -567,42 +571,27 @@ const BookDetail = () => {
                     <form className="bd-review-form" onSubmit={handleReviewSubmit}>
                       <div className="bd-review-form__rating">
                         <label>Votre note :</label>
-                        <div className="bd-review-stars-input">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              className={`bd-review-star-btn ${reviewForm.rating >= star ? 'active' : ''}`}
-                              onClick={() => setReviewForm((f) => ({ ...f, rating: star }))}
-                              aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
-                            >
-                              <i className={reviewForm.rating >= star ? 'fas fa-star' : 'far fa-star'} />
-                            </button>
-                          ))}
-                        </div>
+                        <TnStars value={reviewForm.rating} interactive onChange={(rating) => setReviewForm((f) => ({ ...f, rating }))} size="lg" />
                       </div>
-                      <div className="bd-review-form__comment">
-                        <label htmlFor="review-comment">Votre avis (optionnel) :</label>
-                        <textarea
-                          id="review-comment"
-                          rows={4}
-                          value={reviewForm.comment}
-                          onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
-                          placeholder="Partagez votre expérience de lecture..."
-                          maxLength={1000}
-                        />
-                      </div>
-                      {reviewError && <p className="bd-review-form__error">{reviewError}</p>}
+                      <TnTextarea
+                        label="Votre avis (optionnel) :"
+                        rows={4}
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
+                        placeholder="Partagez votre expérience de lecture..."
+                        maxLength={1000}
+                      />
+                      {reviewError && <TnAlert variant="error">{reviewError}</TnAlert>}
                       <div className="bd-review-form__actions">
-                        <button type="submit" className="bd-btn bd-btn--primary" disabled={reviewSubmitting}>
+                        <TnButton type="submit" variant="primary" loading={reviewSubmitting} disabled={reviewSubmitting}>
                           {reviewSubmitting ? 'Envoi...' : 'Publier mon avis'}
-                        </button>
+                        </TnButton>
                       </div>
                     </form>
                   )}
 
-                  {reviewError && (
-                    <p className="bd-review-form__error">{reviewError}</p>
+                  {reviewError && (editingReviewId || replyingTo || myReview) && (
+                    <TnAlert variant="error">{reviewError}</TnAlert>
                   )}
 
                   {!isAuthenticated && (
@@ -677,19 +666,8 @@ const BookDetail = () => {
                               </div>
                               {editingReviewId === r.id ? (
                                 <form className="bd-review-edit-form" onSubmit={handleReviewEditSubmit}>
-                                  <div className="bd-review-edit-form__stars">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <button
-                                        key={star}
-                                        type="button"
-                                        className={`bd-review-star-btn ${editForm.rating >= star ? 'active' : ''}`}
-                                        onClick={() => setEditForm((f) => ({ ...f, rating: star }))}
-                                      >
-                                        <i className={editForm.rating >= star ? 'fas fa-star' : 'far fa-star'} />
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <textarea
+                                  <TnStars value={editForm.rating} interactive onChange={(rating) => setEditForm((f) => ({ ...f, rating }))} size="md" />
+                                  <TnTextarea
                                     value={editForm.comment}
                                     onChange={(e) => setEditForm((f) => ({ ...f, comment: e.target.value }))}
                                     placeholder="Modifiez votre avis..."
@@ -697,12 +675,12 @@ const BookDetail = () => {
                                     maxLength={1000}
                                   />
                                   <div className="bd-review-edit-form__actions">
-                                    <button type="button" className="bd-btn bd-btn--ghost" onClick={() => { setEditingReviewId(null); setReviewError(''); }}>
+                                    <TnButton type="button" variant="ghost" onClick={() => { setEditingReviewId(null); setReviewError(''); }}>
                                       Annuler
-                                    </button>
-                                    <button type="submit" className="bd-btn bd-btn--primary" disabled={reviewSubmitting}>
+                                    </TnButton>
+                                    <TnButton type="submit" variant="primary" loading={reviewSubmitting} disabled={reviewSubmitting}>
                                       {reviewSubmitting ? 'Enregistrement...' : 'Enregistrer'}
-                                    </button>
+                                    </TnButton>
                                   </div>
                                 </form>
                               ) : (

@@ -12,6 +12,24 @@ Django 5 + DRF (backend).
 Vague 1 -- Foundations : Terminee
 Vague 2 -- Composants atomiques : Terminee
 Vague 2.5 -- Composants atomiques (suite) : Terminee
+Vague 3 -- Frontend Premium V3 : Terminee
+
+### Realisations Vague 3
+
+- BookCard elevation V3 : micro-gradient cover, grain, tokens harmonises, skeleton premium
+- AuthorCard extraction : composant autonome avec TnBadge V2, hover premium
+- 5 atomiques crees/enrichis : TnCheckbox, TnAlert (4 variants), TnInput showToggle,
+  TnTextarea leftIcon (top-aligned), TnSelect leftIcon (centered)
+- Tokens corriges : --ds-warning (#E65100), --ds-info (#1565C0), ajout --ds-warning-bg, --ds-info-bg
+- 7 formulaires migres vers atomiques : Login, Register, ForgotPassword, ResetPassword,
+  Contact, SubmitManuscript, BookDetail reviews
+- 5 CSS legacy nettoyes : Login.css (-234), Register.css (-251), Contact.css (-25),
+  SubmitManuscript.css (-254), BookDetail.css (-68)
+- Toast polish : sync couleurs warning/info avec tokens, prefers-reduced-motion
+- Admin dashboard responsive fix : className manquant manuscrits, breakpoints 768px/480px
+- 27 commits, 38 fichiers, +1838/-1886 lignes (-48 nettes)
+- 5 suites Playwright (42 tests) pour les enrichissements atomiques
+- 0 regression visuelle, audit securite propre (repo public)
 
 ### Realisations Vague 2.5
 
@@ -40,10 +58,11 @@ Vague 2.5 -- Composants atomiques (suite) : Terminee
 
 ## Roadmap
 
+- ~~Vague 1 : Foundations (design system, a11y, performance)~~ Terminee
 - ~~Vague 2 : Composants atomiques (Buttons, Inputs, Badges)~~ Terminee
 - ~~Vague 2.5 : Composants atomiques (Link, TnPrice, TnStars, TnDivider)~~ Terminee
-- Vague 3 : Composants moleculaires (BookCard, Modals, Forms, Toast)
-- Vague 4 : Layouts et Pages
+- ~~Vague 3 : Frontend Premium (BookCard, AuthorCard, 7 Forms, Toast, Admin fix)~~ Terminee
+- Vague 4 : Dette technique (AuthorCard3D, pages admin, WCAG contraste, typography breakpoints)
 - Vague 5 : Etats et micro-narrations
 - Vague 6 : Animations et atmosphere
 - Vague 7 : Touches signees editoriales

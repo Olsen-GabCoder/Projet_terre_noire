@@ -54,30 +54,6 @@
 /* ══════════ FORM ══════════ */
 .ct-form { display: flex; flex-direction: column; gap: 18px; }
 .ct-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.ct-form__group { display: flex; flex-direction: column; gap: 6px; }
-.ct-form__group label { font-size: 0.8125rem; font-weight: 600; color: var(--color-gray-700); }
-.ct-form__group label span { color: var(--color-primary); }
-
-.ct-input-wrap { display: flex; align-items: center; background: var(--tn-cream-2, #F5F2EA); border: 1.5px solid var(--color-gray-200); border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; overflow: hidden; }
-.ct-input-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(232,96,28,0.1); background: var(--ds-white); }
-.ct-input-wrap i { padding: 0 0 0 14px; color: var(--color-gray-400); font-size: 14px; flex-shrink: 0; }
-.ct-input-wrap input, .ct-input-wrap select, .ct-input-wrap textarea { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 0.875rem; color: var(--color-gray-900); padding: 12px 14px; }
-.ct-input-wrap textarea { resize: vertical; min-height: 120px; }
-.ct-input-wrap--select { position: relative; }
-.ct-input-wrap--select select { appearance: none; cursor: pointer; padding-right: 36px; }
-.ct-select-arrow { position: absolute; right: 14px; color: var(--color-gray-400); font-size: 12px; pointer-events: none; }
-.ct-input-wrap--textarea { align-items: flex-start; }
-.ct-icon-top { padding-top: 14px; }
-
-.ct-submit { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border: none; border-radius: 10px; background: var(--color-primary); color: var(--ds-white); font-family: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.ct-submit:hover:not(:disabled) { background: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,96,28,0.25); }
-.ct-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* Alerts */
-.ct-alert { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-top: 4px; }
-.ct-alert--success { background: rgba(22,163,74,0.08); color: #16a34a; border: 1px solid rgba(22,163,74,0.2); }
-.ct-alert--error { background: rgba(220,38,38,0.08); color: #dc2626; border: 1px solid rgba(220,38,38,0.2); }
-
 /* ══════════ BOTTOM ROW ══════════ */
 .ct-bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 

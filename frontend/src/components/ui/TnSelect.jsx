@@ -19,6 +19,7 @@ export default function TnSelect({
   disabled = false,
   error,
   helper,
+  leftIcon,
   className = '',
   ...rest
 }) {
@@ -41,7 +42,8 @@ export default function TnSelect({
           {label}
         </label>
       )}
-      <div className="tn-field__wrap tn-field__wrap--has-right">
+      <div className={`tn-field__wrap tn-field__wrap--has-right${leftIcon ? ' tn-field__wrap--has-left' : ''}`}>
+        {leftIcon && <span className="tn-field__icon tn-field__icon--left" aria-hidden="true">{leftIcon}</span>}
         <select
           id={selectId}
           name={name}

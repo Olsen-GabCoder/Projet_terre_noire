@@ -52,8 +52,10 @@
   --ds-success-bg:     #E6F1E6;
   --ds-error:          #C62828;
   --ds-error-bg:       #FBE8E8;
-  --ds-warning:        #F4863F;
-  --ds-info:           #E8601C;
+  --ds-warning:        #E65100;
+  --ds-warning-bg:     #FFF3E0;
+  --ds-info:           #1565C0;
+  --ds-info-bg:        #E3F2FD;
 
   /* ══════════════════════════════════════════════════════════════
      TRANSPARENCES — Atmosphère

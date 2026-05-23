@@ -263,7 +263,7 @@ const AdminDashboard = () => {
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {recentManuscripts.map((m, i) => (
-                  <li key={m.id} style={{
+                  <li key={m.id} className="adm-list-item" style={{
                     display: 'flex', alignItems: 'center', gap: 14,
                     padding: '14px 22px',
                     borderTop: i > 0 ? '1px solid var(--tn-gray-200)' : 0,
