@@ -188,11 +188,11 @@
 /* Sidebar récap */
 .chk-summary {
   background: var(--ds-white);
-  border: 1px solid var(--tn-gray-200);
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
   border-top: 4px solid var(--tn-orange);
   border-radius: 14px;
   padding: 1.5rem 1.75rem;
-  box-shadow: var(--tn-shadow-2);
+  box-shadow: 0 8px 24px rgba(20,14,8,0.08);
   position: sticky;
   top: 100px;
   align-self: start;

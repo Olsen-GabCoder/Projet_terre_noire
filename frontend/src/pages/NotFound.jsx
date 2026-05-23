@@ -9,16 +9,20 @@ const NotFound = () => (
       <div className="notfound-hero__inner">
         <div className="notfound-hero__code">404</div>
         <div className="notfound-hero__line" />
-        <h1 className="notfound-hero__title">Page non trouvée</h1>
+        <h1 className="notfound-hero__title">La page s&apos;est égarée</h1>
         <p className="notfound-hero__sub">
-          La page que vous recherchez n&apos;existe pas ou a été déplacée.
+          Cette page n&apos;existe plus ou n&apos;a jamais existé. Comme certains livres rares, elle s&apos;est dérobée à notre catalogue.
         </p>
+        <blockquote className="notfound-quote">
+          « Les choses s&apos;effondrent. »
+          <cite>— Chinua Achebe</cite>
+        </blockquote>
         <div className="notfound-hero__actions">
           <Link to="/" className="notfound-btn notfound-btn--primary">
-            <i className="fas fa-home" /> Retour à l&apos;accueil
+            <i className="fas fa-book-open" /> Revenir à la couverture
           </Link>
           <Link to="/catalog" className="notfound-btn notfound-btn--outline">
-            <i className="fas fa-book" /> Voir le catalogue
+            <i className="fas fa-compass" /> Explorer le catalogue
           </Link>
         </div>
       </div>

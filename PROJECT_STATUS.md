@@ -13,6 +13,22 @@ Vague 1 -- Foundations : Terminee
 Vague 2 -- Composants atomiques : Terminee
 Vague 2.5 -- Composants atomiques (suite) : Terminee
 Vague 3 -- Frontend Premium V3 : Terminee
+Vague 4 -- Layouts & Pages : Terminee
+
+### Realisations Vague 4
+
+- TnTooltip atomique cree (12e composant, 4 positions, hover+focus+Escape, 8 tests)
+- Header warm mist + drawer gradient + shadow warm + tooltip logo easter egg
+- Footer : 6 citations africaines en rotation + colophon typographique + mist warm
+- Catalog : staggered card reveals + skeleton grid premium + filter transitions
+- BookDetail : cover shadow perspective + related books scroll-snap carousel
+- AuthorDetail : portrait shadow warm + dropcap tokens --ds-*
+- Cart : etat vide narratif "Votre besace attend ses compagnons" + warm summary
+- Checkout : warm summary card (coherent Cart)
+- Login titre "Retrouver ma bibliotheque", Register "Rejoindre la communaute"
+- Home : 5 epigraphes Playfair italic entre sections
+- 404 : "La page s'est egaree" + citation Chinua Achebe
+- 9 commits, 22 fichiers, +558 lignes, 0 regression
 
 ### Realisations Vague 3
 
@@ -62,7 +78,7 @@ Vague 3 -- Frontend Premium V3 : Terminee
 - ~~Vague 2 : Composants atomiques (Buttons, Inputs, Badges)~~ Terminee
 - ~~Vague 2.5 : Composants atomiques (Link, TnPrice, TnStars, TnDivider)~~ Terminee
 - ~~Vague 3 : Frontend Premium (BookCard, AuthorCard, 7 Forms, Toast, Admin fix)~~ Terminee
-- Vague 4 : Dette technique (AuthorCard3D, pages admin, WCAG contraste, typography breakpoints)
+- ~~Vague 4 : Layouts & Pages (Header, Footer, Catalog, BookDetail, Cart, 404, Home epigraphes)~~ Terminee
 - Vague 5 : Etats et micro-narrations
 - Vague 6 : Animations et atmosphere
 - Vague 7 : Touches signees editoriales

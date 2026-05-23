@@ -105,7 +105,22 @@ const Catalog = () => {
   const activeFilterCount = Object.entries(filters).filter(([k, v]) => v && k !== 'ordering').length;
   const totalPages = Math.ceil(pagination.count / 12);
 
-  if (loading && books.length === 0) return <LoadingSpinner fullPage />;
+  if (loading && books.length === 0) return (
+    <div className="catalog-page">
+      <section className="cat-hero"><div className="cat-hero__inner"><div className="cat-hero__left"><h1 className="cat-hero__title">Notre <span>catalogue</span></h1></div></div></section>
+      <div style={{ padding: '0 56px', maxWidth: 1400, margin: '0 auto' }}>
+        <div className="cat-grid">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="cat-skel-card" style={{ '--i': i }}>
+              <div className="cat-skel-cover" />
+              <div className="cat-skel-line" />
+              <div className="cat-skel-line cat-skel-line--short" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="catalog-page">
@@ -269,8 +284,8 @@ const Catalog = () => {
             </div>
           ) : books.length > 0 ? (
             <>
-              <div className="cat-grid">
-                {books.map((book) => (<BookCard key={book.id} book={book} />))}
+              <div className={`cat-grid${loading ? ' cat-grid--loading' : ''}`}>
+                {books.map((book, index) => (<div key={book.id} style={{ '--i': index }}><BookCard book={book} /></div>))}
               </div>
               {totalPages > 1 && (
                 <nav className="cat-pag" aria-label="Pagination">

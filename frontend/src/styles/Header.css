@@ -13,11 +13,22 @@
   transition: background var(--tn-dur) var(--tn-ease), box-shadow var(--tn-dur) var(--tn-ease);
 }
 
+.tn-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(232,96,28,0.04) 0%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tn-header__bar { position: relative; z-index: 1; }
+
 .tn-header--scrolled {
   background: rgba(10,10,10,0.92);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  box-shadow: 0 10px 30px rgba(20,14,8,0.18);
 }
 
 /* ── Main bar ── */
@@ -651,7 +662,7 @@
   top: 0; right: 0; bottom: 0;
   width: 320px;
   max-width: 85vw;
-  background: var(--tn-black);
+  background: linear-gradient(to bottom, var(--tn-black) 0%, #0F0A07 100%);
   color: var(--tn-cream);
   display: flex;
   flex-direction: column;

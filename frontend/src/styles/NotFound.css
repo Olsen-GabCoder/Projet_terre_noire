@@ -139,6 +139,33 @@
   background: linear-gradient(to bottom, var(--tn-black), var(--color-bg-dark));
 }
 
+/* ── Citation Achebe (Vague 4) ── */
+.notfound-quote {
+  margin: 32px auto;
+  max-width: 480px;
+  text-align: center;
+  font-family: var(--ds-serif, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--ds-cream-2, #F5F2EA);
+  quotes: none;
+  border-left: none;
+  padding: 0 24px;
+  position: relative;
+}
+
+.notfound-quote cite {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--ds-sans, 'Inter', sans-serif);
+  font-style: normal;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-gold, #C8956C);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .notfound-hero__orb {
     animation: none !important;

@@ -104,8 +104,8 @@ const Cart = () => {
         <div className="crt-content">
           <div className="crt-empty">
             <div className="crt-empty__ico"><i className="fas fa-shopping-bag" /></div>
-            <h2>Aucun article</h2>
-            <p>Parcourez notre catalogue et ajoutez des livres à votre panier.</p>
+            <h2>Votre besace attend ses compagnons</h2>
+            <p>Parcourez notre catalogue pour découvrir des œuvres qui sauront vous accompagner.</p>
             <div className="crt-empty__actions">
               <Link to="/catalog" className="crt-btn crt-btn--primary">
                 <i className="fas fa-book" /> Explorer le catalogue

@@ -92,7 +92,7 @@ const Login = () => {
             <i className="fas fa-key" />
           </div>
           <h1 className="login-hero__title">
-            <span className="login-hero__title-main">Connexion</span>
+            <span className="login-hero__title-main">Retrouver ma bibliothèque</span>
           </h1>
           <p className="login-hero__sub">
             Accédez à votre espace pour gérer vos commandes, suivre vos manuscrits

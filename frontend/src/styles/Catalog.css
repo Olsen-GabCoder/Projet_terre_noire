@@ -369,8 +369,49 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 22px;
+  transition: opacity 200ms ease;
 }
+.cat-grid--loading { opacity: 0.4; }
 .cat-main { min-height: 280px; }
+
+/* Staggered card reveal */
+.cat-grid > * {
+  opacity: 0;
+  animation: cat-card-reveal 0.5s ease forwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes cat-card-reveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-grid > * { animation: none; opacity: 1; }
+}
+
+/* Skeleton grid */
+.cat-skel-card {
+  border-radius: var(--ds-r-md, 12px);
+  overflow: hidden;
+  background: var(--ds-white, #fff);
+  border: 1px solid var(--ds-gray-200, #E5E2DA);
+}
+.cat-skel-cover {
+  aspect-ratio: 2/3;
+  background: linear-gradient(90deg, var(--ds-cream-2, #F5F2EA) 0%, var(--ds-cream-3, #ECE7DA) 50%, var(--ds-cream-2, #F5F2EA) 100%);
+  background-size: 200% 100%;
+  animation: cat-skel-shimmer 1.5s ease infinite;
+}
+.cat-skel-line {
+  height: 12px;
+  margin: 12px 14px;
+  border-radius: 6px;
+  background: var(--ds-gray-100, #F1EEE6);
+}
+.cat-skel-line--short { width: 60%; }
+@keyframes cat-skel-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
 
 /* ============================================================
    PAGINATION

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { configAPI } from '../services/api';
+import TnTooltip from './ui/TnTooltip';
 import '../styles/Header.css';
 
 const LOGO_SRC = '/images/logo_terre_noire.png';
@@ -303,13 +304,15 @@ const Header = () => {
       <nav className={`tn-header ${scrolled ? 'tn-header--scrolled' : ''}`}>
         <div className="tn-header__bar">
           {/* Brand */}
-          <Link to="/" className="tn-header__brand" onClick={closeAllMenus} aria-label="Accueil">
-            <img src={LOGO_SRC} alt="Terre Noire" className="tn-header__logo" />
-            <div className="tn-header__brand-text">
-              <span className="tn-header__brand-name">TERRE NOIRE</span>
-              <span className="tn-header__brand-sub">Éditions · Port-Gentil</span>
-            </div>
-          </Link>
+          <TnTooltip text="Fondée en 2025 au cœur de Port-Gentil" position="bottom" align="start" delay={400}>
+            <Link to="/" className="tn-header__brand" onClick={closeAllMenus} aria-label="Accueil">
+              <img src={LOGO_SRC} alt="Terre Noire" className="tn-header__logo" />
+              <div className="tn-header__brand-text">
+                <span className="tn-header__brand-name">TERRE NOIRE</span>
+                <span className="tn-header__brand-sub">Éditions · Port-Gentil</span>
+              </div>
+            </Link>
+          </TnTooltip>
 
           {/* Desktop nav */}
           <nav className="tn-header__nav">

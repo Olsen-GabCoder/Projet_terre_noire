@@ -12,6 +12,7 @@ import TnAlert from '../../components/ui/TnAlert';
 import TnInput from '../../components/ui/TnInput';
 import TnTextarea from '../../components/ui/TnTextarea';
 import TnSelect from '../../components/ui/TnSelect';
+import TnTooltip from '../../components/ui/TnTooltip';
 
 function Section({ title, children }) {
   return (
@@ -132,7 +133,7 @@ export default function AtomicsShowcase() {
         Atomics 2.5 — Showcase
       </h1>
       <p style={{ color: 'var(--ds-gray-500)', marginBottom: 32, fontSize: 14 }}>
-        Vague 2.5 — Composants atomiques (8/8 complets)
+        Vague 2.5+ — Composants atomiques (9/9 complets)
       </p>
 
       {/* ═══════════════════ LINKS ═══════════════════ */}
@@ -475,6 +476,39 @@ export default function AtomicsShowcase() {
           <TnTextarea label="Message" name="msg2" rows={5} leftIcon={<i className="fas fa-pen" />} placeholder="Decrivez votre demande en detail..." />
           <TnTextarea label="Description" name="desc" rows={6} leftIcon={<i className="fas fa-align-left" />} helper="Decrivez votre projet en detail" placeholder="Resume, thematique, public cible..." />
           <TnTextarea label="Avec erreur" name="err" rows={3} leftIcon={<i className="fas fa-pen" />} error="Minimum 50 caracteres" placeholder="Trop court..." />
+        </div>
+      </Section>
+
+      {/* ═══════════════════ TOOLTIP ═══════════════════ */}
+      <Section title="Tooltip (TnTooltip)">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'center', padding: '20px 0' }}>
+          <TnTooltip text="Position top (defaut)" position="top">
+            <button className="tn-btn tn-btn--primary tn-btn--sm">Hover moi (top)</button>
+          </TnTooltip>
+          <TnTooltip text="Position bottom" position="bottom">
+            <button className="tn-btn tn-btn--outline tn-btn--sm">Bottom</button>
+          </TnTooltip>
+          <TnTooltip text="Position left" position="left">
+            <button className="tn-btn tn-btn--ghost tn-btn--sm">Left</button>
+          </TnTooltip>
+          <TnTooltip text="Position right" position="right">
+            <button className="tn-btn tn-btn--secondary tn-btn--sm">Right</button>
+          </TnTooltip>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'center', padding: '20px 0' }}>
+          <TnTooltip text="Fondee en 2025 au coeur de Port-Gentil, Gabon. Maison d'edition litteraire africaine." position="bottom" maxWidth={280}>
+            <span style={{ cursor: 'help', fontSize: 14, fontWeight: 600, color: 'var(--ds-orange)' }}>
+              <i className="fas fa-circle-info" /> Texte long (280px max)
+            </span>
+          </TnTooltip>
+          <TnTooltip text="Ce tooltip est desactive" disabled>
+            <button className="tn-btn tn-btn--outline tn-btn--sm" style={{ opacity: 0.5 }}>Disabled</button>
+          </TnTooltip>
+          <TnTooltip text="Focus via Tab pour voir" position="top">
+            <a href="#" onClick={e => e.preventDefault()} style={{ color: 'var(--ds-orange)', fontWeight: 600, fontSize: 14 }}>
+              Focus clavier (Tab)
+            </a>
+          </TnTooltip>
         </div>
       </Section>
     </div>

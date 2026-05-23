@@ -51,8 +51,8 @@
   aspect-ratio: 1/1.15;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(200,149,108,0.4);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
+  box-shadow: 0 30px 60px rgba(20,14,8,0.4);
   position: relative;
 }
 
@@ -143,10 +143,10 @@
 }
 
 .authd-bio__dropcap {
-  font-family: var(--tn-serif);
+  font-family: var(--ds-serif, 'Playfair Display', serif);
   font-size: 56px;
   line-height: 0.85;
-  color: var(--tn-orange);
+  color: var(--ds-orange);
   float: left;
   margin-right: 8px;
   font-weight: 700;

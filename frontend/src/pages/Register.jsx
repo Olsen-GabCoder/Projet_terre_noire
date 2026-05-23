@@ -157,7 +157,7 @@ const Register = () => {
             <i className="fas fa-user-plus" />
           </div>
           <h1 className="reg-hero__title">
-            <span className="reg-hero__title-main">Créer un compte</span>
+            <span className="reg-hero__title-main">Rejoindre la communauté</span>
           </h1>
           <p className="reg-hero__sub">
             Rejoignez notre communauté d'auteurs et de lecteurs — commandez en toute simplicité,

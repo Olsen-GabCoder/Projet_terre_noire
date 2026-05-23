@@ -7,6 +7,15 @@ import '../styles/Footer.css';
 
 const LOGO_SRC = '/images/logo_terre_noire.png';
 
+const AFRICAN_QUOTES = [
+  { text: "Le danger de l'histoire unique, c'est qu'elle vole aux gens leur dignité.", author: "Chimamanda Ngozi Adichie" },
+  { text: "L'Afrique est un continent, pas un pays. Et ses histoires méritent d'être racontées dans toute leur complexité.", author: "Chimamanda Ngozi Adichie" },
+  { text: "Un vieillard qui meurt, c'est une bibliothèque qui brûle.", author: "Amadou Hampâté Bâ" },
+  { text: "La culture est ce qui reste quand on a tout oublié.", author: "Amadou Hampâté Bâ" },
+  { text: "Tant que les lions n'auront pas leurs propres historiens, les histoires de chasse glorifieront toujours le chasseur.", author: "Proverbe africain" },
+  { text: "Ce n'est pas le fleuve qui est grand, c'est l'eau.", author: "Proverbe beti" },
+];
+
 function DevModalContent({ onClose, children }) {
   const modalRef = useRef(null);
 
@@ -50,6 +59,7 @@ const Footer = () => {
   const [apiError, setApiError] = useState('');
   const [showTop, setShowTop] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
+  const [quote] = useState(() => AFRICAN_QUOTES[Math.floor(Math.random() * AFRICAN_QUOTES.length)]);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 400);
@@ -95,6 +105,14 @@ const Footer = () => {
       <footer className="ft">
         <div className="ft__motif-bg tn-motif-bg" />
         <div className="ft__motif-strip tn-motif-strip" />
+
+        {/* ── CITATION AFRICAINE ── */}
+        <div className="ft__citation">
+          <blockquote className="ft__citation-text">
+            « {quote.text} »
+          </blockquote>
+          <cite className="ft__citation-author">— {quote.author}</cite>
+        </div>
 
         {/* ── MAIN 4-COLUMN GRID ── */}
         <div className="ft__main">
@@ -243,6 +261,12 @@ const Footer = () => {
                   <i className="fas fa-arrow-up-right-from-square ft__credit-dev-icon" />
                 </button>
               </div>
+            </div>
+
+            {/* ── COLOPHON ── */}
+            <div className="ft__colophon">
+              Terre Noire Éditions est composée en Playfair Display &amp; Inter.
+              Imprimée à Port-Gentil, Gabon. 2025–2026.
             </div>
           </div>
         </div>

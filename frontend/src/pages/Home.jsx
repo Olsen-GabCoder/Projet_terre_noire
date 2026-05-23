@@ -348,6 +348,7 @@ const Home = () => {
                 Voir tout <i className="fas fa-arrow-right" />
               </Link>
             </div>
+            <p className="home-epigraph">« Chaque livre est un seuil. Voici quelques portes. »</p>
             <div className="home-books-grid">
               {featured.slice(0, 6).map((book, i) => (
                 <div key={book.id} className="home-stagger-item" style={{ animationDelay: `${i * 80}ms` }}>
@@ -376,6 +377,7 @@ const Home = () => {
                 </h2>
               </div>
             </div>
+            <p className="home-epigraph">« Chaque collection est un territoire à arpenter. »</p>
 
             {/* Tabs */}
             <div className="home-genres__tabs">
@@ -444,6 +446,7 @@ const Home = () => {
                 Voir tout <i className="fas fa-arrow-right" />
               </Link>
             </div>
+            <p className="home-epigraph">« Les voix que d'autres ont déjà écoutées. »</p>
             <div className="home-books-grid">
               {bestsellers.slice(0, 4).map((book, i) => (
                 <div key={book.id} className="home-stagger-item" style={{ animationDelay: `${i * 80}ms` }}>
@@ -470,6 +473,7 @@ const Home = () => {
                 Voir tout <i className="fas fa-arrow-right" />
               </Link>
             </div>
+            <p className="home-epigraph">« L'encre est fraîche, les histoires impatientes. »</p>
             <div className="home-books-grid">
               {newReleases.slice(0, 8).map((book, i) => (
                 <div key={book.id} className="home-stagger-item" style={{ animationDelay: `${i * 80}ms` }}>
@@ -503,6 +507,7 @@ const Home = () => {
                 Tous les auteurs <i className="fas fa-arrow-right" />
               </Link>
             </div>
+            <p className="home-epigraph">« Derrière chaque œuvre, une voix qui demande à être entendue. »</p>
 
             {/* Carrousel horizontal infini */}
             <div className="home-authors-marquee">
