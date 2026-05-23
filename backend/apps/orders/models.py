@@ -46,7 +46,7 @@ class OrderItem(models.Model):
 
 class Payment(models.Model):
     PROVIDER_CHOICES = [
-        ('MOBICASH', 'Mobicash'),
+        ('MOBICASH', 'Moov Money'),  # ex-Mobicash, renomme apres rachat Moov Africa
         ('AIRTEL', 'Airtel Money'),
         ('CASH', 'Espèces'),
         ('VISA', 'Carte Visa'),
@@ -65,7 +65,7 @@ class Payment(models.Model):
         ('EXPIRED', 'Expiré'),
     ]
 
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
     transaction_id = models.CharField(max_length=128, unique=True, db_index=True,
                                        help_text="Référence Bamboo Pay (bamboo_ref)")
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)

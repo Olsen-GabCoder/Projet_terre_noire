@@ -1,4 +1,6 @@
 import logging
+import uuid
+from datetime import timedelta
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -181,9 +183,9 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if hasattr(order, 'payment'):
+        if order.payments.filter(status='SUCCESS').exists():
             return Response(
-                {'error': 'Cette commande a déjà un paiement'},
+                {'error': 'Cette commande a déjà été payée'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -249,25 +251,35 @@ class PaymentInitiateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if hasattr(order, 'payment') and order.payment.is_final:
+        # Si la commande est deja payee, refuser
+        if order.payments.filter(status='SUCCESS').exists():
             return Response(
-                {'error': 'Cette commande a deja un paiement finalise.'},
+                {'error': 'Cette commande a déjà été payée.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Si paiement pending existe deja, le reutiliser
-        if hasattr(order, 'payment') and order.payment.status == 'PENDING':
-            existing = order.payment
-            return Response({
-                'bamboo_ref': existing.transaction_id,
-                'status': 'PENDING',
-                'message': 'Paiement deja initie. Verifiez votre telephone.',
-            })
+        # Si un paiement PENDING existe, verifier s'il est expire ou reutilisable
+        current_payment = order.payments.filter(status='PENDING').order_by('-created_at').first()
+        if current_payment:
+            if current_payment.created_at < timezone.now() - timedelta(minutes=10):
+                # Expirer le paiement obsolete
+                with transaction.atomic():
+                    current_payment.status = 'EXPIRED'
+                    current_payment.finalized_at = timezone.now()
+                    current_payment.save()
+                logger.info("payment.auto_expired_on_retry ref=%s", current_payment.transaction_id)
+            else:
+                # Reutiliser le paiement pending actif
+                return Response({
+                    'bamboo_ref': current_payment.transaction_id,
+                    'status': 'PENDING',
+                    'message': 'Paiement déjà initié. Vérifiez votre téléphone.',
+                })
 
         # Appeler Bamboo Pay
         try:
             service = get_bamboo_service()
-            reference = f"TN-{order.id}"
+            reference = f"TN-{order.id}-{uuid.uuid4().hex[:8]}"
             payer_name = request.user.get_full_name() or request.user.username
 
             result = service.initiate_instant_payment(
@@ -330,6 +342,25 @@ class PaymentCheckStatusView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # Auto-expiration : PENDING > 10 minutes
+        EXPIRATION_DELAY = timedelta(minutes=10)
+        if payment.status == 'PENDING' and \
+           payment.created_at < timezone.now() - EXPIRATION_DELAY:
+            with transaction.atomic():
+                payment.status = 'EXPIRED'
+                payment.finalized_at = timezone.now()
+                payment.save()
+            logger.info(
+                "payment.auto_expired ref=%s age=%s",
+                bamboo_ref, timezone.now() - payment.created_at
+            )
+            return Response({
+                'bamboo_ref': payment.transaction_id,
+                'status': 'EXPIRED',
+                'finalized_at': payment.finalized_at,
+                'message': 'Paiement expiré après 10 minutes sans confirmation.',
+            })
+
         # Idempotence : si deja final, retourner sans re-appeler Bamboo
         if payment.is_final:
             return Response({
@@ -343,16 +374,36 @@ class PaymentCheckStatusView(APIView):
             service = get_bamboo_service()
             result = service.check_status(bamboo_ref)
 
+            # Handle transaction not found at Bamboo
+            if result.get('code') == 404 or not result.get('transaction'):
+                logger.error("bamboo.transaction_not_found ref=%s", bamboo_ref)
+                return Response(
+                    {'error': 'Transaction introuvable côté Bamboo Pay.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
             tx = result.get('transaction', {})
-            bamboo_status = tx.get('status', 'pending')
+            bamboo_status = tx.get('status', 'pending').lower().strip()
 
             # Mapper le statut Bamboo -> statut Payment
-            status_map = {
+            STATUS_MAP = {
                 'completed': 'SUCCESS',
+                'success': 'SUCCESS',
                 'failed': 'FAILED',
+                'rejected': 'FAILED',
+                'cancelled': 'FAILED',
+                'expired': 'EXPIRED',
+                'timeout': 'EXPIRED',
                 'pending': 'PENDING',
+                'processing': 'PENDING',
             }
-            new_status = status_map.get(bamboo_status, 'PENDING')
+            new_status = STATUS_MAP.get(bamboo_status)
+            if new_status is None:
+                logger.warning(
+                    "bamboo.unknown_status ref=%s raw_status=%r — fallback PENDING",
+                    bamboo_ref, bamboo_status
+                )
+                new_status = 'PENDING'
 
             # Mettre a jour si le statut a change vers un etat final
             if new_status != 'PENDING' and payment.status == 'PENDING':
@@ -389,3 +440,73 @@ class PaymentCheckStatusView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_502_BAD_GATEWAY
             )
+
+
+class PaymentWebhookView(APIView):
+    """POST /api/payments/webhook/ — Notification asynchrone Bamboo Pay.
+
+    Bamboo Pay appelle cette URL quand le statut d'une transaction change.
+    Pas d'auth utilisateur (Bamboo appelle directement).
+    """
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        data = request.data
+        reference = data.get('reference') or data.get('billingId')
+        bamboo_status = (data.get('status') or 'pending').lower().strip()
+
+        logger.info("webhook.received ref=%s status=%s", reference, bamboo_status)
+
+        if not reference:
+            logger.warning("webhook.invalid_payload data=%r", data)
+            return Response({'error': 'reference manquante'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payment = Payment.objects.select_related('order').get(
+                transaction_id=reference
+            )
+        except Payment.DoesNotExist:
+            logger.warning("webhook.payment_not_found ref=%s", reference)
+            return Response({'error': 'payment introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Idempotence
+        if payment.is_final:
+            logger.info("webhook.already_final ref=%s status=%s", reference, payment.status)
+            return Response({'status': 'already_processed'})
+
+        STATUS_MAP = {
+            'completed': 'SUCCESS',
+            'success': 'SUCCESS',
+            'failed': 'FAILED',
+            'rejected': 'FAILED',
+            'cancelled': 'FAILED',
+            'pending': 'PENDING',
+        }
+        new_status = STATUS_MAP.get(bamboo_status)
+        if new_status is None:
+            logger.warning("webhook.unknown_status ref=%s status=%r", reference, bamboo_status)
+            return Response({'status': 'unknown_status_logged'})
+
+        if new_status != 'PENDING':
+            with transaction.atomic():
+                payment.status = new_status
+                payment.bamboo_response = data
+                payment.finalized_at = timezone.now()
+                payment.save()
+
+                if new_status == 'SUCCESS':
+                    payment.order.status = 'PAID'
+                    payment.order.save()
+                    try:
+                        from apps.core.email import send_order_paid
+                        send_order_paid(payment.order)
+                    except Exception:
+                        pass
+
+                logger.info(
+                    "webhook.finalized ref=%s status=%s order=%d",
+                    reference, new_status, payment.order.id
+                )
+
+        return Response({'status': 'processed'})

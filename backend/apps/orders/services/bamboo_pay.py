@@ -9,6 +9,7 @@ Required ENV variables:
   - BAMBOO_PAY_MERCHANT_ID
   - BAMBOO_PAY_USERNAME
   - BAMBOO_PAY_PASSWORD
+  - BAMBOO_CALLBACK_URL   (URL publique pour webhook, optionnel en dev)
 """
 
 import logging
@@ -47,10 +48,11 @@ class BambooPayService:
                 f"Verifiez votre .env ou vos variables d'environnement."
             )
 
+        self.callback_url = os.environ.get('BAMBOO_CALLBACK_URL', '')
         self.auth = HTTPBasicAuth(self.username, self.password)
 
     def initiate_instant_payment(self, phone, amount, payer_name,
-                                  reference, operator, callback_url=None):
+                                  reference, operator):
         """
         Methode B — Paiement instantane (sans redirection).
         Le client recoit un push USSD et valide avec son PIN.
@@ -82,7 +84,7 @@ class BambooPayService:
             'payer_name': payer_name,
             'reference': reference,
             'merchant_id': self.merchant_id,
-            'callback_url': callback_url or '',
+            'callback_url': self.callback_url,
             'operateur': operator,
         }
 
