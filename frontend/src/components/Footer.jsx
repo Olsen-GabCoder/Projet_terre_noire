@@ -291,7 +291,7 @@ const Footer = () => {
               <div className="dev-modal__header-pattern" />
               <img src="/images/photo_olsen.jpg" alt="Olsen Kampala" className="dev-modal__photo" />
               <div className="dev-modal__identity">
-                <span className="dev-modal__eyebrow">Ingenieur Informatique</span>
+                <span className="dev-modal__eyebrow">Ingenieur Informatique · Ecrivain · Conferencier</span>
                 <h2 className="dev-modal__name">Olsen Kampala</h2>
                 <p className="dev-modal__location"><i className="fas fa-location-dot" /> Libreville, Gabon</p>
               </div>
@@ -299,8 +299,8 @@ const Footer = () => {
 
             <div className="dev-modal__body">
               <p className="dev-modal__bio">
-                Ingenieur informatique passionne par la creation de solutions digitales a fort impact.
-                Specialise en developpement web &amp; mobile, intelligence artificielle et machine learning.
+                Ingenieur informatique, ecrivain et conferencier. Passionne par la creation de solutions
+                digitales a fort impact, il allie expertise technique et sensibilite litteraire.
                 Concepteur et developpeur de la plateforme Terre Noire Editions.
               </p>
 
@@ -326,12 +326,19 @@ const Footer = () => {
                     <span className="dev-modal__domain-desc">PostgreSQL, Python, Docker, CI/CD</span>
                   </div>
                 </div>
+                <div className="dev-modal__domain">
+                  <div className="dev-modal__domain-icon"><i className="fas fa-feather-pointed" /></div>
+                  <div>
+                    <span className="dev-modal__domain-title">Ecriture & Conferences</span>
+                    <span className="dev-modal__domain-desc">Auteur, orateur, transmission du savoir</span>
+                  </div>
+                </div>
               </div>
 
               <div className="dev-modal__stack">
-                <span className="dev-modal__stack-label">Stack technique</span>
+                <span className="dev-modal__stack-label">Quelques competences</span>
                 <div className="dev-modal__tags">
-                  {['Python', 'JavaScript', 'React', 'Django', 'TensorFlow', 'PostgreSQL', 'Docker', 'Git'].map(t => (
+                  {['Python', 'JavaScript', 'React', 'Django', 'TensorFlow', 'PostgreSQL', 'Docker', 'Git', 'React Native', 'NLP'].map(t => (
                     <span key={t} className="dev-modal__tag">{t}</span>
                   ))}
                 </div>
