@@ -248,8 +248,8 @@ const Home = () => {
             </h1>
 
             <p className="home-hero-sub">
-              Maison d'edition litteraire africaine. Quatre collections — Moughetou, Marabout,
-              Une Vie d'Onction, Mwanna — pour faire entendre les voix qui ecrivent demain.
+              Maison d'edition litteraire africaine. Des collections — Moughetou, Marabout,
+              Une Vie d'Onction, Mwanna et bien d'autres — pour faire entendre les voix qui ecrivent demain.
             </p>
 
             <div className="home-hero-actions">
