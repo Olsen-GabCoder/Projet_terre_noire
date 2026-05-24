@@ -12,6 +12,7 @@ reportlab
 cloudinary
 django-cloudinary-storage
 django-extensions
+requests
 gunicorn
 whitenoise
 psycopg2-binary
