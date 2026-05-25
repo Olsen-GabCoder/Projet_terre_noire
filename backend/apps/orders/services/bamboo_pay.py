@@ -88,6 +88,11 @@ class BambooPayService:
             'operateur': operator,
         }
 
+        logger.info(
+            "bamboo.initiate_payload ref=%s op=%s callback_url=%s merchant=%s",
+            reference, operator, self.callback_url or '(VIDE)', self.merchant_id
+        )
+
         try:
             response = requests.post(
                 f"{self.api_url}/api/mobile/instant-payment",
@@ -162,7 +167,7 @@ class BambooPayService:
         start = time.time()
 
         try:
-            response = requests.get(
+            response = requests.post(
                 f"{self.api_url}/api/check-status/{transaction_id}",
                 auth=self.auth,
                 timeout=15,
