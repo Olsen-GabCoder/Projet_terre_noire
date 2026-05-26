@@ -275,7 +275,7 @@ const BookReader = () => {
     ctx.fillStyle = '#5a4a2a';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `© Terre Noire Éditions — Page ${pageNum} — Usage personnel strictly reserved`,
+      `© Terre Noire Éditions — Page ${pageNum} — Usage personnel strictement réservé`,
       width / 2,
       height - 14
     );

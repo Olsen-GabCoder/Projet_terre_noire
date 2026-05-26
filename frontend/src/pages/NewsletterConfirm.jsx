@@ -14,20 +14,20 @@ const STATES = {
   success: {
     icon: 'fas fa-check-circle',
     color: 'var(--tn-success, #16a34a)',
-    title: 'Inscription confirmee !',
-    message: 'Merci ! Vous recevrez desormais nos actualites, nouveautes et offres exclusives.',
+    title: 'Inscription confirmée !',
+    message: 'Merci ! Vous recevrez désormais nos actualités, nouveautés et offres exclusives.',
   },
   expired: {
     icon: 'fas fa-clock',
     color: 'var(--tn-orange, #E8601C)',
-    title: 'Lien expire',
-    message: 'Ce lien de confirmation a expire (72h). Veuillez vous reinscrire via le formulaire en bas de page.',
+    title: 'Lien expiré',
+    message: 'Ce lien de confirmation a expiré (72h). Veuillez vous réinscrire via le formulaire en bas de page.',
   },
   invalid: {
     icon: 'fas fa-times-circle',
     color: 'var(--tn-error, #dc2626)',
     title: 'Lien invalide',
-    message: 'Ce lien de confirmation est invalide ou a deja ete utilise.',
+    message: 'Ce lien de confirmation est invalide ou a déjà été utilisé.',
   },
 };
 
@@ -62,7 +62,7 @@ const NewsletterConfirm = () => {
         </p>
         {result !== 'loading' && (
           <Link to="/" className="tn-btn tn-btn--primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: 14 }}>
-            <i className="fas fa-home" /> Retour a l'accueil
+            <i className="fas fa-home" /> Retour à l'accueil
           </Link>
         )}
       </div>

@@ -597,7 +597,7 @@ const Profile = () => {
                             <div className="item-details">
                               <h5>{item.book.title}</h5>
                               <p>{item.book.author?.full_name}</p>
-                              <span className="item-quantity">Quantité: {item.quantity}</span>
+                              <span className="item-quantity">Quantité : {item.quantity}</span>
                             </div>
                             <div className="item-price">
                               {formatPrice(item.price * item.quantity)}
@@ -609,14 +609,14 @@ const Profile = () => {
                       <div className="order-footer">
                         <div className="order-shipping">
                           <p>
-                            <strong>Livraison:</strong> {order.shipping_address}, {order.shipping_city}
+                            <strong>Livraison :</strong> {order.shipping_address}, {order.shipping_city}
                           </p>
                           <p>
-                            <strong>Téléphone:</strong> {order.shipping_phone}
+                            <strong>Téléphone :</strong> {order.shipping_phone}
                           </p>
                         </div>
                         <div className="order-total">
-                          <span>Total:</span>
+                          <span>Total :</span>
                           <strong>{formatPrice(order.total_amount)}</strong>
                         </div>
                       </div>

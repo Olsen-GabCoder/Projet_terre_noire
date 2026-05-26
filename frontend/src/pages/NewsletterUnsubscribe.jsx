@@ -8,20 +8,20 @@ const STATES = {
   loading: {
     icon: 'fas fa-spinner fa-spin',
     color: 'var(--tn-orange, #E8601C)',
-    title: 'Desinscription en cours...',
+    title: 'Désinscription en cours...',
     message: 'Veuillez patienter.',
   },
   success: {
     icon: 'fas fa-heart-broken',
     color: 'var(--tn-orange, #E8601C)',
-    title: 'Desinscription confirmee',
-    message: 'Vous ne recevrez plus nos emails. Vous pouvez vous reinscrire a tout moment via notre site.',
+    title: 'Désinscription confirmée',
+    message: 'Vous ne recevrez plus nos emails. Vous pouvez vous réinscrire à tout moment via notre site.',
   },
   invalid: {
     icon: 'fas fa-times-circle',
     color: 'var(--tn-error, #dc2626)',
     title: 'Lien invalide',
-    message: 'Ce lien de desinscription est invalide ou a deja ete utilise.',
+    message: 'Ce lien de désinscription est invalide ou a déjà été utilisé.',
   },
 };
 
@@ -56,7 +56,7 @@ const NewsletterUnsubscribe = () => {
         </p>
         {result !== 'loading' && (
           <Link to="/" className="tn-btn tn-btn--primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: 14 }}>
-            <i className="fas fa-home" /> Retour a l'accueil
+            <i className="fas fa-home" /> Retour à l'accueil
           </Link>
         )}
       </div>

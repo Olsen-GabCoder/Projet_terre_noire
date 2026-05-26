@@ -219,7 +219,7 @@ const Checkout = () => {
           <div className="chk-retry-banner">
             <i className="fas fa-redo" />
             <div className="chk-retry-banner__text">
-              <strong>Retentative de paiement</strong>
+              <strong>Nouvelle tentative de paiement</strong>
               <span>Commande #{retryOrder.id} — {formatPrice(retryOrder.total_amount)}</span>
             </div>
           </div>
@@ -233,7 +233,7 @@ const Checkout = () => {
 
             <div className="chk-form-group">
               <label htmlFor="shipping_address">
-                Adresse Complète <span className="required">*</span>
+                Adresse complète <span className="required">*</span>
               </label>
               <textarea
                 id="shipping_address"
@@ -264,7 +264,7 @@ const Checkout = () => {
 
               <div className="chk-form-group">
                 <label htmlFor="shipping_phone">
-                  Numéro de Téléphone <span className="required">*</span>
+                  Numéro de téléphone <span className="required">*</span>
                 </label>
                 <input
                   type="tel"
@@ -318,7 +318,7 @@ const Checkout = () => {
                       <div className="chk-item-info">
                         <h4>{item.title}</h4>
                         <p>{item.author?.full_name}</p>
-                        <span className="chk-item-qty">Qté: {item.quantity}</span>
+                        <span className="chk-item-qty">Qté : {item.quantity}</span>
                       </div>
                       <div className="chk-item-price">
                         {item.original_price && Number(item.original_price) > Number(item.price) && (
@@ -427,7 +427,7 @@ const Checkout = () => {
                     {isPhoneValid
                       ? 'Vous recevrez une demande de validation sur ce numéro.'
                       : phoneForPayment.length > 0
-                        ? 'Le numéro doit comporter exactement 8 chiffres.'
+                        ? 'Le numéro doit comporter 8 ou 9 chiffres.'
                         : 'Saisissez le numéro associé à votre compte mobile money.'}
                   </p>
                 </div>

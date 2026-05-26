@@ -183,7 +183,7 @@ const Home = () => {
       if (statRes.status === 'fulfilled') setStats(statRes.value.data);
     } catch (err) {
       console.error('Erreur chargement:', err);
-      setError('Impossible de charger les donnees.');
+      setError('Impossible de charger les données.');
     } finally {
       setLoading(false);
     }
@@ -243,12 +243,12 @@ const Home = () => {
             </div>
 
             <h1 className="home-hero-title">
-              Demain s'ecrit <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
+              Demain s'écrit <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
             </h1>
 
             <p className="home-hero-sub">
-              Maison d'edition litteraire africaine. Des collections — Moughetou, Marabout,
-              Une Vie d'Onction, Mwanna et bien d'autres — pour faire entendre les voix qui ecrivent demain.
+              Maison d'édition littéraire africaine. Des collections — Moughetou, Marabout,
+              Une Vie d'Onction, Mwanna et bien d'autres — pour faire entendre les voix qui écrivent demain.
             </p>
 
             <div className="home-hero-actions">
@@ -262,9 +262,9 @@ const Home = () => {
 
             <div className="home-hero-stats" ref={statsRef}>
               <AnimatedStat value={stats?.total_books || 0} label="titres au catalogue" active={statsVisible} />
-              <AnimatedStat value={stats?.total_authors || 0} label="auteurs publies" active={statsVisible} />
-              <AnimatedStat value={stats?.total_categories || 0} label="categories" active={statsVisible} />
-              <AnimatedStat value="+1 an" label="d'edition" active={statsVisible} />
+              <AnimatedStat value={stats?.total_authors || 0} label="auteurs publiés" active={statsVisible} />
+              <AnimatedStat value={stats?.total_categories || 0} label="catégories" active={statsVisible} />
+              <AnimatedStat value="+1 an" label="d'édition" active={statsVisible} />
             </div>
           </div>
 
@@ -286,7 +286,7 @@ const Home = () => {
                   </div>
                 ))}
                 <div className="home-triptych__pick">
-                  <i className="fas fa-star" /> Selection de la semaine
+                  <i className="fas fa-star" /> Sélection de la semaine
                 </div>
               </div>
             ) : null}
@@ -302,7 +302,7 @@ const Home = () => {
           <div className="home-books-inner">
             <div className="home-section-header">
               <div>
-                <span className="home-section-label">Selection de la maison</span>
+                <span className="home-section-label">Sélection de la maison</span>
                 <h2 className="home-section-title tn-section-title">
                   Nos <span className="home-section-title__accent">recommandations</span>
                 </h2>
@@ -378,7 +378,7 @@ const Home = () => {
                   ))}
                 </div>
               ) : (
-                <p className="home-genres__empty">Aucun livre dans cette categorie pour le moment.</p>
+                <p className="home-genres__empty">Aucun livre dans cette catégorie pour le moment.</p>
               )}
             </div>
 
@@ -427,9 +427,9 @@ const Home = () => {
           <div className="home-books-inner">
             <div className="home-section-header">
               <div>
-                <span className="home-section-label">Fraichement publies</span>
+                <span className="home-section-label">Fraîchement publiés</span>
                 <h2 className="home-section-title tn-section-title">
-                  Les <span className="home-section-title__accent">nouveautes</span>
+                  Les <span className="home-section-title__accent">nouveautés</span>
                 </h2>
               </div>
               <Link to="/catalog?ordering=-created_at" className="home-section-link">

@@ -103,7 +103,7 @@ const OrderSuccess = () => {
               <strong>Nous préparons votre commande</strong> — vous recevrez les instructions de paiement (Mobicash, Airtel Money, espèces ou carte Visa)
             </li>
             <li>
-              <strong>Votre commande prend la route</strong> — une fois le paiement confirmé, nous expédions sous 5-10 jours ouvrés
+              <strong>Votre commande prend la route</strong> — une fois le paiement confirmé, nous expédions sous 5 à 10 jours ouvrés
             </li>
             <li>
               <strong>Vos livres rejoignent votre bibliothèque</strong> — livraison à l&apos;adresse indiquée

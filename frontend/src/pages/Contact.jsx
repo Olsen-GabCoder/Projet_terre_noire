@@ -57,13 +57,13 @@ const Contact = () => {
           <div className="ct-hero__line" />
           <h1 className="ct-hero__title">Contactez-<span className="ct-hero__title-accent">nous</span></h1>
           <p className="ct-hero__sub">
-            Une question, un projet d&apos;edition ou une commande ?
-            Notre equipe est a votre ecoute.
+            Une question, un projet d&apos;édition ou une commande ?
+            Notre équipe est à votre écoute.
           </p>
           <div className="ct-hero__trust">
             {[
-              ['fa-clock', 'Reponse sous 24h'],
-              ['fa-shield-halved', 'Donnees securisees'],
+              ['fa-clock', 'Réponse sous 24h'],
+              ['fa-shield-halved', 'Données sécurisées'],
               ['fa-headset', 'Support humain'],
             ].map(([icon, label]) => (
               <span key={label} className="ct-hero__trust-item">
@@ -83,7 +83,7 @@ const Contact = () => {
         <div className="ct-info-row">
           {[
             ['fa-envelope', 'Email', 'terrenoireeditions@gmail.com', 'mailto:terrenoireeditions@gmail.com'],
-            ['fa-phone', 'Telephone', '+241 65 34 88 87 / +241 07 65 93 535', 'tel:+24165348887'],
+            ['fa-phone', 'Téléphone', '+241 65 34 88 87 / +241 07 65 93 535', 'tel:+24165348887'],
             ['fa-brands fa-whatsapp', 'WhatsApp', '+241 65 34 88 87', 'https://wa.me/24165348887'],
             ['fa-location-dot', 'Adresse', 'Port-Gentil, Gabon', null],
           ].map(([icon, title, value, href]) => (
@@ -107,7 +107,7 @@ const Contact = () => {
             <span className="ct-section-num"><i className="fas fa-paper-plane" /></span>
             <div>
               <h2>Envoyez-nous un message</h2>
-              <p className="ct-section-desc">Remplissez le formulaire, nous vous repondrons sous 24h.</p>
+              <p className="ct-section-desc">Remplissez le formulaire, nous vous répondrons sous 24h.</p>
             </div>
           </div>
 
@@ -157,7 +157,7 @@ const Contact = () => {
               required
               value={formData.message}
               onChange={handleChange}
-              placeholder="Decrivez votre demande en detail..."
+              placeholder="Décrivez votre demande en détail..."
               leftIcon={<i className="fas fa-pen" />}
             />
 
@@ -173,7 +173,7 @@ const Contact = () => {
             </TnButton>
 
             {submitStatus === 'success' && (
-              <TnAlert variant="success">Message envoye ! Nous vous repondrons tres bientot.</TnAlert>
+              <TnAlert variant="success">Message envoyé ! Nous vous répondrons très bientôt.</TnAlert>
             )}
             {submitStatus === 'error' && (
               <TnAlert variant="error">{errorMessage || 'Une difficulté est survenue.'}</TnAlert>
@@ -206,12 +206,12 @@ const Contact = () => {
           <div className="ct-card">
             <div className="ct-section-header">
               <span className="ct-section-num"><i className="fas fa-circle-question" /></span>
-              <h2>Questions frequentes</h2>
+              <h2>Questions fréquentes</h2>
             </div>
             <div className="ct-faq-list">
               {[
                 ['Commande', 'Panier puis paiement via Mobicash, Airtel Money, especes ou carte Visa.'],
-                ['Livraison', '5-7 jours a Port-Gentil, 7-10 jours dans les autres villes du Gabon.'],
+                ['Livraison', '5-7 jours à Port-Gentil, 7-10 jours dans les autres villes du Gabon.'],
                 ['Manuscrit', 'Via le formulaire en ligne ou par email direct.'],
               ].map(([q, a]) => (
                 <div key={q} className="ct-faq-item">

@@ -158,7 +158,7 @@ const Catalog = () => {
           <i className="fas fa-search" />
           <input
             type="text"
-            placeholder="Rechercher un titre, un auteur, une reference..."
+            placeholder="Rechercher un titre, un auteur, une référence..."
             value={searchInput}
             onChange={(e) => {
               const val = e.target.value;
