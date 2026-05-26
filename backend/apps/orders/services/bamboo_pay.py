@@ -88,9 +88,11 @@ class BambooPayService:
             'operateur': operator,
         }
 
-        logger.info(
-            "bamboo.initiate_payload ref=%s op=%s callback_url=%s merchant=%s",
-            reference, operator, self.callback_url or '(VIDE)', self.merchant_id
+        logger.warning(
+            "bamboo.initiate_payload ref=%s op=%s phone=%s amount=%s "
+            "callback_url=%s merchant=%s",
+            reference, operator, phone, amount,
+            self.callback_url or '(VIDE)', self.merchant_id
         )
 
         try:
@@ -126,13 +128,18 @@ class BambooPayService:
                 )
 
             # 400, 500, etc.
+            raw_body = response.text
+            logger.error(
+                "bamboo.initiate_error ref=%s status_http=%d body=%s",
+                reference, response.status_code, raw_body[:500]
+            )
             data = {}
             try:
                 data = response.json()
             except Exception:
                 pass
             raise BambooPayError(
-                f"Erreur Bamboo Pay HTTP {response.status_code}: {data}"
+                f"Erreur Bamboo Pay HTTP {response.status_code}: {data or raw_body[:200]}"
             )
 
         except requests.RequestException as e:
