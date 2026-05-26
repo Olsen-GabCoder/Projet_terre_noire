@@ -11,7 +11,7 @@ import useCountUp from '../hooks/useCountUp';
 import '../styles/Home.css';
 
 /* ── Hook : mot qui alterne avec effet typing ── */
-const HERO_WORDS = ['monde', 'univers', 'horizon', 'voyage', 'recit', 'reve', 'destin', 'chemin', 'avenir', 'souffle', 'eveil', 'espoir'];
+const HERO_WORDS = ['aujourd\'hui', 'maintenant', 'ici', 'ensemble', 'sans attendre'];
 function useTypingWords(words, typingSpeed = 80, pauseMs = 2800) {
   const [display, setDisplay] = useState(words[0]);
   const [wordIndex, setWordIndex] = useState(0);
@@ -243,8 +243,7 @@ const Home = () => {
             </div>
 
             <h1 className="home-hero-title">
-              La&nbsp;ou chaque page<br />
-              ouvre un <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
+              Demain s'ecrit <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
             </h1>
 
             <p className="home-hero-sub">
