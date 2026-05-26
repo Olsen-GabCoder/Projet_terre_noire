@@ -35,8 +35,8 @@ const AdminOrders = () => {
       const r = await api.patch(`/orders/${orderId}/`, { status: newStatus });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...r.data } : o));
       setSelectedOrder(prev => prev && prev.id === orderId ? { ...prev, ...r.data } : prev);
-      toast.success('Statut de la commande mis a jour');
-    } catch (e) { toast.error('Erreur lors de la mise a jour du statut'); }
+      toast.success('Statut de la commande mis à jour');
+    } catch (e) { toast.error('Erreur lors de la mise à jour du statut'); }
   };
 
   const counts = useMemo(() => ({
@@ -67,7 +67,7 @@ const AdminOrders = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Commandes']}
         title="Gestion des commandes"
-        subtitle="Consultez et gerez les commandes. Mettez a jour les statuts de livraison."
+        subtitle="Consultez et gérez les commandes. Mettez à jour les statuts de livraison."
         actions={
           <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}>
             <i className="fas fa-arrow-left" /> Retour
@@ -79,19 +79,19 @@ const AdminOrders = () => {
         {/* Stats */}
         <div className="adm-grid-3" style={{ marginBottom: 28 }}>
           <AdminStat icon="fa-layer-group" label="Total" value={counts.all} color="var(--tn-gray-700)" />
-          <AdminStat icon="fa-coins" label="Chiffre d'affaires" value={fmtPrice(counts.revenue)} suffix="FCFA" color="var(--tn-success)" metaTone={counts.revenue > 0 ? 'good' : 'muted'} meta={counts.revenue > 0 ? 'Payees + expediees' : ''} />
+          <AdminStat icon="fa-coins" label="Chiffre d'affaires" value={fmtPrice(counts.revenue)} suffix="FCFA" color="var(--tn-success)" metaTone={counts.revenue > 0 ? 'good' : 'muted'} meta={counts.revenue > 0 ? 'Payées + expédiées' : ''} />
           <AdminStat icon="fa-clock" label="En attente" value={counts.PENDING} meta={counts.PENDING > 0 ? 'action requise' : ''} metaTone="alert" color="var(--tn-warning)" />
-          <AdminStat icon="fa-circle-check" label="Payees" value={counts.PAID} color="var(--tn-success)" />
-          <AdminStat icon="fa-truck" label="Expediees" value={counts.SHIPPED} color="#1c2a4a" />
-          <AdminStat icon="fa-circle-xmark" label="Annulees" value={counts.CANCELLED} color="var(--tn-error)" />
+          <AdminStat icon="fa-circle-check" label="Payées" value={counts.PAID} color="var(--tn-success)" />
+          <AdminStat icon="fa-truck" label="Expédiées" value={counts.SHIPPED} color="#1c2a4a" />
+          <AdminStat icon="fa-circle-xmark" label="Annulées" value={counts.CANCELLED} color="var(--tn-error)" />
         </div>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
           <AdminFilterPills active={filter} onChange={setFilter} items={[
             ['all', 'Toutes', counts.all], ['PENDING', 'En attente', counts.PENDING],
-            ['PAID', 'Payees', counts.PAID], ['SHIPPED', 'Expediees', counts.SHIPPED],
-            ['CANCELLED', 'Annulees', counts.CANCELLED],
+            ['PAID', 'Payées', counts.PAID], ['SHIPPED', 'Expédiées', counts.SHIPPED],
+            ['CANCELLED', 'Annulées', counts.CANCELLED],
           ]} />
           <AdminSearch placeholder="Rechercher client, ville, n..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
         </div>
@@ -223,9 +223,9 @@ const AdminOrders = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {[
                   ['PENDING', 'En attente', 'fa-clock'],
-                  ['PAID', 'Payee', 'fa-check'],
-                  ['SHIPPED', 'Expediee', 'fa-truck'],
-                  ['CANCELLED', 'Annulee', 'fa-times'],
+                  ['PAID', 'Payée', 'fa-check'],
+                  ['SHIPPED', 'Expédiée', 'fa-truck'],
+                  ['CANCELLED', 'Annulée', 'fa-times'],
                 ].map(([s, l, ic]) => (
                   <StatusBtn key={s} statusKey={s.toLowerCase()} label={l} icon={ic} isCurrent={(sel.status || '').toUpperCase() === s} onClick={() => updateOrderStatus(sel.id, s)} />
                 ))}

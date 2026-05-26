@@ -12,11 +12,11 @@ const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFraction
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
 
 const DAYS = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
-const MONTHS = ['JANVIER','FEVRIER','MARS','AVRIL','MAI','JUIN','JUILLET','AOUT','SEPTEMBRE','OCTOBRE','NOVEMBRE','DECEMBRE'];
+const MONTHS = ['JANVIER','FÉVRIER','MARS','AVRIL','MAI','JUIN','JUILLET','AOÛT','SEPTEMBRE','OCTOBRE','NOVEMBRE','DÉCEMBRE'];
 
 function getGreetName(user) {
   const h = new Date().getHours();
-  const prefix = h < 12 ? 'Bonjour' : h < 18 ? 'Bon apres-midi' : 'Bonsoir';
+  const prefix = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
   return { prefix, name: user?.first_name || user?.username || 'Admin' };
 }
 
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
         if (mRes.status === 'fulfilled') setManuscripts(mRes.value.data.results || mRes.value.data || []);
         if (uRes.status === 'fulfilled') setUsers(Array.isArray(uRes.value.data) ? uRes.value.data : (uRes.value.data.results || []));
       } catch (err) {
-        setError('Impossible de charger les donnees');
+        setError('Impossible de charger les données');
         console.error(err);
       } finally {
         setLoading(false);
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Tableau de bord']}
         title={<>{greet.prefix}, <em style={{ fontStyle: 'italic', color: 'var(--tn-orange)', fontWeight: 600 }}>{greet.name}</em></>}
-        subtitle="Tableau de bord Terre Noire Editions — vue d'ensemble de votre activite."
+        subtitle="Tableau de bord Terre Noire Éditions — vue d'ensemble de votre activité."
         actions={
           <>
             <Link to="/" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}>
@@ -135,8 +135,8 @@ const AdminDashboard = () => {
             </span>
             <span style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontStyle: 'italic' }}>
               {orderStats.pending > 0
-                ? `« ${orderStats.pending} commande${orderStats.pending > 1 ? 's' : ''} en attente, ${manuscriptStats.pending} manuscrit${manuscriptStats.pending > 1 ? 's' : ''} a examiner. »`
-                : `« Tout est a jour — bonne journee ! »`
+                ? `« ${orderStats.pending} commande${orderStats.pending > 1 ? 's' : ''} en attente, ${manuscriptStats.pending} manuscrit${manuscriptStats.pending > 1 ? 's' : ''} à examiner. »`
+                : `« Tout est à jour — bonne journée ! »`
               }
             </span>
           </div>
@@ -149,26 +149,26 @@ const AdminDashboard = () => {
         {/* ── 6 KPIs ── */}
         <div className="adm-grid-3" style={{ marginBottom: 32 }}>
           <AdminStat icon="fa-book" label="Livres au catalogue" value={bookStats?.total_books ?? 0} meta={`${bookStats?.available_books ?? 0} disponibles`} color="var(--tn-orange)" />
-          <AdminStat icon="fa-coins" label="Chiffre d'affaires" value={fmtPrice(orderStats.revenue)} suffix="FCFA" meta={orderStats.revenue > 0 ? 'Commandes payees + expediees' : 'Aucune vente'} metaTone={orderStats.revenue > 0 ? 'good' : 'muted'} color="var(--tn-success)" />
+          <AdminStat icon="fa-coins" label="Chiffre d'affaires" value={fmtPrice(orderStats.revenue)} suffix="FCFA" meta={orderStats.revenue > 0 ? 'Commandes payées + expédiées' : 'Aucune vente'} metaTone={orderStats.revenue > 0 ? 'good' : 'muted'} color="var(--tn-success)" />
           <AdminStat icon="fa-bag-shopping" label="Commandes" value={orderStats.total} meta={orderStats.pending > 0 ? `${orderStats.pending} en attente` : 'Aucune en attente'} metaTone={orderStats.pending > 0 ? 'alert' : 'muted'} color="var(--tn-warning)" />
-          <AdminStat icon="fa-pen-to-square" label="Manuscrits recus" value={manuscriptStats.total} meta={manuscriptStats.pending > 0 ? `${manuscriptStats.pending} a traiter` : 'Tous traites'} metaTone={manuscriptStats.pending > 0 ? 'alert' : 'muted'} color="var(--tn-orange)" />
+          <AdminStat icon="fa-pen-to-square" label="Manuscrits reçus" value={manuscriptStats.total} meta={manuscriptStats.pending > 0 ? `${manuscriptStats.pending} à traiter` : 'Tous traités'} metaTone={manuscriptStats.pending > 0 ? 'alert' : 'muted'} color="var(--tn-orange)" />
           <AdminStat icon="fa-users" label="Utilisateurs" value={users.length} meta={`${users.filter(u => u.is_active).length} actifs`} color="var(--tn-gold-dark)" />
           <AdminStat icon="fa-feather" label="Auteurs" value={bookStats?.total_authors ?? 0} meta={`${bookStats?.bestsellers_count ?? 0} best-sellers`} color="var(--tn-orange-hover)" />
         </div>
 
         {/* ── Quick access ── */}
-        <AdminSectionTitle icon="fa-bolt" eyebrow="Sections" title="Acces rapide" />
+        <AdminSectionTitle icon="fa-bolt" eyebrow="Sections" title="Accès rapide" />
         <div className="adm-grid-5" style={{ marginBottom: 36 }}>
           {[
-            ['/admin-dashboard/books', 'fa-book', 'Catalogue', 'Ajouter, modifier et gerer les livres', 'var(--tn-orange)'],
+            ['/admin-dashboard/books', 'fa-book', 'Catalogue', 'Ajouter, modifier et gérer les livres', 'var(--tn-orange)'],
             ['/admin-dashboard/orders', 'fa-bag-shopping', 'Commandes', 'Suivre et traiter les commandes clients', 'var(--tn-success)'],
             ['/admin-dashboard/authors', 'fa-feather', 'Auteurs', 'Gestion des auteurs et biographies', 'var(--tn-gold-dark)'],
-            ['/admin-dashboard/manuscripts', 'fa-pen-to-square', 'Manuscrits', 'Examiner les soumissions recues', 'var(--tn-orange-hover)'],
+            ['/admin-dashboard/manuscripts', 'fa-pen-to-square', 'Manuscrits', 'Examiner les soumissions reçues', 'var(--tn-orange-hover)'],
             ['/admin-dashboard/users', 'fa-users', 'Utilisateurs', 'Gestion des comptes et permissions', 'var(--tn-gray-700)'],
-            ['/admin-dashboard/newsletter', 'fa-envelope', 'Newsletter', 'Abonnes et statistiques newsletter', '#3B82F6'],
-            ['/admin-dashboard/coupons', 'fa-ticket', 'Coupons', 'Creer et gerer les codes promo', '#8B5CF6'],
-            ['/admin-dashboard/contact', 'fa-message', 'Contact', 'Consulter les messages recus', '#0EA5E9'],
-            ['/admin-dashboard/config', 'fa-cog', 'Configuration', 'Frais de livraison et parametres', 'var(--tn-gray-600)'],
+            ['/admin-dashboard/newsletter', 'fa-envelope', 'Newsletter', 'Abonnés et statistiques newsletter', '#3B82F6'],
+            ['/admin-dashboard/coupons', 'fa-ticket', 'Coupons', 'Créer et gérer les codes promo', '#8B5CF6'],
+            ['/admin-dashboard/contact', 'fa-message', 'Contact', 'Consulter les messages reçus', '#0EA5E9'],
+            ['/admin-dashboard/config', 'fa-cog', 'Configuration', 'Frais de livraison et paramètres', 'var(--tn-gray-600)'],
           ].map(([to, icon, label, desc, color]) => (
             <Link key={to} to={to} style={{
               background: 'var(--ds-white)', border: '1px solid var(--tn-gray-200)',
@@ -202,10 +202,10 @@ const AdminDashboard = () => {
               <div>
                 <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <i className="fas fa-clock" style={{ color: 'var(--tn-orange)', fontSize: 14 }} />
-                  Commandes recentes
+                  Commandes récentes
                 </div>
                 <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, color: 'var(--tn-gray-500)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
-                  {recentOrders.length} dernieres
+                  {recentOrders.length} dernières
                 </div>
               </div>
               <Link to="/admin-dashboard/orders" style={{ fontSize: 13, fontWeight: 600, color: 'var(--tn-orange)', textDecoration: 'none' }}>Voir tout →</Link>
@@ -247,10 +247,10 @@ const AdminDashboard = () => {
               <div>
                 <div style={{ fontFamily: 'var(--tn-serif)', fontSize: 17, fontWeight: 600, color: 'var(--tn-gray-900)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <i className="fas fa-feather" style={{ color: 'var(--tn-orange)', fontSize: 14 }} />
-                  Manuscrits recents
+                  Manuscrits récents
                 </div>
                 <div style={{ fontFamily: 'var(--tn-mono)', fontSize: 10, color: 'var(--tn-gray-500)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
-                  {recentManuscripts.length} derniers · {manuscriptStats.pending} a examiner
+                  {recentManuscripts.length} derniers · {manuscriptStats.pending} à examiner
                 </div>
               </div>
               <Link to="/admin-dashboard/manuscripts" style={{ fontSize: 13, fontWeight: 600, color: 'var(--tn-orange)', textDecoration: 'none' }}>Voir tout →</Link>

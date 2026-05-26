@@ -37,15 +37,15 @@ const AdminAuthors = () => {
       if (editingAuthor) await api.patch(`/authors/${editingAuthor.id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
       else await api.post('/authors/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       fetchAuthors(); resetForm();
-      toast.success(editingAuthor ? 'Auteur mis a jour' : 'Auteur cree avec succes');
+      toast.success(editingAuthor ? 'Auteur mis à jour' : 'Auteur créé avec succès');
     } catch(e){ toast.error(e.response?.data?.detail || e.message); }
   };
 
   const handleEdit = (a) => { setEditingAuthor(a); setFormData({ full_name: a.full_name||'', biography: a.biography||'', photo: null }); setPreviewImage(a.photo||null); setShowForm(true); };
   const handleDelete = async (id) => {
-    const ok = await confirm({ title: 'Supprimer cet auteur ?', message: 'Cette action est irreversible. Les livres associes ne seront pas supprimes.', confirmLabel: 'Supprimer', tone: 'danger' });
+    const ok = await confirm({ title: 'Supprimer cet auteur ?', message: 'Cette action est irréversible. Les livres associés ne seront pas supprimés.', confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
-    try { await api.delete(`/authors/${id}/`); fetchAuthors(); toast.success('Auteur supprime'); } catch(e){ toast.error('Echec de la suppression'); }
+    try { await api.delete(`/authors/${id}/`); fetchAuthors(); toast.success('Auteur supprimé'); } catch(e){ toast.error('Échec de la suppression'); }
   };
   const resetForm = useCallback(() => { setShowForm(false); setEditingAuthor(null); setFormData({ full_name:'', biography:'', photo:null }); setPreviewImage(null); }, []);
 
@@ -75,7 +75,7 @@ const AdminAuthors = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Auteurs']}
         title="Gestion des auteurs"
-        subtitle="Creez et modifiez les auteurs du catalogue. Chaque auteur peut etre associe a plusieurs ouvrages."
+        subtitle="Créez et modifiez les auteurs du catalogue. Chaque auteur peut être associé à plusieurs ouvrages."
         actions={<>
           <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>
           <button onClick={() => { if (showForm) resetForm(); else setShowForm(true); }} className="tn-btn tn-btn--primary" style={{ fontSize: 13, padding: '8px 14px' }}>
@@ -207,7 +207,7 @@ const AdminAuthors = () => {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
                 <button type="button" onClick={resetForm} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
-                <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editingAuthor ? 'Mettre a jour' : 'Creer l\'auteur'}</button>
+                <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editingAuthor ? 'Mettre à jour' : 'Créer l\'auteur'}</button>
               </div>
             </form>
           </AdminModalBody>

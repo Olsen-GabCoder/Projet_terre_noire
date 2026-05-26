@@ -9,8 +9,8 @@ import {
 import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
 
-const GENRE_LABELS = { ROMAN:'Roman', NOUVELLE:'Nouvelle', POESIE:'Poesie', ESSAI:'Essai', THEATRE:'Theatre', JEUNESSE:'Jeunesse', BD:'BD', AUTRE:'Autre' };
-const LANG_LABELS = { FR:'Francais', EN:'Anglais', AR:'Arabe', PT:'Portugais', ES:'Espagnol', AUTRE:'Autre' };
+const GENRE_LABELS = { ROMAN:'Roman', NOUVELLE:'Nouvelle', POESIE:'Poésie', ESSAI:'Essai', THEATRE:'Théâtre', JEUNESSE:'Jeunesse', BD:'BD', AUTRE:'Autre' };
+const LANG_LABELS = { FR:'Français', EN:'Anglais', AR:'Arabe', PT:'Portugais', ES:'Espagnol', AUTRE:'Autre' };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '--';
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '--';
 
@@ -26,11 +26,11 @@ const AdminManuscripts = () => {
   useEffect(() => { fetch_(); }, []);
   const fetch_ = async () => { try { setLoading(true); setError(null); const r = await api.get('/manuscripts/'); setManuscripts(r.data.results || r.data); } catch(e){ setError('Impossible de charger les manuscrits'); } finally { setLoading(false); } };
 
-  const updateStatus = async (id, s) => { try { await api.patch(`/manuscripts/${id}/update-status/`, { status: s }); fetch_(); setSel(null); toast.success('Statut mis a jour'); } catch(e){ toast.error('Echec de la mise a jour du statut'); } };
+  const updateStatus = async (id, s) => { try { await api.patch(`/manuscripts/${id}/update-status/`, { status: s }); fetch_(); setSel(null); toast.success('Statut mis à jour'); } catch(e){ toast.error('Échec de la mise à jour du statut'); } };
   const deleteMs = async (id) => {
-    const ok = await confirm({ title: 'Supprimer ce manuscrit ?', message: 'Cette action est irreversible. Le manuscrit et ses fichiers seront supprimes.', confirmLabel: 'Supprimer', tone: 'danger' });
+    const ok = await confirm({ title: 'Supprimer ce manuscrit ?', message: 'Cette action est irréversible. Le manuscrit et ses fichiers seront supprimés.', confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
-    try { await api.delete(`/manuscripts/${id}/`); fetch_(); setSel(null); toast.success('Manuscrit supprime'); } catch(e){ toast.error('Echec de la suppression'); }
+    try { await api.delete(`/manuscripts/${id}/`); fetch_(); setSel(null); toast.success('Manuscrit supprimé'); } catch(e){ toast.error('Échec de la suppression'); }
   };
 
   const counts = useMemo(() => ({
@@ -55,7 +55,7 @@ const AdminManuscripts = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Manuscrits']}
         title="Gestion des manuscrits"
-        subtitle="Examinez les soumissions, changez les statuts et telechargez les fichiers des auteurs."
+        subtitle="Examinez les soumissions, changez les statuts et téléchargez les fichiers des auteurs."
         actions={<Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>}
       />
 
@@ -63,17 +63,17 @@ const AdminManuscripts = () => {
         {/* Stats */}
         <div className="adm-grid-5" style={{ marginBottom: 28 }}>
           <AdminStat icon="fa-layer-group" label="Total" value={counts.all} color="var(--tn-gray-700)" />
-          <AdminStat icon="fa-clock" label="En attente" value={counts.PENDING} meta={counts.PENDING > 0 ? 'a examiner' : ''} metaTone="alert" color="var(--tn-warning)" />
+          <AdminStat icon="fa-clock" label="En attente" value={counts.PENDING} meta={counts.PENDING > 0 ? 'à examiner' : ''} metaTone="alert" color="var(--tn-warning)" />
           <AdminStat icon="fa-magnifying-glass" label="En examen" value={counts.REVIEWING} color="#1c2a4a" />
-          <AdminStat icon="fa-circle-check" label="Acceptes" value={counts.ACCEPTED} color="var(--tn-success)" />
-          <AdminStat icon="fa-circle-xmark" label="Refuses" value={counts.REJECTED} color="var(--tn-error)" />
+          <AdminStat icon="fa-circle-check" label="Acceptés" value={counts.ACCEPTED} color="var(--tn-success)" />
+          <AdminStat icon="fa-circle-xmark" label="Refusés" value={counts.REJECTED} color="var(--tn-error)" />
         </div>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
           <AdminFilterPills active={filter} onChange={setFilter} items={[
             ['all','Tous',counts.all], ['PENDING','En attente',counts.PENDING], ['REVIEWING','En examen',counts.REVIEWING],
-            ['ACCEPTED','Acceptes',counts.ACCEPTED], ['REJECTED','Refuses',counts.REJECTED],
+            ['ACCEPTED','Acceptés',counts.ACCEPTED], ['REJECTED','Refusés',counts.REJECTED],
           ]} />
           <AdminSearch placeholder="Rechercher titre, auteur, email..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
         </div>
@@ -114,7 +114,7 @@ const AdminManuscripts = () => {
                 <AdminCell align="right">
                   <div style={{ display: 'inline-flex', gap: 6 }}>
                     <AdminActionBtn icon="fa-eye" tone="orange" title="Details" onClick={() => setSel(m)} />
-                    {(m.file_url || m.file) && <AdminActionBtn icon="fa-download" tone="gray" title="Telecharger" onClick={() => window.open(m.file_url || m.file, '_blank')} />}
+                    {(m.file_url || m.file) && <AdminActionBtn icon="fa-download" tone="gray" title="Télécharger" onClick={() => window.open(m.file_url || m.file, '_blank')} />}
                   </div>
                 </AdminCell>
               </AdminRow>
@@ -180,7 +180,7 @@ const AdminManuscripts = () => {
                     <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>Soumis le {fmtDate(sel.submitted_at)}</div>
                   </div>
                   <button onClick={() => window.open(sel.file_url || sel.file, '_blank')} className="tn-btn tn-btn--primary tn-btn--sm">
-                    <i className="fas fa-download" /> Telecharger
+                    <i className="fas fa-download" /> Télécharger
                   </button>
                 </div>
               </AdminModalSection>

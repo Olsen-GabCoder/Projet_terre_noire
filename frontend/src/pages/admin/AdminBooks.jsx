@@ -41,7 +41,7 @@ const AdminBooks = () => {
     const name = newCategoryName.trim();
     if (!name) return;
     try { const r = await api.post('/categories/', { name }); await fetchCategories(); setFormData(p => ({ ...p, category: String(r.data.id) })); setNewCategoryName(''); }
-    catch(e){ toast.error(e.response?.data?.name?.[0] || 'Erreur lors de la creation de la categorie'); }
+    catch(e){ toast.error(e.response?.data?.name?.[0] || 'Erreur lors de la création de la catégorie'); }
   };
 
   const buildFormData = () => {
@@ -61,7 +61,7 @@ const AdminBooks = () => {
     try {
       await api.post('/books/', buildFormData());
       fetchBooks(); resetCreateForm();
-      toast.success('Livre cree avec succes');
+      toast.success('Livre créé avec succès');
     } catch(e){ toast.error(e.response?.data?.detail || JSON.stringify(e.response?.data) || e.message); }
   };
 
@@ -85,16 +85,16 @@ const AdminBooks = () => {
     try {
       await api.patch(`/books/${editingBook.id}/`, buildFormData());
       fetchBooks(); closeEditModal();
-      toast.success('Livre mis a jour avec succes');
+      toast.success('Livre mis à jour avec succès');
     } catch(e){ toast.error(e.response?.data?.detail || JSON.stringify(e.response?.data) || e.message); }
   };
 
   const closeEditModal = useCallback(() => { setEditingBook(null); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); }, []);
 
   const handleDelete = async (id) => {
-    const ok = await confirm({ title: 'Supprimer ce livre ?', message: 'Cette action est irreversible. Le livre sera retire du catalogue.', confirmLabel: 'Supprimer', tone: 'danger' });
+    const ok = await confirm({ title: 'Supprimer ce livre ?', message: 'Cette action est irréversible. Le livre sera retiré du catalogue.', confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
-    try { await api.delete(`/books/${id}/`); fetchBooks(); toast.success('Livre supprime'); } catch(e){ toast.error('Echec de la suppression'); }
+    try { await api.delete(`/books/${id}/`); fetchBooks(); toast.success('Livre supprimé'); } catch(e){ toast.error('Échec de la suppression'); }
   };
 
   const resetCreateForm = useCallback(() => { setShowForm(false); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); }, []);
@@ -117,7 +117,7 @@ const AdminBooks = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Catalogue']}
         title="Gestion des livres"
-        subtitle="Creez et modifiez les ouvrages de votre catalogue. Gerez les prix, promotions et disponibilites."
+        subtitle="Créez et modifiez les ouvrages de votre catalogue. Gérez les prix, promotions et disponibilités."
         actions={<>
           <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>
           <button onClick={() => { if (showForm) resetCreateForm(); else setShowForm(true); }} className="tn-btn tn-btn--primary" style={{ fontSize: 13, padding: '8px 14px' }}>
@@ -155,7 +155,7 @@ const AdminBooks = () => {
             { label: 'Couverture', width: 80 },
             { label: 'Titre' },
             { label: 'Auteur' },
-            { label: 'Categorie' },
+            { label: 'Catégorie' },
             { label: 'Prix', align: 'right' },
             { label: 'Stock', width: 130 },
             { label: 'Promo', width: 90 },
@@ -242,7 +242,7 @@ const AdminBooks = () => {
               onSubmit={handleCreateSubmit} onCancel={resetCreateForm}
               authors={authors} categories={categories}
               newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
-              submitLabel="Creer le livre" editingBook={null}
+              submitLabel="Créer le livre" editingBook={null}
             />
           </AdminModalBody>
         </AdminModalOverlay>
@@ -289,7 +289,7 @@ const AdminBooks = () => {
               onSubmit={handleEditSubmit} onCancel={closeEditModal}
               authors={authors} categories={categories}
               newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
-              submitLabel="Mettre a jour" editingBook={editingBook}
+              submitLabel="Mettre à jour" editingBook={editingBook}
             />
           </AdminModalBody>
         </AdminModalOverlay>
@@ -309,25 +309,25 @@ function BookForm({
 }) {
   return (
     <form onSubmit={onSubmit}>
-      <AdminModalSection icon="fa-pen" title="Informations generales">
+      <AdminModalSection icon="fa-pen" title="Informations générales">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <FieldWrap label="Titre" required><input className="tn-input" name="title" value={formData.title} onChange={onInputChange} required /></FieldWrap>
           <FieldWrap label="Auteur" required>
             <select className="tn-input" name="author" value={formData.author} onChange={onInputChange} required style={{ cursor: 'pointer' }}>
-              <option value="">Selectionner</option>
+              <option value="">Sélectionner</option>
               {authors.map(a => <option key={a.id} value={a.id}>{a.full_name}</option>)}
             </select>
           </FieldWrap>
           <div>
-            <FieldWrap label="Categorie" required>
+            <FieldWrap label="Catégorie" required>
               <select className="tn-input" name="category" value={formData.category} onChange={onInputChange} required style={{ cursor: 'pointer' }}>
-                <option value="">Selectionner</option>
+                <option value="">Sélectionner</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </FieldWrap>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--tn-cream-2)', border: '1px dashed var(--tn-gray-300)' }}>
               <i className="fas fa-plus" style={{ color: 'var(--tn-orange)', fontSize: 11 }} />
-              <input type="text" placeholder="Nouvelle categorie..." value={newCategoryName} onChange={e => onNewCategoryNameChange(e.target.value)} style={{ flex: 1, background: 'var(--ds-white)', padding: '6px 10px', border: '1px solid var(--tn-gray-200)', borderRadius: 6, fontSize: 12, outline: 0 }} />
+              <input type="text" placeholder="Nouvelle catégorie..." value={newCategoryName} onChange={e => onNewCategoryNameChange(e.target.value)} style={{ flex: 1, background: 'var(--ds-white)', padding: '6px 10px', border: '1px solid var(--tn-gray-200)', borderRadius: 6, fontSize: 12, outline: 0 }} />
               <button type="button" onClick={onAddCategory} disabled={!newCategoryName.trim()} style={{ fontSize: 11, fontWeight: 600, color: 'var(--tn-orange)', background: 'none', border: 0, cursor: 'pointer' }}>Ajouter</button>
             </div>
           </div>
@@ -346,7 +346,7 @@ function BookForm({
         <textarea className="tn-input" name="description" value={formData.description} onChange={onInputChange} rows="4" placeholder="Description du livre..." style={{ fontFamily: 'var(--tn-serif)', fontSize: 14, lineHeight: 1.55, minHeight: 100, resize: 'vertical' }} />
       </AdminModalSection>
 
-      <AdminModalSection icon="fa-tag" title="Promotion & disponibilite">
+      <AdminModalSection icon="fa-tag" title="Promotion & disponibilité">
         <div style={{ padding: 18, borderRadius: 12, background: 'var(--tn-orange-50)', border: '1px solid var(--tn-orange-100)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, alignItems: 'flex-end' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>

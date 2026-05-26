@@ -31,7 +31,7 @@ const AdminNewsletter = () => {
       setSubscribers(sRes.data.results || []);
       setStats(stRes.data);
     } catch (e) {
-      setError('Impossible de charger les donnees newsletter');
+      setError('Impossible de charger les données newsletter');
     } finally {
       setLoading(false);
     }
@@ -39,8 +39,8 @@ const AdminNewsletter = () => {
 
   const handleDelete = async (id, email) => {
     const ok = await confirm({
-      title: 'Supprimer cet abonne ?',
-      message: `${email} sera definitivement supprime de la liste.`,
+      title: 'Supprimer cet abonné ?',
+      message: `${email} sera définitivement supprimé de la liste.`,
       confirmLabel: 'Supprimer',
       tone: 'danger',
     });
@@ -48,7 +48,7 @@ const AdminNewsletter = () => {
     try {
       await api.delete(`/newsletter/subscribers/${id}/`);
       fetchData();
-      toast.success('Abonne supprime');
+      toast.success('Abonné supprimé');
     } catch (e) {
       toast.error('Erreur lors de la suppression');
     }
@@ -56,7 +56,7 @@ const AdminNewsletter = () => {
 
   const handleExportCSV = () => {
     const active = subscribers.filter(s => s.is_active && s.confirmed);
-    if (!active.length) { toast.error('Aucun abonne actif a exporter'); return; }
+    if (!active.length) { toast.error('Aucun abonné actif à exporter'); return; }
     const csv = 'Email,Date inscription,Date confirmation\n' +
       active.map(s => `${s.email},${s.subscribed_at || ''},${s.confirmed_at || ''}`).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -64,7 +64,7 @@ const AdminNewsletter = () => {
     const a = document.createElement('a');
     a.href = url; a.download = 'newsletter_abonnes.csv'; a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${active.length} abonne(s) exporte(s)`);
+    toast.success(`${active.length} abonné(s) exporté(s)`);
   };
 
   const filtered = useMemo(() => {
@@ -87,7 +87,7 @@ const AdminNewsletter = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Newsletter']}
         title="Newsletter"
-        subtitle={`${stats?.active || 0} abonne(s) actif(s) sur ${stats?.total || 0} au total.`}
+        subtitle={`${stats?.active || 0} abonné(s) actif(s) sur ${stats?.total || 0} au total.`}
         actions={<>
           <Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>
           <button onClick={handleExportCSV} className="tn-btn tn-btn--primary" style={{ fontSize: 13, padding: '8px 14px' }}>
@@ -103,7 +103,7 @@ const AdminNewsletter = () => {
             <AdminStat icon="fa-users" label="Total" value={stats.total} />
             <AdminStat icon="fa-check-circle" label="Actifs" value={stats.active} color="var(--tn-success, #16a34a)" />
             <AdminStat icon="fa-clock" label="En attente" value={stats.pending} color="var(--tn-orange, #E8601C)" />
-            <AdminStat icon="fa-heart-broken" label="Desinscrits" value={stats.unsubscribed} color="var(--tn-gray-400, #999)" />
+            <AdminStat icon="fa-heart-broken" label="Désinscrits" value={stats.unsubscribed} color="var(--tn-gray-400, #999)" />
           </div>
         )}
 
@@ -117,7 +117,7 @@ const AdminNewsletter = () => {
               ['all', 'Tous', subscribers.length],
               ['active', 'Actifs', subscribers.filter(s => s.is_active && s.confirmed).length],
               ['pending', 'En attente', subscribers.filter(s => s.is_active && !s.confirmed).length],
-              ['unsubscribed', 'Desinscrits', subscribers.filter(s => !s.is_active).length],
+              ['unsubscribed', 'Désinscrits', subscribers.filter(s => !s.is_active).length],
             ]}
           />
         </div>
@@ -149,7 +149,7 @@ const AdminNewsletter = () => {
                 </AdminCell>
                 <AdminCell>
                   {!s.is_active ? (
-                    <StatusBadge value="inactive" label="Desinscrit" />
+                    <StatusBadge value="inactive" label="Désinscrit" />
                   ) : s.confirmed ? (
                     <StatusBadge value="active" label="Actif" />
                   ) : (

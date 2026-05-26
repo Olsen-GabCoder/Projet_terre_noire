@@ -42,9 +42,9 @@ const AdminContact = () => {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm({ title: 'Supprimer ce message ?', message: 'Cette action est irreversible.', confirmLabel: 'Supprimer', tone: 'danger' });
+    const ok = await confirm({ title: 'Supprimer ce message ?', message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
-    try { await api.delete(`/contact/messages/${id}/`); fetchMessages(); setSelected(null); toast.success('Message supprime'); }
+    try { await api.delete(`/contact/messages/${id}/`); fetchMessages(); setSelected(null); toast.success('Message supprimé'); }
     catch { toast.error('Erreur'); }
   };
 
@@ -96,7 +96,7 @@ const AdminContact = () => {
         {filtered.length === 0 && <AdminEmpty icon="fa-envelope" title="Aucun message re\u00e7u" subtitle={search ? 'Aucun resultat.' : 'Les messages envoy\u00e9s via le formulaire de contact appara\u00eetront ici.'} />}
 
         {filtered.length > 0 && (
-          <AdminTable columns={[{ label: '', width: 30 }, { label: 'Expediteur' }, { label: 'Sujet', width: 120 }, { label: 'Apercu' }, { label: 'Date', width: 150 }, { label: '', width: 90, align: 'right' }]}>
+          <AdminTable columns={[{ label: '', width: 30 }, { label: 'Expéditeur' }, { label: 'Sujet', width: 120 }, { label: 'Apercu' }, { label: 'Date', width: 150 }, { label: '', width: 90, align: 'right' }]}>
             {filtered.map((m, i) => {
               const sc = SUBJECT_COLORS[m.subject] || SUBJECT_COLORS.Autre;
               return (
@@ -148,7 +148,7 @@ const AdminContact = () => {
                 <i className={`fas ${selected.is_read ? 'fa-envelope' : 'fa-envelope-open'}`} /> {selected.is_read ? 'Marquer non lu' : 'Marquer lu'}
               </button>
               <a href={`mailto:${selected.email}?subject=Re: ${selected.subject}`} className="tn-btn tn-btn--primary">
-                <i className="fas fa-reply" /> Repondre par email
+                <i className="fas fa-reply" /> Répondre par email
               </a>
             </div>
           </AdminModalBody>

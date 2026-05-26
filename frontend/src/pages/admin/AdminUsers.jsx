@@ -31,16 +31,16 @@ const AdminUsers = () => {
   const fetchUsers = async () => { try { setLoading(true); setError(null); const r = await api.get('/users/'); setUsers(Array.isArray(r.data) ? r.data : (r.data.results || [])); } catch(e){ setError('Impossible de charger les utilisateurs'); } finally { setLoading(false); } };
 
   const toggleStatus = async (userId, currentActive) => {
-    const action = currentActive ? 'Desactiver' : 'Activer';
+    const action = currentActive ? 'Désactiver' : 'Activer';
     const ok = await confirm({
       title: `${action} cet utilisateur ?`,
-      message: currentActive ? 'L\'utilisateur ne pourra plus se connecter.' : 'L\'utilisateur retrouvera l\'acces a son compte.',
+      message: currentActive ? 'L\'utilisateur ne pourra plus se connecter.' : 'L\'utilisateur retrouvera l\'accès à son compte.',
       confirmLabel: action,
       tone: currentActive ? 'danger' : 'info',
       icon: currentActive ? 'fa-user-slash' : 'fa-user-check',
     });
     if (!ok) return;
-    try { await api.patch(`/users/${userId}/`, { is_active: !currentActive }); fetchUsers(); setSel(null); toast.success(`Utilisateur ${currentActive ? 'desactive' : 'active'}`); } catch(e){ toast.error('Erreur lors de la mise a jour'); }
+    try { await api.patch(`/users/${userId}/`, { is_active: !currentActive }); fetchUsers(); setSel(null); toast.success(`Utilisateur ${currentActive ? 'désactivé' : 'activé'}`); } catch(e){ toast.error('Erreur lors de la mise à jour'); }
   };
 
   const counts = useMemo(() => ({
@@ -68,7 +68,7 @@ const AdminUsers = () => {
       <AdminTopbar
         breadcrumb={['Admin', 'Utilisateurs']}
         title="Gestion des utilisateurs"
-        subtitle="Consultez et gerez les comptes utilisateurs. Activez ou desactivez les acces."
+        subtitle="Consultez et gérez les comptes utilisateurs. Activez ou désactivez les accès."
         actions={<Link to="/admin-dashboard" className="tn-btn tn-btn--outline" style={{ fontSize: 13, padding: '8px 14px' }}><i className="fas fa-arrow-left" /> Retour</Link>}
       />
 
@@ -97,7 +97,7 @@ const AdminUsers = () => {
         {filtered.length > 0 && (
           <AdminTable columns={[
             { label: 'Utilisateur' }, { label: 'Email', width: 240 }, { label: 'Inscription', width: 120 },
-            { label: 'Statut', width: 110 }, { label: 'Roles', width: 110 }, { label: '', align: 'right', width: 100 },
+            { label: 'Statut', width: 110 }, { label: 'Rôles', width: 110 }, { label: '', align: 'right', width: 100 },
           ]}>
             {filtered.map((u, i) => (
               <AdminRow key={u.id} last={i === filtered.length - 1}>
@@ -131,7 +131,7 @@ const AdminUsers = () => {
                   <div style={{ display: 'inline-flex', gap: 6 }}>
                     <AdminActionBtn icon="fa-eye" tone="orange" title="Details" onClick={() => setSel(u)} />
                     {u.is_active
-                      ? <AdminActionBtn icon="fa-user-slash" tone="red" title="Desactiver" onClick={() => toggleStatus(u.id, true)} />
+                      ? <AdminActionBtn icon="fa-user-slash" tone="red" title="Désactiver" onClick={() => toggleStatus(u.id, true)} />
                       : <AdminActionBtn icon="fa-user-check" tone="green" title="Activer" onClick={() => toggleStatus(u.id, false)} />
                     }
                   </div>
@@ -181,7 +181,7 @@ const AdminUsers = () => {
                 color: sel.is_active ? 'var(--tn-error)' : 'var(--tn-success)',
               }}>
                 <i className={`fas ${sel.is_active ? 'fa-user-slash' : 'fa-user-check'}`} style={{ marginRight: 8 }} />
-                {sel.is_active ? 'Desactiver cet utilisateur' : 'Activer cet utilisateur'}
+                {sel.is_active ? 'Désactiver cet utilisateur' : 'Activer cet utilisateur'}
               </button>
             </div>
           </AdminModalBody>

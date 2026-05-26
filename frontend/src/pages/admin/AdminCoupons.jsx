@@ -42,15 +42,15 @@ const AdminCoupons = () => {
     e.preventDefault();
     const data = { ...formData };
     data.code = data.code.toUpperCase().trim();
-    if (!data.discount_value) { toast.error('Indiquez une valeur de reduction'); return; }
+    if (!data.discount_value) { toast.error('Indiquez une valeur de réduction'); return; }
     if (!data.valid_from) data.valid_from = null;
     if (!data.valid_until) data.valid_until = null;
     if (!data.max_uses) data.max_uses = null;
     if (!data.recipient_email) data.recipient_email = null;
     if (!data.custom_message) data.custom_message = '';
     try {
-      if (editing) { await api.patch(`/coupons/${editing.id}/`, data); toast.success('Coupon modifie'); }
-      else { await api.post('/coupons/', data); toast.success('Coupon cree'); }
+      if (editing) { await api.patch(`/coupons/${editing.id}/`, data); toast.success('Coupon modifié'); }
+      else { await api.post('/coupons/', data); toast.success('Coupon créé'); }
       fetchCoupons(); resetForm();
     } catch (err) { toast.error(err.response?.data?.code?.[0] || err.response?.data?.detail || 'Erreur'); }
   };
@@ -67,14 +67,14 @@ const AdminCoupons = () => {
   };
 
   const handleDelete = async (id, code) => {
-    const ok = await confirm({ title: 'Supprimer ce coupon ?', message: `Le code "${code}" sera definitivement supprime.`, confirmLabel: 'Supprimer', tone: 'danger' });
+    const ok = await confirm({ title: 'Supprimer ce coupon ?', message: `Le code "${code}" sera définitivement supprimé.`, confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
-    try { await api.delete(`/coupons/${id}/`); fetchCoupons(); toast.success('Coupon supprime'); }
+    try { await api.delete(`/coupons/${id}/`); fetchCoupons(); toast.success('Coupon supprimé'); }
     catch { toast.error('Erreur lors de la suppression'); }
   };
 
   const handleToggle = async (c) => {
-    try { await api.patch(`/coupons/${c.id}/`, { is_active: !c.is_active }); fetchCoupons(); toast.success(c.is_active ? 'Coupon desactive' : 'Coupon active'); }
+    try { await api.patch(`/coupons/${c.id}/`, { is_active: !c.is_active }); fetchCoupons(); toast.success(c.is_active ? 'Coupon désactivé' : 'Coupon activé'); }
     catch { toast.error('Erreur'); }
   };
 
@@ -123,13 +123,13 @@ const AdminCoupons = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18, justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <AdminSearch placeholder="Rechercher un code..." value={search} onChange={e => setSearch(e.target.value)} onClear={() => setSearch('')} />
-          <AdminFilterPills active={filter} onChange={setFilter} items={[['all', 'Tous', coupons.length], ['active', 'Actifs', stats.active], ['inactive', 'Inactifs', coupons.length - stats.active], ['expired', 'Expires', stats.expired]]} />
+          <AdminFilterPills active={filter} onChange={setFilter} items={[['all', 'Tous', coupons.length], ['active', 'Actifs', stats.active], ['inactive', 'Inactifs', coupons.length - stats.active], ['expired', 'Expirés', stats.expired]]} />
         </div>
 
         {filtered.length === 0 && <AdminEmpty icon="fa-ticket" title="Aucun coupon cr\u00e9\u00e9" subtitle={search ? 'Aucun resultat.' : 'Cr\u00e9ez votre premier code promotionnel pour r\u00e9compenser vos lecteurs fid\u00e8les.'} />}
 
         {filtered.length > 0 && (
-          <AdminTable columns={[{ label: 'Code' }, { label: 'Reduction' }, { label: 'Destinataire' }, { label: 'Validite' }, { label: 'Utilisations', width: 100 }, { label: 'Statut', width: 90 }, { label: '', width: 90, align: 'right' }]}>
+          <AdminTable columns={[{ label: 'Code' }, { label: 'Réduction' }, { label: 'Destinataire' }, { label: 'Validite' }, { label: 'Utilisations', width: 100 }, { label: 'Statut', width: 90 }, { label: '', width: 90, align: 'right' }]}>
             {filtered.map((c, i) => (
               <AdminRow key={c.id} last={i === filtered.length - 1}>
                 <AdminCell><span style={{ fontFamily: 'var(--tn-mono)', fontWeight: 700, fontSize: 14, letterSpacing: '0.05em' }}>{c.code}</span></AdminCell>
@@ -145,7 +145,7 @@ const AdminCoupons = () => {
                 </AdminCell>
                 <AdminCell>
                   <span style={{ fontSize: 12, color: 'var(--tn-gray-600)' }}>
-                    {c.valid_from ? fmtDate(c.valid_from) : 'Illimite'} — {c.valid_until ? fmtDate(c.valid_until) : 'Illimite'}
+                    {c.valid_from ? fmtDate(c.valid_from) : 'Illimité'} — {c.valid_until ? fmtDate(c.valid_until) : 'Illimité'}
                   </span>
                 </AdminCell>
                 <AdminCell><span style={{ fontFamily: 'var(--tn-mono)', fontSize: 13 }}>{c.usage_count}{c.max_uses ? ` / ${c.max_uses}` : ''}</span></AdminCell>
@@ -181,10 +181,10 @@ const AdminCoupons = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Utilisations max</label>
-                    <input className="tn-input" name="max_uses" type="number" min="1" value={formData.max_uses} onChange={handleChange} placeholder="Illimite" />
+                    <input className="tn-input" name="max_uses" type="number" min="1" value={formData.max_uses} onChange={handleChange} placeholder="Illimité" />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Type de reduction</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Type de réduction</label>
                     <select className="tn-input" name="discount_type" value={formData.discount_type} onChange={handleChange} style={{ cursor: 'pointer' }}>
                       <option value="percent">Pourcentage (%)</option>
                       <option value="fixed">Montant fixe (FCFA)</option>
@@ -198,7 +198,7 @@ const AdminCoupons = () => {
               </AdminModalSection>
               <AdminModalSection icon="fa-user" title="Destinataire (optionnel)">
                 <p style={{ fontSize: 12, color: 'var(--tn-gray-500)', marginBottom: 12 }}>
-                  Laissez vide pour un coupon general. Renseignez un email pour envoyer le code directement au destinataire.
+                  Laissez vide pour un coupon général. Renseignez un email pour envoyer le code directement au destinataire.
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
@@ -206,15 +206,15 @@ const AdminCoupons = () => {
                     <input className="tn-input" name="recipient_email" type="email" value={formData.recipient_email} onChange={handleChange} placeholder="client@email.com" />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Message personnalise</label>
-                    <input className="tn-input" name="custom_message" value={formData.custom_message} onChange={handleChange} placeholder="Ex: Merci pour votre fidelite !" />
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Message personnalisé</label>
+                    <input className="tn-input" name="custom_message" value={formData.custom_message} onChange={handleChange} placeholder="Ex: Merci pour votre fidélité !" />
                   </div>
                 </div>
               </AdminModalSection>
-              <AdminModalSection icon="fa-calendar" title="Validite">
+              <AdminModalSection icon="fa-calendar" title="Validité">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Debut</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Début</label>
                     <input className="tn-input" name="valid_from" type="datetime-local" value={formData.valid_from} onChange={handleChange} />
                   </div>
                   <div>
@@ -229,7 +229,7 @@ const AdminCoupons = () => {
               </AdminModalSection>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid var(--tn-gray-200)', paddingTop: 18 }}>
                 <button type="button" onClick={resetForm} className="tn-btn" style={{ background: 'var(--ds-white)', color: 'var(--tn-gray-700)', border: '1.5px solid var(--tn-gray-200)' }}>Annuler</button>
-                <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editing ? 'Mettre a jour' : 'Creer le coupon'}</button>
+                <button type="submit" className="tn-btn tn-btn--primary"><i className="fas fa-floppy-disk" /> {editing ? 'Mettre à jour' : 'Créer le coupon'}</button>
               </div>
             </form>
           </AdminModalBody>
