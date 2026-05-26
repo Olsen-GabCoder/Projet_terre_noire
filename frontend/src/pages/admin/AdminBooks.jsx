@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
@@ -89,7 +89,7 @@ const AdminBooks = () => {
     } catch(e){ toast.error(e.response?.data?.detail || JSON.stringify(e.response?.data) || e.message); }
   };
 
-  const closeEditModal = () => { setEditingBook(null); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); };
+  const closeEditModal = useCallback(() => { setEditingBook(null); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); }, []);
 
   const handleDelete = async (id) => {
     const ok = await confirm({ title: 'Supprimer ce livre ?', message: 'Cette action est irreversible. Le livre sera retire du catalogue.', confirmLabel: 'Supprimer', tone: 'danger' });
@@ -97,7 +97,7 @@ const AdminBooks = () => {
     try { await api.delete(`/books/${id}/`); fetchBooks(); toast.success('Livre supprime'); } catch(e){ toast.error('Echec de la suppression'); }
   };
 
-  const resetCreateForm = () => { setShowForm(false); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); };
+  const resetCreateForm = useCallback(() => { setShowForm(false); setFormData({ ...EMPTY_FORM }); setNewCategoryName(''); }, []);
 
   const filtered = React.useMemo(() => {
     let list = books;

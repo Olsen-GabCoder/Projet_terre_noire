@@ -435,6 +435,8 @@ export function GenrePill({ value }) {
    ============================================= */
 export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' }) {
   const modalRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const modal = modalRef.current;
@@ -446,7 +448,7 @@ export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' })
     if (focusables.length > 0) focusables[0].focus();
 
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); onCloseRef.current(); return; }
       if (e.key !== 'Tab') return;
       const els = getFocusables();
       const first = els[0];
@@ -459,7 +461,8 @@ export function AdminModalOverlay({ children, onClose, ariaLabel = 'Dialogue' })
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div

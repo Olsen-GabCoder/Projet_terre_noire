@@ -174,6 +174,8 @@ function Toast({ id, type, message, onDismiss }) {
 function ConfirmModal({ config, onResult }) {
   const [state, setState] = useState('entering');
   const modalRef = useRef(null);
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
   const {
     title = 'Confirmer',
     message = 'Etes-vous sur ?',
@@ -204,7 +206,7 @@ function ConfirmModal({ config, onResult }) {
     if (focusables.length > 0) focusables[0].focus();
 
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); onResult(false); return; }
+      if (e.key === 'Escape') { e.preventDefault(); onResultRef.current(false); return; }
       if (e.key !== 'Tab') return;
       const els = getFocusables();
       const first = els[0];
@@ -217,7 +219,8 @@ function ConfirmModal({ config, onResult }) {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onResult]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const close = (result) => {
     setState('exiting');

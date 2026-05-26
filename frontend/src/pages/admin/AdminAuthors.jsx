@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
@@ -47,7 +47,7 @@ const AdminAuthors = () => {
     if (!ok) return;
     try { await api.delete(`/authors/${id}/`); fetchAuthors(); toast.success('Auteur supprime'); } catch(e){ toast.error('Echec de la suppression'); }
   };
-  const resetForm = () => { setShowForm(false); setEditingAuthor(null); setFormData({ full_name:'', biography:'', photo:null }); setPreviewImage(null); };
+  const resetForm = useCallback(() => { setShowForm(false); setEditingAuthor(null); setFormData({ full_name:'', biography:'', photo:null }); setPreviewImage(null); }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminTopbar } from '../../components/admin/AdminLayout';
 import {
@@ -78,7 +78,7 @@ const AdminCoupons = () => {
     catch { toast.error('Erreur'); }
   };
 
-  const resetForm = () => { setShowForm(false); setEditing(null); setFormData({ ...EMPTY }); };
+  const resetForm = useCallback(() => { setShowForm(false); setEditing(null); setFormData({ ...EMPTY }); }, []);
 
   const now = new Date();
   const stats = useMemo(() => ({
