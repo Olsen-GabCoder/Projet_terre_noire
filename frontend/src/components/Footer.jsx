@@ -138,8 +138,8 @@ const Footer = () => {
 
                 <div className="ft-social">
                   {[
-                    { href: 'https://www.facebook.com/terrenoireeditions', icon: 'fab fa-facebook-f', label: 'Facebook' },
-                    { href: 'https://www.tiktok.com/@terrenoireeditions', icon: 'fab fa-tiktok', label: 'TikTok' },
+                    { href: 'https://www.facebook.com/profile.php?id=61556564940483', icon: 'fab fa-facebook-f', label: 'Facebook' },
+                    { href: 'https://www.tiktok.com/@terrenoireedition?_r=1&_t=ZS-96fCndnPtAa', icon: 'fab fa-tiktok', label: 'TikTok' },
                     { href: 'https://wa.me/24165348887', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
                     { href: 'mailto:terrenoireeditions@gmail.com', icon: 'fas fa-envelope', label: 'Email' },
                   ].map((s) => (

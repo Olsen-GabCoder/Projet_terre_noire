@@ -190,8 +190,8 @@ const Contact = () => {
             </div>
             <div className="ct-social-grid">
               {[
-                ['fab fa-facebook-f', 'Facebook', 'https://www.facebook.com/terrenoireeditions', '#1877f2'],
-                ['fab fa-tiktok', 'TikTok', 'https://www.tiktok.com/@terrenoireeditions', '#000'],
+                ['fab fa-facebook-f', 'Facebook', 'https://www.facebook.com/profile.php?id=61556564940483', '#1877f2'],
+                ['fab fa-tiktok', 'TikTok', 'https://www.tiktok.com/@terrenoireedition?_r=1&_t=ZS-96fCndnPtAa', '#000'],
                 ['fab fa-whatsapp', 'WhatsApp', 'https://wa.me/24165348887', '#25d366'],
                 ['fas fa-envelope', 'Email', 'mailto:terrenoireeditions@gmail.com', 'var(--color-primary)'],
               ].map(([icon, label, href, color]) => (
