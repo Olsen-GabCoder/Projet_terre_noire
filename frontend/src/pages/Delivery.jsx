@@ -21,7 +21,7 @@ const Delivery = () => {
           <h1 className="dlv-hero__title">Livraison &amp; <span className="dlv-hero__title-accent">Retours</span></h1>
           <p className="dlv-hero__sub">
             Livraison rapide sur tout le territoire gabonais et conditions de retour
-            simplifiees. Vos livres en toute serenite.
+            simplifiées. Vos livres en toute sérénité.
           </p>
         </div>
       </section>
@@ -34,17 +34,17 @@ const Delivery = () => {
         <div className="dlv-card">
           <div className="dlv-section-header">
             <span className="dlv-section-num">01</span>
-            <h2>Delais de livraison</h2>
+            <h2>Délais de livraison</h2>
           </div>
           <p>
-            Votre commande est preparee et expediee sous <strong>5 a 10 jours ouvres</strong> au Gabon.
-            Nous traitons chaque commande avec soin pour garantir que vos livres arrivent en parfait etat.
+            Votre commande est préparée et expédiée sous <strong>5 à 10 jours ouvrés</strong> au Gabon.
+            Nous traitons chaque commande avec soin pour garantir que vos livres arrivent en parfait état.
           </p>
           <div className="dlv-zones">
             {[
-              ['fa-location-dot', 'Port-Gentil & environs', '5 a 7 jours ouvres', 'var(--color-primary)'],
-              ['fa-city', 'Libreville, Franceville, Lambarene...', '7 a 10 jours ouvres', 'var(--tn-gold, #C8956C)'],
-              ['fa-map', 'Autres localites du Gabon', '7 a 10 jours ouvres', 'var(--color-gray-500)'],
+              ['fa-location-dot', 'Port-Gentil & environs', '5 à 7 jours ouvrés', 'var(--color-primary)'],
+              ['fa-city', 'Libreville, Franceville, Lambaréné...', '7 à 10 jours ouvrés', 'var(--tn-gold, #C8956C)'],
+              ['fa-map', 'Autres localités du Gabon', '7 à 10 jours ouvrés', 'var(--color-gray-500)'],
             ].map(([icon, zone, delay, color]) => (
               <div key={zone} className="dlv-zone">
                 <div className="dlv-zone__icon" style={{ background: `${color}12`, color }}><i className={`fas ${icon}`} /></div>
@@ -56,8 +56,8 @@ const Delivery = () => {
             ))}
           </div>
           <p className="dlv-note">
-            <i className="fas fa-info-circle" /> Les delais sont estimatifs et peuvent varier selon la saison
-            et les conditions de transport. Des l&apos;expedition, vous recevez un email de notification.
+            <i className="fas fa-info-circle" /> Les délais sont estimatifs et peuvent varier selon la saison
+            et les conditions de transport. Dès l&apos;expédition, vous recevez un email de notification.
           </p>
         </div>
 
@@ -71,18 +71,18 @@ const Delivery = () => {
             <div className="dlv-price-card dlv-price-card--free">
               <div className="dlv-price-card__badge"><i className="fas fa-gift" /></div>
               <h3>Gratuit</h3>
-              <p>A partir de <strong>{fmtPrice(shippingFreeThreshold)} FCFA</strong> d&apos;achat</p>
+              <p>À partir de <strong>{fmtPrice(shippingFreeThreshold)} FCFA</strong> d&apos;achat</p>
             </div>
             <div className="dlv-price-card">
               <div className="dlv-price-card__badge"><i className="fas fa-truck" /></div>
               <h3>{fmtPrice(shippingCost)} FCFA</h3>
-              <p>Pour les commandes inferieures a {fmtPrice(shippingFreeThreshold)} FCFA</p>
+              <p>Pour les commandes inférieures à {fmtPrice(shippingFreeThreshold)} FCFA</p>
             </div>
           </div>
           <p>
-            Les frais sont calcules automatiquement lors du passage en caisse. Les ebooks (contenus
-            numeriques) ne sont pas soumis a des frais de livraison — ils sont accessibles immediatement
-            apres confirmation du paiement.
+            Les frais sont calculés automatiquement lors du passage en caisse. Les ebooks (contenus
+            numériques) ne sont pas soumis à des frais de livraison — ils sont accessibles immédiatement
+            après confirmation du paiement.
           </p>
         </div>
 
@@ -94,10 +94,10 @@ const Delivery = () => {
           </div>
           <div className="dlv-steps">
             {[
-              ['fa-check-circle', 'Confirmation', 'Email de confirmation avec le detail de votre commande.'],
-              ['fa-box', 'Preparation', 'Votre commande est preparee et emballee avec soin.'],
-              ['fa-truck', 'Expedition', 'Email de notification avec informations de suivi.'],
-              ['fa-hand-holding-heart', 'Reception', 'Votre colis arrive — verifiez son etat a la reception.'],
+              ['fa-check-circle', 'Confirmation', 'Email de confirmation avec le détail de votre commande.'],
+              ['fa-box', 'Préparation', 'Votre commande est préparée et emballée avec soin.'],
+              ['fa-truck', 'Expédition', 'Email de notification avec informations de suivi.'],
+              ['fa-hand-holding-heart', 'Réception', 'Votre colis arrive — vérifiez son état à la réception.'],
             ].map(([icon, title, desc], i) => (
               <div key={i} className="dlv-step">
                 <div className="dlv-step__num">{i + 1}</div>
@@ -110,7 +110,7 @@ const Delivery = () => {
             ))}
           </div>
           <p>
-            Vous pouvez consulter l&apos;etat de vos commandes a tout moment depuis votre{' '}
+            Vous pouvez consulter l&apos;état de vos commandes à tout moment depuis votre{' '}
             <Link to="/profile">espace client</Link>.
           </p>
         </div>
@@ -119,32 +119,32 @@ const Delivery = () => {
         <div className="dlv-card">
           <div className="dlv-section-header">
             <span className="dlv-section-num">04</span>
-            <h2>Droit de retractation</h2>
+            <h2>Droit de rétractation</h2>
           </div>
           <div className="dlv-highlight">
             <i className="fas fa-gavel" />
             <p>
-              Conformement a la <strong>Loi n° 025/2021</strong>, vous disposez de{' '}
-              <strong>14 jours calendaires</strong> a compter de la reception pour exercer
-              votre droit de retractation, sans avoir a justifier de motif.
+              Conformément à la <strong>Loi n° 025/2021</strong>, vous disposez de{' '}
+              <strong>14 jours calendaires</strong> à compter de la réception pour exercer
+              votre droit de rétractation, sans avoir à justifier de motif.
             </p>
           </div>
-          <h3><i className="fas fa-check" /> Conditions acceptees</h3>
+          <h3><i className="fas fa-check" /> Conditions acceptées</h3>
           <ul>
-            <li>Livre en parfait etat : non lu, non annote, non corne, non tache</li>
+            <li>Livre en parfait état : non lu, non annoté, non corné, non taché</li>
             <li>Emballage d&apos;origine intact</li>
-            <li>Demande effectuee dans les 14 jours suivant la reception</li>
+            <li>Demande effectuée dans les 14 jours suivant la réception</li>
           </ul>
           <h3><i className="fas fa-coins" /> Frais de retour</h3>
           <ul>
-            <li><strong>A notre charge :</strong> defaut d&apos;impression, livre endommage a la livraison, erreur de commande</li>
-            <li><strong>A votre charge :</strong> changement d&apos;avis, doublon, autre motif personnel</li>
+            <li><strong>À notre charge :</strong> défaut d&apos;impression, livre endommagé à la livraison, erreur de commande</li>
+            <li><strong>À votre charge :</strong> changement d&apos;avis, doublon, autre motif personnel</li>
           </ul>
           <h3><i className="fas fa-ban" /> Exclusion ebooks</h3>
           <p>
-            Le droit de retractation ne s&apos;applique pas aux contenus numeriques dont le
-            telechargement a commence. En cas de fichier defectueux, nous renvoyons un lien
-            fonctionnel dans les meilleurs delais.
+            Le droit de rétractation ne s&apos;applique pas aux contenus numériques dont le
+            téléchargement a commencé. En cas de fichier défectueux, nous renvoyons un lien
+            fonctionnel dans les meilleurs délais.
           </p>
         </div>
 
@@ -152,14 +152,14 @@ const Delivery = () => {
         <div className="dlv-card">
           <div className="dlv-section-header">
             <span className="dlv-section-num">05</span>
-            <h2>Procedure de retour</h2>
+            <h2>Procédure de retour</h2>
           </div>
           <div className="dlv-steps">
             {[
-              ['fa-envelope', 'Contactez-nous', 'Par email, telephone ou formulaire de contact en precisant votre numero de commande et le motif.'],
-              ['fa-reply', 'Confirmation', 'Nous validons la prise en charge et vous indiquons la marche a suivre.'],
-              ['fa-box-open', 'Envoi du retour', 'Emballez soigneusement le livre et envoyez-le a l\'adresse indiquee.'],
-              ['fa-money-bill-wave', 'Remboursement', 'Sous 30 jours apres reception et verification, par le meme moyen de paiement.'],
+              ['fa-envelope', 'Contactez-nous', 'Par email, téléphone ou formulaire de contact en précisant votre numéro de commande et le motif.'],
+              ['fa-reply', 'Confirmation', 'Nous validons la prise en charge et vous indiquons la marche à suivre.'],
+              ['fa-box-open', 'Envoi du retour', 'Emballez soigneusement le livre et envoyez-le à l\'adresse indiquée.'],
+              ['fa-money-bill-wave', 'Remboursement', 'Sous 30 jours après réception et vérification, par le même moyen de paiement.'],
             ].map(([icon, title, desc], i) => (
               <div key={i} className="dlv-step">
                 <div className="dlv-step__num">{i + 1}</div>
@@ -178,7 +178,7 @@ const Delivery = () => {
           <div className="dlv-cta-content">
             <h2>Une question sur la livraison ou les retours ?</h2>
             <p>
-              Notre equipe est disponible pour vous accompagner. Nous repondons generalement
+              Notre équipe est disponible pour vous accompagner. Nous répondons généralement
               sous 24 heures.
             </p>
             <div className="dlv-contact-row">
