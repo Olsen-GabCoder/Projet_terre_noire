@@ -165,8 +165,8 @@ const Header = () => {
 
   const userInitial = (user?.first_name?.charAt(0) || user?.username?.charAt(0) || 'U').toUpperCase();
 
-  // ── Mobile drawer ──
-  const MobileMenuOverlay = () => (
+  // ── Mobile drawer (JSX inline, pas un composant, pour eviter unmount/remount a chaque keystroke) ──
+  const mobileDrawer = (
     <div
       ref={mobileMenuRef}
       className="tn-drawer-overlay"
@@ -562,7 +562,7 @@ const Header = () => {
         {scrolled && <div className="tn-motif-strip" style={{ opacity: 0.6 }} />}
       </nav>
 
-      {mobileMenuOpen && createPortal(<MobileMenuOverlay />, document.body)}
+      {mobileMenuOpen && createPortal(mobileDrawer, document.body)}
     </>
   );
 };
