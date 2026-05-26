@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
 class Manuscript(models.Model):
@@ -43,6 +44,7 @@ class Manuscript(models.Model):
     
     file = models.FileField(
         upload_to='manuscripts/',
+        storage=RawMediaCloudinaryStorage(),
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'doc'])],
         verbose_name="Fichier manuscrit"
     )

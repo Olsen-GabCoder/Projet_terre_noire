@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from decimal import Decimal
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
 class Category(models.Model):
@@ -141,6 +142,7 @@ class Book(models.Model):
     )
     pdf_file = models.FileField(
         upload_to='books/pdfs/',
+        storage=RawMediaCloudinaryStorage(),
         verbose_name="Fichier PDF (ebook)",
         blank=True,
         null=True,
