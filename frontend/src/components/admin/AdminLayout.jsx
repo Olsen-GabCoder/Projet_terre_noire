@@ -37,9 +37,9 @@ const AdminLayout = () => {
       <div className="adm-forbidden">
         <div className="adm-forbidden__icon"><i className="fas fa-lock" /></div>
         <div className="adm-forbidden__label">Erreur &middot; 403</div>
-        <h1 className="adm-forbidden__title">Acces <em>refuse</em></h1>
-        <p className="adm-forbidden__msg">Vous n&apos;avez pas les droits pour acceder a cette section.</p>
-        <Link to="/" className="tn-btn tn-btn--primary">Retour a l&apos;accueil</Link>
+        <h1 className="adm-forbidden__title">Accès <em>refusé</em></h1>
+        <p className="adm-forbidden__msg">Vous n&apos;avez pas les droits pour accéder à cette section.</p>
+        <Link to="/" className="tn-btn tn-btn--primary">Retour à l&apos;accueil</Link>
       </div>
     );
   }
@@ -79,7 +79,7 @@ const AdminLayout = () => {
               <span className="adm-sidebar__nav-idx">{item.idx}</span>
             </Link>
           ))}
-          <div className="adm-sidebar__nav-label">Systeme</div>
+          <div className="adm-sidebar__nav-label">Système</div>
           {NAV_ITEMS.slice(5).map(item => (
             <Link key={item.path} to={item.path} className={`adm-sidebar__nav-item ${isActive(item) ? 'active' : ''}`}>
               <i className={item.icon} />

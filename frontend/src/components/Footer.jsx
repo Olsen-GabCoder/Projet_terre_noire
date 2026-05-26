@@ -45,7 +45,7 @@ function DevModalContent({ onClose, children }) {
   }, [onClose]);
 
   return (
-    <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Developpeur" className="dev-modal" onClick={e => e.stopPropagation()}>
+    <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Développeur" className="dev-modal" onClick={e => e.stopPropagation()}>
       {children}
     </div>
   );
@@ -213,7 +213,7 @@ const Footer = () => {
                 </form>
               </div>
               {status === 'success' && (
-                <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--ok"><i className="fas fa-envelope" /> Un email de confirmation vous a ete envoye. Verifiez votre boite de reception.</p>
+                <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--ok"><i className="fas fa-envelope" /> Un email de confirmation vous a été envoyé. Vérifiez votre boîte de réception.</p>
               )}
               {status === 'already-subscribed' && (
                 <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--err"><i className="fas fa-info-circle" /> Cet email est déjà inscrit.</p>
@@ -222,7 +222,7 @@ const Footer = () => {
                 <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--err"><i className="fas fa-exclamation-circle" /> {apiError}</p>
               )}
               {(status === 'error' || status === 'network-error') && (
-                <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--err"><i className="fas fa-exclamation-circle" /> {status === 'error' ? 'Veuillez entrer une adresse email valide.' : 'Erreur de connexion, veuillez reessayer.'}</p>
+                <p className="ft-newsletter-strip__msg ft-newsletter-strip__msg--err"><i className="fas fa-exclamation-circle" /> {status === 'error' ? 'Veuillez entrer une adresse email valide.' : 'Erreur de connexion, veuillez réessayer.'}</p>
               )}
             </div>
 
@@ -245,7 +245,7 @@ const Footer = () => {
                   ))}
                 </div>
                 <div className="ft__legal">
-                  <span>&copy; {year} Terre Noire Editions</span>
+                  <span>&copy; {year} Terre Noire Éditions</span>
                   <span className="ft__legal-sep">·</span>
                   <Link to="/cgv">CGV</Link>
                   <span className="ft__legal-sep">·</span>
@@ -255,7 +255,7 @@ const Footer = () => {
                 </div>
               </div>
               <div className="ft__credit">
-                <span className="ft__credit-label">Conception & Developpement</span>
+                <span className="ft__credit-label">Conception & Développement</span>
                 <button className="ft__credit-dev" onClick={() => setShowDevModal(true)}>
                   <span className="ft__credit-dev-name">Olsen Kampala</span>
                   <i className="fas fa-arrow-up-right-from-square ft__credit-dev-icon" />
@@ -291,7 +291,7 @@ const Footer = () => {
               <div className="dev-modal__header-pattern" />
               <img src="/images/photo_olsen.jpg" alt="Olsen Kampala" className="dev-modal__photo" />
               <div className="dev-modal__identity">
-                <span className="dev-modal__eyebrow">Ingenieur Informatique · Ecrivain · Conferencier</span>
+                <span className="dev-modal__eyebrow">Ingénieur Informatique · Écrivain · Conférencier</span>
                 <h2 className="dev-modal__name">Olsen Kampala</h2>
                 <p className="dev-modal__location"><i className="fas fa-location-dot" /> Libreville, Gabon</p>
               </div>
@@ -299,9 +299,9 @@ const Footer = () => {
 
             <div className="dev-modal__body">
               <p className="dev-modal__bio">
-                Ingenieur informatique, ecrivain et conferencier. Passionne par la creation de solutions
-                digitales a fort impact, il allie expertise technique et sensibilite litteraire.
-                Concepteur et developpeur de la plateforme Terre Noire Editions.
+                Ingénieur informatique, écrivain et conférencier. Passionné par la création de solutions
+                digitales à fort impact, il allie expertise technique et sensibilité littéraire.
+                Concepteur et développeur de la plateforme Terre Noire Éditions.
               </p>
 
               <div className="dev-modal__domains">
@@ -329,14 +329,14 @@ const Footer = () => {
                 <div className="dev-modal__domain">
                   <div className="dev-modal__domain-icon"><i className="fas fa-feather-pointed" /></div>
                   <div>
-                    <span className="dev-modal__domain-title">Ecriture & Conferences</span>
+                    <span className="dev-modal__domain-title">Écriture & Conférences</span>
                     <span className="dev-modal__domain-desc">Auteur, orateur, transmission du savoir</span>
                   </div>
                 </div>
               </div>
 
               <div className="dev-modal__stack">
-                <span className="dev-modal__stack-label">Quelques competences</span>
+                <span className="dev-modal__stack-label">Quelques compétences</span>
                 <div className="dev-modal__tags">
                   {['Python', 'JavaScript', 'React', 'Django', 'TensorFlow', 'PostgreSQL', 'Docker', 'Git', 'React Native', 'NLP'].map(t => (
                     <span key={t} className="dev-modal__tag">{t}</span>
@@ -361,7 +361,7 @@ const Footer = () => {
             </div>
 
             <div className="dev-modal__footer">
-              Terre Noire Editions &middot; v1.0
+              Terre Noire Éditions &middot; v1.0
             </div>
           </DevModalContent>
         </div>,

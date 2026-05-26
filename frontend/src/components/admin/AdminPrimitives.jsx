@@ -15,13 +15,13 @@ import React, { useEffect, useRef } from 'react';
    STATUS BADGE — used across orders, manuscripts, users
    ============================================= */
 const STATUS_MAP = {
-  paid:      { bg: 'rgba(46,125,50,0.12)',  fg: '#2E7D32', dot: '#2E7D32', label: 'Payee' },
+  paid:      { bg: 'rgba(46,125,50,0.12)',  fg: '#2E7D32', dot: '#2E7D32', label: 'Payée' },
   pending:   { bg: 'rgba(232,96,28,0.12)',  fg: '#C94E15', dot: '#E8601C', label: 'En attente' },
-  shipped:   { bg: 'rgba(28,42,74,0.12)',   fg: '#1c2a4a', dot: '#1c2a4a', label: 'Expediee' },
-  cancelled: { bg: 'rgba(198,40,40,0.12)',  fg: '#C62828', dot: '#C62828', label: 'Annulee' },
+  shipped:   { bg: 'rgba(28,42,74,0.12)',   fg: '#1c2a4a', dot: '#1c2a4a', label: 'Expédiée' },
+  cancelled: { bg: 'rgba(198,40,40,0.12)',  fg: '#C62828', dot: '#C62828', label: 'Annulée' },
   reviewing: { bg: 'rgba(28,42,74,0.12)',   fg: '#1c2a4a', dot: '#1c2a4a', label: 'En examen' },
-  accepted:  { bg: 'rgba(46,125,50,0.12)',  fg: '#2E7D32', dot: '#2E7D32', label: 'Accepte' },
-  rejected:  { bg: 'rgba(198,40,40,0.12)',  fg: '#C62828', dot: '#C62828', label: 'Refuse' },
+  accepted:  { bg: 'rgba(46,125,50,0.12)',  fg: '#2E7D32', dot: '#2E7D32', label: 'Accepté' },
+  rejected:  { bg: 'rgba(198,40,40,0.12)',  fg: '#C62828', dot: '#C62828', label: 'Refusé' },
   active:    { bg: 'rgba(46,125,50,0.12)',  fg: '#2E7D32', dot: '#2E7D32', label: 'Actif' },
   inactive:  { bg: 'rgba(198,40,40,0.12)',  fg: '#C62828', dot: '#C62828', label: 'Inactif' },
 };
@@ -388,12 +388,12 @@ export function AdminError({ message, onRetry }) {
         Une erreur est survenue
       </div>
       <div style={{ fontSize: 14, color: 'var(--tn-gray-500)', marginTop: 8, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.55 }}>
-        {message || "Impossible de charger les donnees. Verifiez votre connexion ou reessayez."}
+        {message || "Impossible de charger les données. Vérifiez votre connexion ou réessayez."}
       </div>
       {onRetry && (
         <div style={{ marginTop: 24 }}>
           <button onClick={onRetry} className="tn-btn tn-btn--primary">
-            <i className="fas fa-rotate-right" /> Reessayer
+            <i className="fas fa-rotate-right" /> Réessayer
           </button>
         </div>
       )}
@@ -418,8 +418,8 @@ const GENRE_COLORS = {
 export function GenrePill({ value }) {
   const c = GENRE_COLORS[(value || '').toUpperCase()] || GENRE_COLORS.AUTRE;
   const labels = {
-    ROMAN: 'Roman', NOUVELLE: 'Nouvelle', POESIE: 'Poesie', ESSAI: 'Essai',
-    THEATRE: 'Theatre', JEUNESSE: 'Jeunesse', BD: 'BD', AUTRE: 'Autre',
+    ROMAN: 'Roman', NOUVELLE: 'Nouvelle', POESIE: 'Poésie', ESSAI: 'Essai',
+    THEATRE: 'Théâtre', JEUNESSE: 'Jeunesse', BD: 'BD', AUTRE: 'Autre',
   };
   return (
     <span style={{

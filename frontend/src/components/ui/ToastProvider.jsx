@@ -128,7 +128,7 @@ function Toast({ id, type, message, onDismiss }) {
           fontFamily: 'var(--tn-mono, monospace)', fontSize: 9, letterSpacing: '0.18em',
           textTransform: 'uppercase', color: cfg.accent, marginBottom: 4, fontWeight: 700,
         }}>
-          {type === 'success' ? 'Succes' : type === 'error' ? 'Erreur' : type === 'warning' ? 'Attention' : 'Information'}
+          {type === 'success' ? 'Succès' : type === 'error' ? 'Erreur' : type === 'warning' ? 'Attention' : 'Information'}
         </div>
         <div style={{
           fontFamily: 'var(--tn-sans, sans-serif)', fontSize: 13, fontWeight: 500,
@@ -178,7 +178,7 @@ function ConfirmModal({ config, onResult }) {
   onResultRef.current = onResult;
   const {
     title = 'Confirmer',
-    message = 'Etes-vous sur ?',
+    message = 'Êtes-vous sûr ?',
     confirmLabel = 'Confirmer',
     cancelLabel = 'Annuler',
     tone = 'danger', // 'danger' | 'warning' | 'info'
