@@ -78,8 +78,13 @@ class BambooPayService:
         """
         start = time.time()
 
+        # Normaliser : numéros gabonais = 9 chiffres avec 0 initial
+        phone_clean = phone.strip()
+        if len(phone_clean) == 8 and not phone_clean.startswith('0'):
+            phone_clean = '0' + phone_clean
+
         payload = {
-            'phone': phone,
+            'phone': phone_clean,
             'amount': str(amount),
             'payer_name': payer_name,
             'reference': reference,
@@ -89,9 +94,9 @@ class BambooPayService:
         }
 
         logger.warning(
-            "bamboo.initiate_payload ref=%s op=%s phone=%s amount=%s "
+            "bamboo.initiate_payload ref=%s op=%s phone=%s (raw=%s) amount=%s "
             "callback_url=%s merchant=%s",
-            reference, operator, phone, amount,
+            reference, operator, phone_clean, phone, amount,
             self.callback_url or '(VIDE)', self.merchant_id
         )
 

@@ -52,8 +52,8 @@ const Checkout = () => {
         shipping_city: order.shipping_city || '',
       });
       if (order.shipping_phone) {
-        const digits = order.shipping_phone.replace(/\D/g, '').slice(-8);
-        if (digits.length === 8) setPhoneForPayment(digits);
+        const digits = order.shipping_phone.replace(/\D/g, '').slice(-9);
+        if (digits.length >= 8) setPhoneForPayment(digits);
       }
       setRetryLoading(false);
     }).catch(() => {
@@ -86,8 +86,8 @@ const Checkout = () => {
         shipping_city: user.city || '',
       });
       if (user.phone_number) {
-        const digits = user.phone_number.replace(/\D/g, '').slice(-8);
-        if (digits.length === 8) setPhoneForPayment(digits);
+        const digits = user.phone_number.replace(/\D/g, '').slice(-9);
+        if (digits.length >= 8) setPhoneForPayment(digits);
       }
     }
   }, [isAuthenticated, cartItems, user, navigate, retryOrderId]);
@@ -109,7 +109,7 @@ const Checkout = () => {
 
   const isMobileMoney = paymentMethod === 'moov_money' || paymentMethod === 'airtel_money';
   const phoneDigits = phoneForPayment.replace(/\D/g, '');
-  const isPhoneValid = phoneDigits.length === 8;
+  const isPhoneValid = phoneDigits.length >= 8 && phoneDigits.length <= 9;
   const canSubmit = !isProcessing && (!isMobileMoney || isPhoneValid);
 
   const handleSubmit = async (e) => {
@@ -117,7 +117,7 @@ const Checkout = () => {
     setError('');
 
     if (isMobileMoney && !isPhoneValid) {
-      setError('Veuillez saisir un numéro de téléphone valide (8 chiffres).');
+      setError('Veuillez saisir un numéro de téléphone valide (8 ou 9 chiffres).');
       return;
     }
 
