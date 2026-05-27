@@ -93,6 +93,15 @@ class Book(models.Model):
         ('PAPIER', 'Papier'),
     ]
 
+    LANGUAGE_CHOICES = [
+        ('FR', 'Français'),
+        ('EN', 'Anglais'),
+        ('AR', 'Arabe'),
+        ('PT', 'Portugais'),
+        ('ES', 'Espagnol'),
+        ('AUTRE', 'Autre'),
+    ]
+
     title = models.CharField(
         max_length=300,
         verbose_name="Titre"
@@ -233,6 +242,46 @@ class Book(models.Model):
         default=0,
         verbose_name="Ventes totales",
         help_text="Nombre total d'exemplaires vendus"
+    )
+
+    # Details techniques (C4.1)
+    page_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Nombre de pages",
+    )
+    isbn = models.CharField(
+        max_length=20,
+        unique=True,
+        null=True,
+        blank=True,
+        verbose_name="ISBN",
+        help_text="ISBN-13 standard",
+    )
+    language = models.CharField(
+        max_length=10,
+        choices=LANGUAGE_CHOICES,
+        default='FR',
+        verbose_name="Langue",
+    )
+    dimensions_width_cm = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Largeur (cm)",
+    )
+    dimensions_height_cm = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Hauteur (cm)",
+    )
+    weight_g = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Poids (g)",
     )
     # === FIN NOUVEAUX CHAMPS ===
 

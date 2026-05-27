@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
 
 const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null };
+const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null,page_count:'',isbn:'',language:'FR',dimensions_width_cm:'',dimensions_height_cm:'',weight_g:'' };
 
 const AdminBooks = () => {
   const { toast, confirm } = useToast();
@@ -76,6 +76,8 @@ const AdminBooks = () => {
       is_bestseller: book.is_bestseller||false,
       category: book.category?.id||book.category||'',
       cover_image: null, back_cover_image: null, pdf_file: null,
+      page_count: book.page_count||'', isbn: book.isbn||'', language: book.language||'FR',
+      dimensions_width_cm: book.dimensions_width_cm||'', dimensions_height_cm: book.dimensions_height_cm||'', weight_g: book.weight_g||'',
     });
     setNewCategoryName('');
   };
@@ -344,6 +346,26 @@ function BookForm({
 
       <AdminModalSection icon="fa-align-left" title="Description">
         <textarea className="tn-input" name="description" value={formData.description} onChange={onInputChange} rows="4" placeholder="Description du livre..." style={{ fontFamily: 'var(--tn-serif)', fontSize: 14, lineHeight: 1.55, minHeight: 100, resize: 'vertical' }} />
+      </AdminModalSection>
+
+      <AdminModalSection icon="fa-info-circle" title="Détails techniques">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <FieldWrap label="Langue">
+            <select className="tn-input" name="language" value={formData.language} onChange={onInputChange} style={{ cursor: 'pointer' }}>
+              <option value="FR">Français</option>
+              <option value="EN">Anglais</option>
+              <option value="AR">Arabe</option>
+              <option value="PT">Portugais</option>
+              <option value="ES">Espagnol</option>
+              <option value="AUTRE">Autre</option>
+            </select>
+          </FieldWrap>
+          <FieldWrap label="ISBN"><input className="tn-input" name="isbn" value={formData.isbn} onChange={onInputChange} placeholder="978-2-1234-5678-9" style={{ fontFamily: 'var(--tn-mono)' }} /></FieldWrap>
+          <FieldWrap label="Nombre de pages"><input className="tn-input" name="page_count" type="number" min="1" value={formData.page_count} onChange={onInputChange} placeholder="Ex: 320" /></FieldWrap>
+          <FieldWrap label="Largeur (cm)"><input className="tn-input" name="dimensions_width_cm" type="number" min="0" step="0.1" value={formData.dimensions_width_cm} onChange={onInputChange} placeholder="Ex: 14.0" /></FieldWrap>
+          <FieldWrap label="Hauteur (cm)"><input className="tn-input" name="dimensions_height_cm" type="number" min="0" step="0.1" value={formData.dimensions_height_cm} onChange={onInputChange} placeholder="Ex: 21.0" /></FieldWrap>
+          <FieldWrap label="Poids (g)"><input className="tn-input" name="weight_g" type="number" min="0" value={formData.weight_g} onChange={onInputChange} placeholder="Ex: 350" /></FieldWrap>
+        </div>
       </AdminModalSection>
 
       <AdminModalSection icon="fa-tag" title="Promotion & disponibilité">

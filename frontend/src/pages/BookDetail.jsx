@@ -512,22 +512,58 @@ const BookDetail = () => {
                         {book.format === 'EBOOK' ? 'Ebook numérique (PDF)' : 'Livre papier'}
                       </span>
                     </div>
+                    {book.isbn && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">ISBN</span>
+                        <span className="bd-detail-value" style={{ fontFamily: 'var(--tn-mono, monospace)' }}>{book.isbn}</span>
+                      </div>
+                    )}
+                    {book.reference && book.reference !== book.isbn && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Référence</span>
+                        <span className="bd-detail-value">{book.reference}</span>
+                      </div>
+                    )}
                     <div className="bd-detail-item">
-                      <span className="bd-detail-label">Référence</span>
-                      <span className="bd-detail-value">{book.reference || '—'}</span>
-                    </div>
-                    <div className="bd-detail-item">
-                      <span className="bd-detail-label">Date de publication</span>
+                      <span className="bd-detail-label">Langue</span>
                       <span className="bd-detail-value">
-                        {book.created_at
-                          ? new Date(book.created_at).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })
-                          : '—'}
+                        {{ FR:'Français', EN:'Anglais', AR:'Arabe', PT:'Portugais', ES:'Espagnol', AUTRE:'Autre' }[book.language] || book.language || 'Français'}
                       </span>
                     </div>
+                    {book.page_count && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Nombre de pages</span>
+                        <span className="bd-detail-value">{book.page_count}</span>
+                      </div>
+                    )}
+                    {(book.dimensions_width_cm || book.dimensions_height_cm) && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Dimensions</span>
+                        <span className="bd-detail-value">
+                          {book.dimensions_width_cm && book.dimensions_height_cm
+                            ? `${book.dimensions_width_cm} × ${book.dimensions_height_cm} cm`
+                            : book.dimensions_width_cm ? `${book.dimensions_width_cm} cm (L)` : `${book.dimensions_height_cm} cm (H)`}
+                        </span>
+                      </div>
+                    )}
+                    {book.weight_g && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Poids</span>
+                        <span className="bd-detail-value">{book.weight_g} g</span>
+                      </div>
+                    )}
+                    {book.published_date && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Date de publication</span>
+                        <span className="bd-detail-value">
+                          {new Date(book.published_date).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

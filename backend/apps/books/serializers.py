@@ -221,6 +221,14 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'rating_display',
             'rating_stars',
             'pdf_file',
+            # Details techniques (C4.1)
+            'published_date',
+            'page_count',
+            'isbn',
+            'language',
+            'dimensions_width_cm',
+            'dimensions_height_cm',
+            'weight_g',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
     
@@ -275,6 +283,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
     pdf_file = serializers.FileField(required=False, allow_null=True)
     reference = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
     description = serializers.CharField(required=False, allow_blank=True, default='')
+    isbn = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
 
     class Meta:
         model = Book
@@ -294,6 +303,13 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'rating_count',
             'category',
             'author',
+            # Details techniques (C4.1)
+            'page_count',
+            'isbn',
+            'language',
+            'dimensions_width_cm',
+            'dimensions_height_cm',
+            'weight_g',
         ]
     
     def validate(self, data):
@@ -330,7 +346,11 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'rating': "La note doit être comprise entre 0 et 5."
                 })
-        
+
+        # Convertir isbn vide en None pour eviter les doublons unique
+        if 'isbn' in data and not data['isbn']:
+            data['isbn'] = None
+
         return data
 
 
