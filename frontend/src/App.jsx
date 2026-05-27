@@ -42,6 +42,7 @@ const Cookies = lazy(() => import('./pages/Cookies'));
 const Settings = lazy(() => import('./pages/Settings'));
 const ServerError = lazy(() => import('./pages/ServerError'));
 const AuthorDetail = lazy(() => import('./pages/AuthorDetail'));
+const CollectionDetail = lazy(() => import('./pages/CollectionDetail'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Orders = lazy(() => import('./pages/Orders'));
 const NewsletterConfirm = lazy(() => import('./pages/NewsletterConfirm'));
@@ -59,6 +60,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminNewsletter = lazy(() => import('./pages/admin/AdminNewsletter'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminContact = lazy(() => import('./pages/admin/AdminContact'));
+const AdminCollections = lazy(() => import('./pages/admin/AdminCollections'));
 const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
 
 // Dev-only routes (tree-shaken in production)
@@ -106,7 +108,7 @@ function ScrollProgressBar() {
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
-  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/newsletter/') || location.pathname.startsWith('/checkout/paiement/');
+  const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/collections/') || location.pathname.startsWith('/newsletter/') || location.pathname.startsWith('/checkout/paiement/');
   const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
 
   return (
@@ -155,6 +157,7 @@ function AppContent() {
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="newsletter" element={<AdminNewsletter />} />
                   <Route path="coupons" element={<AdminCoupons />} />
+                  <Route path="collections" element={<AdminCollections />} />
                   <Route path="contact" element={<AdminContact />} />
                   <Route path="config" element={<AdminConfig />} />
                 </Route>
@@ -162,6 +165,7 @@ function AppContent() {
                 {/* Routes informatives */}
                 <Route path="/authors" element={<Authors />} />
                 <Route path="/authors/:id" element={<AuthorDetail />} />
+                <Route path="/collections/:slug" element={<CollectionDetail />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />

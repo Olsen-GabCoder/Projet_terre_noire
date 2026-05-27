@@ -35,6 +35,7 @@ from .serializers import (
     CategorySerializer,
     CategoryDetailSerializer,
     CollectionSerializer,
+    CollectionDetailSerializer,
     BookStatisticsSerializer,
     BookReviewSerializer,
     BookReviewCreateSerializer,
@@ -872,3 +873,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
     search_fields = ['name']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+
+    @action(detail=False, methods=['get'], url_path='by-slug/(?P<slug>[^/.]+)')
+    def by_slug(self, request, slug=None):
+        """GET /api/collections/by-slug/<slug>/ — detail avec livres."""
+        collection = get_object_or_404(Collection, slug=slug, is_active=True)
+        serializer = CollectionDetailSerializer(collection, context={'request': request})
+        return Response(serializer.data)

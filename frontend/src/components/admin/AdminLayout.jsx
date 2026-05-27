@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { path: '/admin-dashboard', icon: 'fas fa-chart-line', idx: '01', label: 'Tableau de bord', exact: true },
   { path: '/admin-dashboard/books', icon: 'fas fa-book', idx: '02', label: 'Catalogue' },
   { path: '/admin-dashboard/authors', icon: 'fas fa-feather', idx: '03', label: 'Auteurs' },
+  { path: '/admin-dashboard/collections', icon: 'fas fa-layer-group', idx: '03b', label: 'Collections' },
   { path: '/admin-dashboard/orders', icon: 'fas fa-bag-shopping', idx: '04', label: 'Commandes' },
   { path: '/admin-dashboard/manuscripts', icon: 'fas fa-pen-to-square', idx: '05', label: 'Manuscrits' },
   { path: '/admin-dashboard/users', icon: 'fas fa-users', idx: '06', label: 'Utilisateurs' },

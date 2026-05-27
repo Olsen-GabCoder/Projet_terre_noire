@@ -1,0 +1,233 @@
+/* ============================================================
+   COLLECTION DETAIL — Terre Noire Editions
+   Clone de AuthorDetail.css avec prefixe coll-
+   ============================================================ */
+
+.coll-page {
+  min-height: 100vh;
+  background: var(--tn-cream);
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.coll-hero {
+  background: var(--tn-black);
+  color: var(--tn-cream);
+  padding: 56px 56px 24px;
+  position: relative;
+  overflow: hidden;
+  padding-top: 56px;
+}
+
+.coll-hero__motif {
+  position: absolute; inset: 0;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.coll-hero__orb {
+  position: absolute;
+  top: -80px; left: -80px;
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(200,149,108,0.45), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.coll-hero__inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 48px;
+  align-items: flex-end;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Cover */
+.coll-hero__cover {
+  width: 280px;
+  aspect-ratio: 1/1.15;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--ds-gold-18, rgba(200,149,108,0.18));
+  box-shadow: 0 30px 60px rgba(20,14,8,0.4);
+  position: relative;
+}
+
+.coll-hero__cover img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.coll-hero__cover-initial {
+  font-family: var(--tn-serif);
+  font-size: 84px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.18);
+  position: absolute;
+}
+
+/* Info */
+.coll-hero__info {
+  padding-bottom: 32px;
+}
+
+.coll-hero__breadcrumb {
+  font-family: var(--tn-mono);
+  font-size: 11px;
+  color: var(--tn-orange-light);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.coll-hero__breadcrumb a {
+  color: var(--tn-gray-400);
+  text-decoration: none;
+}
+.coll-hero__breadcrumb a:hover {
+  color: var(--tn-cream);
+}
+
+.coll-hero__name {
+  font-family: var(--tn-serif);
+  font-size: clamp(40px, 5vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.0;
+  margin: 0;
+}
+
+.coll-hero__pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* ============================================================
+   DESCRIPTION SECTION
+   ============================================================ */
+.coll-desc-section {
+  padding: 56px 56px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.coll-desc__label {
+  display: block;
+  font-family: var(--tn-mono);
+  font-size: 11px;
+  color: var(--tn-orange);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.coll-desc__text {
+  font-family: var(--tn-serif);
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--tn-gray-700);
+  max-width: 800px;
+}
+
+.coll-desc__text p {
+  margin: 0 0 16px;
+}
+
+.coll-desc__dropcap {
+  font-family: var(--ds-serif, 'Playfair Display', serif);
+  font-size: 56px;
+  line-height: 0.85;
+  color: var(--ds-orange);
+  float: left;
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   BOOKS SECTION
+   ============================================================ */
+.coll-books {
+  padding: 64px 56px 80px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.coll-books__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.coll-books__title {
+  font-family: var(--tn-serif);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--tn-gray-900);
+}
+
+.coll-books__count {
+  font-family: var(--tn-mono);
+  font-size: 11px;
+  color: var(--tn-gray-500);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.coll-books__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 22px;
+}
+
+.coll-books__empty {
+  color: var(--tn-gray-500);
+  font-size: 15px;
+  padding: 48px 0;
+  text-align: center;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .coll-hero { padding: 40px 32px 20px; }
+  .coll-hero__inner {
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+  }
+  .coll-hero__cover { width: 200px; }
+  .coll-desc-section { padding: 40px 32px 0; }
+  .coll-books { padding: 48px 32px 64px; }
+}
+
+@media (max-width: 600px) {
+  .coll-hero { padding: 32px 20px 16px; }
+  .coll-hero__inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    text-align: center;
+  }
+  .coll-hero__cover {
+    width: 160px;
+    margin: 0 auto;
+  }
+  .coll-hero__info { padding-bottom: 16px; }
+  .coll-hero__name { font-size: 36px; }
+  .coll-hero__pills { justify-content: center; }
+  .coll-hero__breadcrumb { text-align: left; }
+
+  .coll-desc-section { padding: 32px 20px 0; }
+  .coll-desc__dropcap { font-size: 40px; }
+  .coll-desc__text { font-size: 15px; }
+
+  .coll-books { padding: 32px 20px 48px; }
+  .coll-books__header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .coll-books__title { font-size: 26px; }
+  .coll-books__grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+}

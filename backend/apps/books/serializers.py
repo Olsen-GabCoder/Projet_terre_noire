@@ -26,6 +26,17 @@ class CollectionSerializer(serializers.ModelSerializer):
         return obj.books.count()
 
 
+class CollectionDetailSerializer(CollectionSerializer):
+    books = serializers.SerializerMethodField()
+
+    class Meta(CollectionSerializer.Meta):
+        fields = CollectionSerializer.Meta.fields + ['books']
+
+    def get_books(self, obj):
+        qs = obj.books.filter(available=True).select_related('category', 'author')
+        return BookListSerializer(qs, many=True, context=self.context).data
+
+
 class AuthorSerializer(serializers.ModelSerializer):
     """
     Sérialiseur pour le modèle Author
