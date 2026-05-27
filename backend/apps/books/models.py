@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.utils.text import slugify
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator, FileExtensionValidator
 from decimal import Decimal
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
@@ -81,6 +81,59 @@ class Author(models.Model):
 
     def __str__(self):
         return self.full_name
+
+
+class Collection(models.Model):
+    """
+    Collection editoriale (ex: "Voix d'Afrique", "Classiques Terre Noire").
+    Distinct de Category qui represente le genre litteraire.
+    """
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        verbose_name="Nom de la collection",
+    )
+    slug = models.SlugField(
+        max_length=220,
+        unique=True,
+        blank=True,
+        verbose_name="Slug",
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name="Description",
+    )
+    cover_image = models.ImageField(
+        upload_to='collections/covers/',
+        blank=True,
+        null=True,
+        verbose_name="Image de couverture",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Active",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Collection"
+        verbose_name_plural = "Collections"
+        ordering = ['name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            n = 1
+            while Collection.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{n}"
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Book(models.Model):
@@ -282,6 +335,24 @@ class Book(models.Model):
         null=True,
         blank=True,
         verbose_name="Poids (g)",
+    )
+
+    # Collection editoriale et extrait (C4.2)
+    collection = models.ForeignKey(
+        Collection,
+        on_delete=models.PROTECT,
+        related_name='books',
+        null=True,
+        blank=True,
+        verbose_name="Collection",
+    )
+    excerpt_pdf = models.FileField(
+        upload_to='books/excerpts/',
+        storage=RawMediaCloudinaryStorage(),
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf'])],
+        verbose_name="Extrait PDF",
     )
     # === FIN NOUVEAUX CHAMPS ===
 

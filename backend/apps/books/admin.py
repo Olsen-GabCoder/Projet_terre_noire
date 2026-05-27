@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Author, Book, BookReview, ReviewLike
+from .models import Category, Author, Collection, Book, BookReview, ReviewLike
 
 
 @admin.register(Category)
@@ -15,6 +15,14 @@ class AuthorAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('full_name',)}
     search_fields = ['full_name']
     list_filter = ['created_at']
+
+
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'is_active', 'created_at']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name']
+    list_filter = ['is_active']
 
 
 @admin.register(Book)

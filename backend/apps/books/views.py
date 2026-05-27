@@ -34,11 +34,13 @@ from .serializers import (
     AuthorDetailSerializer,
     CategorySerializer,
     CategoryDetailSerializer,
+    CollectionSerializer,
     BookStatisticsSerializer,
     BookReviewSerializer,
     BookReviewCreateSerializer,
     BookReviewReplySerializer,
 )
+from .models import Collection
 
 
 @xframe_options_exempt
@@ -122,6 +124,30 @@ def _download_raw_from_cloudinary(file_name):
     if not filenames:
         raise ValueError("Archive Cloudinary vide")
     return z.read(filenames[0])
+
+
+@require_GET
+def serve_book_excerpt(request, book_id):
+    """
+    Sert l'extrait PDF d'un livre. Endpoint public (pas d'auth requise).
+    Utilise le proxy Cloudinary pour contourner le blocage ACL raw.
+    GET /api/books/<book_id>/excerpt/
+    """
+    book = get_object_or_404(Book, pk=book_id)
+    if not book.excerpt_pdf:
+        raise Http404("Aucun extrait disponible pour ce livre.")
+
+    try:
+        file_data = _download_raw_from_cloudinary(book.excerpt_pdf.name)
+    except Exception as e:
+        logger.warning("Telechargement extrait livre %s echoue: %s", book_id, e)
+        raise Http404("Extrait inaccessible.") from e
+
+    filename = f"extrait-{book.slug or book.id}.pdf"
+    response = HttpResponse(file_data, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    response['Content-Length'] = len(file_data)
+    return response
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -825,12 +851,24 @@ class CategoryViewSet(viewsets.ModelViewSet):
         """
         category = self.get_object()
         books = category.books.filter(available=True).select_related('category', 'author')
-        
+
         page = self.paginate_queryset(books)
-        
+
         if page is not None:
             serializer = BookListSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = BookListSerializer(books, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+class CollectionViewSet(viewsets.ModelViewSet):
+    """ViewSet pour les collections editoriales."""
+    queryset = Collection.objects.all()
+    serializer_class = CollectionSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']

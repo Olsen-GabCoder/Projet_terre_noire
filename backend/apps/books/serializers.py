@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Author, Book, BookReview, ReviewLike
+from .models import Category, Author, Collection, Book, BookReview, ReviewLike
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -12,6 +12,18 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'slug', 'created_at', 'updated_at']
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    books_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Collection
+        fields = ['id', 'name', 'slug', 'description', 'cover_image', 'is_active', 'books_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+    def get_books_count(self, obj):
+        return obj.books.count()
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -141,6 +153,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
     # Nested serializers pour les relations
     category = CategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
+    collection = CollectionSerializer(read_only=True)
+    excerpt_pdf_url = serializers.SerializerMethodField()
     
     # IDs pour la création/modification (write_only)
     category_id = serializers.PrimaryKeyRelatedField(
@@ -229,9 +243,21 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'dimensions_width_cm',
             'dimensions_height_cm',
             'weight_g',
+            # Collection et extrait (C4.2)
+            'collection',
+            'excerpt_pdf_url',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-    
+
+    def get_excerpt_pdf_url(self, obj):
+        if obj.excerpt_pdf:
+            request = self.context.get('request')
+            url = f'/api/books/{obj.pk}/excerpt/'
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
+
     def get_rating_display(self, obj):
         """Retourne la note formatée (ex: "4.5/5")"""
         if obj.rating and obj.rating > 0:
@@ -281,9 +307,11 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
     cover_image = serializers.ImageField(required=False, allow_null=True)
     back_cover_image = serializers.ImageField(required=False, allow_null=True)
     pdf_file = serializers.FileField(required=False, allow_null=True)
+    excerpt_pdf = serializers.FileField(required=False, allow_null=True)
     reference = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
     description = serializers.CharField(required=False, allow_blank=True, default='')
     isbn = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
+    collection = serializers.PrimaryKeyRelatedField(queryset=Collection.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Book
@@ -310,8 +338,11 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'dimensions_width_cm',
             'dimensions_height_cm',
             'weight_g',
+            # Collection et extrait (C4.2)
+            'collection',
+            'excerpt_pdf',
         ]
-    
+
     def validate(self, data):
         """
         Validation globale des données

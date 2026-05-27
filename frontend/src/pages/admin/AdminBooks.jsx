@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
 
 const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null,page_count:'',isbn:'',language:'FR',dimensions_width_cm:'',dimensions_height_cm:'',weight_g:'' };
+const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null,page_count:'',isbn:'',language:'FR',dimensions_width_cm:'',dimensions_height_cm:'',weight_g:'',collection:'',excerpt_pdf:null };
 
 const AdminBooks = () => {
   const { toast, confirm } = useToast();
@@ -26,16 +26,20 @@ const AdminBooks = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
-  useEffect(() => { fetchBooks(); fetchAuthors(); fetchCategories(); }, []);
+  const [collections, setCollections] = useState([]);
+
+  useEffect(() => { fetchBooks(); fetchAuthors(); fetchCategories(); fetchCollections(); }, []);
 
   const fetchBooks = async () => { try { setLoading(true); setError(null); const r = await api.get('/books/', { params: { page_size: 100 } }); setBooks(r.data.results || r.data); } catch(e){ setError('Impossible de charger les livres'); console.error(e); } finally{setLoading(false);} };
   const fetchAuthors = async () => { try { const r = await api.get('/authors/', { params: { page_size: 100 } }); setAuthors(r.data.results || r.data); } catch(e){console.error(e);} };
   const fetchCategories = async () => { try { const r = await api.get('/categories/', { params: { page_size: 100 } }); setCategories(r.data.results || r.data || []); } catch(e){setCategories([]);} };
+  const fetchCollections = async () => { try { const r = await api.get('/collections/', { params: { page_size: 100 } }); setCollections(r.data.results || r.data || []); } catch(e){setCollections([]);} };
 
   const handleInputChange = (e) => { const { name, value, type, checked } = e.target; setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value })); };
   const handleFileChange = (e) => setFormData(p => ({ ...p, cover_image: e.target.files[0] }));
   const handleBackCoverChange = (e) => setFormData(p => ({ ...p, back_cover_image: e.target.files[0] || null }));
   const handlePdfChange = (e) => setFormData(p => ({ ...p, pdf_file: e.target.files[0] || null }));
+  const handleExcerptChange = (e) => setFormData(p => ({ ...p, excerpt_pdf: e.target.files[0] || null }));
 
   const handleAddCategory = async () => {
     const name = newCategoryName.trim();
@@ -48,7 +52,7 @@ const AdminBooks = () => {
     const data = new FormData();
     Object.keys(formData).forEach(key => {
       const v = formData[key];
-      if (['cover_image','back_cover_image','pdf_file'].includes(key) && v === null) return;
+      if (['cover_image','back_cover_image','pdf_file','excerpt_pdf'].includes(key) && v === null) return;
       if (typeof v === 'boolean') data.append(key, v.toString());
       else if (v !== '' && v !== null && v !== undefined) data.append(key, v);
     });
@@ -75,9 +79,10 @@ const AdminBooks = () => {
       format: book.format||'PAPIER', available: book.available??true,
       is_bestseller: book.is_bestseller||false,
       category: book.category?.id||book.category||'',
-      cover_image: null, back_cover_image: null, pdf_file: null,
+      cover_image: null, back_cover_image: null, pdf_file: null, excerpt_pdf: null,
       page_count: book.page_count||'', isbn: book.isbn||'', language: book.language||'FR',
       dimensions_width_cm: book.dimensions_width_cm||'', dimensions_height_cm: book.dimensions_height_cm||'', weight_g: book.weight_g||'',
+      collection: book.collection?.id||book.collection||'',
     });
     setNewCategoryName('');
   };
@@ -240,9 +245,9 @@ const AdminBooks = () => {
           <AdminModalBody>
             <BookForm
               formData={formData} onInputChange={handleInputChange}
-              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange}
+              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange} onExcerptChange={handleExcerptChange}
               onSubmit={handleCreateSubmit} onCancel={resetCreateForm}
-              authors={authors} categories={categories}
+              authors={authors} categories={categories} collections={collections}
               newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
               submitLabel="Créer le livre" editingBook={null}
             />
@@ -287,9 +292,9 @@ const AdminBooks = () => {
           <AdminModalBody>
             <BookForm
               formData={formData} onInputChange={handleInputChange}
-              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange}
+              onFileChange={handleFileChange} onBackCoverChange={handleBackCoverChange} onPdfChange={handlePdfChange} onExcerptChange={handleExcerptChange}
               onSubmit={handleEditSubmit} onCancel={closeEditModal}
-              authors={authors} categories={categories}
+              authors={authors} categories={categories} collections={collections}
               newCategoryName={newCategoryName} onNewCategoryNameChange={setNewCategoryName} onAddCategory={handleAddCategory}
               submitLabel="Mettre à jour" editingBook={editingBook}
             />
@@ -303,16 +308,18 @@ const AdminBooks = () => {
 /* ─────────────────────────────────────────────
    SHARED BOOK FORM (used for create + edit modal)
    ───────────────────────────────────────────── */
+const grid2 = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 };
+
 function BookForm({
-  formData, onInputChange, onFileChange, onBackCoverChange, onPdfChange,
-  onSubmit, onCancel, authors, categories,
+  formData, onInputChange, onFileChange, onBackCoverChange, onPdfChange, onExcerptChange,
+  onSubmit, onCancel, authors, categories, collections,
   newCategoryName, onNewCategoryNameChange, onAddCategory,
   submitLabel, editingBook,
 }) {
   return (
     <form onSubmit={onSubmit}>
       <AdminModalSection icon="fa-pen" title="Informations générales">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={grid2}>
           <FieldWrap label="Titre" required><input className="tn-input" name="title" value={formData.title} onChange={onInputChange} required /></FieldWrap>
           <FieldWrap label="Auteur" required>
             <select className="tn-input" name="author" value={formData.author} onChange={onInputChange} required style={{ cursor: 'pointer' }}>
@@ -349,7 +356,13 @@ function BookForm({
       </AdminModalSection>
 
       <AdminModalSection icon="fa-info-circle" title="Détails techniques">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={grid2}>
+          <FieldWrap label="Collection">
+            <select className="tn-input" name="collection" value={formData.collection} onChange={onInputChange} style={{ cursor: 'pointer' }}>
+              <option value="">Aucune</option>
+              {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </FieldWrap>
           <FieldWrap label="Langue">
             <select className="tn-input" name="language" value={formData.language} onChange={onInputChange} style={{ cursor: 'pointer' }}>
               <option value="FR">Français</option>
@@ -368,9 +381,18 @@ function BookForm({
         </div>
       </AdminModalSection>
 
+      <AdminModalSection icon="fa-eye" title="Extrait public">
+        <FieldWrap label="Extrait PDF">
+          <input type="file" accept="application/pdf" onChange={onExcerptChange} style={{ fontSize: 12 }} />
+          <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>
+            {editingBook?.excerpt_pdf ? <span style={{ color: 'var(--tn-success)' }}><i className="fas fa-check" /> Extrait joint</span> : 'Fichier PDF visible sans achat. Choisissez les pages qui donnent envie d\'acheter.'}
+          </div>
+        </FieldWrap>
+      </AdminModalSection>
+
       <AdminModalSection icon="fa-tag" title="Promotion & disponibilité">
         <div style={{ padding: 18, borderRadius: 12, background: 'var(--tn-orange-50)', border: '1px solid var(--tn-orange-100)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, alignItems: 'flex-end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, alignItems: 'flex-end' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
               <input type="checkbox" name="available" checked={formData.available} onChange={onInputChange} style={{ width: 18, height: 18, accentColor: 'var(--tn-orange)' }} />
               <span style={{ fontSize: 13, fontWeight: 600 }}>Disponible</span>
@@ -387,7 +409,7 @@ function BookForm({
       </AdminModalSection>
 
       <AdminModalSection icon="fa-paperclip" title="Fichiers">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
           <FieldWrap label="Couverture (recto)">
             <input type="file" accept="image/*" onChange={onFileChange} style={{ fontSize: 12 }} />
             <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>{editingBook ? 'Vide = conserver' : '400x600px'}</div>

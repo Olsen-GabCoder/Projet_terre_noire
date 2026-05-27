@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookViewSet, AuthorViewSet, CategoryViewSet, serve_book_pdf
+from .views import BookViewSet, AuthorViewSet, CategoryViewSet, CollectionViewSet, serve_book_pdf, serve_book_excerpt
 
 # Instanciation du routeur DRF
 router = DefaultRouter()
@@ -11,9 +11,11 @@ router = DefaultRouter()
 router.register(r'books', BookViewSet, basename='book')
 router.register(r'authors', AuthorViewSet, basename='author')
 router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'collections', CollectionViewSet, basename='collection')
 
 # Configuration des URLs (route PDF avant le routeur pour priorité)
 urlpatterns = [
     path('books/<int:book_id>/read-pdf/', serve_book_pdf),
+    path('books/<int:book_id>/excerpt/', serve_book_excerpt),
     path('', include(router.urls)),
 ]

@@ -425,6 +425,18 @@ const BookDetail = () => {
                 </div>
               )}
 
+              {book.excerpt_pdf_url && (
+                <div className="bd-read-action">
+                  <button
+                    type="button"
+                    className="bd-btn bd-btn--outline"
+                    onClick={() => window.open(book.excerpt_pdf_url, '_blank')}
+                  >
+                    <i className="fas fa-file-pdf" /> Lire un extrait
+                  </button>
+                </div>
+              )}
+
               {book.available && (
                 <div className="bd-actions">
                   <div className="bd-quantity">
@@ -530,6 +542,16 @@ const BookDetail = () => {
                         {{ FR:'Français', EN:'Anglais', AR:'Arabe', PT:'Portugais', ES:'Espagnol', AUTRE:'Autre' }[book.language] || book.language || 'Français'}
                       </span>
                     </div>
+                    {book.collection && (
+                      <div className="bd-detail-item">
+                        <span className="bd-detail-label">Collection</span>
+                        <span className="bd-detail-value">
+                          <Link to={`/collections/${book.collection.slug}`} style={{ color: 'var(--tn-orange)', textDecoration: 'none' }}>
+                            {book.collection.name}
+                          </Link>
+                        </span>
+                      </div>
+                    )}
                     {book.page_count && (
                       <div className="bd-detail-item">
                         <span className="bd-detail-label">Nombre de pages</span>
