@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useDeliveryConfig } from '../context/DeliveryConfigContext';
 import { couponAPI } from '../services/api';
+import TnAlert from '../components/ui/TnAlert';
 import '../styles/Cart.css';
 
 const Cart = () => {
@@ -32,7 +33,8 @@ const Cart = () => {
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(p) + ' FCFA';
 
   const subtotal = cartItems.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
-  const shipping = subtotal === 0 ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
+  const hasPhysicalBook = cartItems.some((i) => i.format === 'PAPIER');
+  const shipping = subtotal === 0 || !hasPhysicalBook ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
   const discountPercent = appliedCoupon?.discountPercent ?? 0;
   const discountFixed = appliedCoupon?.discountAmount ?? 0;
   const discountAmt = discountPercent > 0
@@ -249,6 +251,12 @@ const Cart = () => {
                   </p>
                 )}
               </div>
+
+              {hasPhysicalBook && (
+                <TnAlert variant="info" style={{ marginBottom: 16 }}>
+                  Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devez venir recuperer votre commande dans l'une de ces trois villes.
+                </TnAlert>
+              )}
 
               {/* Prix */}
               <div className="crt-prices">

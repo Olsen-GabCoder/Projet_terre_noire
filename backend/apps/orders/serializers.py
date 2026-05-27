@@ -96,7 +96,13 @@ class OrderCreateSerializer(serializers.Serializer):
         config = SiteConfig.get_config()
         shipping_free_threshold = config.shipping_free_threshold
         shipping_cost_default = config.shipping_cost
-        shipping_cost = Decimal('0') if subtotal >= shipping_free_threshold else shipping_cost_default
+        has_physical = any(item['book'].format == 'PAPIER' for item in order_items)
+        if not has_physical:
+            shipping_cost = Decimal('0')
+        elif subtotal >= shipping_free_threshold:
+            shipping_cost = Decimal('0')
+        else:
+            shipping_cost = shipping_cost_default
         discount_amount = Decimal('0')
         coupon_code = validated_data.get('coupon_code', '').strip().upper()
 

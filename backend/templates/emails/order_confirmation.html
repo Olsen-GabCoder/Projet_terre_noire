@@ -28,6 +28,13 @@
 <h3>Adresse de livraison</h3>
 <p>{{ order.shipping_address }}<br>{{ order.shipping_city }}<br>Tél : {{ order.shipping_phone }}</p>
 
+{% if order.has_physical_book %}
+<div style="background: #E3F2FD; border-left: 4px solid #1565C0; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+  <strong style="color: #1565C0;">Information livraison</strong><br>
+  Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devez venir recuperer votre commande dans l'une de ces trois villes.
+</div>
+{% endif %}
+
 <p><em>Votre facture est jointe à cet email en pièce attachée (PDF).</em></p>
 
 <h3>Prochaines étapes</h3>

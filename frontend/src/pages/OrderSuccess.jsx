@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import orderService from '../services/orderService';
+import TnAlert from '../components/ui/TnAlert';
 import '../styles/OrderSuccess.css';
 
 const OrderSuccess = () => {
@@ -95,6 +96,12 @@ const OrderSuccess = () => {
             <span className="os-info-value">{orderData?.shipping_city}</span>
           </div>
         </div>
+
+        {orderData?.items?.some((i) => i.book?.format === 'PAPIER') && (
+          <TnAlert variant="info" style={{ marginBottom: 20 }}>
+            Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devrez venir recuperer votre commande dans l'une de ces trois villes.
+          </TnAlert>
+        )}
 
         <div className="os-steps">
           <h2><i className="fas fa-list-check" /> Et maintenant ?</h2>

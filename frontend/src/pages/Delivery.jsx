@@ -30,11 +30,40 @@ const Delivery = () => {
 
       <div className="dlv-content">
 
+        {/* ══════════ ZONES DESSERVIES ══════════ */}
+        <div className="dlv-card">
+          <div className="dlv-section-header">
+            <span className="dlv-section-num">00</span>
+            <h2>Zones de livraison desservies</h2>
+          </div>
+          <p>
+            Nous livrons les exemplaires physiques uniquement dans les trois villes suivantes :
+          </p>
+          <div className="dlv-zones">
+            {[
+              ['fa-location-dot', 'Libreville', 'Capitale', 'var(--color-primary)'],
+              ['fa-location-dot', 'Port-Gentil', 'Siege de Terre Noire Editions', 'var(--tn-gold, #C8956C)'],
+              ['fa-location-dot', 'Lambarene', 'Province du Moyen-Ogooue', 'var(--color-gray-500)'],
+            ].map(([icon, zone, desc, color]) => (
+              <div key={zone} className="dlv-zone">
+                <div className="dlv-zone__icon" style={{ background: `${color}12`, color }}><i className={`fas ${icon}`} /></div>
+                <div>
+                  <strong>{zone}</strong>
+                  <p>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="dlv-note">
+            <i className="fas fa-info-circle" /> Si votre adresse de livraison ne se trouve pas dans l&apos;une de ces trois villes, vous pourrez tout de meme passer commande, mais vous devrez venir retirer votre commande en main propre dans la ville desservie la plus proche. Nous vous contacterons pour coordonner le retrait des que votre commande sera arrivee a destination.
+          </p>
+        </div>
+
         {/* ══════════ LIVRAISON ══════════ */}
         <div className="dlv-card">
           <div className="dlv-section-header">
             <span className="dlv-section-num">01</span>
-            <h2>Délais de livraison</h2>
+            <h2>Delais de livraison</h2>
           </div>
           <p>
             Votre commande est préparée et expédiée sous <strong>5 à 10 jours ouvrés</strong> au Gabon.

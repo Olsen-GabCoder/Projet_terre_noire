@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import '../styles/CGV.css';
 
-const LAST_UPDATED = '21 mai 2026';
+const LAST_UPDATED = '27 mai 2026';
 
 const CGV = () => {
   return (
@@ -156,34 +156,46 @@ const CGV = () => {
 
           {/* ── 7. LIVRAISON ── */}
           <h2 id="cgv-7">Article 7 — Livraison</h2>
-          <h3>7.1 Zones et délais</h3>
-          <p>Terre Noire Éditions livre sur l&apos;ensemble du territoire gabonais :</p>
+          <h3>7.1 Zones desservies</h3>
+          <p>
+            Terre Noire Editions livre les exemplaires physiques (livres papier) uniquement
+            dans les trois villes suivantes : <strong>Libreville</strong>,{' '}
+            <strong>Port-Gentil</strong> et <strong>Lambarene</strong>.
+          </p>
+          <p>
+            Le Client residant en dehors de ces trois villes peut neanmoins passer commande.
+            Dans ce cas, il devra venir retirer sa commande en main propre dans la ville
+            desservie la plus proche. Terre Noire Editions contactera le Client pour coordonner
+            les modalites de retrait des que la commande sera arrivee a destination.
+          </p>
+          <h3>7.2 Delais de livraison</h3>
+          <p>Les delais estimes sont les suivants :</p>
           <ul>
-            <li><strong>Port-Gentil :</strong> livraison sous 24 à 72 heures ouvrées.</li>
-            <li><strong>Libreville et grandes villes :</strong> livraison sous 3 à 7 jours ouvrés.</li>
-            <li><strong>Autres localités :</strong> livraison sous 5 à 10 jours ouvrés.</li>
+            <li><strong>Port-Gentil :</strong> livraison sous 24 a 72 heures ouvrees.</li>
+            <li><strong>Libreville :</strong> livraison sous 3 a 7 jours ouvres.</li>
+            <li><strong>Lambarene :</strong> livraison sous 5 a 10 jours ouvres.</li>
           </ul>
           <p>
-            Les délais indiqués sont estimatifs. Terre Noire Éditions ne saurait être tenue
-            responsable des retards dus au transporteur ou à un cas de force majeure.
+            Les delais indiques sont estimatifs. Terre Noire Editions ne saurait etre tenue
+            responsable des retards dus au transporteur ou a un cas de force majeure.
           </p>
-          <h3>7.2 Frais de livraison</h3>
+          <h3>7.3 Frais de livraison</h3>
           <p>
-            Les frais de livraison sont calculés en fonction de la destination et du montant
-            de la commande. Ils sont affichés au Client avant la validation de la commande.
-            Un seuil de gratuité peut être appliqué ; les conditions en vigueur sont consultables
+            Les frais de livraison sont calcules en fonction de la destination et du montant
+            de la commande. Ils sont affiches au Client avant la validation de la commande.
+            Un seuil de gratuite peut etre applique ; les conditions en vigueur sont consultables
             sur la page panier au moment de la commande.
           </p>
           <p>
-            Les ebooks (contenus numériques) ne sont pas soumis à des frais de livraison.
-            Ils sont accessibles immédiatement après confirmation du paiement.
+            Les ebooks (contenus numeriques) ne sont pas soumis a des frais de livraison.
+            Ils sont accessibles immediatement apres confirmation du paiement.
           </p>
-          <h3>7.3 Transfert des risques</h3>
+          <h3>7.4 Transfert des risques</h3>
           <p>
             Le transfert des risques de perte ou d&apos;endommagement du produit intervient au moment
-            de la remise du colis au Client. En cas de colis endommagé à la réception, le Client
-            doit émettre des réserves auprès du transporteur et contacter Terre Noire Éditions
-            dans un délai de 48 heures.
+            de la remise du colis au Client. En cas de colis endommage a la reception, le Client
+            doit emettre des reserves aupres du transporteur et contacter Terre Noire Editions
+            dans un delai de 48 heures.
           </p>
 
           {/* ── 8. RETRACTATION ── */}

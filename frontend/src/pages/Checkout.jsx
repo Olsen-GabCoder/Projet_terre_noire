@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDeliveryConfig } from '../context/DeliveryConfigContext';
 import orderService from '../services/orderService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import TnAlert from '../components/ui/TnAlert';
 import '../styles/Checkout.css';
 
 const Checkout = () => {
@@ -278,6 +279,12 @@ const Checkout = () => {
               </div>
             </div>
 
+            {cartItems.some((i) => i.format === 'PAPIER') && (
+              <TnAlert variant="info" style={{ marginTop: 12 }}>
+                Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devez venir recuperer votre commande dans l'une de ces trois villes.
+              </TnAlert>
+            )}
+
             {error && (
               <div className="chk-error">
                 <i className="fas fa-exclamation-circle"></i>
@@ -332,7 +339,8 @@ const Checkout = () => {
 
                 {(() => {
                   const subtotal = getTotalPrice();
-                  const shipping = subtotal >= shippingFreeThreshold ? 0 : shippingCost;
+                  const hasPhysical = cartItems.some((i) => i.format === 'PAPIER');
+                  const shipping = !hasPhysical ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
                   const discountPercent = appliedCoupon?.discountPercent ?? 0;
                   const discountFixed = appliedCoupon?.discountAmount ?? 0;
                   const discountAmt = discountPercent > 0

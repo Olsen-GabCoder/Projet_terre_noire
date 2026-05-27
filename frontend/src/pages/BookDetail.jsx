@@ -483,6 +483,12 @@ const BookDetail = () => {
                   </div>
                 </div>
               )}
+
+              {book.format === 'PAPIER' && (
+                <TnAlert variant="info" style={{ marginTop: 16 }}>
+                  Livraison physique disponible a Libreville, Port-Gentil et Lambarene uniquement. Hors de ces villes, retrait en main propre dans l'une d'entre elles.
+                </TnAlert>
+              )}
             </div>
           </div>
 

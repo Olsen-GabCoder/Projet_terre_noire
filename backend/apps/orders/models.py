@@ -33,6 +33,11 @@ class Order(models.Model):
     def __str__(self):
         return f"Commande #{self.id} - {self.user.email}"
 
+    @property
+    def has_physical_book(self):
+        """True si la commande contient au moins un livre papier."""
+        return self.items.filter(book__format='PAPIER').exists()
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
