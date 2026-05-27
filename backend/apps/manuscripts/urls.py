@@ -1,9 +1,10 @@
 from django.urls import path
 from .views import (
-    ManuscriptCreateView, 
-    ManuscriptListView, 
+    ManuscriptCreateView,
+    ManuscriptListView,
     ManuscriptDetailView,
-    ManuscriptStatusUpdateView
+    ManuscriptStatusUpdateView,
+    ManuscriptDownloadView,
 )
 
 app_name = 'manuscripts'
@@ -13,4 +14,5 @@ urlpatterns = [
     path('', ManuscriptListView.as_view(), name='manuscript_list'),
     path('<int:pk>/', ManuscriptDetailView.as_view(), name='manuscript_detail'),
     path('<int:pk>/update-status/', ManuscriptStatusUpdateView.as_view(), name='manuscript_update_status'),
+    path('<int:pk>/download/', ManuscriptDownloadView.as_view(), name='manuscript_download'),
 ]

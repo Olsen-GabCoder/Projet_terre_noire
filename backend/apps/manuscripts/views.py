@@ -1,13 +1,22 @@
+import io
+import logging
+import mimetypes
+import zipfile
+
+import requests as http_requests
 from rest_framework import generics, status, permissions
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
+from django.http import HttpResponse
 from django.utils import timezone
 
 from apps.core.throttling import PublicEndpointThrottle
 from .models import Manuscript
 from .serializers import ManuscriptSerializer
+
+logger = logging.getLogger(__name__)
 
 class ManuscriptCreateView(generics.CreateAPIView):
     queryset = Manuscript.objects.all()
@@ -127,3 +136,68 @@ class ManuscriptStatusUpdateView(APIView):
                 'data': ManuscriptSerializer(manuscript).data
             }
         )
+
+
+class ManuscriptDownloadView(APIView):
+    """
+    Proxy de telechargement des manuscrits via l'API Cloudinary.
+    Cloudinary bloque la livraison publique des fichiers raw (401),
+    donc Django telecharge le fichier via generate_archive et le
+    streame au navigateur apres verification d'auth admin.
+    Endpoint: GET /api/manuscripts/<pk>/download/
+    """
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, pk):
+        try:
+            manuscript = Manuscript.objects.get(pk=pk, is_deleted=False)
+        except Manuscript.DoesNotExist:
+            return Response(
+                {'error': 'Manuscrit non trouvé.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not manuscript.file:
+            return Response(
+                {'error': 'Aucun fichier associé à ce manuscrit.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            import cloudinary.utils
+
+            archive_url = cloudinary.utils.download_archive_url(
+                public_ids=[manuscript.file.name],
+                resource_type='raw',
+                flatten_folders=True,
+                target_format='zip',
+            )
+            resp = http_requests.get(archive_url, timeout=30)
+            resp.raise_for_status()
+
+            z = zipfile.ZipFile(io.BytesIO(resp.content))
+            filenames = z.namelist()
+            if not filenames:
+                raise ValueError("Archive Cloudinary vide")
+            file_data = z.read(filenames[0])
+
+        except Exception as e:
+            logger.error(
+                "[DOWNLOAD] Echec telechargement manuscrit #%s depuis Cloudinary: %s",
+                pk, e, exc_info=True,
+            )
+            return Response(
+                {'error': 'Impossible de récupérer le fichier. Réessayez plus tard.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        original_name = manuscript.file.name.split('/')[-1]
+        content_type, _ = mimetypes.guess_type(original_name)
+        if not content_type:
+            content_type = 'application/octet-stream'
+
+        response = HttpResponse(file_data, content_type=content_type)
+        safe_title = manuscript.title.replace('"', "'")
+        response['Content-Disposition'] = f'inline; filename="{safe_title}.pdf"'
+        response['Content-Length'] = len(file_data)
+        return response

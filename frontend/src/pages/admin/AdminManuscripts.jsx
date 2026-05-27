@@ -27,6 +27,23 @@ const AdminManuscripts = () => {
   const fetch_ = async () => { try { setLoading(true); setError(null); const r = await api.get('/manuscripts/'); setManuscripts(r.data.results || r.data); } catch(e){ setError('Impossible de charger les manuscrits'); } finally { setLoading(false); } };
 
   const updateStatus = async (id, s) => { try { await api.patch(`/manuscripts/${id}/update-status/`, { status: s }); fetch_(); setSel(null); toast.success('Statut mis à jour'); } catch(e){ toast.error('Échec de la mise à jour du statut'); } };
+
+  const downloadManuscript = async (m) => {
+    try {
+      const response = await api.get(`/manuscripts/${m.id}/download/`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${m.title || 'manuscrit'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Erreur lors du téléchargement du manuscrit');
+    }
+  };
   const deleteMs = async (id) => {
     const ok = await confirm({ title: 'Supprimer ce manuscrit ?', message: 'Cette action est irréversible. Le manuscrit et ses fichiers seront supprimés.', confirmLabel: 'Supprimer', tone: 'danger' });
     if (!ok) return;
@@ -114,7 +131,7 @@ const AdminManuscripts = () => {
                 <AdminCell align="right">
                   <div style={{ display: 'inline-flex', gap: 6 }}>
                     <AdminActionBtn icon="fa-eye" tone="orange" title="Details" onClick={() => setSel(m)} />
-                    {(m.file_url || m.file) && <AdminActionBtn icon="fa-download" tone="gray" title="Télécharger" onClick={() => window.open(m.file_url || m.file, '_blank')} />}
+                    {(m.file_url || m.file) && <AdminActionBtn icon="fa-download" tone="gray" title="Télécharger" onClick={() => downloadManuscript(m)} />}
                   </div>
                 </AdminCell>
               </AdminRow>
@@ -179,7 +196,7 @@ const AdminManuscripts = () => {
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>Soumis le {fmtDate(sel.submitted_at)}</div>
                   </div>
-                  <button onClick={() => window.open(sel.file_url || sel.file, '_blank')} className="tn-btn tn-btn--primary tn-btn--sm">
+                  <button onClick={() => downloadManuscript(sel)} className="tn-btn tn-btn--primary tn-btn--sm">
                     <i className="fas fa-download" /> Télécharger
                   </button>
                 </div>
