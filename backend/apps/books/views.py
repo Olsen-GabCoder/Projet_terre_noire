@@ -1,6 +1,10 @@
 # backend/apps/books/views.py
 
+import io
 import logging
+import zipfile
+
+import requests as http_requests
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -12,7 +16,7 @@ from django.db.models import Count, Avg, Q, F, Exists, OuterRef
 from django.conf import settings
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
-from django.http import FileResponse, Http404
+from django.http import FileResponse, HttpResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_GET
 from rest_framework.permissions import IsAuthenticated
@@ -44,6 +48,8 @@ def serve_book_pdf(request, book_id):
     Sert le PDF d'un livre pour affichage dans l'iframe de l'application.
     Exempt de X-Frame-Options pour autoriser l'embedding dans notre frontend.
     Securise : seuls les admins ou les utilisateurs ayant achete le livre peuvent y acceder.
+    Telecharge le fichier via l'API Cloudinary (generate_archive) pour contourner
+    le blocage ACL sur les fichiers raw.
     """
     from apps.users.jwt_cookie_auth import JWTCookieAuthentication
 
@@ -83,14 +89,39 @@ def serve_book_pdf(request, book_id):
             )
 
     try:
-        f = book.pdf_file.open('rb')
+        file_data = _download_raw_from_cloudinary(book.pdf_file.name)
     except Exception as e:
-        logger.warning("Ouverture du PDF livre %s échouée: %s", book_id, e)
+        logger.warning("Telechargement PDF livre %s echoue: %s", book_id, e)
         raise Http404("Fichier PDF inaccessible.") from e
+
     filename = f"{book.slug or book.id}.pdf"
-    response = FileResponse(f, content_type='application/pdf')
+    response = HttpResponse(file_data, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
+    response['Content-Length'] = len(file_data)
     return response
+
+
+def _download_raw_from_cloudinary(file_name):
+    """
+    Telecharge un fichier raw depuis Cloudinary via generate_archive.
+    Contourne le blocage ACL sur la livraison publique des fichiers raw.
+    """
+    import cloudinary.utils
+
+    archive_url = cloudinary.utils.download_archive_url(
+        public_ids=[file_name],
+        resource_type='raw',
+        flatten_folders=True,
+        target_format='zip',
+    )
+    resp = http_requests.get(archive_url, timeout=30)
+    resp.raise_for_status()
+
+    z = zipfile.ZipFile(io.BytesIO(resp.content))
+    filenames = z.namelist()
+    if not filenames:
+        raise ValueError("Archive Cloudinary vide")
+    return z.read(filenames[0])
 
 
 class StandardResultsSetPagination(PageNumberPagination):
