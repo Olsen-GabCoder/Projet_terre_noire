@@ -72,6 +72,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         response_serializer = OrderListSerializer(order, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    # Transitions d'etat autorisees pour les commandes
+    VALID_TRANSITIONS = {
+        'PENDING': ['PAID', 'CANCELLED'],
+        'PAID': ['SHIPPED', 'CANCELLED'],
+        'SHIPPED': [],  # Etat final
+        'CANCELLED': [],  # Etat final
+    }
+
     def partial_update(self, request, *args, **kwargs):
         """Mise à jour du statut (admin uniquement). Retourne la commande complète."""
         if not request.user.is_staff:
@@ -81,6 +89,17 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         instance = self.get_object()
         old_status = instance.status
+        new_status = request.data.get('status')
+
+        if new_status and new_status != old_status:
+            allowed = self.VALID_TRANSITIONS.get(old_status, [])
+            if new_status not in allowed:
+                return Response(
+                    {'error': f'Transition {old_status} -> {new_status} non autorisee. '
+                              f'Transitions possibles : {", ".join(allowed) or "aucune (etat final)"}.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
