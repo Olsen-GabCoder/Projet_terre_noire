@@ -239,6 +239,22 @@ class PaymentInitiateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Validation du numero de telephone
+        phone_digits = ''.join(c for c in phone if c.isdigit())
+        if len(phone_digits) < 8 or len(phone_digits) > 9:
+            return Response(
+                {'error': 'Le numéro de téléphone doit comporter 8 ou 9 chiffres.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if len(phone_digits) == 8:
+            phone_digits = '0' + phone_digits
+        if not phone_digits[0] == '0':
+            return Response(
+                {'error': 'Le numéro de téléphone doit commencer par 0.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        phone = phone_digits
+
         # Verifier la commande
         try:
             order = Order.objects.get(id=order_id, user=request.user)
@@ -322,7 +338,7 @@ class PaymentInitiateView(APIView):
         except BambooPayError as e:
             logger.error("payment.initiate_failed order=%d err=%s", order.id, str(e))
             return Response(
-                {'error': str(e)},
+                {'error': 'Le service de paiement est temporairement indisponible. Veuillez réessayer dans quelques instants.'},
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
