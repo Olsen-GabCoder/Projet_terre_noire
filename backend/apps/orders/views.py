@@ -435,11 +435,15 @@ class PaymentCheckStatusView(APIView):
             })
 
         except BambooPayError as e:
-            logger.error("payment.check_failed ref=%s err=%s", bamboo_ref, str(e))
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_502_BAD_GATEWAY
+            logger.warning(
+                "payment.check_temporary_error ref=%s err=%s — returning PENDING",
+                bamboo_ref, str(e)
             )
+            return Response({
+                'bamboo_ref': bamboo_ref,
+                'status': 'PENDING',
+                'message': 'Verification temporairement indisponible, nouvelle tentative en cours.',
+            })
 
 
 class PaymentWebhookView(APIView):
@@ -470,11 +474,6 @@ class PaymentWebhookView(APIView):
             logger.warning("webhook.payment_not_found ref=%s", reference)
             return Response({'error': 'payment introuvable'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Idempotence
-        if payment.is_final:
-            logger.info("webhook.already_final ref=%s status=%s", reference, payment.status)
-            return Response({'status': 'already_processed'})
-
         STATUS_MAP = {
             'completed': 'SUCCESS',
             'success': 'SUCCESS',
@@ -487,6 +486,37 @@ class PaymentWebhookView(APIView):
         if new_status is None:
             logger.warning("webhook.unknown_status ref=%s status=%r", reference, bamboo_status)
             return Response({'status': 'unknown_status_logged'})
+
+        # Cas special : Payment EXPIRED mais Bamboo confirme SUCCESS.
+        # L'expiration est un timeout applicatif de notre cote, pas un echec
+        # de paiement reel. On rattrape pour eviter que le client paie sans rien recevoir.
+        if payment.status == 'EXPIRED' and new_status == 'SUCCESS':
+            logger.warning(
+                "webhook.recovering_expired ref=%s payment=%d — "
+                "was EXPIRED but Bamboo confirms SUCCESS, recovering",
+                reference, payment.id
+            )
+            with transaction.atomic():
+                payment.status = 'SUCCESS'
+                payment.bamboo_response = data
+                payment.finalized_at = timezone.now()
+                payment.save()
+
+                if payment.order.status != 'PAID':
+                    payment.order.status = 'PAID'
+                    payment.order.save()
+                    try:
+                        from apps.core.email import send_order_paid
+                        send_order_paid(payment.order)
+                    except Exception:
+                        pass
+
+            return Response({'status': 'recovered'})
+
+        # Idempotence : si deja final (SUCCESS, FAILED), ignorer
+        if payment.is_final:
+            logger.info("webhook.already_final ref=%s status=%s", reference, payment.status)
+            return Response({'status': 'already_processed'})
 
         if new_status != 'PENDING':
             with transaction.atomic():

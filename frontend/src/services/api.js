@@ -65,7 +65,13 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Server error 500+ → redirect to error page
-    if (error.response?.status >= 500) {
+    // Exception : les endpoints de paiement gerent leurs propres erreurs.
+    // Une redirection forcee tuerait le polling et ferait croire au client
+    // que son paiement a echoue alors que Bamboo peut encore confirmer.
+    const requestUrl = error.config?.url || '';
+    const isPaymentEndpoint = requestUrl.includes('/payments/');
+
+    if (error.response?.status >= 500 && !isPaymentEndpoint) {
       console.error('Server error:', error.response.status, error.config?.url);
       window.location.href = '/erreur-serveur';
       return new Promise(() => {}); // never resolves (page navigates away)
