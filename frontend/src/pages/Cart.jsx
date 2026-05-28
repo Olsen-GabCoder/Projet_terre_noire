@@ -199,17 +199,23 @@ const Cart = () => {
                     </span>
                   )}
                   <div className="crt-card__bottom">
-                    <div className="crt-qty">
-                      <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        disabled={item.quantity <= 1}
-                      >−</button>
-                      <span>{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
-                        disabled={item.quantity >= 99}
-                      >+</button>
-                    </div>
+                    {item.format === 'EBOOK' ? (
+                      <div className="crt-qty crt-qty--locked">
+                        <span>1</span>
+                      </div>
+                    ) : (
+                      <div className="crt-qty">
+                        <button
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                        >−</button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
+                          disabled={item.quantity >= 99}
+                        >+</button>
+                      </div>
+                    )}
                     <div className="crt-card__price">
                       {item.original_price && Number(item.original_price) > Number(item.price) && (
                         <span className="crt-card__old-price">{fmt(item.original_price)}</span>

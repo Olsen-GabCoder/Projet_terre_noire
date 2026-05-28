@@ -32,19 +32,19 @@ export const CartProvider = ({ children }) => {
 
   // Ajouter un article au panier
   const addToCart = (book, quantity = 1) => {
+    const isEbook = book.format === 'EBOOK';
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === book.id);
 
       if (existingItem) {
-        // Si le livre existe déjà, augmenter la quantité
+        if (isEbook) return prevItems; // Ebook deja dans le panier, qty=1 max
         return prevItems.map((item) =>
           item.id === book.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        // Sinon, ajouter le nouveau livre
-        return [...prevItems, { ...book, quantity }];
+        return [...prevItems, { ...book, quantity: isEbook ? 1 : quantity }];
       }
     });
   };
@@ -62,9 +62,11 @@ export const CartProvider = ({ children }) => {
     }
 
     setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === bookId ? { ...item, quantity } : item
-      )
+      prevItems.map((item) => {
+        if (item.id !== bookId) return item;
+        if (item.format === 'EBOOK') return item; // Ebook verrouille a qty=1
+        return { ...item, quantity };
+      })
     );
   };
 

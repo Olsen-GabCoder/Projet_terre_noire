@@ -37,13 +37,22 @@ class OrderCreateSerializer(serializers.Serializer):
     def validate_items(self, value):
         if not value:
             raise serializers.ValidationError("La commande doit contenir au moins un article.")
-        
+
         for item in value:
             if 'book_id' not in item or 'quantity' not in item:
                 raise serializers.ValidationError("Chaque article doit avoir book_id et quantity.")
             if item['quantity'] < 1:
                 raise serializers.ValidationError("La quantité doit être au moins 1.")
-        
+
+        # Ebook = 1 exemplaire max
+        ebook_ids = [item['book_id'] for item in value if item.get('book_id')]
+        ebooks = set(Book.objects.filter(id__in=ebook_ids, format='EBOOK').values_list('id', flat=True))
+        for item in value:
+            if item.get('book_id') in ebooks and item['quantity'] > 1:
+                raise serializers.ValidationError(
+                    "Un ebook ne peut être commandé qu'en un seul exemplaire."
+                )
+
         return value
 
     def validate(self, attrs):
