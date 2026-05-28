@@ -71,13 +71,14 @@ class BookListSerializer(serializers.ModelSerializer):
     Sérialiseur optimisé pour la liste des livres
     Version allégée pour les performances (liste de catalogue)
     """
-    
+
     # Nested serializers pour avoir les détails complets au lieu de simples IDs
     category = CategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
-    
+
     # Champs calculés
     format_display = serializers.CharField(source='get_format_display', read_only=True)
+    has_pdf = serializers.SerializerMethodField()
     
     # === NOUVEAUX CHAMPS ===
     # Promotions et prix
@@ -144,10 +145,13 @@ class BookListSerializer(serializers.ModelSerializer):
             'published_date',
             'popularity_score',
             'trending_score',
-            'pdf_file',
+            'has_pdf',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
-    
+
+    def get_has_pdf(self, obj):
+        return bool(obj.pdf_file)
+
     def get_rating_display(self, obj):
         """Retourne la note formatée (ex: "4.5/5")"""
         if obj.rating and obj.rating > 0:
@@ -183,6 +187,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
     format_display = serializers.CharField(source='get_format_display', read_only=True)
     is_ebook = serializers.BooleanField(read_only=True)
     is_available = serializers.BooleanField(read_only=True)
+    has_pdf = serializers.SerializerMethodField()
+    can_read = serializers.SerializerMethodField()
     
     # === NOUVEAUX CHAMPS ===
     # Promotions et prix
@@ -245,7 +251,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'rating_count',
             'rating_display',
             'rating_stars',
-            'pdf_file',
+            'has_pdf',
+            'can_read',
             # Details techniques (C4.1)
             'published_date',
             'page_count',
@@ -259,6 +266,22 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'excerpt_pdf_url',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+    def get_has_pdf(self, obj):
+        return bool(obj.pdf_file)
+
+    def get_can_read(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        if request.user.is_staff:
+            return True
+        from apps.orders.models import OrderItem
+        return OrderItem.objects.filter(
+            order__user=request.user,
+            order__status='PAID',
+            book=obj,
+        ).exists()
 
     def get_excerpt_pdf_url(self, obj):
         if obj.excerpt_pdf:

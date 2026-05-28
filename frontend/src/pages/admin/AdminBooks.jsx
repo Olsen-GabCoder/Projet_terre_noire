@@ -420,7 +420,7 @@ function BookForm({
           </FieldWrap>
           <FieldWrap label="PDF ebook">
             <input type="file" accept=".pdf" onChange={onPdfChange} style={{ fontSize: 12 }} />
-            {editingBook?.pdf_file && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Joint</div>}
+            {editingBook?.has_pdf && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Joint</div>}
           </FieldWrap>
         </div>
       </AdminModalSection>

@@ -241,7 +241,7 @@ const BookReader = () => {
 
   // ── Charger le PDF en mémoire ──
   useEffect(() => {
-    if (!book?.pdf_file || !book?.id) return;
+    if (!book?.has_pdf || !book?.id) return;
     let cancelled = false;
     const loadPdf = async () => {
       setLoadingPdf(true);
@@ -263,7 +263,7 @@ const BookReader = () => {
     };
     loadPdf();
     return () => { cancelled = true; };
-  }, [book?.id, book?.pdf_file]);
+  }, [book?.id, book?.has_pdf]);
 
   // ── Filigrane canvas ──
   const drawWatermark = useCallback((ctx, width, height, pageNum) => {
@@ -474,7 +474,7 @@ const BookReader = () => {
     );
   }
 
-  if (!book.pdf_file) {
+  if (!book.has_pdf) {
     return (
       <div className="br-error-page">
         <div className="br-error-page__bg" aria-hidden="true" />

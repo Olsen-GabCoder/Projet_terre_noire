@@ -417,12 +417,17 @@ const BookDetail = () => {
                 </div>
               </div>
 
-              {book.pdf_file && (
+              {book.has_pdf && book.can_read && (
                 <div className="bd-read-action">
                   <Link to={`/books/${id}/read`} className="bd-btn bd-btn--read">
                     <i className="fas fa-book-open" /> Lire le livre
                   </Link>
                 </div>
+              )}
+              {book.has_pdf && !book.can_read && isAuthenticated && (
+                <p className="bd-read-hint">
+                  <i className="fas fa-book-open" /> Achetez ce livre pour le lire en integralite
+                </p>
               )}
 
               {book.excerpt_pdf_url && (

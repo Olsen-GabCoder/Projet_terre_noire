@@ -557,6 +557,19 @@
   box-shadow: 0 4px 12px rgba(232, 96, 28, 0.4);
 }
 
+.bd-read-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin-bottom: 1rem;
+}
+.bd-read-hint i {
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+}
+
 .bd-btn--lg {
   padding: 0.875rem 1.5rem;
   font-size: 1rem;
