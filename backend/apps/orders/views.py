@@ -389,6 +389,9 @@ class PaymentCheckStatusView(APIView):
             STATUS_MAP = {
                 'completed': 'SUCCESS',
                 'success': 'SUCCESS',
+                'successful': 'SUCCESS',
+                'approved': 'SUCCESS',
+                'paid': 'SUCCESS',
                 'failed': 'FAILED',
                 'rejected': 'FAILED',
                 'cancelled': 'FAILED',
@@ -477,10 +480,16 @@ class PaymentWebhookView(APIView):
         STATUS_MAP = {
             'completed': 'SUCCESS',
             'success': 'SUCCESS',
+            'successful': 'SUCCESS',
+            'approved': 'SUCCESS',
+            'paid': 'SUCCESS',
             'failed': 'FAILED',
             'rejected': 'FAILED',
             'cancelled': 'FAILED',
+            'expired': 'EXPIRED',
+            'timeout': 'EXPIRED',
             'pending': 'PENDING',
+            'processing': 'PENDING',
         }
         new_status = STATUS_MAP.get(bamboo_status)
         if new_status is None:

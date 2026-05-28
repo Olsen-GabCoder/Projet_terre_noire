@@ -353,6 +353,36 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # =============================================================================
+# Logging — visibilite du flux de paiement en production
+# Par defaut Django n'affiche que WARNING+ quand DEBUG=False.
+# Le logger bamboo_pay doit etre visible au niveau INFO pour
+# diagnostiquer les problemes de paiement en prod.
+# =============================================================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'bamboo_pay': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# =============================================================================
 # Sécurité production (actif uniquement quand DEBUG=False)
 # https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 # =============================================================================
