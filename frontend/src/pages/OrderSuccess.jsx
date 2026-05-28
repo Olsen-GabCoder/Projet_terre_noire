@@ -103,6 +103,27 @@ const OrderSuccess = () => {
           </TnAlert>
         )}
 
+        {(() => {
+          const ebookItems = (orderData?.items || []).filter((i) => i.book?.format === 'EBOOK');
+          if (ebookItems.length === 0) return null;
+          return (
+            <TnAlert variant="success" style={{ marginBottom: 20 }}>
+              <strong>Vos ebooks sont prêts !</strong> Vous pouvez les lire dès maintenant.
+              <div style={{ marginTop: 10 }}>
+                {ebookItems.length === 1 ? (
+                  <Link to={`/books/${ebookItems[0].book.id}/read`} className="os-btn os-btn--read">
+                    <i className="fas fa-book-reader" /> Lire mon ebook
+                  </Link>
+                ) : (
+                  <Link to="/orders" className="os-btn os-btn--read">
+                    <i className="fas fa-book-reader" /> Lire mes ebooks
+                  </Link>
+                )}
+              </div>
+            </TnAlert>
+          );
+        })()}
+
         <div className="os-steps">
           <h2><i className="fas fa-list-check" /> Et maintenant ?</h2>
           <ol>

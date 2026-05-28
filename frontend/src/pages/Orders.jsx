@@ -177,6 +177,14 @@ const Orders = () => {
                             <span className="ord-item__qty">
                               Quantité : {item.quantity}
                             </span>
+                            {order.status === 'PAID' && item.book?.format === 'EBOOK' && (
+                              <Link
+                                to={`/books/${item.book?.id}/read`}
+                                className="ord-btn ord-btn--read"
+                              >
+                                <i className="fas fa-book-reader" /> Lire mon ebook
+                              </Link>
+                            )}
                           </div>
                           <div className="ord-item__price">
                             {formatPrice(item.price * item.quantity)}

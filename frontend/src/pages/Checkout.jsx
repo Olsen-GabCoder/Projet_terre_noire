@@ -23,6 +23,7 @@ const Checkout = () => {
     shipping_city: '',
   });
 
+  const hasPhysical = cartItems.some((i) => i.format === 'PAPIER');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -234,15 +235,15 @@ const Checkout = () => {
 
             <div className="chk-form-group">
               <label htmlFor="shipping_address">
-                Adresse complète <span className="required">*</span>
+                Adresse complète {hasPhysical && <span className="required">*</span>}
               </label>
               <textarea
                 id="shipping_address"
                 name="shipping_address"
                 value={formData.shipping_address}
                 onChange={handleChange}
-                placeholder="Numéro, Rue, Avenue, Quartier..."
-                required
+                placeholder={hasPhysical ? 'Numéro, Rue, Avenue, Quartier...' : 'Adresse (facultative pour les ebooks)'}
+                required={hasPhysical}
                 rows="3"
               />
             </div>
@@ -250,7 +251,7 @@ const Checkout = () => {
             <div className="chk-form-row">
               <div className="chk-form-group">
                 <label htmlFor="shipping_city">
-                  Ville <span className="required">*</span>
+                  Ville {hasPhysical && <span className="required">*</span>}
                 </label>
                 <input
                   type="text"
@@ -258,14 +259,14 @@ const Checkout = () => {
                   name="shipping_city"
                   value={formData.shipping_city}
                   onChange={handleChange}
-                  placeholder="Ex: Port-Gentil"
-                  required
+                  placeholder={hasPhysical ? 'Ex: Port-Gentil' : 'Ville (facultative pour les ebooks)'}
+                  required={hasPhysical}
                 />
               </div>
 
               <div className="chk-form-group">
                 <label htmlFor="shipping_phone">
-                  Numéro de téléphone <span className="required">*</span>
+                  Numéro de téléphone {hasPhysical && <span className="required">*</span>}
                 </label>
                 <input
                   type="tel"
@@ -273,8 +274,8 @@ const Checkout = () => {
                   name="shipping_phone"
                   value={formData.shipping_phone}
                   onChange={handleChange}
-                  placeholder="+241 XX XX XX XX"
-                  required
+                  placeholder={hasPhysical ? '+241 XX XX XX XX' : 'Téléphone (facultatif pour les ebooks)'}
+                  required={hasPhysical}
                 />
               </div>
             </div>

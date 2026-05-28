@@ -258,6 +258,12 @@ const Cart = () => {
                 </TnAlert>
               )}
 
+              {!hasPhysicalBook && cartItems.length > 0 && (
+                <TnAlert variant="info" style={{ marginBottom: 16 }}>
+                  Votre ebook sera disponible immédiatement dans votre espace personnel après confirmation du paiement.
+                </TnAlert>
+              )}
+
               {/* Prix */}
               <div className="crt-prices">
                 <div className="crt-row">

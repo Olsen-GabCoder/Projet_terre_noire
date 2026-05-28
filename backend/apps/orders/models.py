@@ -20,9 +20,10 @@ class Order(models.Model):
     coupon_code = models.CharField(max_length=50, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     
-    shipping_address = models.TextField()
-    shipping_phone = models.CharField(max_length=20)
-    shipping_city = models.CharField(max_length=100)
+    shipping_address = models.TextField(blank=True, default='')
+    shipping_phone = models.CharField(max_length=20, blank=True, default='')
+    shipping_city = models.CharField(max_length=100, blank=True, default='')
+
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

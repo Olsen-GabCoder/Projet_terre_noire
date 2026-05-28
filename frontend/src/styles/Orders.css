@@ -390,6 +390,20 @@
   background: rgba(198, 40, 40, 0.2);
 }
 
+.ord-btn--read {
+  background: var(--ds-success);
+  color: var(--color-text-light);
+  box-shadow: var(--shadow-btn);
+  margin-top: 0.5rem;
+  display: inline-flex;
+}
+
+.ord-btn--read:hover {
+  background: var(--ds-success-dark, #1b5e20);
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-1px);
+}
+
 .ord-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;

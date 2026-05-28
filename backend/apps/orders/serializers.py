@@ -29,9 +29,9 @@ class OrderCreateSerializer(serializers.Serializer):
         child=serializers.DictField(child=serializers.IntegerField()),
         write_only=True
     )
-    shipping_address = serializers.CharField(max_length=500)
-    shipping_phone = serializers.CharField(max_length=20)
-    shipping_city = serializers.CharField(max_length=100)
+    shipping_address = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+    shipping_phone = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
+    shipping_city = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
     coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True, min_length=0)
     
     def validate_items(self, value):
@@ -64,6 +64,26 @@ class OrderCreateSerializer(serializers.Serializer):
                 f"Veuillez completer votre profil avant de commander. "
                 f"Champs manquants : {', '.join(missing)}."
             )
+
+        # Vérifier si la commande contient des livres papier
+        items = attrs.get('items', [])
+        book_ids = [item.get('book_id') for item in items if item.get('book_id')]
+        has_physical = Book.objects.filter(id__in=book_ids, format='PAPIER').exists()
+
+        if has_physical:
+            if not attrs.get('shipping_address', '').strip():
+                raise serializers.ValidationError({
+                    'shipping_address': "L'adresse est requise pour une commande avec livre papier."
+                })
+            if not attrs.get('shipping_city', '').strip():
+                raise serializers.ValidationError({
+                    'shipping_city': 'La ville est requise pour une commande avec livre papier.'
+                })
+            if not attrs.get('shipping_phone', '').strip():
+                raise serializers.ValidationError({
+                    'shipping_phone': 'Le téléphone est requis pour une commande avec livre papier.'
+                })
+
         return attrs
 
     @transaction.atomic
