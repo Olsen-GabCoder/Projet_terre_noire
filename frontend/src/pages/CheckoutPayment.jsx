@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import orderService from '../services/orderService';
@@ -40,6 +40,9 @@ const CheckoutPayment = () => {
   const storedOrderId = orderId || sessionStorage.getItem('current_order_id');
   const storedRef = bambooRef || sessionStorage.getItem('current_payment_ref');
 
+  const POLLING_MAX_MS = 15 * 60 * 1000; // 15 minutes
+  const pollingStartedAt = useRef(Date.now());
+
   const [status, setStatus] = useState('PENDING');
   const [elapsed, setElapsed] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -60,6 +63,13 @@ const CheckoutPayment = () => {
 
     async function poll() {
       if (cancelled) return;
+
+      // Timeout absolu : apres 15 min, arreter le polling
+      if (Date.now() - pollingStartedAt.current > POLLING_MAX_MS) {
+        setStatus('TIMEOUT');
+        return;
+      }
+
       try {
         const result = await orderService.checkPaymentStatus(storedRef);
         if (cancelled) return;
@@ -185,6 +195,7 @@ const CheckoutPayment = () => {
     SUCCESS: 'Paiement confirmé',
     FAILED: 'Paiement non abouti',
     EXPIRED: 'Délai dépassé',
+    TIMEOUT: 'Vérification en attente',
     ERROR: 'Erreur de vérification',
   };
 
@@ -388,6 +399,51 @@ const CheckoutPayment = () => {
               </button>
               <button className="cpay-btn cpay-btn--ghost" onClick={handleCancel}>
                 Retour à mes commandes
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ═══ TIMEOUT ═══ */}
+        {status === 'TIMEOUT' && (
+          <>
+            <div className="cpay-icon cpay-icon--expired">
+              <i className="far fa-clock" />
+            </div>
+
+            <span className="cpay-tag cpay-tag--expired">Vérification en attente</span>
+            <h2 className="cpay-heading">Votre paiement prend plus de temps que prévu</h2>
+            <p className="cpay-desc">
+              Si vous avez bien saisi votre code PIN et confirmé le paiement
+              sur votre téléphone, la confirmation peut arriver en différé.
+              Consultez vos commandes dans quelques minutes.
+            </p>
+            <p className="cpay-desc" style={{ marginTop: '-0.5rem' }}>
+              Si vous n&apos;avez pas finalisé le paiement, vous pouvez réessayer.
+            </p>
+
+            <div className="cpay-ref">
+              <div>
+                <div className="cpay-ref-label">Référence</div>
+                <div className="cpay-ref-value">
+                  {storedRef}
+                  <button className="cpay-copy" onClick={handleCopy} title="Copier">
+                    <i className={copied ? 'fas fa-check' : 'far fa-copy'} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p className="cpay-ref-note">À conserver en cas de réclamation.</p>
+
+            <div className="cpay-actions">
+              <button className="cpay-btn cpay-btn--primary" onClick={() => navigate('/orders')}>
+                Voir mes commandes <i className="fas fa-arrow-right" />
+              </button>
+              <button className="cpay-btn cpay-btn--ghost" onClick={handleRetry}>
+                <i className="fas fa-redo" /> Réessayer le paiement
+              </button>
+              <button className="cpay-btn cpay-btn--ghost" onClick={() => navigate('/')}>
+                Retour à l&apos;accueil
               </button>
             </div>
           </>

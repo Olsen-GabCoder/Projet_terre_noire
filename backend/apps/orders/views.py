@@ -211,7 +211,10 @@ class PaymentViewSet(viewsets.ModelViewSet):
 # =============================================
 
 class PaymentCheckStatusThrottle(UserRateThrottle):
-    rate = '12/min'
+    # Le polling client = 1 req/5s = 12/min exact.
+    # La fenetre glissante DRF peut throttler a 12/min.
+    # 20/min donne une marge confortable sans risquer d'abus.
+    rate = '20/min'
 
 
 class PaymentInitiateView(APIView):
