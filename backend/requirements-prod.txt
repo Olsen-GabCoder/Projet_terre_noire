@@ -1,0 +1,21 @@
+# Pour le deploiement en production (DigitalOcean App Platform / PostgreSQL).
+# Sans mysqlclient (libs systeme absentes en prod cloud).
+# Copie de requirements-render.txt avec nom plus universel.
+Django>=5.0,<6.0
+djangorestframework
+python-dotenv
+django-cors-headers
+Pillow
+djangorestframework-simplejwt
+django-filter
+drf-spectacular
+drf-spectacular-sidecar
+reportlab
+cloudinary
+django-cloudinary-storage
+django-extensions
+requests
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url

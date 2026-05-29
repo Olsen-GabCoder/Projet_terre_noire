@@ -387,6 +387,12 @@ LOGGING = {
 # https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 # =============================================================================
 if not DEBUG:
+    # Reverse proxy (DigitalOcean App Platform / Render) termine TLS
+    # au load balancer. Cette config indique a Django de considerer la
+    # requete comme HTTPS quand le header X-Forwarded-Proto est present.
+    # Sans cette ligne, SECURE_SSL_REDIRECT cause une boucle infinie.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
     # Redirection HTTP → HTTPS
     SECURE_SSL_REDIRECT = True
 
