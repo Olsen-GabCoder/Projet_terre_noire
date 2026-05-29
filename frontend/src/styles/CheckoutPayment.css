@@ -156,8 +156,10 @@
 /* Copy button */
 .cpay-copy {
   background: none; border: none; cursor: pointer;
-  color: var(--color-gray-400); font-size: 0.8rem;
-  padding: 2px 4px; border-radius: 4px;
+  color: var(--color-gray-400); font-size: 0.875rem;
+  min-width: 44px; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px; border-radius: 4px;
   transition: all 0.2s;
 }
 .cpay-copy:hover { color: var(--color-primary); background: rgba(232,96,28,0.06); }
@@ -173,7 +175,7 @@
   display: flex; justify-content: space-between; align-items: center;
   text-align: left;
 }
-.cpay-ref-label { font-size: 0.8125rem; color: var(--color-gray-500); }
+.cpay-ref-label { font-size: 0.875rem; color: var(--color-gray-500); }
 .cpay-ref-value {
   font-size: 0.875rem; font-weight: 600; color: var(--color-gray-900);
   display: flex; align-items: center; gap: 0.4rem;
@@ -187,7 +189,7 @@
 
 /* ═══ Timer ═══ */
 .cpay-timer {
-  font-size: 0.8125rem; color: var(--color-gray-500);
+  font-size: 0.875rem; color: var(--color-gray-500);
   margin-bottom: 0.35rem;
   display: flex; align-items: center; gap: 0.4rem;
 }
@@ -204,7 +206,7 @@
 
 /* ═══ Redirect note ═══ */
 .cpay-redirect {
-  font-size: 0.8125rem; color: var(--color-gray-500);
+  font-size: 0.875rem; color: var(--color-gray-500);
   margin-bottom: 1rem;
   font-style: italic;
 }
@@ -215,12 +217,12 @@
   margin-bottom: 1.5rem;
 }
 .cpay-causes-title {
-  font-size: 0.8125rem; font-weight: 600;
+  font-size: 0.875rem; font-weight: 600;
   color: var(--color-gray-700); margin-bottom: 0.5rem;
 }
 .cpay-causes ul { list-style: none; padding: 0; }
 .cpay-causes li {
-  font-size: 0.8125rem; color: var(--color-gray-500);
+  font-size: 0.875rem; color: var(--color-gray-500);
   padding: 0.25rem 0 0.25rem 1rem;
   position: relative;
 }

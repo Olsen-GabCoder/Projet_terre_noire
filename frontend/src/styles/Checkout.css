@@ -114,7 +114,7 @@
   font-size: 0.875rem; color: var(--color-gray-900);
 }
 .chk-retry-banner__text span {
-  font-size: 0.8125rem; color: var(--color-gray-500);
+  font-size: 0.875rem; color: var(--color-gray-500);
 }
 
 /* Content */
@@ -274,7 +274,7 @@
 }
 
 .chk-item-info p {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-gray-500);
   margin: 0;
 }
@@ -428,7 +428,7 @@
   background: var(--color-gray-100); color: var(--color-gray-400);
 }
 .chk-pay__desc {
-  font-size: 0.8125rem; color: var(--color-gray-500); margin-top: 0.15rem;
+  font-size: 0.875rem; color: var(--color-gray-500); margin-top: 0.15rem;
 }
 
 /* Phone field (conditional) */
@@ -471,7 +471,7 @@
   letter-spacing: 0.02em; min-width: 0;
 }
 .chk-pay__phone-hint {
-  font-size: 0.75rem; color: var(--color-gray-500); margin-top: 0.4rem;
+  font-size: 0.875rem; color: var(--color-gray-500); margin-top: 0.4rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -490,7 +490,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-gray-600);
 }
 

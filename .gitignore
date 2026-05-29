@@ -28,6 +28,10 @@ A_FAIRE.md
 
 # Audit et documentation interne (hors repo public)
 docs/audit-premium/
+audit-archive/
+
+# Backups
+backups/
 
 # Claude Code
 .claude/
