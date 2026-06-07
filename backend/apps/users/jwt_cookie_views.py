@@ -18,7 +18,7 @@ from .serializers import UserDetailSerializer
 def _set_auth_cookies(response, access_token, refresh_token=None):
     """Configure les cookies HttpOnly pour les tokens."""
     secure = not getattr(settings, 'DEBUG', True)
-    samesite = 'Lax'
+    samesite = 'None' if secure else 'Lax'
     cookie_opts = {
         'httponly': True,
         'secure': secure,
@@ -46,7 +46,7 @@ def _clear_auth_cookies(response):
     access_name = getattr(settings, 'JWT_ACCESS_COOKIE_NAME', 'access_token')
     refresh_name = getattr(settings, 'JWT_REFRESH_COOKIE_NAME', 'refresh_token')
     for name in (access_name, refresh_name):
-        response.delete_cookie(name, path='/', samesite='Lax')
+        response.delete_cookie(name, path='/', samesite='None' if not getattr(settings, 'DEBUG', True) else 'Lax')
 
 
 class CookieTokenObtainPairView(TokenObtainPairView):
