@@ -3,7 +3,11 @@ from django.db.models import Q
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator, FileExtensionValidator
 from decimal import Decimal
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
+import os
+if os.getenv('CLOUDINARY_CLOUD_NAME', '').strip():
+    from cloudinary_storage.storage import RawMediaCloudinaryStorage
+else:
+    RawMediaCloudinaryStorage = None
 
 
 class Category(models.Model):
@@ -204,7 +208,7 @@ class Book(models.Model):
     )
     pdf_file = models.FileField(
         upload_to='books/pdfs/',
-        storage=RawMediaCloudinaryStorage(),
+        **({"storage": RawMediaCloudinaryStorage()} if RawMediaCloudinaryStorage else {}),
         verbose_name="Fichier PDF (ebook)",
         blank=True,
         null=True,
@@ -348,7 +352,7 @@ class Book(models.Model):
     )
     excerpt_pdf = models.FileField(
         upload_to='books/excerpts/',
-        storage=RawMediaCloudinaryStorage(),
+        **({"storage": RawMediaCloudinaryStorage()} if RawMediaCloudinaryStorage else {}),
         null=True,
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=['pdf'])],
