@@ -827,20 +827,22 @@
   .home-hero-sub { max-width: 100%; text-align: center; margin-top: 20px; font-size: 15px; }
   .home-hero-actions { justify-content: center; margin-top: 24px; }
   .home-hero-stats {
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-wrap: nowrap;
+    gap: 0;
     justify-content: center;
     margin-top: 32px;
     border-top: 0;
     padding-top: 0;
+    width: 100%;
   }
   .home-hero-stat {
-    border-right: 0;
-    padding: 0;
+    flex: 1;
+    border-right: 1px solid rgba(200,149,108,0.2);
+    padding: 0 12px;
     text-align: center;
-    flex: 0 0 auto;
-    min-width: 80px;
+    min-width: 0;
   }
+  .home-hero-stat:last-child { border-right: 0; }
   .home-hero-stat__value { font-size: 28px; }
   .home-hero-right {
     display: flex;
