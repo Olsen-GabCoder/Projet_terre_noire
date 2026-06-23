@@ -206,6 +206,7 @@
   letter-spacing: -0.02em;
   margin: 0;
   white-space: nowrap;
+  min-height: 1.05em;
 }
 .home-hero-title__accent {
   font-style: italic;
@@ -261,6 +262,8 @@
   margin-top: 56px;
   border-top: 1px solid rgba(200,149,108,0.3);
   padding-top: 24px;
+  width: 100%;
+  max-width: 520px;
 }
 .home-hero-stat {
   flex: 1;
