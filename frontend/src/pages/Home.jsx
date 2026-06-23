@@ -239,7 +239,6 @@ const Home = () => {
           <div className="home-hero-left">
             <div className="home-hero-pill">
               <span className="home-hero-pill__icon">✦</span>
-              Gabon
             </div>
 
             <h1 className="home-hero-title">
