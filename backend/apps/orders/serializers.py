@@ -20,13 +20,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'book', 'book_id', 'quantity', 'price']
+        fields = ['id', 'book', 'book_id', 'quantity', 'price', 'format_purchased']
         read_only_fields = ['id', 'price']
 
 
 class OrderCreateSerializer(serializers.Serializer):
     items = serializers.ListField(
-        child=serializers.DictField(child=serializers.IntegerField()),
+        child=serializers.DictField(),
         write_only=True
     )
     shipping_address = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
@@ -41,16 +41,29 @@ class OrderCreateSerializer(serializers.Serializer):
         for item in value:
             if 'book_id' not in item or 'quantity' not in item:
                 raise serializers.ValidationError("Chaque article doit avoir book_id et quantity.")
-            if item['quantity'] < 1:
+            if int(item['quantity']) < 1:
                 raise serializers.ValidationError("La quantité doit être au moins 1.")
+            fmt = item.get('format_purchased', 'PAPIER')
+            if fmt not in ('PAPIER', 'EBOOK'):
+                raise serializers.ValidationError("Format invalide. Utilisez PAPIER ou EBOOK.")
 
         # Ebook = 1 exemplaire max
-        ebook_ids = [item['book_id'] for item in value if item.get('book_id')]
-        ebooks = set(Book.objects.filter(id__in=ebook_ids, format='EBOOK').values_list('id', flat=True))
         for item in value:
-            if item.get('book_id') in ebooks and item['quantity'] > 1:
+            if item.get('format_purchased') == 'EBOOK' and int(item['quantity']) > 1:
                 raise serializers.ValidationError(
-                    "Un ebook ne peut être commandé qu'en un seul exemplaire."
+                    "Un ebook ne peut etre commande qu'en un seul exemplaire."
+                )
+
+        # Verifier que le livre propose bien l'ebook si demande
+        ebook_items = [item for item in value if item.get('format_purchased') == 'EBOOK']
+        if ebook_items:
+            ebook_book_ids = [item['book_id'] for item in ebook_items]
+            books_without_ebook = Book.objects.filter(
+                id__in=ebook_book_ids, has_ebook=False
+            ).values_list('id', flat=True)
+            if books_without_ebook:
+                raise serializers.ValidationError(
+                    "Certains livres ne sont pas disponibles en ebook."
                 )
 
         return value
@@ -74,10 +87,9 @@ class OrderCreateSerializer(serializers.Serializer):
                 f"Champs manquants : {', '.join(missing)}."
             )
 
-        # Vérifier si la commande contient des livres papier
+        # Verifier si la commande contient des livres papier
         items = attrs.get('items', [])
-        book_ids = [item.get('book_id') for item in items if item.get('book_id')]
-        has_physical = Book.objects.filter(id__in=book_ids, format='PAPIER').exists()
+        has_physical = any(item.get('format_purchased', 'PAPIER') == 'PAPIER' for item in items)
 
         if has_physical:
             if not attrs.get('shipping_address', '').strip():
@@ -112,20 +124,22 @@ class OrderCreateSerializer(serializers.Serializer):
             if not book.available:
                 raise serializers.ValidationError(f"Le livre '{book.title}' n'est plus disponible.")
 
+            fmt = item_data.get('format_purchased', 'PAPIER')
             quantity = item_data['quantity']
-            price = book.price
+            price = book.ebook_price if fmt == 'EBOOK' else book.price
             subtotal += price * quantity
 
             order_items.append({
                 'book': book,
                 'quantity': quantity,
-                'price': price
+                'price': price,
+                'format_purchased': fmt,
             })
 
         config = SiteConfig.get_config()
         shipping_free_threshold = config.shipping_free_threshold
         shipping_cost_default = config.shipping_cost
-        has_physical = any(item['book'].format == 'PAPIER' for item in order_items)
+        has_physical = any(item['format_purchased'] == 'PAPIER' for item in order_items)
         if not has_physical:
             shipping_cost = Decimal('0')
         elif subtotal >= shipping_free_threshold:

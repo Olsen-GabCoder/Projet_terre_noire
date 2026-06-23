@@ -106,25 +106,41 @@ def serve_book_pdf(request, book_id):
 
 def _download_raw_from_cloudinary(file_name):
     """
-    Telecharge un fichier raw depuis Cloudinary via generate_archive.
-    Contourne le blocage ACL sur la livraison publique des fichiers raw.
+    Telecharge le contenu binaire d'un fichier raw (PDF).
+    - En prod (Cloudinary actif) : passe par l'API Cloudinary generate_archive
+    - En dev (Cloudinary inactif) : sert le fichier local depuis MEDIA_ROOT
     """
-    import cloudinary.utils
+    import os
+    use_cloudinary = bool(os.getenv('CLOUDINARY_CLOUD_NAME', '').strip())
 
-    archive_url = cloudinary.utils.download_archive_url(
-        public_ids=[file_name],
-        resource_type='raw',
-        flatten_folders=True,
-        target_format='zip',
-    )
-    resp = http_requests.get(archive_url, timeout=30)
-    resp.raise_for_status()
+    if use_cloudinary:
+        import cloudinary.utils
 
-    z = zipfile.ZipFile(io.BytesIO(resp.content))
-    filenames = z.namelist()
-    if not filenames:
-        raise ValueError("Archive Cloudinary vide")
-    return z.read(filenames[0])
+        archive_url = cloudinary.utils.download_archive_url(
+            public_ids=[file_name],
+            resource_type='raw',
+            flatten_folders=True,
+            target_format='zip',
+        )
+        resp = http_requests.get(archive_url, timeout=30)
+        resp.raise_for_status()
+
+        z = zipfile.ZipFile(io.BytesIO(resp.content))
+        filenames = z.namelist()
+        if not filenames:
+            raise ValueError("Archive Cloudinary vide")
+        return z.read(filenames[0])
+
+    # Fallback local (dev)
+    local_path = os.path.join(settings.MEDIA_ROOT, file_name)
+    if not os.path.exists(local_path):
+        # Gestion du double prefixe "media/" (artefact Cloudinary)
+        if file_name.startswith('media/'):
+            local_path = os.path.join(settings.MEDIA_ROOT, file_name[len('media/'):])
+    if not os.path.exists(local_path):
+        raise FileNotFoundError(f"Fichier introuvable: {file_name}")
+    with open(local_path, 'rb') as f:
+        return f.read()
 
 
 @require_GET
@@ -408,28 +424,6 @@ class BookViewSet(viewsets.ModelViewSet):
             cache.set(cache_key, data, getattr(settings, 'CACHE_BOOKS_TTL', 300))
         return Response(data)
     
-    @action(detail=False, methods=['get'], url_path='by-format/(?P<format_type>[^/.]+)')
-    def by_format(self, request, format_type=None):
-        """
-        Endpoint personnalisé: /api/books/by-format/EBOOK/ ou /PAPIER/
-        Retourne les livres filtrés par format
-        """
-        if format_type not in ['EBOOK', 'PAPIER']:
-            return Response(
-                {'error': 'Format invalide. Utilisez EBOOK ou PAPIER'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        books = self.get_queryset().filter(format=format_type, available=True)
-        page = self.paginate_queryset(books)
-        
-        if page is not None:
-            serializer = BookListSerializer(page, many=True, context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        
-        serializer = BookListSerializer(books, many=True, context={'request': request})
-        return Response(serializer.data)
-    
     @action(detail=True, methods=['get'], url_path='reviews/me')
     def my_review(self, request, pk=None):
         """
@@ -670,8 +664,8 @@ class BookViewSet(viewsets.ModelViewSet):
                 'total_authors': Author.objects.count(),
                 'total_categories': Category.objects.count(),
                 'available_books': available_books,
-                'ebooks_count': Book.objects.filter(format='EBOOK').count(),
-                'paper_books_count': Book.objects.filter(format='PAPIER').count(),
+                'ebooks_count': Book.objects.filter(has_ebook=True).count(),
+                'paper_books_count': total_books,
                 'average_price': average_price,
                 'bestsellers_count': Book.objects.filter(is_bestseller=True).count(),
                 'average_rating': average_rating,

@@ -99,7 +99,7 @@ const BookCard = ({ book, featured = false }) => {
         {/* Meta pills */}
         <div className="tn-book-card__meta">
           {categoryName && <span className="tn-pill tn-pill--orange">{categoryName}</span>}
-          {book.format_display && <span className="tn-pill tn-pill--gray">{book.format_display}</span>}
+          <span className="tn-pill tn-pill--gray">{book.has_ebook ? 'Papier + Ebook' : 'Papier'}</span>
           {book.is_bestseller && <span className="tn-pill tn-pill--dark">★ Best-seller</span>}
         </div>
 

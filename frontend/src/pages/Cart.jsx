@@ -33,7 +33,7 @@ const Cart = () => {
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(p) + ' FCFA';
 
   const subtotal = cartItems.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
-  const hasPhysicalBook = cartItems.some((i) => i.format === 'PAPIER');
+  const hasPhysicalBook = cartItems.some((i) => i.format_purchased === 'PAPIER');
   const shipping = subtotal === 0 || !hasPhysicalBook ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
   const discountPercent = appliedCoupon?.discountPercent ?? 0;
   const discountFixed = appliedCoupon?.discountAmount ?? 0;
@@ -162,7 +162,7 @@ const Cart = () => {
             </div>
 
             {cartItems.map((item) => (
-              <div className="crt-card" key={item.id}>
+              <div className="crt-card" key={`${item.id}_${item.format_purchased}`}>
                 <div
                   className="crt-card__img"
                   onClick={() => navigate(`/books/${item.id}`)}
@@ -183,7 +183,7 @@ const Cart = () => {
                       {item.title}
                     </h3>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.id, item.format_purchased)}
                       className="crt-card__rm"
                       aria-label="Retirer"
                     >
@@ -193,25 +193,23 @@ const Cart = () => {
                   <p className="crt-card__author">
                     {item.author?.full_name || 'Auteur inconnu'}
                   </p>
-                  {item.format && (
-                    <span className="crt-card__format">
-                      {item.format === 'EBOOK' ? 'Ebook' : 'Papier'}
-                    </span>
-                  )}
+                  <span className="crt-card__format">
+                    {item.format_purchased === 'EBOOK' ? 'Ebook' : 'Papier'}
+                  </span>
                   <div className="crt-card__bottom">
-                    {item.format === 'EBOOK' ? (
+                    {item.format_purchased === 'EBOOK' ? (
                       <div className="crt-qty crt-qty--locked">
                         <span>1</span>
                       </div>
                     ) : (
                       <div className="crt-qty">
                         <button
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.format_purchased)}
                           disabled={item.quantity <= 1}
                         >−</button>
                         <span>{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1))}
+                          onClick={() => updateQuantity(item.id, Math.min(99, item.quantity + 1), item.format_purchased)}
                           disabled={item.quantity >= 99}
                         >+</button>
                       </div>

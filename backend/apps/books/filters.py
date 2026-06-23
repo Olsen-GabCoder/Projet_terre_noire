@@ -6,15 +6,13 @@ from .models import Book
 
 class BookFilter(django_filters.FilterSet):
     """
-    Filtre personnalisé pour les livres
-    Renomme 'format' en 'book_format' pour éviter le conflit avec DRF
+    Filtre personnalise pour les livres.
     """
-    book_format = django_filters.ChoiceFilter(
-        field_name='format',
-        choices=Book.FORMAT_CHOICES,
-        label='Format du livre'
+    has_ebook = django_filters.BooleanFilter(
+        field_name='has_ebook',
+        label='Disponible en ebook',
     )
-    
+
     class Meta:
         model = Book
         fields = {

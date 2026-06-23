@@ -40,7 +40,6 @@ class OrderCreateTest(APITestCase):
             reference='REF001',
             description='Desc',
             price=Decimal('5000'),
-            format='PAPIER',
             available=True,
             category=cat,
             author=auth,

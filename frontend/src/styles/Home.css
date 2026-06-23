@@ -205,7 +205,7 @@
   line-height: 0.98;
   letter-spacing: -0.02em;
   margin: 0;
-  text-wrap: balance;
+  white-space: nowrap;
 }
 .home-hero-title__accent {
   font-style: italic;

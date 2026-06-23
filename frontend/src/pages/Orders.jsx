@@ -177,7 +177,7 @@ const Orders = () => {
                             <span className="ord-item__qty">
                               Quantité : {item.quantity}
                             </span>
-                            {order.status === 'PAID' && item.book?.format === 'EBOOK' && (
+                            {order.status === 'PAID' && item.format_purchased === 'EBOOK' && (
                               <Link
                                 to={`/books/${item.book?.id}/read`}
                                 className="ord-btn ord-btn--read"

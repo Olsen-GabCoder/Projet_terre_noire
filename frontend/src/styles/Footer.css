@@ -355,7 +355,9 @@
   width: 24px;
   height: 18px;
   object-fit: contain;
-  border-radius: 2px;
+  background: #fff;
+  padding: 2px 4px;
+  border-radius: 3px;
 }
 
 .ft__legal {

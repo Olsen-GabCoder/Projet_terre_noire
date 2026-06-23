@@ -38,7 +38,6 @@ class ModelTests(TestCase):
             reference="ISBN123456",
             description="Un roman historique français",
             price=25.99,
-            format="PAPIER",
             cover_image=self.test_image,
             available=True,
             category=self.category,
@@ -62,7 +61,6 @@ class ModelTests(TestCase):
         self.assertEqual(self.book.title, "Les Misérables")
         self.assertEqual(self.book.reference, "ISBN123456")
         self.assertEqual(self.book.price, 25.99)
-        self.assertEqual(self.book.format, "PAPIER")
         self.assertEqual(self.book.available, True)
         self.assertEqual(self.book.category, self.category)
         self.assertEqual(self.book.author, self.author)
@@ -76,7 +74,6 @@ class ModelTests(TestCase):
             reference="ISBN789012",
             description="Roman historique",
             price=19.99,
-            format="PAPIER",
             cover_image=self.test_image,
             available=True,
             category=self.category,
@@ -88,23 +85,25 @@ class ModelTests(TestCase):
     
     def test_book_properties(self):
         """Test des propriétés calculées du livre"""
-        # Test de is_ebook
-        self.assertFalse(self.book.is_ebook)
-        
-        # Créer un ebook pour tester
-        ebook = Book.objects.create(
+        # Test de has_ebook (par defaut False)
+        self.assertFalse(self.book.has_ebook)
+
+        # Creer un livre avec ebook
+        ebook_book = Book.objects.create(
             title="Ebook Test",
             reference="EBOOK001",
             description="Un ebook",
             price=9.99,
-            format="EBOOK",
+            has_ebook=True,
+            ebook_price=4.99,
             cover_image=self.test_image,
             available=True,
             category=self.category,
             author=self.author
         )
-        self.assertTrue(ebook.is_ebook)
-        
+        self.assertTrue(ebook_book.has_ebook)
+        self.assertEqual(ebook_book.ebook_price, 4.99)
+
         # Test de is_available
         self.assertTrue(self.book.is_available)
         
@@ -121,7 +120,6 @@ class ModelTests(TestCase):
             reference="ISBN345678",
             description="Roman de Victor Hugo",
             price=22.50,
-            format="PAPIER",
             cover_image=self.test_image,
             available=True,
             category=self.category,
@@ -139,7 +137,6 @@ class ModelTests(TestCase):
             reference="ISBN901234",
             description="Recueil de poèmes",
             price=18.75,
-            format="PAPIER",
             cover_image=self.test_image,
             available=True,
             category=self.category,
@@ -181,7 +178,6 @@ class BookAPITests(APITestCase):
             reference="ISBN-SF-001",
             description="Un empire galactique",
             price=29.99,
-            format="PAPIER",
             cover_image=self.test_image,
             available=True,
             category=self.category,
@@ -194,19 +190,19 @@ class BookAPITests(APITestCase):
             reference="ISBN-SF-002",
             description="Recueil de nouvelles",
             price=24.99,
-            format="PAPIER",
             available=False,  # Non disponible pour tester les filtres
             category=self.category,
             author=self.author
         )
         
-        # Créer un ebook
+        # Creer un livre avec ebook
         self.ebook = Book.objects.create(
             title="I, Robot",
             reference="ISBN-EBOOK-001",
-            description="Première loi de la robotique",
+            description="Premiere loi de la robotique",
             price=14.99,
-            format="EBOOK",
+            has_ebook=True,
+            ebook_price=9.99,
             available=True,
             category=self.category,
             author=self.author
@@ -242,7 +238,6 @@ class BookAPITests(APITestCase):
             reference="ISBN-FANTASY-001",
             description="Fantasy épique",
             price=35.99,
-            format="PAPIER",
             available=True,
             category=category2,
             author=self.author
@@ -255,23 +250,13 @@ class BookAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3)
     
-    def test_book_filter_by_format(self):
-        """Test du filtre par format via l'action personnalisée"""
-        # Test EBOOK
-        url = '/api/books/by-format/EBOOK/'
-        response = self.client.get(url)
+    def test_book_filter_by_ebook(self):
+        """Test du filtre has_ebook"""
+        url = reverse('book-list')
+        response = self.client.get(url, {'has_ebook': 'true'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # CORRECTION: Tester le nombre de résultats dans la réponse paginée
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(len(response.data['results']), 1)
-        
-        # Test PAPIER
-        url = '/api/books/by-format/PAPIER/'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Nous avons 1 livre papier disponible (self.book) car self.book2 n'est pas disponible
-        self.assertEqual(response.data['count'], 1)
-        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['title'], "I, Robot")
     
     def test_book_filter_by_availability(self):
         """Test du filtre par disponibilité"""
@@ -341,7 +326,7 @@ class BookAPITests(APITestCase):
         self.assertEqual(response.data['total_categories'], 1)
         self.assertEqual(response.data['available_books'], 2)
         self.assertEqual(response.data['ebooks_count'], 1)
-        self.assertEqual(response.data['paper_books_count'], 2)
+        self.assertEqual(response.data['paper_books_count'], 3)
     
     def test_author_api(self):
         """Test de l'API des auteurs"""
@@ -413,8 +398,7 @@ class PaginationTests(APITestCase):
                 reference=f"TEST-{i+1}",
                 description="Description test",
                 price=10.00,
-                format="PAPIER",
-                available=True,
+                    available=True,
                 category=category,
                 author=author
             )
@@ -463,7 +447,6 @@ class ValidationTests(TestCase):
             reference="REF-001",
             description="Description",
             price=10.00,
-            format="PAPIER",
             available=True,
             category=self.category,
             author=self.author
@@ -476,8 +459,7 @@ class ValidationTests(TestCase):
                 reference="REF-001",
                 description="Description",
                 price=15.00,
-                format="PAPIER",
-                available=True,
+                    available=True,
                 category=self.category,
                 author=self.author
             )

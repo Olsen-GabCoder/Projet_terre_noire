@@ -97,14 +97,14 @@ const OrderSuccess = () => {
           </div>
         </div>
 
-        {orderData?.items?.some((i) => i.book?.format === 'PAPIER') && (
+        {orderData?.items?.some((i) => (i.format_purchased || 'PAPIER') === 'PAPIER') && (
           <TnAlert variant="info" style={{ marginBottom: 20 }}>
             Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devrez venir recuperer votre commande dans l'une de ces trois villes.
           </TnAlert>
         )}
 
         {(() => {
-          const ebookItems = (orderData?.items || []).filter((i) => i.book?.format === 'EBOOK');
+          const ebookItems = (orderData?.items || []).filter((i) => i.format_purchased === 'EBOOK');
           if (ebookItems.length === 0) return null;
           return (
             <TnAlert variant="success" style={{ marginBottom: 20 }}>
@@ -179,7 +179,7 @@ const OrderSuccess = () => {
           <p>
             <i className="fas fa-headset"></i>
             Une question ? Contactez notre service client au{' '}
-            <a href="tel:+24165348887">+241 65 34 88 87</a> ou <a href="tel:+241076593535">+241 07 65 93 535</a>
+            <a href="tel:+24165348887">+241 65 34 88 87</a> ou <a href="tel:+24176593535">+241 76 59 35 35</a>
           </p>
         </div>
         </div>

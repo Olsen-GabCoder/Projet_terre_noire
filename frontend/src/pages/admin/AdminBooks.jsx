@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/ToastProvider';
 import api from '../../services/api';
 
 const fmtPrice = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',format:'PAPIER',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null,page_count:'',isbn:'',language:'FR',dimensions_width_cm:'',dimensions_height_cm:'',weight_g:'',collection:'',excerpt_pdf:null };
+const EMPTY_FORM = { title:'',author:'',description:'',price:'',original_price:'',reference:'',has_ebook:false,ebook_price:'',available:true,is_bestseller:false,category:'',cover_image:null,back_cover_image:null,pdf_file:null,page_count:'',isbn:'',language:'FR',dimensions_width_cm:'',dimensions_height_cm:'',weight_g:'',collection:'',excerpt_pdf:null };
 
 const AdminBooks = () => {
   const { toast, confirm } = useToast();
@@ -76,7 +76,8 @@ const AdminBooks = () => {
       title: book.title||'', author: book.author?.id||book.author||'',
       description: book.description||'', price: book.price||'',
       original_price: book.original_price||'', reference: book.reference||'',
-      format: book.format||'PAPIER', available: book.available??true,
+      has_ebook: book.has_ebook||false, ebook_price: book.ebook_price||'',
+      available: book.available??true,
       is_bestseller: book.is_bestseller||false,
       category: book.category?.id||book.category||'',
       cover_image: null, back_cover_image: null, pdf_file: null, excerpt_pdf: null,
@@ -111,7 +112,7 @@ const AdminBooks = () => {
     if (filter === 'available') list = list.filter(b => b.available);
     else if (filter === 'promo') list = list.filter(b => b.original_price && Number(b.original_price) > Number(b.price));
     else if (filter === 'bestseller') list = list.filter(b => b.is_bestseller);
-    else if (filter === 'ebook') list = list.filter(b => b.format === 'EBOOK');
+    else if (filter === 'ebook') list = list.filter(b => b.has_ebook);
     if (search.trim()) { const q = search.toLowerCase(); list = list.filter(b => (b.title||'').toLowerCase().includes(q) || (b.author?.full_name||'').toLowerCase().includes(q) || (b.reference||'').toLowerCase().includes(q)); }
     return list;
   }, [books, filter, search]);
@@ -146,7 +147,7 @@ const AdminBooks = () => {
               ['available', 'Disponibles', books.filter(b => b.available).length],
               ['promo', 'En promo', books.filter(b => b.original_price && Number(b.original_price) > Number(b.price)).length],
               ['bestseller', 'Best-sellers', books.filter(b => b.is_bestseller).length],
-              ['ebook', 'Ebooks', books.filter(b => b.format === 'EBOOK').length],
+              ['ebook', 'Ebooks', books.filter(b => b.has_ebook).length],
             ]}
           />
         </div>
@@ -164,6 +165,7 @@ const AdminBooks = () => {
             { label: 'Auteur' },
             { label: 'Catégorie' },
             { label: 'Prix', align: 'right' },
+            { label: 'Ebook', width: 80 },
             { label: 'Stock', width: 130 },
             { label: 'Promo', width: 90 },
             { label: '', width: 90, align: 'right' },
@@ -196,6 +198,12 @@ const AdminBooks = () => {
                       <span style={{ fontSize: 11, color: 'var(--tn-gray-400)', textDecoration: 'line-through', marginTop: 2 }}>{fmtPrice(b.original_price)}</span>
                     )}
                   </div>
+                </AdminCell>
+                <AdminCell>
+                  {b.has_ebook
+                    ? <span style={{ padding: '3px 8px', borderRadius: 999, background: 'var(--tn-orange-50)', color: 'var(--tn-orange)', fontSize: 10, fontWeight: 700, fontFamily: 'var(--tn-mono)', letterSpacing: '0.05em' }}>OUI</span>
+                    : <span style={{ color: 'var(--tn-gray-400)', fontSize: 11 }}>—</span>
+                  }
                 </AdminCell>
                 <AdminCell>
                   <StatusBadge value={b.available ? 'active' : 'inactive'} />
@@ -279,7 +287,7 @@ const AdminBooks = () => {
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
                   <span style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: 'var(--tn-gold-light)', fontSize: 11, fontWeight: 600, border: '1px solid rgba(200,149,108,0.3)' }}>
-                    {editingBook.format || 'PAPIER'}
+                    Papier{editingBook.has_ebook ? ' + Ebook' : ''}
                   </span>
                   <span style={{ fontFamily: 'var(--tn-mono)', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                     {fmtPrice(editingBook.price)} FCFA
@@ -340,13 +348,7 @@ function BookForm({
               <button type="button" onClick={onAddCategory} disabled={!newCategoryName.trim()} style={{ fontSize: 11, fontWeight: 600, color: 'var(--tn-orange)', background: 'none', border: 0, cursor: 'pointer' }}>Ajouter</button>
             </div>
           </div>
-          <FieldWrap label="Format">
-            <select className="tn-input" name="format" value={formData.format} onChange={onInputChange} style={{ cursor: 'pointer' }}>
-              <option value="PAPIER">Papier</option>
-              <option value="EBOOK">Ebook</option>
-            </select>
-          </FieldWrap>
-          <FieldWrap label="Prix FCFA" required><input className="tn-input" name="price" type="number" min="0" step="1" value={formData.price} onChange={onInputChange} required /></FieldWrap>
+          <FieldWrap label="Prix papier (FCFA)" required><input className="tn-input" name="price" type="number" min="0" step="1" value={formData.price} onChange={onInputChange} required /></FieldWrap>
           <FieldWrap label="Reference ISBN"><input className="tn-input" name="reference" value={formData.reference} onChange={onInputChange} placeholder="978-2-1234-5678-9" style={{ fontFamily: 'var(--tn-mono)' }} /></FieldWrap>
         </div>
       </AdminModalSection>
@@ -408,19 +410,39 @@ function BookForm({
         </div>
       </AdminModalSection>
 
-      <AdminModalSection icon="fa-paperclip" title="Fichiers">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
+      <AdminModalSection icon="fa-tablet-screen-button" title="Format ebook">
+        <div style={{ padding: 18, borderRadius: 12, background: 'var(--tn-cream-2)', border: '1px solid var(--tn-gray-200)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: formData.has_ebook ? 16 : 0 }}>
+            <input type="checkbox" name="has_ebook" checked={formData.has_ebook} onChange={onInputChange} style={{ width: 18, height: 18, accentColor: 'var(--tn-orange)' }} />
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Disponible en ebook</span>
+          </label>
+          {formData.has_ebook && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+              <FieldWrap label="Prix ebook (FCFA)" required>
+                <input className="tn-input" name="ebook_price" type="number" min="0" step="1" value={formData.ebook_price} onChange={onInputChange} required placeholder="Ex: 2000" style={{ fontFamily: 'var(--tn-mono)' }} />
+              </FieldWrap>
+              <FieldWrap label="Fichier PDF (ebook)">
+                <input type="file" accept=".pdf" onChange={onPdfChange} style={{ fontSize: 12 }} />
+                {editingBook?.has_pdf && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Joint</div>}
+              </FieldWrap>
+            </div>
+          )}
+        </div>
+      </AdminModalSection>
+
+      <AdminModalSection icon="fa-paperclip" title="Images">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
           <FieldWrap label="Couverture (recto)">
             <input type="file" accept="image/*" onChange={onFileChange} style={{ fontSize: 12 }} />
-            <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>{editingBook ? 'Vide = conserver' : '400x600px'}</div>
+            <div style={{ fontSize: 11, color: 'var(--tn-gray-500)', marginTop: 4 }}>
+              {formData.cover_image
+                ? <span style={{ color: 'var(--tn-success)' }}><i className="fas fa-check" /> {formData.cover_image.name}</span>
+                : editingBook ? 'Vide = conserver' : '400x600px'}
+            </div>
           </FieldWrap>
           <FieldWrap label="4e de couverture">
             <input type="file" accept="image/*" onChange={onBackCoverChange} style={{ fontSize: 12 }} />
             {editingBook?.back_cover_image && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Jointe</div>}
-          </FieldWrap>
-          <FieldWrap label="PDF ebook">
-            <input type="file" accept=".pdf" onChange={onPdfChange} style={{ fontSize: 12 }} />
-            {editingBook?.has_pdf && <div style={{ fontSize: 11, color: 'var(--tn-success)', marginTop: 4 }}><i className="fas fa-check" /> Joint</div>}
           </FieldWrap>
         </div>
       </AdminModalSection>

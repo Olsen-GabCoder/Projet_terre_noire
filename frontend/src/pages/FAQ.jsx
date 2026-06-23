@@ -96,7 +96,7 @@ const FAQ_CATEGORIES = [
   {
     id: 'contact', icon: 'fa-headset', label: 'Contact & Support',
     items: [
-      { q: 'Comment vous contacter ?', a: 'Par email : terrenoireeditions@gmail.com. Par téléphone : +241 65 34 88 87 ou +241 07 65 93 535. Via WhatsApp : +241 65 34 88 87. Ou via le formulaire de contact sur notre site.' },
+      { q: 'Comment vous contacter ?', a: 'Par email : terrenoireeditions@gmail.com. Par téléphone : +241 65 34 88 87 ou +241 76 59 35 35. Via WhatsApp : +241 76 59 35 35. Ou via le formulaire de contact sur notre site.' },
       { q: 'Quel est le délai de réponse ?', a: 'Nous répondons généralement sous 24 heures (jours ouvrés).' },
       { q: 'Où êtes-vous situés ?', a: 'À Port-Gentil, Gabon. Nos ouvrages sont également disponibles chez nos librairies partenaires : Librairie du Mapane, Livre+ et Librairie Clé d\'Impact.' },
     ],

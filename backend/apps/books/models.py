@@ -144,12 +144,6 @@ class Book(models.Model):
     """
     Modèle pour les livres
     """
-    # Choix pour le format du livre
-    FORMAT_CHOICES = [
-        ('EBOOK', 'Ebook'),
-        ('PAPIER', 'Papier'),
-    ]
-
     LANGUAGE_CHOICES = [
         ('FR', 'Français'),
         ('EN', 'Anglais'),
@@ -186,13 +180,21 @@ class Book(models.Model):
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        verbose_name="Prix (FCFA)"
+        verbose_name="Prix papier (FCFA)"
     )
-    format = models.CharField(
-        max_length=10,
-        choices=FORMAT_CHOICES,
-        default='PAPIER',
-        verbose_name="Format"
+    has_ebook = models.BooleanField(
+        default=False,
+        verbose_name="Disponible en ebook",
+        help_text="Le livre est-il aussi disponible en format ebook ?",
+    )
+    ebook_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Prix ebook (FCFA)",
+        help_text="Prix de la version ebook (requis si ebook active)",
     )
     cover_image = models.ImageField(
         upload_to='books/covers/',
@@ -400,19 +402,20 @@ class Book(models.Model):
         return f"{self.title} - {self.author.full_name}"
 
     @property
-    def is_ebook(self):
-        """Vérifie si le livre est un ebook"""
-        return self.format == 'EBOOK'
-
-    @property
     def is_available(self):
         """Vérifie la disponibilité"""
         return self.available
 
-    def get_format_display(self):
-        """Retourne la version lisible du format"""
-        return dict(self.FORMAT_CHOICES).get(self.format, self.format)
-    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        if self.has_ebook and self.ebook_price is None:
+            raise ValidationError({
+                'ebook_price': "Le prix ebook est requis si l'ebook est active."
+            })
+        if not self.has_ebook and self.ebook_price is not None:
+            self.ebook_price = None
+
     # === NOUVELLES PROPRIÉTÉS ===
     @property
     def has_discount(self):

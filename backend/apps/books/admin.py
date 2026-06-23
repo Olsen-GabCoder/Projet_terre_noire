@@ -27,27 +27,27 @@ class CollectionAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'category', 'price', 'format', 'available', 'is_featured', 'is_bestseller', 'popularity_score', 'created_at']
+    list_display = ['title', 'author', 'category', 'price', 'has_ebook', 'available', 'is_featured', 'is_bestseller', 'popularity_score', 'created_at']
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ['title', 'reference', 'author__full_name']
-    list_filter = ['format', 'available', 'is_featured', 'is_bestseller', 'category', 'created_at']
-    list_editable = ['available', 'is_featured', 'is_bestseller']
+    list_filter = ['has_ebook', 'available', 'is_featured', 'is_bestseller', 'category', 'created_at']
+    list_editable = ['available', 'is_featured', 'is_bestseller', 'has_ebook']
     readonly_fields = ['created_at', 'updated_at', 'popularity_score', 'trending_score']
     autocomplete_fields = ['category', 'author']
     actions = ['mark_featured', 'unmark_featured']
     fieldsets = (
         ('Informations generales', {
-            'fields': ('title', 'slug', 'author', 'category', 'reference', 'format', 'description', 'published_date'),
+            'fields': ('title', 'slug', 'author', 'category', 'reference', 'description', 'published_date'),
         }),
         ('Prix et disponibilite', {
             'fields': ('price', 'original_price', 'available', 'is_bestseller', 'is_featured'),
         }),
+        ('Format ebook', {
+            'fields': ('has_ebook', 'ebook_price', 'pdf_file'),
+            'description': 'Activez l\'ebook et definissez son prix. Le PDF est necessaire pour la lecture en ligne.',
+        }),
         ('Image et notation', {
             'fields': ('cover_image', 'back_cover_image', 'rating', 'rating_count'),
-        }),
-        ('Ebook / PDF', {
-            'fields': ('pdf_file',),
-            'description': 'Fichier PDF pour lecture en ligne ou achat ebook.',
         }),
         ('Scores (calcules automatiquement)', {
             'fields': ('popularity_score', 'trending_score'),

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import bookService from '../services/bookService';
 import api from '../services/api';
@@ -181,6 +181,9 @@ const PageTurnEffect = () => (
 
 const BookReader = () => {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isExcerptMode = location.pathname.endsWith('/excerpt-read');
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -221,6 +224,7 @@ const BookReader = () => {
 
   // ── Charger le catalogue (livres disponibles) pour la barre latérale gauche ──
   useEffect(() => {
+    if (isExcerptMode) { setCatalogLoading(false); return; }
     let cancelled = false;
     const fetchCatalog = async () => {
       try {
@@ -237,17 +241,25 @@ const BookReader = () => {
     };
     fetchCatalog();
     return () => { cancelled = true; };
-  }, []);
+  }, [isExcerptMode]);
 
   // ── Charger le PDF en mémoire ──
   useEffect(() => {
-    if (!book?.has_pdf || !book?.id) return;
+    if (!book?.id) return;
+    // En mode extrait : verifier excerpt_pdf_url ; en mode normal : verifier has_pdf
+    if (isExcerptMode && !book?.excerpt_pdf_url) return;
+    if (!isExcerptMode && !book?.has_pdf) return;
+
+    const pdfEndpoint = isExcerptMode
+      ? `/books/${book.id}/excerpt/`
+      : `/books/${book.id}/read-pdf/`;
+
     let cancelled = false;
     const loadPdf = async () => {
       setLoadingPdf(true);
       setPdfError(null);
       try {
-        const { data } = await api.get(`/books/${book.id}/read-pdf/`, {
+        const { data } = await api.get(pdfEndpoint, {
           responseType: 'arraybuffer',
         });
         if (cancelled) return;
@@ -263,7 +275,7 @@ const BookReader = () => {
     };
     loadPdf();
     return () => { cancelled = true; };
-  }, [book?.id, book?.has_pdf]);
+  }, [book?.id, book?.has_pdf, book?.excerpt_pdf_url, isExcerptMode]);
 
   // ── Filigrane canvas ──
   const drawWatermark = useCallback((ctx, width, height, pageNum) => {
@@ -474,7 +486,8 @@ const BookReader = () => {
     );
   }
 
-  if (!book.has_pdf) {
+  const noPdf = isExcerptMode ? !book.excerpt_pdf_url : !book.has_pdf;
+  if (noPdf) {
     return (
       <div className="br-error-page">
         <div className="br-error-page__bg" aria-hidden="true" />
@@ -482,10 +495,12 @@ const BookReader = () => {
           <div className="br-error-card__icon-wrap">
             <IconFilePdf className="br-error-card__icon" />
           </div>
-          <h1 className="br-error-card__title">Lecture indisponible</h1>
+          <h1 className="br-error-card__title">{isExcerptMode ? 'Aucun extrait disponible' : 'Lecture indisponible'}</h1>
           <OrnamentalDivider />
           <p className="br-error-card__desc">
-            Ce livre ne dispose pas encore de version numérique pour la lecture en ligne.
+            {isExcerptMode
+              ? "Cet ouvrage ne propose pas encore d\u2019extrait en ligne."
+              : "Ce livre ne dispose pas encore de version numérique pour la lecture en ligne."}
           </p>
           <Link to={`/books/${id}`} className="br-cta">
             <IconArrowLeft className="br-cta__icon" />
@@ -548,9 +563,16 @@ const BookReader = () => {
             />
           </div>
 
-          {/* Méta : Terre Noire, titre, auteur (poussés à l’extrême gauche du bloc central) */}
+          {/* Meta : Terre Noire, titre, auteur */}
           <div className="br-header__meta">
-            <p className="br-header__edition">Terre Noire Éditions</p>
+            <p className="br-header__edition">
+              {isExcerptMode ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                  Terre Noire Editions
+                  <span style={{ padding: "1px 8px", borderRadius: 999, background: "rgba(232,96,28,0.2)", color: "var(--br-gold-bright)", fontSize: "0.55rem", fontWeight: 700, letterSpacing: "0.14em", border: "1px solid rgba(232,96,28,0.35)" }}>EXTRAIT</span>
+                </span>
+              ) : "Terre Noire Editions"}
+            </p>
             <h1 className="br-header__title" title={book.title}>{book.title}</h1>
             {authorName && (
               <p className="br-header__author">{authorName}</p>
@@ -559,6 +581,19 @@ const BookReader = () => {
 
           {/* Spacer pour pousser nav à droite */}
           <div className="br-header__spacer" aria-hidden="true" />
+
+          {/* Bouton Acheter (mode extrait uniquement) */}
+          {isExcerptMode && (
+            <button
+              type="button"
+              className="br-header__back"
+              style={{ background: "rgba(232,96,28,0.15)", borderColor: "rgba(232,96,28,0.5)", color: "var(--br-gold-bright)" }}
+              onClick={() => navigate(`/books/${id}`)}
+            >
+              <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>Acheter ce livre</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </button>
+          )}
 
           {/* Progression */}
           {numPages > 0 && (
@@ -615,8 +650,8 @@ const BookReader = () => {
 
       {/* ── Zone de lecture : sidebar gauche (livres) + centre (PDF + miniatures) ── */}
       <div className={`br-main ${!sidebarVisible ? 'br-main--sidebar-hidden' : ''}`}>
-        {/* Sidebar gauche : liste des livres disponibles */}
-        <aside className="br-sidebar-left" aria-label="Livres disponibles">
+        {/* Sidebar gauche : liste des livres disponibles (masquee en mode extrait) */}
+        {!isExcerptMode && <aside className="br-sidebar-left" aria-label="Livres disponibles">
           <h3 className="br-sidebar-left__title">Livres</h3>
           {catalogLoading ? (
             <div className="br-sidebar-left__loading">Chargement…</div>
@@ -645,7 +680,7 @@ const BookReader = () => {
           {!catalogLoading && catalogBooks.length === 0 && (
             <p className="br-sidebar-left__empty">Aucun livre</p>
           )}
-        </aside>
+        </aside>}
 
         {/* Centre : viewport PDF + sidebar miniatures à droite */}
         <div className="br-center">

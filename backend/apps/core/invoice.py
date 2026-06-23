@@ -163,8 +163,8 @@ def generate_order_invoice_pdf(order):
         title_text = item.book.title
         if author_name:
             title_text += f"<br/><font size='7' color='#6B6B6B'>{author_name}</font>"
-        if hasattr(item.book, 'format') and item.book.format:
-            title_text += f"<font size='7' color='#C8956C'> &middot; {item.book.format}</font>"
+        if hasattr(item, 'format_purchased') and item.format_purchased:
+            title_text += f"<font size='7' color='#C8956C'> &middot; {item.format_purchased}</font>"
 
         data.append([
             str(idx),

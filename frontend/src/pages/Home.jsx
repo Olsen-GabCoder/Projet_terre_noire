@@ -11,7 +11,7 @@ import useCountUp from '../hooks/useCountUp';
 import '../styles/Home.css';
 
 /* ── Hook : mot qui alterne avec effet typing ── */
-const HERO_WORDS = ['aujourd\'hui', 'maintenant', 'ici', 'ensemble', 'sans attendre'];
+const HERO_WORDS = ['aujourd\'hui', 'maintenant', 'ici', 'ensemble'];
 function useTypingWords(words, typingSpeed = 80, pauseMs = 2800) {
   const [display, setDisplay] = useState(words[0]);
   const [wordIndex, setWordIndex] = useState(0);
@@ -239,17 +239,12 @@ const Home = () => {
           <div className="home-hero-left">
             <div className="home-hero-pill">
               <span className="home-hero-pill__icon">✦</span>
-              Port-Gentil · Gabon · Depuis 2025
+              Gabon
             </div>
 
             <h1 className="home-hero-title">
               Demain s'écrit <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
             </h1>
-
-            <p className="home-hero-sub">
-              Maison d'édition littéraire africaine. Des collections — Moughetou, Marabout,
-              Une Vie d'Onction, Mwanna et bien d'autres — pour faire entendre les voix qui écrivent demain.
-            </p>
 
             <div className="home-hero-actions">
               <Link to="/catalog" className="tn-btn tn-btn--primary tn-btn--lg">
@@ -264,7 +259,6 @@ const Home = () => {
               <AnimatedStat value={stats?.total_books || 0} label="titres au catalogue" active={statsVisible} />
               <AnimatedStat value={stats?.total_authors || 0} label="auteurs publiés" active={statsVisible} />
               <AnimatedStat value={stats?.total_categories || 0} label="catégories" active={statsVisible} />
-              <AnimatedStat value="+1 an" label="d'édition" active={statsVisible} />
             </div>
           </div>
 

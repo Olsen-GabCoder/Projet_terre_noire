@@ -117,13 +117,17 @@ const BookDetail = () => {
     }
   }, [activeTab, id, isAuthenticated]);
 
-  const handleAddToCart = () => {
-    if (book?.available) addToCart(book, quantity);
+  const handleAddPaper = () => {
+    if (book?.available) addToCart(book, quantity, 'PAPIER');
+  };
+
+  const handleAddEbook = () => {
+    if (book?.available && book?.has_ebook) addToCart(book, 1, 'EBOOK');
   };
 
   const handleBuyNow = () => {
     if (book?.available) {
-      addToCart(book, quantity);
+      addToCart(book, quantity, 'PAPIER');
       navigate('/cart');
     }
   };
@@ -344,9 +348,9 @@ const BookDetail = () => {
                 {!book.available && (
                   <span className="bd-image-badge bd-image-badge--unavailable">Indisponible</span>
                 )}
-                {book.format === 'EBOOK' && (
+                {book.has_ebook && (
                   <span className="bd-image-badge bd-image-badge--format">
-                    <i className="fas fa-file-pdf" /> Ebook
+                    <i className="fas fa-file-pdf" /> Papier + Ebook
                   </span>
                 )}
               </div>
@@ -382,7 +386,7 @@ const BookDetail = () => {
                   <span className="bd-meta-item">
                     <span className="bd-meta-label">Format</span>
                     <span className="bd-meta-value">
-                      {book.format === 'EBOOK' ? 'Ebook (PDF)' : 'Livre papier'}
+                      {book.has_ebook ? 'Papier + Ebook' : 'Livre papier'}
                     </span>
                   </span>
                   {book.reference && (
@@ -400,8 +404,13 @@ const BookDetail = () => {
                     <span className="bd-price-old">{formatPrice(book.original_price)}</span>
                   )}
                   <span className="bd-price">{formatPrice(book.price)}</span>
-                  {book.format === 'EBOOK' && (
-                    <span className="bd-price-vat">TVA incluse</span>
+                  <span className="bd-price-vat">Papier</span>
+                  {book.has_ebook && book.ebook_price && (
+                    <>
+                      <span style={{ color: 'var(--tn-gray-400)', margin: '0 6px' }}>|</span>
+                      <span className="bd-price" style={{ fontSize: '0.85em' }}>{formatPrice(book.ebook_price)}</span>
+                      <span className="bd-price-vat">Ebook</span>
+                    </>
                   )}
                 </div>
                 <div className="bd-availability">
@@ -417,28 +426,11 @@ const BookDetail = () => {
                 </div>
               </div>
 
-              {book.has_pdf && book.can_read && (
-                <div className="bd-read-action">
-                  <Link to={`/books/${id}/read`} className="bd-btn bd-btn--read">
-                    <i className="fas fa-book-open" /> Lire le livre
-                  </Link>
-                </div>
-              )}
-              {book.has_pdf && !book.can_read && isAuthenticated && (
-                <p className="bd-read-hint">
-                  <i className="fas fa-book-open" /> Achetez ce livre pour le lire en integralite
-                </p>
-              )}
-
               {book.excerpt_pdf_url && (
                 <div className="bd-read-action">
-                  <button
-                    type="button"
-                    className="bd-btn bd-btn--outline"
-                    onClick={() => window.open(book.excerpt_pdf_url, '_blank')}
-                  >
+                  <Link to={`/books/${id}/excerpt-read`} className="bd-btn bd-btn--outline">
                     <i className="fas fa-file-pdf" /> Lire un extrait
-                  </button>
+                  </Link>
                 </div>
               )}
 
@@ -468,32 +460,37 @@ const BookDetail = () => {
                   <div className="bd-action-btns">
                     <button
                       type="button"
-                      onClick={handleAddToCart}
-                      className={`bd-btn bd-btn--cart ${isInCart(book.id) ? 'bd-btn--in-cart' : ''}`}
-                      disabled={isInCart(book.id)}
+                      onClick={handleAddPaper}
+                      className={`bd-btn bd-btn--cart ${isInCart(book.id, 'PAPIER') ? 'bd-btn--in-cart' : ''}`}
+                      disabled={isInCart(book.id, 'PAPIER')}
                     >
-                      {isInCart(book.id) ? (
-                        <><i className="fas fa-check" /> {getItemQuantity(book.id)} dans le panier</>
+                      {isInCart(book.id, 'PAPIER') ? (
+                        <><i className="fas fa-check" /> Papier dans le panier</>
                       ) : (
-                        <><i className="fas fa-shopping-cart" /> Ajouter au panier</>
+                        <><i className="fas fa-shopping-cart" /> Ajouter Papier — {formatPrice(book.price)}</>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleBuyNow}
-                      className="bd-btn bd-btn--buy"
-                    >
-                      <i className="fas fa-bolt" /> Acheter maintenant
-                    </button>
+                    {book.has_ebook && book.ebook_price && (
+                      <button
+                        type="button"
+                        onClick={handleAddEbook}
+                        className={`bd-btn bd-btn--cart ${isInCart(book.id, 'EBOOK') ? 'bd-btn--in-cart' : ''}`}
+                        disabled={isInCart(book.id, 'EBOOK')}
+                      >
+                        {isInCart(book.id, 'EBOOK') ? (
+                          <><i className="fas fa-check" /> Ebook dans le panier</>
+                        ) : (
+                          <><i className="fas fa-file-pdf" /> Ajouter Ebook — {formatPrice(book.ebook_price)}</>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {book.format === 'PAPIER' && (
-                <TnAlert variant="info" style={{ marginTop: 16 }}>
-                  Livraison physique disponible a Libreville, Port-Gentil et Lambarene uniquement. Hors de ces villes, retrait en main propre dans l'une d'entre elles.
-                </TnAlert>
-              )}
+              <TnAlert variant="info" style={{ marginTop: 16 }}>
+                Livraison physique disponible a Libreville, Port-Gentil et Lambarene uniquement. Hors de ces villes, retrait en main propre dans l'une d'entre elles.
+              </TnAlert>
             </div>
           </div>
 
@@ -532,7 +529,7 @@ const BookDetail = () => {
                     <div className="bd-detail-item">
                       <span className="bd-detail-label">Format</span>
                       <span className="bd-detail-value">
-                        {book.format === 'EBOOK' ? 'Ebook numérique (PDF)' : 'Livre papier'}
+                        {book.has_ebook ? 'Livre papier + Ebook (PDF)' : 'Livre papier'}
                       </span>
                     </div>
                     {book.isbn && (

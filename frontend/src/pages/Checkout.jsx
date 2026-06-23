@@ -23,7 +23,7 @@ const Checkout = () => {
     shipping_city: '',
   });
 
-  const hasPhysical = cartItems.some((i) => i.format === 'PAPIER');
+  const hasPhysical = cartItems.some((i) => i.format_purchased === 'PAPIER');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -135,6 +135,7 @@ const Checkout = () => {
           items: cartItems.map((item) => ({
             book_id: item.id,
             quantity: item.quantity,
+            format_purchased: item.format_purchased || 'PAPIER',
           })),
           shipping_address: formData.shipping_address,
           shipping_phone: formData.shipping_phone,
@@ -280,7 +281,7 @@ const Checkout = () => {
               </div>
             </div>
 
-            {cartItems.some((i) => i.format === 'PAPIER') && (
+            {cartItems.some((i) => i.format_purchased === 'PAPIER') && (
               <TnAlert variant="info" style={{ marginTop: 12 }}>
                 Terre Noire Editions livre les exemplaires physiques uniquement a Libreville, Port-Gentil et Lambarene. Si vous residez ailleurs, vous devez venir recuperer votre commande dans l'une de ces trois villes.
               </TnAlert>
@@ -316,7 +317,7 @@ const Checkout = () => {
               <>
                 <div className="chk-summary-items">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="chk-summary-item">
+                    <div key={`${item.id}_${item.format_purchased}`} className="chk-summary-item">
                       <img
                         src={item.cover_image || '/images/default-book-cover.jpg'}
                         alt={item.title}
@@ -326,7 +327,7 @@ const Checkout = () => {
                       <div className="chk-item-info">
                         <h4>{item.title}</h4>
                         <p>{item.author?.full_name}</p>
-                        <span className="chk-item-qty">Qté : {item.quantity}</span>
+                        <span className="chk-item-qty">{item.format_purchased === 'EBOOK' ? 'Ebook' : 'Papier'} · Qté : {item.quantity}</span>
                       </div>
                       <div className="chk-item-price">
                         {item.original_price && Number(item.original_price) > Number(item.price) && (
@@ -340,7 +341,7 @@ const Checkout = () => {
 
                 {(() => {
                   const subtotal = getTotalPrice();
-                  const hasPhysical = cartItems.some((i) => i.format === 'PAPIER');
+                  const hasPhysical = cartItems.some((i) => i.format_purchased === 'PAPIER');
                   const shipping = !hasPhysical ? 0 : subtotal >= shippingFreeThreshold ? 0 : shippingCost;
                   const discountPercent = appliedCoupon?.discountPercent ?? 0;
                   const discountFixed = appliedCoupon?.discountAmount ?? 0;

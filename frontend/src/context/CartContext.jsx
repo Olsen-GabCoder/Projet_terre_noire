@@ -11,10 +11,23 @@ export const useCart = () => {
   return context;
 };
 
+function cartKey(item) {
+  return `${item.id}_${item.format_purchased || 'PAPIER'}`;
+}
+
+function migrateCart(items) {
+  return items.map((item) => {
+    if (!item.format_purchased) {
+      return { ...item, format_purchased: 'PAPIER' };
+    }
+    return item;
+  });
+}
+
 function loadCartFromStorage() {
   try {
     const saved = localStorage.getItem('cart');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? migrateCart(JSON.parse(saved)) : [];
   } catch {
     localStorage.removeItem('cart');
     return [];
@@ -25,68 +38,78 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(loadCartFromStorage);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  // Sauvegarder le panier dans localStorage à chaque modification
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Ajouter un article au panier
-  const addToCart = (book, quantity = 1) => {
-    const isEbook = book.format === 'EBOOK';
+  const addToCart = (book, quantity = 1, formatPurchased = 'PAPIER') => {
+    const isEbook = formatPurchased === 'EBOOK';
+    const price = isEbook ? book.ebook_price : book.price;
+
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === book.id);
+      const key = `${book.id}_${formatPurchased}`;
+      const existingItem = prevItems.find((item) => cartKey(item) === key);
 
       if (existingItem) {
-        if (isEbook) return prevItems; // Ebook deja dans le panier, qty=1 max
+        if (isEbook) return prevItems;
         return prevItems.map((item) =>
-          item.id === book.id
+          cartKey(item) === key
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        return [...prevItems, { ...book, quantity: isEbook ? 1 : quantity }];
+        return [...prevItems, {
+          ...book,
+          format_purchased: formatPurchased,
+          price,
+          quantity: isEbook ? 1 : quantity,
+        }];
       }
     });
   };
 
-  // Retirer un article du panier
-  const removeFromCart = (bookId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== bookId));
+  const removeFromCart = (bookId, formatPurchased) => {
+    setCartItems((prevItems) =>
+      prevItems.filter((item) => {
+        if (formatPurchased) {
+          return !(item.id === bookId && item.format_purchased === formatPurchased);
+        }
+        return item.id !== bookId;
+      })
+    );
   };
 
-  // Mettre à jour la quantité d'un article
-  const updateQuantity = (bookId, quantity) => {
+  const updateQuantity = (bookId, quantity, formatPurchased) => {
     if (quantity <= 0) {
-      removeFromCart(bookId);
+      removeFromCart(bookId, formatPurchased);
       return;
     }
 
     setCartItems((prevItems) =>
       prevItems.map((item) => {
-        if (item.id !== bookId) return item;
-        if (item.format === 'EBOOK') return item; // Ebook verrouille a qty=1
+        const match = formatPurchased
+          ? item.id === bookId && item.format_purchased === formatPurchased
+          : item.id === bookId;
+        if (!match) return item;
+        if (item.format_purchased === 'EBOOK') return item;
         return { ...item, quantity };
       })
     );
   };
 
-  // Vider le panier
   const clearCart = () => {
     setCartItems([]);
     setAppliedCoupon(null);
     localStorage.removeItem('cart');
   };
 
-  // Code promo appliqué
   const applyCouponToContext = (coupon) => setAppliedCoupon(coupon);
   const clearCoupon = () => setAppliedCoupon(null);
 
-  // Calculer le nombre total d'articles
   const getTotalItems = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
-  // Calculer le prix total
   const getTotalPrice = () => {
     return cartItems.reduce(
       (total, item) => total + parseFloat(item.price) * item.quantity,
@@ -94,15 +117,19 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // Vérifier si un livre est dans le panier
-  const isInCart = (bookId) => {
+  const isInCart = (bookId, formatPurchased) => {
+    if (formatPurchased) {
+      return cartItems.some((item) => item.id === bookId && item.format_purchased === formatPurchased);
+    }
     return cartItems.some((item) => item.id === bookId);
   };
 
-  // Obtenir la quantité d'un livre dans le panier
-  const getItemQuantity = (bookId) => {
-    const item = cartItems.find((item) => item.id === bookId);
-    return item ? item.quantity : 0;
+  const getItemQuantity = (bookId, formatPurchased) => {
+    if (formatPurchased) {
+      const item = cartItems.find((item) => item.id === bookId && item.format_purchased === formatPurchased);
+      return item ? item.quantity : 0;
+    }
+    return cartItems.filter((item) => item.id === bookId).reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const value = {

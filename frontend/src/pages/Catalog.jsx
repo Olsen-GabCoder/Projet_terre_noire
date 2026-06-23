@@ -29,7 +29,7 @@ const Catalog = () => {
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
     author: searchParams.get('author') || '',
-    book_format: searchParams.get('book_format') || '',
+    has_ebook: searchParams.get('has_ebook') || '',
     available: searchParams.get('available') || '',
     ordering: searchParams.get('ordering') || '-created_at',
   });
@@ -54,7 +54,7 @@ const Catalog = () => {
       search: searchParams.get('search') || '',
       category: searchParams.get('category') || '',
       author: searchParams.get('author') || '',
-      book_format: searchParams.get('book_format') || '',
+      has_ebook: searchParams.get('has_ebook') || '',
       available: searchParams.get('available') || '',
       ordering: searchParams.get('ordering') || '-created_at',
     });
@@ -92,7 +92,7 @@ const Catalog = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ search: '', category: '', author: '', book_format: '', available: '', ordering: '-created_at' });
+    setFilters({ search: '', category: '', author: '', has_ebook: '', available: '', ordering: '-created_at' });
     navigate('/catalog');
     setMobileFiltersOpen(false);
   };
@@ -224,9 +224,8 @@ const Catalog = () => {
                 <div className="cat-filters__group">
                   <span className="cat-filters__label">Format</span>
                   <div className="cat-filters__toggles">
-                    <button type="button" className={`cat-filters__toggle ${!filters.book_format ? 'cat-filters__toggle--active' : ''}`} onClick={() => handleFilterChange('book_format', '')}>Tous</button>
-                    <button type="button" className={`cat-filters__toggle ${filters.book_format === 'PAPIER' ? 'cat-filters__toggle--active' : ''}`} onClick={() => handleFilterChange('book_format', filters.book_format === 'PAPIER' ? '' : 'PAPIER')}><i className="fas fa-book" /> Papier</button>
-                    <button type="button" className={`cat-filters__toggle ${filters.book_format === 'EBOOK' ? 'cat-filters__toggle--active' : ''}`} onClick={() => handleFilterChange('book_format', filters.book_format === 'EBOOK' ? '' : 'EBOOK')}><i className="fas fa-file-pdf" /> Ebook</button>
+                    <button type="button" className={`cat-filters__toggle ${!filters.has_ebook ? 'cat-filters__toggle--active' : ''}`} onClick={() => handleFilterChange('has_ebook', '')}>Tous</button>
+                    <button type="button" className={`cat-filters__toggle ${filters.has_ebook === 'true' ? 'cat-filters__toggle--active' : ''}`} onClick={() => handleFilterChange('has_ebook', filters.has_ebook === 'true' ? '' : 'true')}><i className="fas fa-file-pdf" /> Avec ebook</button>
                   </div>
                 </div>
                 <div className="cat-filters__group">
@@ -257,8 +256,8 @@ const Catalog = () => {
                   {filters.category && (
                     <span className="cat-filters__chip">{categories.find((c) => c.id === parseInt(filters.category))?.name || 'Catégorie'} <button type="button" onClick={() => handleFilterChange('category', '')}><i className="fas fa-times" /></button></span>
                   )}
-                  {filters.book_format && (
-                    <span className="cat-filters__chip">{filters.book_format === 'EBOOK' ? 'Ebook' : 'Papier'} <button type="button" onClick={() => handleFilterChange('book_format', '')}><i className="fas fa-times" /></button></span>
+                  {filters.has_ebook && (
+                    <span className="cat-filters__chip">Avec ebook <button type="button" onClick={() => handleFilterChange('has_ebook', '')}><i className="fas fa-times" /></button></span>
                   )}
                   {filters.available && (
                     <span className="cat-filters__chip">{filters.available === 'true' ? 'En stock' : 'Épuisé'} <button type="button" onClick={() => handleFilterChange('available', '')}><i className="fas fa-times" /></button></span>

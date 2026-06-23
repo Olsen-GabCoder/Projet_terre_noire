@@ -132,15 +132,15 @@ const Footer = () => {
                 <p className="ft-brand__tagline">« Demain s'écrit aujourd'hui. »</p>
 
                 <p className="ft-brand__desc">
-                  Maison d'édition littéraire africaine, imprimerie et librairie,
-                  basée à Port-Gentil, Gabon. Quatre collections, des voix qui transmettent.
+                  Maison d'édition littéraire africaine, imprimerie et librairie.
                 </p>
 
                 <div className="ft-social">
                   {[
                     { href: 'https://www.facebook.com/profile.php?id=61556564940483', icon: 'fab fa-facebook-f', label: 'Facebook' },
+                    { href: 'https://instagram.com/terre_noire_editions', icon: 'fab fa-instagram', label: 'Instagram' },
                     { href: 'https://www.tiktok.com/@terrenoireedition?_r=1&_t=ZS-96fCndnPtAa', icon: 'fab fa-tiktok', label: 'TikTok' },
-                    { href: 'https://wa.me/24165348887', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
+                    { href: 'https://wa.me/24176593535', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
                     { href: 'mailto:terrenoireeditions@gmail.com', icon: 'fas fa-envelope', label: 'Email' },
                   ].map((s) => (
                     <a key={s.label} href={s.href} className="ft-social__link" aria-label={s.label} target="_blank" rel="noopener noreferrer">
@@ -171,10 +171,10 @@ const Footer = () => {
                 <h3 className="ft-col__title">Contact</h3>
                 <div className="ft-contact">
                   {[
-                    { icon: 'fas fa-location-dot', label: 'Port-Gentil, Gabon' },
-                    { icon: 'fas fa-phone', label: '+241 65 34 88 87', value: '+241 07 65 93 535' },
+                    { icon: 'fas fa-location-dot', label: 'Gabon' },
+                    { icon: 'fas fa-phone', label: '+241 65 34 88 87', value: '+241 76 59 35 35' },
                     { icon: 'fas fa-envelope', label: 'terrenoireeditions@gmail.com' },
-                    { icon: 'fab fa-whatsapp', label: 'WhatsApp · 65 34 88 87' },
+                    { icon: 'fab fa-whatsapp', label: 'WhatsApp · +241 76 59 35 35' },
                   ].map((c) => (
                     <div className="ft-contact__row" key={c.label}>
                       <div className="ft-contact__icon"><i className={c.icon} /></div>
@@ -265,8 +265,7 @@ const Footer = () => {
 
             {/* ── COLOPHON ── */}
             <div className="ft__colophon">
-              Terre Noire Éditions est composée en Playfair Display &amp; Inter.
-              Imprimée à Port-Gentil, Gabon. 2025–2026.
+              Terre Noire Editions est composee en Playfair Display &amp; Inter.
             </div>
           </div>
         </div>

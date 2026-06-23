@@ -26,7 +26,6 @@ class WishlistTest(APITestCase):
             reference='REF1',
             description='D',
             price=Decimal('1000'),
-            format='PAPIER',
             available=True,
             category=cat,
             author=auth,

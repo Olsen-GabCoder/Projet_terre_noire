@@ -109,7 +109,7 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
   const isFullWidthPage = ['/profile', '/contact', '/about', '/delivery', '/privacy', '/cgv', '/faq', '/support', '/terms', '/cookies', '/settings', '/submit-manuscript', '/wishlist', '/orders', '/checkout', '/order-success', '/cart', '/forgot-password', '/reset-password'].includes(location.pathname) || location.pathname.startsWith('/books/') || location.pathname.startsWith('/authors/') || location.pathname.startsWith('/collections/') || location.pathname.startsWith('/newsletter/') || location.pathname.startsWith('/checkout/paiement/');
-  const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/read$/);
+  const isReaderPage = location.pathname.match(/^\/books\/[^/]+\/(read|excerpt-read)$/);
 
   return (
     <div className="app">
@@ -123,13 +123,14 @@ function AppContent() {
       <main id="main-content" role="main" className={`main-content ${isAdminRoute ? 'main-content--admin' : ''} ${isFullWidthPage ? 'main-content--full' : ''} ${isReaderPage ? 'main-content--reader' : ''}`}>
         <ErrorBoundary>
         <Suspense fallback={<RouteSuspenseFallback />}>
-          <div key={location.pathname} className={location.pathname.startsWith('/admin') || location.pathname.match(/\/read$/) || location.pathname.startsWith('/checkout') ? '' : 'tn-page-transition'}>
+          <div key={location.pathname} className={location.pathname.startsWith('/admin') || location.pathname.match(/\/(read|excerpt-read)$/) || location.pathname.startsWith('/checkout') ? '' : 'tn-page-transition'}>
               <Routes>
                 {/* Routes principales */}
                 <Route path="/" element={<Home />} />
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/books/:id" element={<BookDetail />} />
                 <Route path="/books/:id/read" element={<BookReader />} />
+                <Route path="/books/:id/excerpt-read" element={<BookReader />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/checkout" element={<Checkout />} />

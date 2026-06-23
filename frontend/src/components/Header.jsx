@@ -304,12 +304,12 @@ const Header = () => {
       <nav className={`tn-header ${scrolled ? 'tn-header--scrolled' : ''}`}>
         <div className="tn-header__bar">
           {/* Brand */}
-          <TnTooltip text="Fondée en 2025 au cœur de Port-Gentil" position="bottom" align="start" delay={400}>
+          <TnTooltip text="Maison d'edition litteraire africaine" position="bottom" align="start" delay={400}>
             <Link to="/" className="tn-header__brand" onClick={closeAllMenus} aria-label="Accueil">
               <img src={LOGO_SRC} alt="Terre Noire" className="tn-header__logo" />
               <div className="tn-header__brand-text">
                 <span className="tn-header__brand-name">TERRE NOIRE</span>
-                <span className="tn-header__brand-sub">Éditions · Port-Gentil</span>
+                <span className="tn-header__brand-sub">Editions</span>
               </div>
             </Link>
           </TnTooltip>

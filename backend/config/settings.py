@@ -208,6 +208,15 @@ if _cloud_name:
     except ImportError:
         pass
 
+# Dummy credentials pour que les anciennes migrations importent cloudinary_storage sans crash
+if not _use_cloudinary:
+    try:
+        import cloudinary
+        cloudinary.config(cloud_name='dummy', api_key='dummy', api_secret='dummy')
+        CLOUDINARY_STORAGE = {'CLOUD_NAME': 'dummy', 'API_KEY': 'dummy', 'API_SECRET': 'dummy'}
+    except ImportError:
+        pass
+
 # Static files : stockage Django standard (pas de post-process WhiteNoise pendant collectstatic)
 # Le middleware WhiteNoise sert quand même les fichiers depuis STATIC_ROOT en production
 _static_storage = 'django.contrib.staticfiles.storage.StaticFilesStorage'

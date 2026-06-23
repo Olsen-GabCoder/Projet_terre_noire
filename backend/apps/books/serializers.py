@@ -77,9 +77,8 @@ class BookListSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)
 
     # Champs calculés
-    format_display = serializers.CharField(source='get_format_display', read_only=True)
     has_pdf = serializers.SerializerMethodField()
-    
+
     # === NOUVEAUX CHAMPS ===
     # Promotions et prix
     original_price = serializers.DecimalField(
@@ -124,8 +123,8 @@ class BookListSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'original_price',
-            'format',
-            'format_display',
+            'has_ebook',
+            'ebook_price',
             'cover_image',
             'back_cover_image',
             'available',
@@ -184,8 +183,6 @@ class BookDetailSerializer(serializers.ModelSerializer):
     )
     
     # Champs calculés
-    format_display = serializers.CharField(source='get_format_display', read_only=True)
-    is_ebook = serializers.BooleanField(read_only=True)
     is_available = serializers.BooleanField(read_only=True)
     has_pdf = serializers.SerializerMethodField()
     can_read = serializers.SerializerMethodField()
@@ -229,12 +226,11 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'original_price',
-            'format',
-            'format_display',
+            'has_ebook',
+            'ebook_price',
             'cover_image',
             'back_cover_image',
             'available',
-            'is_ebook',
             'is_available',
             'category',
             'category_id',
@@ -355,7 +351,8 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'original_price',
-            'format',
+            'has_ebook',
+            'ebook_price',
             'cover_image',
             'back_cover_image',
             'pdf_file',
@@ -411,6 +408,16 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'rating': "La note doit être comprise entre 0 et 5."
                 })
+
+        # Validation ebook
+        has_ebook = data.get('has_ebook', getattr(self.instance, 'has_ebook', False) if self.instance else False)
+        ebook_price = data.get('ebook_price')
+        if has_ebook and 'ebook_price' in data and (ebook_price is None or ebook_price <= 0):
+            raise serializers.ValidationError({
+                'ebook_price': "Le prix ebook est requis et doit etre positif si l'ebook est active."
+            })
+        if not has_ebook and 'ebook_price' in data:
+            data['ebook_price'] = None
 
         # Convertir isbn vide en None pour eviter les doublons unique
         if 'isbn' in data and not data['isbn']:
