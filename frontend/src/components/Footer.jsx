@@ -140,7 +140,7 @@ const Footer = () => {
                     { href: 'https://www.facebook.com/profile.php?id=61556564940483', icon: 'fab fa-facebook-f', label: 'Facebook' },
                     { href: 'https://instagram.com/terre_noire_editions', icon: 'fab fa-instagram', label: 'Instagram' },
                     { href: 'https://www.tiktok.com/@terrenoireedition?_r=1&_t=ZS-96fCndnPtAa', icon: 'fab fa-tiktok', label: 'TikTok' },
-                    { href: 'https://wa.me/24176593535', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
+                    { href: 'https://wa.me/24105348887', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
                     { href: 'mailto:terrenoireeditions@gmail.com', icon: 'fas fa-envelope', label: 'Email' },
                   ].map((s) => (
                     <a key={s.label} href={s.href} className="ft-social__link" aria-label={s.label} target="_blank" rel="noopener noreferrer">
