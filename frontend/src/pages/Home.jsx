@@ -237,10 +237,6 @@ const Home = () => {
 
         <div className={`home-hero-inner ${heroReady ? 'is-ready' : ''}`}>
           <div className="home-hero-left">
-            <div className="home-hero-pill">
-              <span className="home-hero-pill__icon">✦</span>
-            </div>
-
             <h1 className="home-hero-title">
               Demain s'écrit <span className="home-hero-title__accent">{typingWord}<span className="home-hero-cursor" /></span>.
             </h1>
